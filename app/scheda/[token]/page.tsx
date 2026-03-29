@@ -166,6 +166,7 @@ export default function PublicSchedaPage() {
           exercises={plan.exercises}
           logs={logs}
           totalWeeks={plan.total_weeks}
+          daysPerWeek={plan.days_per_week}
           mode="client"
           onUpsertLog={handleUpsertLog}
         />

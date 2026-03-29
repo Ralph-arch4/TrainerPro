@@ -23,6 +23,7 @@ export interface Exercise {
   targetReps: string; // e.g. "8-10", "12", "AMRAP"
   notes?: string;
   order: number;
+  day: number; // 1-based day number
 }
 
 // ─── Weekly log (filled by client via shared link) ────────────────────────────

@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/lib/store";
+import type { PlanTier } from "@/lib/store";
 import { PLAN_LIMITS } from "@/lib/plan-limits";
+import { dbProfiles } from "@/lib/db";
 import {
   Dumbbell, LayoutDashboard, Users, Activity, UtensilsCrossed,
-  TrendingUp, Calculator, FileDown, LogOut, Menu, X, Crown
+  TrendingUp, Calculator, FileDown, LogOut, Menu, X, Crown, CheckCircle2, Loader2
 } from "lucide-react";
 
 const navItems = [
@@ -30,6 +32,20 @@ export default function AppNav() {
 
   const plan = user?.plan ?? "free";
   const planLabel = PLAN_LIMITS[plan].label;
+  const [upgrading, setUpgrading] = useState(false);
+  const [upgraded, setUpgraded] = useState(false);
+
+  async function handleUpgrade(targetPlan: PlanTier) {
+    if (!user) return;
+    setUpgrading(true);
+    try {
+      await dbProfiles.updatePlan(user.id, targetPlan);
+      useAppStore.setState({ user: { ...user, plan: targetPlan } });
+      setUpgraded(true);
+      setTimeout(() => { setShowUpgrade(false); setUpgraded(false); }, 1500);
+    } catch {}
+    setUpgrading(false);
+  }
 
   async function handleLogout() {
     const supabase = createClient();
@@ -145,21 +161,76 @@ export default function AppNav() {
       {/* Upgrade modal */}
       {showUpgrade && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowUpgrade(false)}>
-          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.7)" }} />
-          <div className="relative w-full max-w-sm glass-dark rounded-2xl p-8 text-center fade-in" onClick={(e) => e.stopPropagation()}>
-            <Crown size={40} className="mx-auto mb-4" style={{ color: "var(--accent)" }} />
-            <h3 className="text-xl font-bold mb-2" style={{ color: "var(--ivory)" }}>Potenzia il tuo business</h3>
-            <p className="text-sm mb-6" style={{ color: "rgba(245,240,232,0.6)" }}>
-              {plan === "free"
-                ? "Con Personal Coach gestisci fino a 15 clienti per soli €29/mese."
-                : "Fitness Master Customized: illimitato e personalizzato sul tuo modus operandi."}
-            </p>
-            <button className="accent-btn w-full py-3 rounded-xl text-sm" onClick={() => setShowUpgrade(false)}>
-              Contattaci per l&apos;upgrade
-            </button>
-            <button onClick={() => setShowUpgrade(false)} className="mt-3 text-xs hover:underline" style={{ color: "rgba(245,240,232,0.4)" }}>
-              Non ora
-            </button>
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
+          <div className="relative w-full max-w-lg glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Crown size={20} style={{ color: "var(--accent)" }} />
+                <h3 className="text-lg font-bold" style={{ color: "var(--ivory)" }}>Scegli il tuo piano</h3>
+              </div>
+              <button onClick={() => setShowUpgrade(false)}>
+                <X size={16} style={{ color: "rgba(245,240,232,0.4)" }} />
+              </button>
+            </div>
+
+            {upgraded ? (
+              <div className="text-center py-8">
+                <CheckCircle2 size={48} className="mx-auto mb-3" style={{ color: "#22c55e" }} />
+                <p className="font-semibold" style={{ color: "var(--ivory)" }}>Piano aggiornato!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3">
+                {(["free", "personal_coach", "fitness_master"] as PlanTier[]).map((tier) => {
+                  const isCurrent = plan === tier;
+                  const isHigher = ["free", "personal_coach", "fitness_master"].indexOf(tier) > ["free", "personal_coach", "fitness_master"].indexOf(plan);
+                  const prices: Record<PlanTier, string> = { free: "€0", personal_coach: "€29/mese", fitness_master: "Su misura" };
+                  const features: Record<PlanTier, string[]> = {
+                    free: ["1 cliente", "Schede illimitate", "Diete & fasi", "Export PDF"],
+                    personal_coach: ["15 clienti", "Schede illimitate", "Diete & fasi", "Export PDF", "Link cliente"],
+                    fitness_master: ["Clienti illimitati", "Tutto Personal Coach", "Supporto dedicato", "Personalizzazione totale"],
+                  };
+                  return (
+                    <div key={tier} className="rounded-2xl p-4 flex flex-col" style={{
+                      background: isCurrent ? "rgba(255,107,43,0.1)" : "rgba(255,255,255,0.03)",
+                      border: `1px solid ${isCurrent ? "rgba(255,107,43,0.4)" : "rgba(255,255,255,0.08)"}`,
+                    }}>
+                      <div className="mb-3">
+                        <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: isCurrent ? "var(--accent)" : "rgba(245,240,232,0.5)" }}>
+                          {PLAN_LIMITS[tier].label}
+                        </p>
+                        <p className="text-xl font-bold" style={{ color: "var(--ivory)" }}>{prices[tier]}</p>
+                      </div>
+                      <ul className="space-y-1.5 flex-1 mb-4">
+                        {features[tier].map((f) => (
+                          <li key={f} className="flex items-center gap-1.5 text-xs" style={{ color: "rgba(245,240,232,0.6)" }}>
+                            <CheckCircle2 size={11} style={{ color: isCurrent ? "var(--accent)" : "#22c55e", flexShrink: 0 }} />
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                      {isCurrent ? (
+                        <div className="text-center text-xs py-2 rounded-xl font-semibold" style={{ background: "rgba(255,107,43,0.15)", color: "var(--accent-light)" }}>
+                          Piano attuale
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleUpgrade(tier)}
+                          disabled={upgrading}
+                          className="w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+                          style={{
+                            background: isHigher ? "linear-gradient(135deg, var(--accent), var(--accent-dark))" : "rgba(255,255,255,0.06)",
+                            color: isHigher ? "#0A0A0A" : "rgba(245,240,232,0.5)",
+                            cursor: upgrading ? "wait" : "pointer",
+                          }}>
+                          {upgrading ? <Loader2 size={11} className="animate-spin" /> : null}
+                          {isHigher ? "Attiva" : "Declassa"}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}

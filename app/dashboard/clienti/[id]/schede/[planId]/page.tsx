@@ -114,6 +114,7 @@ export default function WorkoutPlanPage() {
         exercises={plan.exercises}
         logs={plan.logs}
         totalWeeks={plan.totalWeeks}
+        daysPerWeek={plan.daysPerWeek}
         mode="trainer"
         shareToken={plan.shareToken}
         onAddExercise={handleAddExercise}
