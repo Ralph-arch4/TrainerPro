@@ -1,0 +1,82 @@
+{
+  "project": "TrainerPro",
+  "url": "http://localhost:3000",
+  "command": "node screenshots.mjs",
+  "screenshots_dir": "screenshots",
+  "pages": [
+    { "file": "01-landing.png",    "label": "Landing",      "auth": false },
+    { "file": "02-login.png",      "label": "Login",        "auth": false },
+    { "file": "03-register.png",   "label": "Register",     "auth": false },
+    { "file": "04-dashboard.png",  "label": "Dashboard",    "auth": true },
+    { "file": "05-clienti.png",    "label": "Clienti",      "auth": true },
+    { "file": "06-fasi.png",       "label": "Fasi",         "auth": true },
+    { "file": "07-diete.png",      "label": "Diete",        "auth": true },
+    { "file": "08-misurazioni.png","label": "Misurazioni",  "auth": true },
+    { "file": "09-preventivi.png", "label": "Preventivi",   "auth": true },
+    { "file": "10-export.png",     "label": "Export",       "auth": true }
+  ],
+  "checklists": {
+    "Landing": [
+      "TrainerPro logo and headline visible",
+      "CTA buttons (Inizia gratis / Accedi) present",
+      "Features section rendered with icons",
+      "Pricing tiers (Free / Personal Coach / Fitness Master) visible",
+      "FAQ section visible",
+      "Dark background with orange accent color",
+      "No broken layout or overflow"
+    ],
+    "Login": [
+      "TrainerPro logo visible",
+      "Email and password input fields present",
+      "Accedi button visible",
+      "Links to register and forgot-password present",
+      "Dark glass card style applied"
+    ],
+    "Register": [
+      "Name, email, password fields present",
+      "Crea account gratuito button visible",
+      "Link back to login present"
+    ],
+    "Dashboard": [
+      "Sidebar navigation visible with all menu items",
+      "Welcome message with trainer name",
+      "Stats cards (Clienti, Fasi, Misurazioni) rendered",
+      "Quick actions section visible",
+      "Orange accent color applied throughout"
+    ],
+    "Clienti": [
+      "Page header with Clienti title",
+      "Search and filter controls visible",
+      "Nuovo cliente button present",
+      "Empty state or client cards shown"
+    ],
+    "Fasi": [
+      "Fasi & Piani title visible",
+      "Stats cards rendered",
+      "Filter controls present",
+      "Empty state or phase list shown"
+    ],
+    "Diete": [
+      "Piani Alimentari title visible",
+      "Stats cards rendered",
+      "Empty state or diet cards shown"
+    ],
+    "Misurazioni": [
+      "Misurazioni Corporee title visible",
+      "Stats cards rendered",
+      "Empty state or measurement cards shown"
+    ],
+    "Preventivi": [
+      "Preventivi title visible",
+      "Nuovo preventivo button present",
+      "Split layout with quote list and editor"
+    ],
+    "Export": [
+      "Esporta PDF title visible",
+      "Client selector dropdown present",
+      "Section toggles visible",
+      "Genera PDF button present",
+      "Print preview panel visible"
+    ]
+  }
+}

@@ -1,0 +1,710 @@
+"use client";
+import { useState, useEffect } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useAppStore } from "@/lib/store";
+import { dbPhases, dbWorkoutPlans, dbDietPlans, dbMeasurements, dbNotes } from "@/lib/db";
+import Link from "next/link";
+import {
+  ArrowLeft, Activity, UtensilsCrossed, TrendingUp, StickyNote,
+  Dumbbell, Plus, X, Loader2, Pencil, Trash2, CheckCircle2, Circle,
+  Mail, Phone, Calendar, Target, BarChart2, ExternalLink
+} from "lucide-react";
+
+type Tab = "overview" | "fasi" | "schede" | "dieta" | "misurazioni" | "note";
+
+const goalLabel: Record<string, string> = { dimagrimento: "Dimagrimento", massa: "Massa", tonificazione: "Tonificazione", performance: "Performance" };
+const levelLabel: Record<string, string> = { principiante: "Principiante", intermedio: "Intermedio", avanzato: "Avanzato" };
+const phaseTypeLabel: Record<string, string> = { bulk: "Bulk", cut: "Cut", maintenance: "Mantenimento", custom: "Personalizzata" };
+const phaseTypeColor: Record<string, string> = { bulk: "#a78bfa", cut: "#38bdf8", maintenance: "#34d399", custom: "#fb923c" };
+const statusColor: Record<string, string> = { attivo: "#22c55e", in_pausa: "#f59e0b", inattivo: "#6b7280" };
+const statusLabel: Record<string, string> = { attivo: "Attivo", in_pausa: "In pausa", inattivo: "Inattivo" };
+
+function formatDate(d: string) { return new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" }); }
+
+export default function ClientDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const client = useAppStore((s) => s.clients.find((c) => c.id === id));
+  const addPhase = useAppStore((s) => s.addPhase);
+  const updatePhase = useAppStore((s) => s.updatePhase);
+  const removePhase = useAppStore((s) => s.removePhase);
+  const addWorkoutPlan = useAppStore((s) => s.addWorkoutPlan);
+  const removeWorkoutPlan = useAppStore((s) => s.removeWorkoutPlan);
+  const addDietPlan = useAppStore((s) => s.addDietPlan);
+  const removeDietPlan = useAppStore((s) => s.removeDietPlan);
+  const addMeasurement = useAppStore((s) => s.addMeasurement);
+  const removeMeasurement = useAppStore((s) => s.removeMeasurement);
+  const addNote = useAppStore((s) => s.addNote);
+  const removeNote = useAppStore((s) => s.removeNote);
+  const updateClient = useAppStore((s) => s.updateClient);
+
+  const [tab, setTab] = useState<Tab>((searchParams.get("tab") as Tab) || "overview");
+  const [saving, setSaving] = useState(false);
+
+  // Phase modal
+  const [showPhaseModal, setShowPhaseModal] = useState(false);
+  const [phaseForm, setPhaseForm] = useState({ name: "", type: "bulk", startDate: "", endDate: "", targetCalories: "", targetWeight: "", notes: "" });
+
+  // Workout plan modal
+  const [showWorkoutModal, setShowWorkoutModal] = useState(false);
+  const [workoutForm, setWorkoutForm] = useState({ name: "", description: "", daysPerWeek: "3", totalWeeks: "12" });
+
+  // Diet plan modal
+  const [showDietModal, setShowDietModal] = useState(false);
+  const [dietForm, setDietForm] = useState({ name: "", calories: "", protein: "", carbs: "", fat: "", notes: "" });
+
+  // Measurement modal
+  const [showMeasModal, setShowMeasModal] = useState(false);
+  const [measForm, setMeasForm] = useState({ date: new Date().toISOString().split("T")[0], weight: "", bodyFat: "", chest: "", waist: "", hips: "", arms: "", legs: "", notes: "" });
+
+  // Note
+  const [noteText, setNoteText] = useState("");
+
+  if (!client) {
+    return (
+      <div className="p-8 text-center">
+        <p style={{ color: "rgba(245,240,232,0.5)" }}>Cliente non trovato.</p>
+        <button onClick={() => router.push("/dashboard/clienti")} className="mt-4 text-sm hover:underline" style={{ color: "var(--accent-light)" }}>
+          Torna alla lista
+        </button>
+      </div>
+    );
+  }
+
+  async function savePhase() {
+    if (!phaseForm.name || !phaseForm.startDate || !phaseForm.endDate) return;
+    setSaving(true);
+    const p = addPhase(client!.id, {
+      name: phaseForm.name, type: phaseForm.type as "bulk" | "cut" | "maintenance" | "custom",
+      startDate: phaseForm.startDate, endDate: phaseForm.endDate,
+      targetCalories: phaseForm.targetCalories ? parseInt(phaseForm.targetCalories) : undefined,
+      targetWeight: phaseForm.targetWeight ? parseFloat(phaseForm.targetWeight) : undefined,
+      notes: phaseForm.notes || undefined, completed: false,
+    });
+    try { await dbPhases.create(p); } catch {}
+    setSaving(false);
+    setShowPhaseModal(false);
+    setPhaseForm({ name: "", type: "bulk", startDate: "", endDate: "", targetCalories: "", targetWeight: "", notes: "" });
+  }
+
+  async function saveWorkout() {
+    if (!workoutForm.name) return;
+    setSaving(true);
+    const w = addWorkoutPlan(client!.id, {
+      name: workoutForm.name, description: workoutForm.description,
+      daysPerWeek: parseInt(workoutForm.daysPerWeek),
+      totalWeeks: parseInt(workoutForm.totalWeeks) || 12,
+      active: true,
+    });
+    try { await dbWorkoutPlans.create(w); } catch {}
+    setSaving(false);
+    setShowWorkoutModal(false);
+    setWorkoutForm({ name: "", description: "", daysPerWeek: "3", totalWeeks: "12" });
+  }
+
+  async function saveDiet() {
+    if (!dietForm.name || !dietForm.calories) return;
+    setSaving(true);
+    const d = addDietPlan(client!.id, {
+      name: dietForm.name, calories: parseInt(dietForm.calories),
+      protein: parseFloat(dietForm.protein) || 0, carbs: parseFloat(dietForm.carbs) || 0,
+      fat: parseFloat(dietForm.fat) || 0, meals: "[]", notes: dietForm.notes || undefined, active: true,
+    });
+    try { await dbDietPlans.create(d); } catch {}
+    setSaving(false);
+    setShowDietModal(false);
+    setDietForm({ name: "", calories: "", protein: "", carbs: "", fat: "", notes: "" });
+  }
+
+  async function saveMeasurement() {
+    if (!measForm.weight) return;
+    setSaving(true);
+    const m = addMeasurement(client!.id, {
+      date: measForm.date, weight: parseFloat(measForm.weight),
+      bodyFat: measForm.bodyFat ? parseFloat(measForm.bodyFat) : undefined,
+      chest: measForm.chest ? parseFloat(measForm.chest) : undefined,
+      waist: measForm.waist ? parseFloat(measForm.waist) : undefined,
+      hips: measForm.hips ? parseFloat(measForm.hips) : undefined,
+      arms: measForm.arms ? parseFloat(measForm.arms) : undefined,
+      legs: measForm.legs ? parseFloat(measForm.legs) : undefined,
+      notes: measForm.notes || undefined,
+    });
+    try { await dbMeasurements.create(m); } catch {}
+    setSaving(false);
+    setShowMeasModal(false);
+    setMeasForm({ date: new Date().toISOString().split("T")[0], weight: "", bodyFat: "", chest: "", waist: "", hips: "", arms: "", legs: "", notes: "" });
+  }
+
+  async function saveNote() {
+    if (!noteText.trim()) return;
+    const n = addNote(client!.id, noteText.trim());
+    try { await dbNotes.create(n); } catch {}
+    setNoteText("");
+  }
+
+  const tabs: { key: Tab; label: string; icon: React.ElementType; count?: number }[] = [
+    { key: "overview", label: "Overview", icon: BarChart2 },
+    { key: "fasi", label: "Fasi", icon: Activity, count: client.phases.length },
+    { key: "schede", label: "Schede", icon: Dumbbell, count: client.workoutPlans.length },
+    { key: "dieta", label: "Dieta", icon: UtensilsCrossed, count: client.dietPlans.length },
+    { key: "misurazioni", label: "Misurazioni", icon: TrendingUp, count: client.measurements.length },
+    { key: "note", label: "Note", icon: StickyNote, count: client.notes.length },
+  ];
+
+  const inputClass = "w-full px-3 py-2.5 rounded-xl text-sm outline-none";
+  const inputStyle = { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" };
+  const selectStyle = { background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" };
+
+  return (
+    <div className="p-6 lg:p-8 fade-in">
+      {/* Back + header */}
+      <button onClick={() => router.push("/dashboard/clienti")}
+        className="flex items-center gap-2 text-sm mb-5 hover:opacity-80 transition-all"
+        style={{ color: "rgba(245,240,232,0.5)" }}>
+        <ArrowLeft size={15} /> Tutti i clienti
+      </button>
+
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl accent-btn flex items-center justify-center text-xl font-bold flex-shrink-0">
+            {client.name.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold" style={{ color: "var(--ivory)" }}>{client.name}</h1>
+            <div className="flex items-center gap-3 mt-1">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor[client.status] }} />
+                <span className="text-xs" style={{ color: "rgba(245,240,232,0.5)" }}>{statusLabel[client.status]}</span>
+              </div>
+              {client.goal && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(255,107,43,0.1)", color: "var(--accent-light)" }}>{goalLabel[client.goal]}</span>}
+              {client.level && <span className="text-xs" style={{ color: "rgba(245,240,232,0.35)" }}>{levelLabel[client.level]}</span>}
+            </div>
+          </div>
+        </div>
+        {client.monthlyFee && (
+          <div className="text-right">
+            <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Quota mensile</p>
+            <p className="text-xl font-bold" style={{ color: "var(--accent)" }}>€{client.monthlyFee}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 overflow-x-auto pb-1">
+        {tabs.map(({ key, label, icon: Icon, count }) => (
+          <button key={key} onClick={() => setTab(key)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm whitespace-nowrap transition-all"
+            style={{
+              background: tab === key ? "rgba(255,107,43,0.12)" : "transparent",
+              color: tab === key ? "var(--accent-light)" : "rgba(245,240,232,0.5)",
+              border: tab === key ? "1px solid rgba(255,107,43,0.2)" : "1px solid transparent",
+              fontWeight: tab === key ? "600" : "400",
+            }}>
+            <Icon size={14} />
+            {label}
+            {count !== undefined && count > 0 && (
+              <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>{count}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* ── OVERVIEW ── */}
+      {tab === "overview" && (
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="card-luxury rounded-2xl p-5">
+            <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--ivory)" }}>Informazioni personali</h3>
+            <div className="space-y-3">
+              {client.email && <div className="flex items-center gap-3 text-sm"><Mail size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "rgba(245,240,232,0.7)" }}>{client.email}</span></div>}
+              {client.phone && <div className="flex items-center gap-3 text-sm"><Phone size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "rgba(245,240,232,0.7)" }}>{client.phone}</span></div>}
+              {client.birthDate && <div className="flex items-center gap-3 text-sm"><Calendar size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "rgba(245,240,232,0.7)" }}>{formatDate(client.birthDate)}</span></div>}
+              {client.goal && <div className="flex items-center gap-3 text-sm"><Target size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "rgba(245,240,232,0.7)" }}>{goalLabel[client.goal]}</span></div>}
+              <div className="flex items-center gap-3 text-sm"><Calendar size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "rgba(245,240,232,0.7)" }}>Inizio: {formatDate(client.startDate)}</span></div>
+            </div>
+          </div>
+
+          <div className="card-luxury rounded-2xl p-5">
+            <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--ivory)" }}>Riepilogo attività</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: "Fasi", value: client.phases.length, color: "#a78bfa" },
+                { label: "Schede", value: client.workoutPlans.length, color: "var(--accent)" },
+                { label: "Diete", value: client.dietPlans.length, color: "#34d399" },
+                { label: "Misurazioni", value: client.measurements.length, color: "#38bdf8" },
+              ].map(({ label, value, color }) => (
+                <div key={label} className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.04)" }}>
+                  <p className="text-2xl font-bold" style={{ color }}>{value}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {client.measurements.length > 0 && (
+            <div className="card-luxury rounded-2xl p-5 sm:col-span-2">
+              <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--ivory)" }}>Ultima misurazione</h3>
+              {(() => {
+                const last = [...client.measurements].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+                return (
+                  <div className="flex flex-wrap gap-4">
+                    <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Peso</p><p className="text-xl font-bold" style={{ color: "var(--ivory)" }}>{last.weight} kg</p></div>
+                    {last.bodyFat && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Grasso</p><p className="text-xl font-bold" style={{ color: "var(--ivory)" }}>{last.bodyFat}%</p></div>}
+                    {last.waist && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Vita</p><p className="text-xl font-bold" style={{ color: "var(--ivory)" }}>{last.waist} cm</p></div>}
+                    {last.arms && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Braccia</p><p className="text-xl font-bold" style={{ color: "var(--ivory)" }}>{last.arms} cm</p></div>}
+                    <div className="ml-auto self-end"><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{formatDate(last.date)}</p></div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── FASI ── */}
+      {tab === "fasi" && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{client.phases.length} {client.phases.length === 1 ? "fase" : "fasi"}</p>
+            <button onClick={() => setShowPhaseModal(true)} className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm">
+              <Plus size={14} /> Nuova fase
+            </button>
+          </div>
+          {client.phases.length === 0 ? (
+            <div className="text-center py-16 card-luxury rounded-2xl">
+              <Activity size={40} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.25)" }} />
+              <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>Nessuna fase pianificata</p>
+              <button onClick={() => setShowPhaseModal(true)} className="mt-3 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>Aggiungi la prima fase</button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {[...client.phases].sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()).map((phase) => (
+                <div key={phase.id} className="card-luxury rounded-2xl p-5">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 rounded-full flex-shrink-0 mt-1" style={{ background: phaseTypeColor[phase.type] }} />
+                      <div>
+                        <p className="font-semibold" style={{ color: "var(--ivory)" }}>{phase.name}</p>
+                        <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>
+                          {formatDate(phase.startDate)} → {formatDate(phase.endDate)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: `${phaseTypeColor[phase.type]}18`, color: phaseTypeColor[phase.type] }}>
+                        {phaseTypeLabel[phase.type]}
+                      </span>
+                      <button onClick={() => { updatePhase(client!.id, phase.id, { completed: !phase.completed }); dbPhases.update(phase.id, { completed: !phase.completed }).catch(() => {}); }}
+                        className="p-1.5 rounded-lg hover:bg-white/5 transition-all">
+                        {phase.completed ? <CheckCircle2 size={15} style={{ color: "#22c55e" }} /> : <Circle size={15} style={{ color: "rgba(245,240,232,0.35)" }} />}
+                      </button>
+                      <button onClick={async () => { removePhase(client!.id, phase.id); try { await dbPhases.remove(phase.id); } catch {} }}
+                        className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all">
+                        <Trash2 size={14} style={{ color: "rgba(239,68,68,0.6)" }} />
+                      </button>
+                    </div>
+                  </div>
+                  {(phase.targetCalories || phase.targetWeight || phase.notes) && (
+                    <div className="mt-3 pt-3 flex flex-wrap gap-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                      {phase.targetCalories && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Calorie target</p><p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{phase.targetCalories} kcal</p></div>}
+                      {phase.targetWeight && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Peso target</p><p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{phase.targetWeight} kg</p></div>}
+                      {phase.notes && <p className="text-xs w-full" style={{ color: "rgba(245,240,232,0.5)" }}>{phase.notes}</p>}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── SCHEDE ── */}
+      {tab === "schede" && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{client.workoutPlans.length} schede</p>
+            <button onClick={() => setShowWorkoutModal(true)} className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm">
+              <Plus size={14} /> Nuova scheda
+            </button>
+          </div>
+          {client.workoutPlans.length === 0 ? (
+            <div className="text-center py-16 card-luxury rounded-2xl">
+              <Dumbbell size={40} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.25)" }} />
+              <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>Nessuna scheda di allenamento</p>
+              <button onClick={() => setShowWorkoutModal(true)} className="mt-3 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>Crea la prima scheda</button>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {client.workoutPlans.map((wp) => (
+                <div key={wp.id} className="card-luxury rounded-2xl p-5">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold" style={{ color: "var(--ivory)" }}>{wp.name}</p>
+                        {wp.active && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Attiva</span>}
+                      </div>
+                      {wp.description && <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.45)" }}>{wp.description}</p>}
+                    </div>
+                    <button onClick={async () => { removeWorkoutPlan(client!.id, wp.id); try { await dbWorkoutPlans.remove(wp.id); } catch {} }}
+                      className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all flex-shrink-0">
+                      <Trash2 size={14} style={{ color: "rgba(239,68,68,0.6)" }} />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                    <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
+                      {wp.daysPerWeek} gg/sett · {(wp as { totalWeeks?: number }).totalWeeks ?? 12} sett · {wp.exercises.length} esercizi
+                    </p>
+                    <Link
+                      href={`/dashboard/clienti/${id}/schede/${wp.id}`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all"
+                      style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.18)", color: "var(--accent-light)" }}>
+                      <ExternalLink size={11} /> Apri scheda
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── DIETA ── */}
+      {tab === "dieta" && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{client.dietPlans.length} piani</p>
+            <button onClick={() => setShowDietModal(true)} className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm">
+              <Plus size={14} /> Nuovo piano
+            </button>
+          </div>
+          {client.dietPlans.length === 0 ? (
+            <div className="text-center py-16 card-luxury rounded-2xl">
+              <UtensilsCrossed size={40} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.25)" }} />
+              <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>Nessun piano alimentare</p>
+              <button onClick={() => setShowDietModal(true)} className="mt-3 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>Crea il primo piano</button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {client.dietPlans.map((dp) => (
+                <div key={dp.id} className="card-luxury rounded-2xl p-5">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold" style={{ color: "var(--ivory)" }}>{dp.name}</p>
+                        {dp.active && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Attivo</span>}
+                      </div>
+                    </div>
+                    <button onClick={async () => { removeDietPlan(client!.id, dp.id); try { await dbDietPlans.remove(dp.id); } catch {} }}
+                      className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all">
+                      <Trash2 size={14} style={{ color: "rgba(239,68,68,0.6)" }} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-4 gap-3">
+                    {[
+                      { label: "Calorie", value: `${dp.calories} kcal`, color: "var(--accent)" },
+                      { label: "Proteine", value: `${dp.protein}g`, color: "#a78bfa" },
+                      { label: "Carboidrati", value: `${dp.carbs}g`, color: "#38bdf8" },
+                      { label: "Grassi", value: `${dp.fat}g`, color: "#fbbf24" },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.04)" }}>
+                        <p className="text-sm font-bold" style={{ color }}>{value}</p>
+                        <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {dp.notes && <p className="text-xs mt-3" style={{ color: "rgba(245,240,232,0.45)" }}>{dp.notes}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── MISURAZIONI ── */}
+      {tab === "misurazioni" && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{client.measurements.length} rilevazioni</p>
+            <button onClick={() => setShowMeasModal(true)} className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm">
+              <Plus size={14} /> Aggiungi
+            </button>
+          </div>
+          {client.measurements.length === 0 ? (
+            <div className="text-center py-16 card-luxury rounded-2xl">
+              <TrendingUp size={40} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.25)" }} />
+              <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>Nessuna misurazione registrata</p>
+              <button onClick={() => setShowMeasModal(true)} className="mt-3 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>Registra la prima</button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {[...client.measurements].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((m, i) => (
+                <div key={m.id} className="card-luxury rounded-2xl p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold" style={{ color: "var(--ivory)" }}>{formatDate(m.date)}</p>
+                      {i === 0 && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(255,107,43,0.12)", color: "var(--accent-light)" }}>Ultima</span>}
+                    </div>
+                    <button onClick={async () => { removeMeasurement(client!.id, m.id); try { await dbMeasurements.remove(m.id); } catch {} }}
+                      className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all">
+                      <Trash2 size={14} style={{ color: "rgba(239,68,68,0.6)" }} />
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-4">
+                    <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Peso</p><p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{m.weight} kg</p></div>
+                    {m.bodyFat && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>% grasso</p><p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{m.bodyFat}%</p></div>}
+                    {m.chest && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Petto</p><p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{m.chest} cm</p></div>}
+                    {m.waist && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Vita</p><p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{m.waist} cm</p></div>}
+                    {m.hips && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Fianchi</p><p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{m.hips} cm</p></div>}
+                    {m.arms && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Braccia</p><p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{m.arms} cm</p></div>}
+                    {m.legs && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Gambe</p><p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{m.legs} cm</p></div>}
+                  </div>
+                  {m.notes && <p className="text-xs mt-2" style={{ color: "rgba(245,240,232,0.4)" }}>{m.notes}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── NOTE ── */}
+      {tab === "note" && (
+        <div>
+          <div className="card-luxury rounded-2xl p-4 mb-4">
+            <textarea value={noteText} onChange={(e) => setNoteText(e.target.value)}
+              placeholder="Aggiungi una nota sul cliente…"
+              rows={3}
+              className="w-full bg-transparent outline-none text-sm resize-none"
+              style={{ color: "var(--ivory)" }} />
+            <div className="flex justify-end mt-2">
+              <button onClick={saveNote} disabled={!noteText.trim()}
+                className="accent-btn px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 disabled:opacity-40">
+                <Plus size={13} /> Aggiungi nota
+              </button>
+            </div>
+          </div>
+          {client.notes.length === 0 ? (
+            <div className="text-center py-10" style={{ color: "rgba(245,240,232,0.4)" }}>
+              <StickyNote size={32} className="mx-auto mb-2" style={{ color: "rgba(255,107,43,0.2)" }} />
+              <p className="text-sm">Nessuna nota ancora</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {[...client.notes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((note) => (
+                <div key={note.id} className="card-luxury rounded-2xl p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-sm flex-1" style={{ color: "rgba(245,240,232,0.8)" }}>{note.content}</p>
+                    <button onClick={async () => { removeNote(client!.id, note.id); try { await dbNotes.remove(note.id); } catch {} }}
+                      className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all flex-shrink-0">
+                      <Trash2 size={13} style={{ color: "rgba(239,68,68,0.5)" }} />
+                    </button>
+                  </div>
+                  <p className="text-xs mt-2" style={{ color: "rgba(245,240,232,0.3)" }}>{formatDate(note.createdAt)}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── MODALS ── */}
+
+      {/* Phase modal */}
+      {showPhaseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowPhaseModal(false)}>
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
+          <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Nuova fase</h3>
+              <button onClick={() => setShowPhaseModal(false)}><X size={16} style={{ color: "rgba(245,240,232,0.5)" }} /></button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Nome fase *</label>
+                <input value={phaseForm.name} onChange={(e) => setPhaseForm({ ...phaseForm, name: e.target.value })} placeholder="es. Bulk invernale" className={inputClass} style={inputStyle} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Tipo</label>
+                  <select value={phaseForm.type} onChange={(e) => setPhaseForm({ ...phaseForm, type: e.target.value })} className={`${inputClass}`} style={selectStyle}>
+                    <option value="bulk">Bulk</option><option value="cut">Cut</option><option value="maintenance">Mantenimento</option><option value="custom">Personalizzata</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Calorie target</label>
+                  <input type="number" value={phaseForm.targetCalories} onChange={(e) => setPhaseForm({ ...phaseForm, targetCalories: e.target.value })} placeholder="3200" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Data inizio *</label>
+                  <input type="date" value={phaseForm.startDate} onChange={(e) => setPhaseForm({ ...phaseForm, startDate: e.target.value })} className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Data fine *</label>
+                  <input type="date" value={phaseForm.endDate} onChange={(e) => setPhaseForm({ ...phaseForm, endDate: e.target.value })} className={inputClass} style={inputStyle} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Note</label>
+                <textarea value={phaseForm.notes} onChange={(e) => setPhaseForm({ ...phaseForm, notes: e.target.value })} rows={2} placeholder="Obiettivi, indicazioni…" className={`${inputClass} resize-none`} style={inputStyle} />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setShowPhaseModal(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>Annulla</button>
+              <button onClick={savePhase} disabled={saving} className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Salva fase
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Workout modal */}
+      {showWorkoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowWorkoutModal(false)}>
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
+          <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Nuova scheda</h3>
+              <button onClick={() => setShowWorkoutModal(false)}><X size={16} style={{ color: "rgba(245,240,232,0.5)" }} /></button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Nome scheda *</label>
+                <input value={workoutForm.name} onChange={(e) => setWorkoutForm({ ...workoutForm, name: e.target.value })} placeholder="es. Scheda A — Push/Pull/Legs" className={inputClass} style={inputStyle} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Descrizione</label>
+                <textarea value={workoutForm.description} onChange={(e) => setWorkoutForm({ ...workoutForm, description: e.target.value })} rows={2} placeholder="Obiettivi, note sulla scheda…" className={`${inputClass} resize-none`} style={inputStyle} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Giorni a settimana</label>
+                  <select value={workoutForm.daysPerWeek} onChange={(e) => setWorkoutForm({ ...workoutForm, daysPerWeek: e.target.value })} className={inputClass} style={selectStyle}>
+                    {[2,3,4,5,6].map((d) => <option key={d} value={d}>{d} giorni</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Durata (settimane)</label>
+                  <select value={workoutForm.totalWeeks} onChange={(e) => setWorkoutForm({ ...workoutForm, totalWeeks: e.target.value })} className={inputClass} style={selectStyle}>
+                    {[4,6,8,10,12,16,20,24].map((w) => <option key={w} value={w}>{w} settimane</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setShowWorkoutModal(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>Annulla</button>
+              <button onClick={saveWorkout} disabled={saving} className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Salva scheda
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Diet modal */}
+      {showDietModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowDietModal(false)}>
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
+          <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Nuovo piano alimentare</h3>
+              <button onClick={() => setShowDietModal(false)}><X size={16} style={{ color: "rgba(245,240,232,0.5)" }} /></button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Nome piano *</label>
+                <input value={dietForm.name} onChange={(e) => setDietForm({ ...dietForm, name: e.target.value })} placeholder="es. Dieta Bulk — 3200 kcal" className={inputClass} style={inputStyle} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Calorie totali *</label>
+                  <input type="number" value={dietForm.calories} onChange={(e) => setDietForm({ ...dietForm, calories: e.target.value })} placeholder="3200" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Proteine (g)</label>
+                  <input type="number" value={dietForm.protein} onChange={(e) => setDietForm({ ...dietForm, protein: e.target.value })} placeholder="200" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Carboidrati (g)</label>
+                  <input type="number" value={dietForm.carbs} onChange={(e) => setDietForm({ ...dietForm, carbs: e.target.value })} placeholder="350" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Grassi (g)</label>
+                  <input type="number" value={dietForm.fat} onChange={(e) => setDietForm({ ...dietForm, fat: e.target.value })} placeholder="80" className={inputClass} style={inputStyle} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Note</label>
+                <textarea value={dietForm.notes} onChange={(e) => setDietForm({ ...dietForm, notes: e.target.value })} rows={2} placeholder="Indicazioni, note…" className={`${inputClass} resize-none`} style={inputStyle} />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setShowDietModal(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>Annulla</button>
+              <button onClick={saveDiet} disabled={saving} className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Salva piano
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Measurement modal */}
+      {showMeasModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowMeasModal(false)}>
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
+          <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Nuova misurazione</h3>
+              <button onClick={() => setShowMeasModal(false)}><X size={16} style={{ color: "rgba(245,240,232,0.5)" }} /></button>
+            </div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Data</label>
+                  <input type="date" value={measForm.date} onChange={(e) => setMeasForm({ ...measForm, date: e.target.value })} className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Peso (kg) *</label>
+                  <input type="number" step="0.1" value={measForm.weight} onChange={(e) => setMeasForm({ ...measForm, weight: e.target.value })} placeholder="82.5" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>% Grasso</label>
+                  <input type="number" step="0.1" value={measForm.bodyFat} onChange={(e) => setMeasForm({ ...measForm, bodyFat: e.target.value })} placeholder="18" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Petto (cm)</label>
+                  <input type="number" step="0.5" value={measForm.chest} onChange={(e) => setMeasForm({ ...measForm, chest: e.target.value })} placeholder="105" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Vita (cm)</label>
+                  <input type="number" step="0.5" value={measForm.waist} onChange={(e) => setMeasForm({ ...measForm, waist: e.target.value })} placeholder="82" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Fianchi (cm)</label>
+                  <input type="number" step="0.5" value={measForm.hips} onChange={(e) => setMeasForm({ ...measForm, hips: e.target.value })} placeholder="98" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Braccia (cm)</label>
+                  <input type="number" step="0.5" value={measForm.arms} onChange={(e) => setMeasForm({ ...measForm, arms: e.target.value })} placeholder="40" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Gambe (cm)</label>
+                  <input type="number" step="0.5" value={measForm.legs} onChange={(e) => setMeasForm({ ...measForm, legs: e.target.value })} placeholder="62" className={inputClass} style={inputStyle} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Note</label>
+                <textarea value={measForm.notes} onChange={(e) => setMeasForm({ ...measForm, notes: e.target.value })} rows={2} className={`${inputClass} resize-none`} style={inputStyle} />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setShowMeasModal(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>Annulla</button>
+              <button onClick={saveMeasurement} disabled={saving} className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Salva
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

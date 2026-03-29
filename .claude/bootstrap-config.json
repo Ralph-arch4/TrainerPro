@@ -1,0 +1,20 @@
+{
+  "project": "TrainerPro",
+  "description": "CRM e gestione clienti per personal trainer indipendenti per gestire schede, diete e fasi di allenamento",
+  "industry": "Fitness / Bodybuilding",
+  "accentColor": "#FF6B2B",
+  "accentColorLight": "#FF9A6C",
+  "accentColorDark": "#CC4A0A",
+  "language": "Italian",
+  "features": ["auth", "multi-entity-workspace", "client-list", "timeline-phases", "quote-calculator", "pdf-export", "landing-page"],
+  "primaryEntity": "Client",
+  "secondaryEntities": ["WorkoutPlan", "Phase", "DietPlan", "BodyMeasurement", "Note"],
+  "pricingTiers": [
+    { "key": "free", "name": "Free", "price": null, "label": "Free", "limits": { "clients": 1 } },
+    { "key": "personal_coach", "name": "Personal Coach", "price": "29", "currency": "EUR", "label": "Personal Coach", "limits": { "clients": 15 } },
+    { "key": "fitness_master", "name": "Fitness Master Customized", "price": "custom", "currency": "EUR", "label": "Fitness Master Customized", "limits": { "clients": 999999 } }
+  ],
+  "deployTarget": "vercel",
+  "storageKey": "trainerpro-storage",
+  "generatedAt": "2026-03-28T00:00:00.000Z"
+}
