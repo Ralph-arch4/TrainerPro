@@ -208,6 +208,97 @@ export const dbExerciseLogs = {
   },
 };
 
+// ─── Intake Forms ─────────────────────────────────────────────────────────────
+export interface IntakeForm {
+  id: string;
+  trainer_id: string;
+  token: string;
+  label: string | null;
+  status: "pending" | "submitted";
+  response: IntakeResponse | null;
+  submitted_at: string | null;
+  created_at: string;
+}
+
+export interface IntakeResponse {
+  // Step 1 — Personal
+  fullName: string;
+  email: string;
+  phone?: string;
+  birthDate?: string;
+  gender?: string;
+  // Step 2 — Body & Goals
+  height?: number;
+  currentWeight?: number;
+  targetWeight?: number;
+  bodyFatPercent?: number;
+  primaryGoal?: string;
+  goalTimeline?: string;
+  motivation?: string;
+  // Step 3 — Training
+  level?: string;
+  trainingYears?: string;
+  currentTrainingDays?: string;
+  injuriesOrLimitations?: string;
+  availableDays?: string[];
+  sessionDuration?: string;
+  trainingLocation?: string[];
+  equipment?: string;
+  // Step 4 — Diet & Lifestyle
+  dietType?: string;
+  foodAllergies?: string;
+  mealsPerDay?: string;
+  alcoholConsumption?: string;
+  supplements?: string;
+  workType?: string;
+  sleepHours?: string;
+  stressLevel?: number;
+  otherActivities?: string;
+  additionalNotes?: string;
+}
+
+export const dbIntakeForms = {
+  async list(trainerId: string): Promise<IntakeForm[]> {
+    const { data, error } = await db()
+      .from("intake_forms")
+      .select("*")
+      .eq("trainer_id", trainerId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data as IntakeForm[];
+  },
+  async create(trainerId: string, label: string): Promise<IntakeForm> {
+    const { data, error } = await db()
+      .from("intake_forms")
+      .insert({ trainer_id: trainerId, label })
+      .select()
+      .single();
+    if (error) throw error;
+    return data as IntakeForm;
+  },
+  async remove(id: string) {
+    const { error } = await db().from("intake_forms").delete().eq("id", id);
+    if (error) throw error;
+  },
+  async getByToken(token: string): Promise<IntakeForm | null> {
+    const { data, error } = await db()
+      .from("intake_forms")
+      .select("*")
+      .eq("token", token)
+      .single();
+    if (error || !data) return null;
+    return data as IntakeForm;
+  },
+  async submit(token: string, response: IntakeResponse) {
+    const { error } = await db()
+      .from("intake_forms")
+      .update({ status: "submitted", response, submitted_at: new Date().toISOString() })
+      .eq("token", token)
+      .eq("status", "pending");
+    if (error) throw error;
+  },
+};
+
 // ─── Notes ────────────────────────────────────────────────────────────────────
 export const dbNotes = {
   async list(clientId: string) {
