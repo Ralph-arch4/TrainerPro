@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
 import { PLAN_LIMITS } from "@/lib/plan-limits";
-import { Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight, Crown } from "lucide-react";
+import { Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight, Crown, CheckCircle2, Circle, Dumbbell, Share2 } from "lucide-react";
 
 export default function DashboardPage() {
   const user = useAppStore((s) => s.user);
@@ -87,26 +87,88 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Recent clients */}
-        <div className="card-luxury rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold" style={{ color: "var(--ivory)" }}>Clienti recenti</h2>
-            <Link href="/dashboard/clienti" className="flex items-center gap-1 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>
-              Vedi tutti <ArrowRight size={12} />
+      {clients.length === 0 ? (
+        /* ── Onboarding state ── */
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="card-luxury rounded-2xl p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,107,43,0.1)" }}>
+                <Plus size={20} style={{ color: "var(--accent)" }} />
+              </div>
+              <div>
+                <h2 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Inizia in 4 passi</h2>
+                <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Configura il tuo studio in pochi minuti</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {[
+                { icon: Users, label: "Aggiungi il tuo primo cliente", desc: "Nome, obiettivo, livello e dati personali", href: "/dashboard/clienti", done: false },
+                { icon: Dumbbell, label: "Crea una scheda di allenamento", desc: "Organizza gli esercizi per giorno", href: "/dashboard/clienti", done: false },
+                { icon: Activity, label: "Imposta una fase", desc: "Bulk, Cut o Mantenimento con calorie target", href: "/dashboard/fasi", done: false },
+                { icon: Share2, label: "Condividi il link col cliente", desc: "Il cliente compila i progressi ogni settimana", href: "/dashboard/clienti", done: false },
+              ].map(({ icon: Icon, label, desc, href, done }, i) => (
+                <Link key={i} href={href}
+                  className="flex items-center gap-3 p-3.5 rounded-xl transition-all hover:bg-white/5 group">
+                  <div className="flex-shrink-0">
+                    {done
+                      ? <CheckCircle2 size={20} style={{ color: "#22c55e" }} />
+                      : <Circle size={20} style={{ color: "rgba(255,107,43,0.35)" }} />
+                    }
+                  </div>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: "rgba(255,107,43,0.08)" }}>
+                    <Icon size={15} style={{ color: "var(--accent)" }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium" style={{ color: "var(--ivory)" }}>{label}</p>
+                    <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{desc}</p>
+                  </div>
+                  <ArrowRight size={13} className="opacity-0 group-hover:opacity-60 transition-all flex-shrink-0" style={{ color: "var(--accent-light)" }} />
+                </Link>
+              ))}
+            </div>
+            <Link href="/dashboard/clienti" className="accent-btn w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm mt-5">
+              <Plus size={15} /> Aggiungi il tuo primo cliente
             </Link>
           </div>
 
-          {recentClients.length === 0 ? (
-            <div className="text-center py-8">
-              <Users size={36} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.3)" }} />
-              <p className="text-sm font-medium mb-1" style={{ color: "var(--ivory)" }}>Nessun cliente ancora</p>
-              <p className="text-xs mb-4" style={{ color: "rgba(245,240,232,0.4)" }}>Aggiungi il tuo primo cliente per iniziare</p>
-              <Link href="/dashboard/clienti" className="accent-btn inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs">
-                <Plus size={14} /> Aggiungi cliente
+          {/* Quick actions */}
+          <div className="card-luxury rounded-2xl p-5">
+            <h2 className="text-base font-semibold mb-4" style={{ color: "var(--ivory)" }}>Azioni rapide</h2>
+            <div className="space-y-2">
+              {[
+                { href: "/dashboard/clienti", icon: Users, label: "Aggiungi nuovo cliente", desc: "Registra un nuovo cliente" },
+                { href: "/dashboard/fasi", icon: Activity, label: "Crea una fase", desc: "Bulk, cut o mantenimento" },
+                { href: "/dashboard/diete", icon: UtensilsCrossed, label: "Piano alimentare", desc: "Calcola macro e calorie" },
+                { href: "/dashboard/misurazioni", icon: TrendingUp, label: "Registra misurazioni", desc: "Traccia i progressi" },
+              ].map(({ href, icon: Icon, label, desc }) => (
+                <Link key={href} href={href}
+                  className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all"
+                    style={{ background: "rgba(255,107,43,0.1)" }}>
+                    <Icon size={16} style={{ color: "var(--accent)" }} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium" style={{ color: "var(--ivory)" }}>{label}</p>
+                    <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{desc}</p>
+                  </div>
+                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-all" style={{ color: "var(--accent-light)" }} />
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* ── Normal state (has clients) ── */
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Recent clients */}
+          <div className="card-luxury rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold" style={{ color: "var(--ivory)" }}>Clienti recenti</h2>
+              <Link href="/dashboard/clienti" className="flex items-center gap-1 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>
+                Vedi tutti <ArrowRight size={12} />
               </Link>
             </div>
-          ) : (
             <div className="space-y-3">
               {recentClients.map((client) => (
                 <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
@@ -124,35 +186,35 @@ export default function DashboardPage() {
                 </Link>
               ))}
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Quick actions */}
-        <div className="card-luxury rounded-2xl p-5">
-          <h2 className="text-base font-semibold mb-4" style={{ color: "var(--ivory)" }}>Azioni rapide</h2>
-          <div className="space-y-2">
-            {[
-              { href: "/dashboard/clienti", icon: Users, label: "Aggiungi nuovo cliente", desc: "Registra un nuovo cliente" },
-              { href: "/dashboard/fasi", icon: Activity, label: "Crea una fase", desc: "Bulk, cut o mantenimento" },
-              { href: "/dashboard/diete", icon: UtensilsCrossed, label: "Piano alimentare", desc: "Calcola macro e calorie" },
-              { href: "/dashboard/misurazioni", icon: TrendingUp, label: "Registra misurazioni", desc: "Traccia i progressi" },
-            ].map(({ href, icon: Icon, label, desc }) => (
-              <Link key={href} href={href}
-                className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all"
-                  style={{ background: "rgba(255,107,43,0.1)" }}>
-                  <Icon size={16} style={{ color: "var(--accent)" }} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium" style={{ color: "var(--ivory)" }}>{label}</p>
-                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{desc}</p>
-                </div>
-                <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-all" style={{ color: "var(--accent-light)" }} />
-              </Link>
-            ))}
+          {/* Quick actions */}
+          <div className="card-luxury rounded-2xl p-5">
+            <h2 className="text-base font-semibold mb-4" style={{ color: "var(--ivory)" }}>Azioni rapide</h2>
+            <div className="space-y-2">
+              {[
+                { href: "/dashboard/clienti", icon: Users, label: "Aggiungi nuovo cliente", desc: "Registra un nuovo cliente" },
+                { href: "/dashboard/fasi", icon: Activity, label: "Crea una fase", desc: "Bulk, cut o mantenimento" },
+                { href: "/dashboard/diete", icon: UtensilsCrossed, label: "Piano alimentare", desc: "Calcola macro e calorie" },
+                { href: "/dashboard/misurazioni", icon: TrendingUp, label: "Registra misurazioni", desc: "Traccia i progressi" },
+              ].map(({ href, icon: Icon, label, desc }) => (
+                <Link key={href} href={href}
+                  className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-all"
+                    style={{ background: "rgba(255,107,43,0.1)" }}>
+                    <Icon size={16} style={{ color: "var(--accent)" }} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium" style={{ color: "var(--ivory)" }}>{label}</p>
+                    <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{desc}</p>
+                  </div>
+                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-all" style={{ color: "var(--accent-light)" }} />
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

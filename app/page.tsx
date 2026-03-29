@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Dumbbell, Users, Activity, UtensilsCrossed, TrendingUp, FileDown, Calculator, CheckCircle, ArrowRight } from "lucide-react";
+import { Dumbbell, Users, Activity, UtensilsCrossed, TrendingUp, FileDown, Calculator, CheckCircle, ArrowRight, Zap, Shield, Clock } from "lucide-react";
 
 const features = [
   { icon: Users,           title: "Gestione Clienti",      desc: "Anagrafica completa, obiettivi, livello e storico di ogni cliente in un unico posto." },
@@ -63,22 +63,26 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-32 pb-24 px-6 lg:px-12 text-center">
-        <div className="max-w-4xl mx-auto fade-in">
+      <section className="pt-32 pb-16 px-6 lg:px-12 text-center relative overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] pointer-events-none"
+          style={{ background: "radial-gradient(ellipse, rgba(255,107,43,0.07) 0%, transparent 70%)" }} />
+
+        <div className="max-w-4xl mx-auto fade-in relative z-10">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium mb-6"
             style={{ background: "rgba(255,107,43,0.1)", border: "1px solid rgba(255,107,43,0.25)", color: "var(--accent-light)" }}>
             <Dumbbell size={12} />
-            CRM per Personal Trainer
+            CRM per Personal Trainer · Fitness &amp; Bodybuilding
           </div>
           <h1 className="text-4xl lg:text-6xl font-bold leading-tight mb-6">
             Gestisci i tuoi clienti<br />
             <span className="accent-text">come un professionista</span>
           </h1>
           <p className="text-lg lg:text-xl mb-10 max-w-2xl mx-auto" style={{ color: "rgba(245,240,232,0.6)" }}>
-            TrainerPro ti permette di gestire schede di allenamento, piani alimentari, fasi di bulk/cut e misurazioni di tutti i tuoi clienti in un unico posto.
+            Schede di allenamento, piani alimentari, fasi di bulk/cut e misurazioni. Tutto in un posto. Condividi le schede con un link, i tuoi clienti compilano i progressi settimanalmente.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/register" className="accent-btn flex items-center gap-2 px-8 py-3.5 rounded-xl text-base">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+            <Link href="/register" className="accent-btn flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-semibold">
               Inizia gratis <ArrowRight size={16} />
             </Link>
             <Link href="/login" className="flex items-center gap-2 px-8 py-3.5 rounded-xl text-base transition-all hover:bg-white/5"
@@ -86,9 +90,50 @@ export default function LandingPage() {
               Accedi al tuo account
             </Link>
           </div>
-          <p className="text-xs mt-4" style={{ color: "rgba(245,240,232,0.35)" }}>
+          <p className="text-xs mb-16" style={{ color: "rgba(245,240,232,0.35)" }}>
             Nessuna carta di credito richiesta · Piano gratuito per sempre
           </p>
+
+          {/* Stats bar */}
+          <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+            {[
+              { icon: Zap, value: "2 min", label: "Setup iniziale" },
+              { icon: Shield, value: "100%", label: "Dati protetti" },
+              { icon: Clock, value: "∞", label: "Piano free" },
+            ].map(({ icon: Icon, value, label }) => (
+              <div key={label} className="rounded-2xl p-4 text-center"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,107,43,0.1)" }}>
+                <Icon size={18} className="mx-auto mb-2" style={{ color: "var(--accent)" }} />
+                <p className="text-2xl font-bold mb-0.5" style={{ color: "var(--ivory)" }}>{value}</p>
+                <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="py-20 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(255,107,43,0.08)" }}>
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl lg:text-4xl font-bold text-center mb-3">
+            Come <span className="accent-text">funziona</span>
+          </h2>
+          <p className="text-center text-base mb-12" style={{ color: "rgba(245,240,232,0.5)" }}>
+            In 3 passi il tuo studio è operativo
+          </p>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { step: "01", title: "Aggiungi i tuoi clienti", desc: "Crea il profilo di ogni cliente con obiettivi, livello e dati personali. Tutto organizzato in un posto." },
+              { step: "02", title: "Costruisci le schede", desc: "Crea schede di allenamento divise per giorni, aggiungi esercizi con serie e ripetizioni target." },
+              { step: "03", title: "Condividi il link", desc: "Il cliente riceve un link personale e compila i progressi settimana per settimana — senza registrarsi." },
+            ].map(({ step, title, desc }) => (
+              <div key={step} className="relative">
+                <div className="text-6xl font-bold mb-4 leading-none" style={{ color: "rgba(255,107,43,0.12)" }}>{step}</div>
+                <h3 className="font-bold mb-2" style={{ color: "var(--ivory)" }}>{title}</h3>
+                <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

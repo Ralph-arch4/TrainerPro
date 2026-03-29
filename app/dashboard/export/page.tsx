@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
-import { FileDown, Printer, CheckCircle2, Dumbbell, UtensilsCrossed, TrendingUp, Activity, User } from "lucide-react";
+import { FileDown, Printer, CheckCircle2, Dumbbell, UtensilsCrossed, TrendingUp, Activity, User, Users } from "lucide-react";
 
 const phaseTypeLabel: Record<string, string> = { bulk: "Bulk", cut: "Cut", maintenance: "Mantenimento", custom: "Personalizzata" };
 const goalLabel: Record<string, string> = { dimagrimento: "Dimagrimento", massa: "Massa", tonificazione: "Tonificazione", performance: "Performance" };
@@ -48,10 +48,25 @@ export default function ExportPage() {
   if (clients.length === 0) {
     return (
       <div className="p-6 lg:p-8 fade-in">
-        <h1 className="text-2xl font-bold mb-4" style={{ color: "var(--ivory)" }}>Esporta PDF</h1>
-        <div className="text-center py-20 card-luxury rounded-2xl">
-          <FileDown size={48} className="mx-auto mb-4" style={{ color: "rgba(255,107,43,0.2)" }} />
-          <p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>Aggiungi clienti per poter esportare le loro schede</p>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold" style={{ color: "var(--ivory)" }}>Esporta PDF</h1>
+          <p className="text-sm mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>Genera un documento completo da condividere con il cliente</p>
+        </div>
+        <div className="card-luxury rounded-2xl p-12 text-center">
+          <div className="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center"
+            style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.15)" }}>
+            <FileDown size={28} style={{ color: "rgba(255,107,43,0.5)" }} />
+          </div>
+          <h2 className="text-lg font-bold mb-2" style={{ color: "var(--ivory)" }}>Nessun cliente da esportare</h2>
+          <p className="text-sm mb-1 max-w-sm mx-auto" style={{ color: "rgba(245,240,232,0.5)" }}>
+            Aggiungi almeno un cliente per poter generare schede, piani alimentari e report in PDF.
+          </p>
+          <p className="text-xs mb-6 max-w-sm mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>
+            I PDF includono: anagrafica, fasi di allenamento, schede, diete e misurazioni.
+          </p>
+          <a href="/dashboard/clienti" className="accent-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm">
+            <CheckCircle2 size={15} /> Vai ai clienti
+          </a>
         </div>
       </div>
     );

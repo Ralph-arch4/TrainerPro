@@ -1,6 +1,6 @@
 {
   "project": "TrainerPro",
-  "url": "http://localhost:3000",
+  "url": "https://trainer-pro-phi.vercel.app",
   "command": "node screenshots.mjs",
   "screenshots_dir": "screenshots",
   "pages": [
