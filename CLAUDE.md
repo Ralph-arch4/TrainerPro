@@ -11,7 +11,7 @@ UI Language: Italian
 - Zustand with persist middleware
 - Tailwind CSS 4
 - Stripe: not included (can be added)
-- Deployed on Vercel
+- Deployed on Vercel: https://trainer-pro-phi.vercel.app
 
 ## Architecture Decisions
 - Auth: PKCE flow via @supabase/ssr. Password recovery redirects to /reset-password
