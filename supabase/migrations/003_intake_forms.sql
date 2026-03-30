@@ -1,5 +1,6 @@
 -- ─── Intake Forms ─────────────────────────────────────────────────────────────
--- Trainers create intake links; clients fill the form without logging in.
+-- Trainers create intake links; clients submit via server-side API route
+-- (service role key), so no anon RLS policies are needed.
 
 CREATE TABLE IF NOT EXISTS intake_forms (
   id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -14,19 +15,12 @@ CREATE TABLE IF NOT EXISTS intake_forms (
 
 ALTER TABLE intake_forms ENABLE ROW LEVEL SECURITY;
 
--- Trainers: full access to their own forms
+-- Trainers: full CRUD access to their own forms
 CREATE POLICY "trainer_all" ON intake_forms
   FOR ALL TO authenticated
   USING  (trainer_id = auth.uid())
   WITH CHECK (trainer_id = auth.uid());
 
--- Anon: read any form by token (the query filter .eq("token", t) restricts to one row)
-CREATE POLICY "anon_read" ON intake_forms
-  FOR SELECT TO anon
-  USING (true);
-
--- Anon: submit (update) a still-pending form
-CREATE POLICY "anon_submit" ON intake_forms
-  FOR UPDATE TO anon
-  USING  (status = 'pending')
-  WITH CHECK (true);
+-- Note: client form reads/submits go through /api/intake/[token]
+-- which uses SUPABASE_SERVICE_ROLE_KEY server-side and bypasses RLS entirely.
+-- No anon policies needed.

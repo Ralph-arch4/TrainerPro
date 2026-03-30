@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, use } from "react";
-import { createClient } from "@/lib/supabase/client";
 import type { IntakeResponse } from "@/lib/db";
 import { Dumbbell, ChevronRight, ChevronLeft, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 
@@ -151,13 +150,9 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
 
   useEffect(() => {
     async function load() {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("intake_forms")
-        .select("status, token")
-        .eq("token", token)
-        .single();
-      if (!data) { setStatus("not_found"); return; }
+      const res = await fetch(`/api/intake/${token}`);
+      if (!res.ok) { setStatus("not_found"); return; }
+      const data = await res.json();
       if (data.status === "submitted") { setStatus("already_submitted"); return; }
       setStatus("open");
     }
@@ -177,17 +172,12 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
     setError("");
     setStatus("submitting");
     try {
-      const supabase = createClient();
-      const { error: err } = await supabase
-        .from("intake_forms")
-        .update({
-          status: "submitted",
-          response: form,
-          submitted_at: new Date().toISOString(),
-        })
-        .eq("token", token)
-        .eq("status", "pending");
-      if (err) throw err;
+      const res = await fetch(`/api/intake/${token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error("submit failed");
       setStatus("success");
     } catch {
       setError("Si è verificato un errore. Riprova.");
