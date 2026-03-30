@@ -221,40 +221,63 @@ export interface IntakeForm {
 }
 
 export interface IntakeResponse {
-  // Step 1 — Personal
-  fullName: string;
-  email: string;
-  phone?: string;
-  birthDate?: string;
-  gender?: string;
-  // Step 2 — Body & Goals
-  height?: number;
-  currentWeight?: number;
-  targetWeight?: number;
-  bodyFatPercent?: number;
-  primaryGoal?: string;
-  goalTimeline?: string;
-  motivation?: string;
-  // Step 3 — Training
-  level?: string;
-  trainingYears?: string;
-  currentTrainingDays?: string;
-  injuriesOrLimitations?: string;
-  availableDays?: string[];
-  sessionDuration?: string;
-  trainingLocation?: string[];
-  equipment?: string;
-  // Step 4 — Diet & Lifestyle
-  dietType?: string;
-  foodAllergies?: string;
-  mealsPerDay?: string;
-  alcoholConsumption?: string;
-  supplements?: string;
-  workType?: string;
-  sleepHours?: string;
-  stressLevel?: number;
-  otherActivities?: string;
-  additionalNotes?: string;
+  // ── DATI PERSONALI ──────────────────────────────────────────────────────────
+  fullName: string;          // 1. Nome e Cognome
+  age?: string;              // 2. Età
+  height?: string;           // 3. Altezza
+  currentWeight?: string;    // 3. Peso attuale
+  // ── OBIETTIVI & MOTIVAZIONE ─────────────────────────────────────────────────
+  primaryGoal?: string;      // 4. Obiettivo principale
+  secondaryGoals?: string;   // 5. Obiettivi secondari
+  motivation?: string;       // 6. Cosa ti spinge ad allenarti
+  // ── ESPERIENZA IN PALESTRA ──────────────────────────────────────────────────
+  gymExperience?: string;    // 7. Hai esperienza in palestra?
+  trainingYears?: string;    // 8. Da quanto tempo ti alleni?
+  hasFollowedProgram?: string; // 9. Hai mai seguito una scheda strutturata?
+  knownExercises?: string;   // 10. Esercizi che conosci tecnicamente
+  musclesFelt?: string;      // 11. Muscoli che senti lavorare
+  musclesNotFelt?: string;   // 12. Muscoli che non riesci a sentire
+  favoriteExercises?: string; // 13. Esercizi preferiti
+  unwantedExercises?: string; // 14. Esercizi che non vuoi fare
+  strongExercises?: string;  // 15. Esercizi in cui ti senti forte
+  weakExercises?: string;    // 16. Esercizi in cui ti senti debole
+  pastSports?: string;       // 17. Sport praticati in passato
+  currentSports?: string;    // 18. Sport praticati attualmente
+  fitnessAssessment?: string; // 19. Valuta resistenza/forza attuale
+  trainingTypePreference?: string[]; // 20. Tipo di allenamento preferito
+  // ── DISPONIBILITÀ & LOGISTICA ───────────────────────────────────────────────
+  sessionDuration?: string;  // 21. Tempo massimo per singolo allenamento
+  trainingDaysPerWeek?: string; // 22. Quante volte a settimana
+  canTrainWeekend?: string;  // 23. Puoi allenarti il fine settimana?
+  canTrainHome?: string;     // 24. Possibilità di allenarti in casa?
+  homeEquipment?: string;    // 25. Attrezzatura in casa
+  fixedSchedule?: string;    // 26. Orario fisso o variabile?
+  trainingPartner?: string;  // 27. Solo o con qualcuno?
+  preferredTrainingTime?: string; // 28. Mattina, pomeriggio o sera?
+  // ── SALUTE & INFORTUNI ──────────────────────────────────────────────────────
+  jointProblems?: string;    // 29. Problemi articolari o muscolari
+  pathologies?: string;      // 30. Patologie
+  injuries?: string;         // 31. Infortuni passati
+  medications?: string;      // 32. Farmaci
+  supplements?: string;      // 33. Integratori
+  digestiveIssues?: string;  // 34. Problemi digestivi/intestinali
+  // ── STILE DI VITA ───────────────────────────────────────────────────────────
+  workDemanding?: string;    // 35. Lavoro impegnativo?
+  workDaysPerWeek?: string;  // 36. Quante volte lavori a settimana?
+  activityLevel?: string;    // 37. In movimento o sedentario?
+  sleepHours?: string;       // 38. Ore di sonno
+  sleepQuality?: string;     // 39. Qualità del sonno
+  // ── ALIMENTAZIONE ───────────────────────────────────────────────────────────
+  eatingOutFrequency?: string; // 40. Quante volte mangi fuori
+  cheatFoods?: string;       // 41. Cosa mangi quando "sgarri"
+  dietType?: string;         // 42. Vegetariano/vegano/ecc.
+  foodAllergies?: string;    // 43. Intolleranze/allergie
+  mealsPerDay?: string;      // 44. Quanti pasti al giorno
+  mealDistribution?: string; // 45. Come suddividi i pasti
+  canPrepMeals?: string;     // 46. Puoi prepararti i pasti?
+  waterIntake?: string;      // 47. Acqua al giorno
+  alcoholConsumption?: string; // 48. Consumi alcolici?
+  typicalDayMeals?: string;  // 49. Cosa mangi in una giornata tipo
 }
 
 export const dbIntakeForms = {

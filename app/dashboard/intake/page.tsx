@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
-import { dbIntakeForms, type IntakeForm, type IntakeResponse } from "@/lib/db";
+import { dbIntakeForms, dbClients, type IntakeForm } from "@/lib/db";
 import { generateIntakeHtml } from "@/lib/generate-intake-html";
 import {
   ClipboardList, Plus, Copy, CheckCircle2, Clock, Trash2, X,
-  User, Target, Dumbbell, UtensilsCrossed, ExternalLink,
-  ChevronRight, Loader2, RefreshCw, FileDown,
+  User, Target, Dumbbell, UtensilsCrossed, Activity, Heart,
+  ChevronRight, Loader2, RefreshCw, FileDown, UserPlus,
 } from "lucide-react";
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
@@ -15,13 +16,6 @@ function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-const goalLabel: Record<string, string> = {
-  dimagrimento: "Perdita peso", massa: "Massa muscolare",
-  tonificazione: "Tonificazione", performance: "Performance", salute: "Salute generale",
-};
-const timelineLabel: Record<string, string> = {
-  "1m": "1 mese", "3m": "3 mesi", "6m": "6 mesi", "1y": "1 anno", nessuna_fretta: "Senza fretta",
-};
 
 export default function IntakePage() {
   const user = useAppStore((s) => s.user);
@@ -307,114 +301,181 @@ function FormRow({ form, selected, onSelect, onCopy, copied, onDownload, downloa
 }
 
 function ResponseDetail({ form }: { form: IntakeForm }) {
+  const router = useRouter();
+  const user = useAppStore((s) => s.user);
+  const addClient = useAppStore((s) => s.addClient);
   const r = form.response!;
-  const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const [creating, setCreating] = useState(false);
+  const [created, setCreated] = useState(false);
 
-  const Section = ({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) => (
+  async function handleCreateClient() {
+    if (!user) return;
+    setCreating(true);
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const newClient = addClient({
+        userId: user.id,
+        name: r.fullName,
+        email: "",
+        status: "attivo",
+        startDate: today,
+      });
+      await dbClients.create({ userId: user.id, name: r.fullName, email: "", status: "attivo", startDate: today });
+      setCreated(true);
+      setTimeout(() => router.push("/dashboard/clienti"), 1200);
+    } catch {}
+    setCreating(false);
+  }
+
+  const Sec = ({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) => (
     <div className="mb-5">
-      <div className="flex items-center gap-2 mb-3">
-        <Icon size={14} style={{ color: "var(--accent)" }} />
+      <div className="flex items-center gap-2 mb-2.5 pb-1.5" style={{ borderBottom: "1px solid rgba(255,107,43,0.08)" }}>
+        <Icon size={13} style={{ color: "var(--accent)" }} />
         <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--accent)" }}>{title}</p>
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3">{children}</div>
+      <div className="space-y-2">{children}</div>
     </div>
   );
 
-  const Field = ({ label, value }: { label: string; value?: string | number | null }) => (
-    value ? (
-      <div>
-        <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
-        <p className="text-sm font-medium" style={{ color: "var(--ivory)" }}>{value}</p>
+  const F = ({ n, label, value }: { n: number; label: string; value?: string | string[] | null }) => {
+    if (!value || (Array.isArray(value) && value.length === 0)) return null;
+    const display = Array.isArray(value) ? value.join(", ") : value;
+    return (
+      <div className="flex gap-2">
+        <span className="text-xs font-bold flex-shrink-0 mt-0.5 w-5 text-right" style={{ color: "rgba(255,107,43,0.5)" }}>{n}.</span>
+        <div className="flex-1 min-w-0">
+          <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{label} </span>
+          <span className="text-sm" style={{ color: "var(--ivory)" }}>{display}</span>
+        </div>
       </div>
-    ) : null
-  );
-
-  const FullField = ({ label, value }: { label: string; value?: string | null }) => (
-    value ? (
-      <div className="col-span-2">
-        <p className="text-xs mb-1" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
-        <p className="text-sm" style={{ color: "var(--ivory)" }}>{value}</p>
-      </div>
-    ) : null
-  );
-
-  const genderLabel: Record<string, string> = { M: "Maschio", F: "Femmina", altro: "Altro / Non specificato" };
-  const levelLabel: Record<string, string> = { principiante: "Principiante", intermedio: "Intermedio", avanzato: "Avanzato" };
-  const daysMap: Record<string, string> = { lun: "Lun", mar: "Mar", mer: "Mer", gio: "Gio", ven: "Ven", sab: "Sab", dom: "Dom" };
+    );
+  };
 
   return (
-    <div className="card-luxury rounded-2xl p-5 overflow-auto" style={{ maxHeight: "calc(100vh - 200px)" }}>
-      <div className="flex items-center justify-between mb-5">
+    <div className="card-luxury rounded-2xl overflow-hidden">
+      {/* Header bar */}
+      <div className="p-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,107,43,0.1)" }}>
         <div>
           <h2 className="text-base font-bold" style={{ color: "var(--ivory)" }}>{r.fullName}</h2>
           <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
             {form.submitted_at ? `Compilato ${fmtDate(form.submitted_at)}` : ""}
+            {form.label ? ` · ${form.label}` : ""}
           </p>
         </div>
-        <a href={`mailto:${r.email}`}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all hover:bg-white/5"
-          style={{ color: "var(--accent-light)", border: "1px solid rgba(255,107,43,0.2)" }}>
-          <ExternalLink size={12} /> Contatta
-        </a>
+        {!created ? (
+          <button onClick={handleCreateClient} disabled={creating}
+            className="accent-btn flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold">
+            {creating ? <Loader2 size={13} className="animate-spin" /> : <UserPlus size={13} />}
+            {creating ? "Creazione…" : "Crea cliente"}
+          </button>
+        ) : (
+          <span className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold"
+            style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+            <CheckCircle2 size={13} /> Cliente creato!
+          </span>
+        )}
       </div>
 
-      <Section title="Dati Personali" icon={User}>
-        <Field label="Email" value={r.email} />
-        <Field label="Telefono" value={r.phone} />
-        <Field label="Data di nascita" value={r.birthDate} />
-        <Field label="Sesso" value={r.gender ? genderLabel[r.gender] : undefined} />
-      </Section>
+      {/* Scrollable content */}
+      <div className="p-5 overflow-auto" style={{ maxHeight: "calc(100vh - 260px)" }}>
+        <Sec title="Dati personali" icon={User}>
+          <F n={1} label="Nome e Cognome" value={r.fullName} />
+          <F n={2} label="Età" value={r.age} />
+          <F n={3} label="Altezza / Peso" value={[r.height && `${r.height} cm`, r.currentWeight && `${r.currentWeight} kg`].filter(Boolean).join(" · ") || undefined} />
+        </Sec>
 
-      <Section title="Fisico & Obiettivi" icon={Target}>
-        <Field label="Altezza" value={r.height ? `${r.height} cm` : undefined} />
-        <Field label="Peso attuale" value={r.currentWeight ? `${r.currentWeight} kg` : undefined} />
-        <Field label="Peso obiettivo" value={r.targetWeight ? `${r.targetWeight} kg` : undefined} />
-        <Field label="% Grasso (stimata)" value={r.bodyFatPercent ? `${r.bodyFatPercent}%` : undefined} />
-        <Field label="Obiettivo principale" value={r.primaryGoal ? goalLabel[r.primaryGoal] : undefined} />
-        <Field label="Timeline" value={r.goalTimeline ? timelineLabel[r.goalTimeline] : undefined} />
-        <FullField label="Motivazione" value={r.motivation} />
-      </Section>
+        <Sec title="Obiettivi & Motivazione" icon={Target}>
+          <F n={4} label="Obiettivo principale" value={r.primaryGoal} />
+          <F n={5} label="Obiettivi secondari" value={r.secondaryGoals} />
+          <F n={6} label="Motivazione" value={r.motivation} />
+        </Sec>
 
-      <Section title="Allenamento" icon={Dumbbell}>
-        <Field label="Livello" value={r.level ? levelLabel[r.level] : undefined} />
-        <Field label="Anni di training" value={r.trainingYears} />
-        <Field label="Freq. attuale" value={r.currentTrainingDays ? `${r.currentTrainingDays} gg/sett.` : undefined} />
-        <Field label="Durata sessione" value={r.sessionDuration ? `${r.sessionDuration} min` : undefined} />
-        {r.availableDays && r.availableDays.length > 0 && (
-          <div className="col-span-2">
-            <p className="text-xs mb-1.5" style={{ color: "rgba(245,240,232,0.4)" }}>Giorni disponibili</p>
-            <div className="flex gap-1.5 flex-wrap">
-              {r.availableDays.map((d) => (
-                <span key={d} className="px-2 py-0.5 rounded-lg text-xs font-medium"
-                  style={{ background: "rgba(255,107,43,0.1)", color: "var(--accent-light)" }}>
-                  {daysMap[d] ?? d}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-        {r.trainingLocation && r.trainingLocation.length > 0 && (
-          <div className="col-span-2">
-            <p className="text-xs mb-1.5" style={{ color: "rgba(245,240,232,0.4)" }}>Dove si allena</p>
-            <p className="text-sm" style={{ color: "var(--ivory)" }}>{r.trainingLocation.join(", ")}</p>
-          </div>
-        )}
-        <FullField label="Attrezzatura" value={r.equipment} />
-        <FullField label="Infortuni / Limitazioni" value={r.injuriesOrLimitations} />
-      </Section>
+        <Sec title="Esperienza in palestra" icon={Dumbbell}>
+          <F n={7} label="Esperienza in palestra" value={r.gymExperience} />
+          <F n={8} label="Da quanto si allena" value={r.trainingYears} />
+          <F n={9} label="Ha seguito programmi strutturati" value={r.hasFollowedProgram} />
+          <F n={10} label="Esercizi che conosce tecnicamente" value={r.knownExercises} />
+          <F n={11} label="Muscoli che sente lavorare" value={r.musclesFelt} />
+          <F n={12} label="Muscoli che non sente" value={r.musclesNotFelt} />
+          <F n={13} label="Esercizi preferiti" value={r.favoriteExercises} />
+          <F n={14} label="Esercizi che non vuole fare" value={r.unwantedExercises} />
+          <F n={15} label="Punti di forza" value={r.strongExercises} />
+          <F n={16} label="Punti di debolezza" value={r.weakExercises} />
+          <F n={17} label="Sport praticati in passato" value={r.pastSports} />
+          <F n={18} label="Sport attuali" value={r.currentSports} />
+          <F n={19} label="Autovalutazione forza/resistenza" value={r.fitnessAssessment} />
+          <F n={20} label="Tipo di allenamento preferito" value={r.trainingTypePreference} />
+        </Sec>
 
-      <Section title="Alimentazione & Stile di vita" icon={UtensilsCrossed}>
-        <Field label="Alimentazione" value={r.dietType} />
-        <Field label="Pasti al giorno" value={r.mealsPerDay} />
-        <Field label="Consumo alcol" value={r.alcoholConsumption} />
-        <Field label="Tipo di lavoro" value={r.workType} />
-        <Field label="Ore di sonno" value={r.sleepHours} />
-        <Field label="Livello stress" value={r.stressLevel ? `${r.stressLevel}/5` : undefined} />
-        <FullField label="Allergie / Intolleranze" value={r.foodAllergies} />
-        <FullField label="Integratori" value={r.supplements} />
-        <FullField label="Altre attività" value={r.otherActivities} />
-        <FullField label="Note aggiuntive" value={r.additionalNotes} />
-      </Section>
+        <Sec title="Disponibilità & Logistica" icon={Activity}>
+          <F n={21} label="Durata sessione" value={r.sessionDuration} />
+          <F n={22} label="Frequenza settimanale" value={r.trainingDaysPerWeek} />
+          <F n={23} label="Disponibile il weekend" value={r.canTrainWeekend} />
+          <F n={24} label="Può allenarsi in casa" value={r.canTrainHome} />
+          <F n={25} label="Attrezzatura in casa" value={r.homeEquipment} />
+          <F n={26} label="Orario fisso o variabile" value={r.fixedSchedule} />
+          <F n={27} label="Solo/a o con qualcuno" value={r.trainingPartner} />
+          <F n={28} label="Orario preferito" value={r.preferredTrainingTime} />
+        </Sec>
+
+        <Sec title="Salute & Infortuni" icon={Heart}>
+          <F n={29} label="Problemi articolari/muscolari" value={r.jointProblems} />
+          <F n={30} label="Patologie" value={r.pathologies} />
+          <F n={31} label="Infortuni passati" value={r.injuries} />
+          <F n={32} label="Farmaci" value={r.medications} />
+          <F n={33} label="Integratori" value={r.supplements} />
+          <F n={34} label="Problemi digestivi" value={r.digestiveIssues} />
+        </Sec>
+
+        <Sec title="Stile di vita" icon={User}>
+          <F n={35} label="Lavoro impegnativo" value={r.workDemanding} />
+          <F n={36} label="Giorni lavorativi/sett." value={r.workDaysPerWeek} />
+          <F n={37} label="Livello attività quotidiana" value={r.activityLevel} />
+          <F n={38} label="Ore di sonno" value={r.sleepHours} />
+          <F n={39} label="Qualità del sonno" value={r.sleepQuality} />
+        </Sec>
+
+        <Sec title="Alimentazione" icon={UtensilsCrossed}>
+          <F n={40} label="Pasti fuori a settimana" value={r.eatingOutFrequency} />
+          <F n={41} label="Cosa mangia quando sgarra" value={r.cheatFoods} />
+          <F n={42} label="Tipo di dieta" value={r.dietType} />
+          <F n={43} label="Allergie / Intolleranze" value={r.foodAllergies} />
+          <F n={44} label="Pasti al giorno" value={r.mealsPerDay} />
+          <F n={45} label="Suddivisione pasti" value={r.mealDistribution} />
+          <F n={46} label="Prepara i pasti da solo/a" value={r.canPrepMeals} />
+          <F n={47} label="Acqua al giorno" value={r.waterIntake} />
+          <F n={48} label="Alcolici" value={r.alcoholConsumption} />
+          <F n={49} label="Giornata alimentare tipo" value={r.typicalDayMeals} />
+        </Sec>
+      </div>
     </div>
   );
+}
+
+function buildClientNotes(r: NonNullable<IntakeForm["response"]>): string {
+  const lines: string[] = ["=== INTAKE FORM ==="];
+  const add = (n: number, label: string, val?: string | string[] | null) => {
+    if (!val || (Array.isArray(val) && !val.length)) return;
+    lines.push(`${n}. ${label}: ${Array.isArray(val) ? val.join(", ") : val}`);
+  };
+  add(1,"Nome",r.fullName);add(2,"Età",r.age);add(3,"Altezza/Peso",[r.height&&`${r.height}cm`,r.currentWeight&&`${r.currentWeight}kg`].filter(Boolean).join(" / ")||undefined);
+  add(4,"Obiettivo principale",r.primaryGoal);add(5,"Obiettivi secondari",r.secondaryGoals);add(6,"Motivazione",r.motivation);
+  add(7,"Esperienza palestra",r.gymExperience);add(8,"Anni di training",r.trainingYears);add(9,"Ha seguito schede",r.hasFollowedProgram);
+  add(10,"Esercizi noti",r.knownExercises);add(11,"Muscoli che sente",r.musclesFelt);add(12,"Muscoli non sentiti",r.musclesNotFelt);
+  add(13,"Esercizi preferiti",r.favoriteExercises);add(14,"Esercizi da evitare",r.unwantedExercises);
+  add(15,"Punti di forza",r.strongExercises);add(16,"Punti di debolezza",r.weakExercises);
+  add(17,"Sport passati",r.pastSports);add(18,"Sport attuali",r.currentSports);add(19,"Autovalutazione",r.fitnessAssessment);
+  add(20,"Tipo allenamento preferito",r.trainingTypePreference);
+  add(21,"Durata sessione",r.sessionDuration);add(22,"Freq. settimanale",r.trainingDaysPerWeek);
+  add(23,"Weekend",r.canTrainWeekend);add(24,"Casa",r.canTrainHome);add(25,"Attrezzatura casa",r.homeEquipment);
+  add(26,"Orario",r.fixedSchedule);add(27,"Partner",r.trainingPartner);add(28,"Orario preferito",r.preferredTrainingTime);
+  add(29,"Problemi articolari",r.jointProblems);add(30,"Patologie",r.pathologies);add(31,"Infortuni",r.injuries);
+  add(32,"Farmaci",r.medications);add(33,"Integratori",r.supplements);add(34,"Prob. digestivi",r.digestiveIssues);
+  add(35,"Lavoro",r.workDemanding);add(36,"Giorni lavoro",r.workDaysPerWeek);add(37,"Attività quotidiana",r.activityLevel);
+  add(38,"Sonno ore",r.sleepHours);add(39,"Qualità sonno",r.sleepQuality);
+  add(40,"Pasti fuori",r.eatingOutFrequency);add(41,"Sgarri",r.cheatFoods);add(42,"Tipo dieta",r.dietType);
+  add(43,"Allergie",r.foodAllergies);add(44,"Pasti/giorno",r.mealsPerDay);add(45,"Suddivisione pasti",r.mealDistribution);
+  add(46,"Prepara pasti",r.canPrepMeals);add(47,"Acqua",r.waterIntake);add(48,"Alcolici",r.alcoholConsumption);
+  add(49,"Giornata tipo",r.typicalDayMeals);
+  return lines.join("\n");
 }
