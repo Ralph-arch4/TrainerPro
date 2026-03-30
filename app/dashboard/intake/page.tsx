@@ -2,10 +2,11 @@
 import { useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
 import { dbIntakeForms, type IntakeForm, type IntakeResponse } from "@/lib/db";
+import { generateIntakeHtml } from "@/lib/generate-intake-html";
 import {
   ClipboardList, Plus, Copy, CheckCircle2, Clock, Trash2, X,
-  User, Weight, Target, Dumbbell, UtensilsCrossed, ExternalLink,
-  ChevronRight, Loader2, RefreshCw,
+  User, Target, Dumbbell, UtensilsCrossed, ExternalLink,
+  ChevronRight, Loader2, RefreshCw, FileDown,
 } from "lucide-react";
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
@@ -30,6 +31,7 @@ export default function IntakePage() {
   const [newLabel, setNewLabel] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [downloadedId, setDownloadedId] = useState<string | null>(null);
   const [selected, setSelected] = useState<IntakeForm | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
@@ -70,6 +72,19 @@ export default function IntakePage() {
     navigator.clipboard.writeText(url);
     setCopiedId(form.id);
     setTimeout(() => setCopiedId(null), 2000);
+  }
+
+  function downloadHtml(form: IntakeForm) {
+    const html = generateIntakeHtml(form.token, form.label ?? "Form");
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `questionario-${(form.label ?? "cliente").toLowerCase().replace(/\s+/g, "-")}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setDownloadedId(form.id);
+    setTimeout(() => setDownloadedId(null), 2000);
   }
 
   const pending = forms.filter((f) => f.status === "pending");
@@ -169,6 +184,7 @@ export default function IntakePage() {
                   <FormRow key={f.id} form={f} selected={selected?.id === f.id}
                     onSelect={() => setSelected(selected?.id === f.id ? null : f)}
                     onCopy={() => copyLink(f)} copied={copiedId === f.id}
+                    onDownload={() => downloadHtml(f)} downloaded={downloadedId === f.id}
                     onDelete={() => handleDelete(f.id)} deleting={deleting === f.id} />
                 ))}
               </div>
@@ -184,6 +200,7 @@ export default function IntakePage() {
                   <FormRow key={f.id} form={f} selected={selected?.id === f.id}
                     onSelect={() => setSelected(selected?.id === f.id ? null : f)}
                     onCopy={() => copyLink(f)} copied={copiedId === f.id}
+                    onDownload={() => downloadHtml(f)} downloaded={downloadedId === f.id}
                     onDelete={() => handleDelete(f.id)} deleting={deleting === f.id} />
                 ))}
               </div>
@@ -201,13 +218,24 @@ export default function IntakePage() {
                 <p className="text-xs mb-5" style={{ color: "rgba(245,240,232,0.4)" }}>
                   Il cliente non ha ancora compilato il form.
                 </p>
-                <button
-                  onClick={() => copyLink(selected)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm transition-all"
-                  style={{ background: "rgba(255,107,43,0.1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
-                  {copiedId === selected.id ? <CheckCircle2 size={15} /> : <Copy size={15} />}
-                  {copiedId === selected.id ? "Link copiato!" : "Copia link da inviare"}
-                </button>
+                <div className="flex flex-col gap-2 items-center">
+                  <button
+                    onClick={() => downloadHtml(selected)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all accent-btn">
+                    {downloadedId === selected.id ? <CheckCircle2 size={15} /> : <FileDown size={15} />}
+                    {downloadedId === selected.id ? "Scaricato!" : "Scarica HTML da inviare"}
+                  </button>
+                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.3)" }}>
+                    oppure
+                  </p>
+                  <button
+                    onClick={() => copyLink(selected)}
+                    className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm transition-all"
+                    style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
+                    {copiedId === selected.id ? <CheckCircle2 size={14} /> : <Copy size={14} />}
+                    {copiedId === selected.id ? "Link copiato!" : "Copia link web"}
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="card-luxury rounded-2xl p-8 text-center">
@@ -224,9 +252,10 @@ export default function IntakePage() {
   );
 }
 
-function FormRow({ form, selected, onSelect, onCopy, copied, onDelete, deleting }: {
+function FormRow({ form, selected, onSelect, onCopy, copied, onDownload, downloaded, onDelete, deleting }: {
   form: IntakeForm; selected: boolean;
   onSelect: () => void; onCopy: () => void; copied: boolean;
+  onDownload: () => void; downloaded: boolean;
   onDelete: () => void; deleting: boolean;
 }) {
   const isSubmitted = form.status === "submitted";
@@ -254,6 +283,12 @@ function FormRow({ form, selected, onSelect, onCopy, copied, onDelete, deleting 
           </p>
         </div>
         <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <button onClick={onDownload}
+            title="Scarica HTML da inviare al cliente"
+            className="p-2 rounded-lg transition-all hover:bg-white/5"
+            style={{ color: downloaded ? "#22c55e" : "rgba(245,240,232,0.35)" }}>
+            {downloaded ? <CheckCircle2 size={14} /> : <FileDown size={14} />}
+          </button>
           <button onClick={onCopy}
             title="Copia link"
             className="p-2 rounded-lg transition-all hover:bg-white/5"

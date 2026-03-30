@@ -1,6 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS });
+}
+
 // Server-side service role client — bypasses RLS, never exposed to browser
 function adminDb() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -18,10 +28,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
       .select("token, status, label")
       .eq("token", token)
       .single();
-    if (error || !data) return NextResponse.json({ error: "not_found" }, { status: 404 });
-    return NextResponse.json({ status: data.status, label: data.label });
+    if (error || !data) return NextResponse.json({ error: "not_found" }, { status: 404, headers: CORS });
+    return NextResponse.json({ status: data.status, label: data.label }, { headers: CORS });
   } catch {
-    return NextResponse.json({ error: "server_error" }, { status: 500 });
+    return NextResponse.json({ error: "server_error" }, { status: 500, headers: CORS });
   }
 }
 
@@ -39,9 +49,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
       })
       .eq("token", token)
       .eq("status", "pending"); // only update if still pending
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-    return NextResponse.json({ ok: true });
+    if (error) return NextResponse.json({ error: error.message }, { status: 400, headers: CORS });
+    return NextResponse.json({ ok: true }, { headers: CORS });
   } catch {
-    return NextResponse.json({ error: "server_error" }, { status: 500 });
+    return NextResponse.json({ error: "server_error" }, { status: 500, headers: CORS });
   }
 }
