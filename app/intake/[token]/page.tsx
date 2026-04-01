@@ -72,12 +72,15 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
   const [status, setStatus] = useState<Status>("loading");
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
+  const [stepError, setStepError] = useState("");
+  const [label, setLabel] = useState("");
   const [form, setForm] = useState<Partial<IntakeResponse>>({ trainingTypePreference: [] });
 
   useEffect(() => {
     fetch(`/api/intake/${token}`).then(async (res) => {
       if (!res.ok) { setStatus("not_found"); return; }
       const d = await res.json();
+      if (d.label) setLabel(d.label);
       setStatus(d.status === "submitted" ? "already_submitted" : "open");
     });
   }, [token]);
@@ -99,13 +102,30 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
   if (status === "success") return <Screen><div className="text-center py-16"><div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.1)", border: "2px solid rgba(34,197,94,0.3)" }}><CheckCircle2 size={44} style={{ color: "#22c55e" }} /></div><h2 className="text-2xl font-bold mb-3" style={{ color: "var(--ivory)" }}>Questionario inviato!</h2><p className="text-base mb-2" style={{ color: "rgba(245,240,232,0.65)" }}>Grazie, <strong style={{ color: "var(--ivory)" }}>{v.fullName}</strong>!</p><p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>Il tuo personal trainer ha ricevuto tutte le risposte.</p></div></Screen>;
 
   return (
-    <Screen>
-      {/* Progress */}
+    <Screen label={label}>
+      {/* Progress bar */}
       <div className="mb-6">
-        <div className="flex justify-between mb-1.5"><span className="text-xs font-semibold" style={{ color: "var(--accent)" }}>Passo {step + 1} di {STEPS.length}</span><span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{STEPS[step]}</span></div>
-        <div className="h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}><div className="h-1.5 rounded-full transition-all duration-500" style={{ background: "linear-gradient(90deg,var(--accent),var(--accent-light))", width: `${((step + 1) / STEPS.length) * 100}%` }} /></div>
+        <div className="flex justify-between mb-2">
+          <span className="text-xs font-semibold" style={{ color: "var(--accent)" }}>
+            Passo {step + 1} di {STEPS.length}
+          </span>
+          <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{STEPS[step]}</span>
+        </div>
+        <div className="h-1.5 rounded-full mb-3" style={{ background: "rgba(255,255,255,0.08)" }}>
+          <div className="h-1.5 rounded-full transition-all duration-500"
+            style={{ background: "linear-gradient(90deg,var(--accent),var(--accent-light))", width: `${((step + 1) / STEPS.length) * 100}%` }} />
+        </div>
+        {/* Step dots */}
+        <div className="flex gap-1.5">
+          {STEPS.map((_, i) => (
+            <div key={i} className="flex-1 h-0.5 rounded-full transition-all duration-300"
+              style={{ background: i <= step ? "var(--accent)" : "rgba(255,255,255,0.1)" }} />
+          ))}
+        </div>
       </div>
-      <h2 className="text-xl font-bold mb-5" style={{ color: "var(--ivory)" }}>{["Chi sei?", "Obiettivi & Motivazione", "Esperienza in palestra", "Disponibilità & Logistica", "Salute & Infortuni", "Stile di vita & Alimentazione"][step]}</h2>
+      <h2 className="text-xl font-bold mb-5" style={{ color: "var(--ivory)" }}>
+        {["Chi sei?", "Obiettivi & Motivazione", "Esperienza in palestra", "Disponibilità & Logistica", "Salute & Infortuni", "Stile di vita & Alimentazione"][step]}
+      </h2>
 
       {/* ── Step 0 ── */}
       {step === 0 && <div className="space-y-4">
@@ -188,19 +208,38 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
         {error && <div className="p-3 rounded-xl text-sm flex items-center gap-2" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}><AlertCircle size={15} />{error}</div>}
       </div>}
 
+      {/* Step validation error */}
+      {stepError && (
+        <div className="mt-4 p-3 rounded-xl text-sm flex items-center gap-2"
+          style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}>
+          <AlertCircle size={15} />{stepError}
+        </div>
+      )}
+
       {/* Nav */}
       <div className="flex items-center justify-between mt-8 pt-5" style={{ borderTop: "1px solid rgba(255,107,43,0.1)" }}>
         {step > 0 ? (
-          <button onClick={() => { setStep((s) => s - 1); window.scrollTo(0, 0); }} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm transition-all hover:bg-white/5" style={{ color: "rgba(245,240,232,0.6)", border: "1px solid rgba(255,255,255,0.1)" }}>
+          <button onClick={() => { setStepError(""); setStep((s) => s - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm transition-all hover:bg-white/5"
+            style={{ color: "rgba(245,240,232,0.6)", border: "1px solid rgba(255,255,255,0.1)" }}>
             <ChevronLeft size={16} /> Indietro
           </button>
         ) : <div />}
         {step < STEPS.length - 1 ? (
-          <button onClick={() => { if (step === 0 && !v.fullName?.trim()) { alert("Il nome è obbligatorio."); return; } setStep((s) => s + 1); window.scrollTo(0, 0); }} className="accent-btn flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm">
+          <button onClick={() => {
+            if (step === 0 && !v.fullName?.trim()) {
+              setStepError("Il nome e cognome è obbligatorio.");
+              return;
+            }
+            setStepError("");
+            setStep((s) => s + 1);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }} className="accent-btn flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm">
             Avanti <ChevronRight size={16} />
           </button>
         ) : (
-          <button onClick={submit} disabled={status === "submitting"} className="accent-btn flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold">
+          <button onClick={submit} disabled={status === "submitting"}
+            className="accent-btn flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold">
             {status === "submitting" ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
             {status === "submitting" ? "Invio…" : "Invia questionario"}
           </button>
@@ -210,13 +249,25 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
   );
 }
 
-function Screen({ children }: { children: React.ReactNode }) {
+function Screen({ children, label }: { children: React.ReactNode; label?: string }) {
   return (
     <div className="min-h-screen" style={{ background: "var(--black)" }}>
       <div className="sticky top-0 z-10 px-5 h-14 flex items-center gap-3 glass-dark">
-        <div className="w-8 h-8 rounded-xl accent-btn flex items-center justify-center"><Dumbbell size={16} /></div>
+        <div className="w-8 h-8 rounded-xl accent-btn flex items-center justify-center flex-shrink-0">
+          <Dumbbell size={16} />
+        </div>
         <span className="font-bold accent-text">TrainerPro</span>
-        <span className="text-xs ml-2 px-2 py-0.5 rounded-full" style={{ background: "rgba(255,107,43,0.1)", color: "var(--accent-light)" }}>Questionario programmazione</span>
+        {label ? (
+          <span className="text-xs ml-2 px-2 py-0.5 rounded-full truncate max-w-[200px]"
+            style={{ background: "rgba(255,107,43,0.1)", color: "var(--accent-light)", border: "1px solid rgba(255,107,43,0.2)" }}>
+            {label}
+          </span>
+        ) : (
+          <span className="text-xs ml-2 px-2 py-0.5 rounded-full"
+            style={{ background: "rgba(255,107,43,0.08)", color: "var(--accent-light)" }}>
+            Questionario programmazione
+          </span>
+        )}
       </div>
       <div className="max-w-xl mx-auto px-5 py-10">{children}</div>
     </div>

@@ -147,17 +147,41 @@ export default function PublicSchedaPage() {
         </div>
       </div>
 
-      {/* Description */}
-      {plan.description && (
-        <div className="max-w-screen-2xl mx-auto px-4 lg:px-8 pt-4">
-          <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{plan.description}</p>
-        </div>
-      )}
+      {/* Stats bar */}
+      <div className="max-w-screen-2xl mx-auto px-4 lg:px-8 pt-5">
+        {plan.description && (
+          <p className="text-sm mb-4" style={{ color: "rgba(245,240,232,0.5)" }}>{plan.description}</p>
+        )}
+        {/* Progress summary */}
+        {(() => {
+          const weeksLogged = logs.length > 0
+            ? Math.max(...logs.map((l) => l.weekNumber))
+            : 0;
+          const pct = Math.round((weeksLogged / plan.total_weeks) * 100);
+          return (
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              {[
+                { label: "Settimane completate", value: `${weeksLogged} / ${plan.total_weeks}` },
+                { label: "Progressi", value: `${pct}%` },
+                { label: "Registrazioni totali", value: String(logs.length) },
+              ].map(({ label, value }) => (
+                <div key={label} className="rounded-xl p-3 text-center"
+                  style={{ background: "rgba(255,107,43,0.05)", border: "1px solid rgba(255,107,43,0.1)" }}>
+                  <p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{value}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+      </div>
 
       {/* Spreadsheet */}
-      <div className="max-w-screen-2xl mx-auto px-4 lg:px-8 py-6">
-        <div className="mb-4 p-3 rounded-xl text-sm" style={{ background: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.12)", color: "rgba(245,240,232,0.6)" }}>
-          <strong style={{ color: "var(--accent-light)" }}>Come usare la scheda:</strong> clicca su una cella per inserire il peso utilizzato e le ripetizioni completate per quella settimana.
+      <div className="max-w-screen-2xl mx-auto px-4 lg:px-8 pb-6">
+        <div className="mb-4 p-3 rounded-xl text-sm flex items-start gap-2"
+          style={{ background: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.12)", color: "rgba(245,240,232,0.6)" }}>
+          <span className="text-base leading-none mt-0.5">💡</span>
+          <span><strong style={{ color: "var(--accent-light)" }}>Come usare la scheda:</strong> clicca su una cella per inserire il peso utilizzato e le ripetizioni completate. I dati vengono salvati automaticamente.</span>
         </div>
 
         <WorkoutSpreadsheet
