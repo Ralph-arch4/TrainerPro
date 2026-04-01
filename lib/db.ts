@@ -3,6 +3,12 @@ import type { Client, WorkoutPlan, Phase, DietPlan, BodyMeasurement, Note, Exerc
 
 const db = () => createClient();
 
+async function uid(): Promise<string> {
+  const { data: { user } } = await createClient().auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  return user.id;
+}
+
 // ─── Profiles ─────────────────────────────────────────────────────────────────
 export const dbProfiles = {
   async updatePlan(userId: string, plan: PlanTier) {
@@ -55,15 +61,14 @@ export const dbWorkoutPlans = {
     return data;
   },
   async create(payload: Omit<WorkoutPlan, "id" | "createdAt">) {
-    // Explicit camelCase → snake_case mapping.
-    // Spreading the payload directly would silently drop share_token, days_per_week,
-    // total_weeks etc. because Supabase ignores unknown camelCase column names.
+    const userId = await uid();
     const { data, error } = await db()
       .from("workout_plans")
       .insert({
         name:          payload.name,
         description:   payload.description ?? null,
         client_id:     payload.clientId,
+        user_id:       userId,
         phase_id:      payload.phaseId ?? null,
         days_per_week: payload.daysPerWeek,
         total_weeks:   payload.totalWeeks,
@@ -108,9 +113,10 @@ export const dbPhases = {
     return data;
   },
   async create(payload: Omit<Phase, "id">) {
+    const userId = await uid();
     const { data, error } = await db()
       .from("phases")
-      .insert({ ...payload, client_id: payload.clientId })
+      .insert({ ...payload, client_id: payload.clientId, user_id: userId })
       .select()
       .single();
     if (error) throw error;
@@ -138,9 +144,10 @@ export const dbDietPlans = {
     return data;
   },
   async create(payload: Omit<DietPlan, "id" | "createdAt">) {
+    const userId = await uid();
     const { data, error } = await db()
       .from("diet_plans")
-      .insert({ ...payload, client_id: payload.clientId })
+      .insert({ ...payload, client_id: payload.clientId, user_id: userId })
       .select()
       .single();
     if (error) throw error;
@@ -168,9 +175,10 @@ export const dbMeasurements = {
     return data;
   },
   async create(payload: Omit<BodyMeasurement, "id">) {
+    const userId = await uid();
     const { data, error } = await db()
       .from("body_measurements")
-      .insert({ ...payload, client_id: payload.clientId })
+      .insert({ ...payload, client_id: payload.clientId, user_id: userId })
       .select()
       .single();
     if (error) throw error;
@@ -357,9 +365,10 @@ export const dbNotes = {
     return data;
   },
   async create(payload: Omit<Note, "id">) {
+    const userId = await uid();
     const { data, error } = await db()
       .from("notes")
-      .insert({ ...payload, client_id: payload.clientId })
+      .insert({ ...payload, client_id: payload.clientId, user_id: userId })
       .select()
       .single();
     if (error) throw error;
