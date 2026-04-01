@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { dbWorkoutPlans, dbExerciseLogs } from "@/lib/db";
@@ -13,6 +13,15 @@ export default function WorkoutPlanPage() {
   const client = useAppStore((s) => s.clients.find((c) => c.id === id));
   const plan = client?.workoutPlans.find((p) => p.id === planId);
   const addExercise = useAppStore((s) => s.addExercise);
+  const synced = useRef(false);
+
+  // Auto-repair: if this plan has a shareToken in the store but it was never
+  // persisted to DB (created before the camelCase fix), write it now.
+  useEffect(() => {
+    if (!plan?.shareToken || synced.current) return;
+    synced.current = true;
+    dbWorkoutPlans.update(plan.id, { shareToken: plan.shareToken }).catch(() => {});
+  }, [plan?.id, plan?.shareToken]);
   const updateExercise = useAppStore((s) => s.updateExercise);
   const removeExercise = useAppStore((s) => s.removeExercise);
   const reorderExercises = useAppStore((s) => s.reorderExercises);
