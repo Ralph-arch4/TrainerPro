@@ -55,16 +55,39 @@ export const dbWorkoutPlans = {
     return data;
   },
   async create(payload: Omit<WorkoutPlan, "id" | "createdAt">) {
+    // Explicit camelCase → snake_case mapping.
+    // Spreading the payload directly would silently drop share_token, days_per_week,
+    // total_weeks etc. because Supabase ignores unknown camelCase column names.
     const { data, error } = await db()
       .from("workout_plans")
-      .insert({ ...payload, client_id: payload.clientId })
+      .insert({
+        name:          payload.name,
+        description:   payload.description ?? null,
+        client_id:     payload.clientId,
+        phase_id:      payload.phaseId ?? null,
+        days_per_week: payload.daysPerWeek,
+        total_weeks:   payload.totalWeeks,
+        exercises:     payload.exercises,
+        active:        payload.active,
+        share_token:   payload.shareToken,
+      })
       .select()
       .single();
     if (error) throw error;
     return data;
   },
   async update(id: string, payload: Partial<WorkoutPlan>) {
-    const { error } = await db().from("workout_plans").update(payload).eq("id", id);
+    // Map any camelCase keys the caller might pass to their snake_case column names.
+    const mapped: Record<string, unknown> = {};
+    if (payload.name         !== undefined) mapped.name          = payload.name;
+    if (payload.description  !== undefined) mapped.description   = payload.description;
+    if (payload.phaseId      !== undefined) mapped.phase_id      = payload.phaseId;
+    if (payload.daysPerWeek  !== undefined) mapped.days_per_week = payload.daysPerWeek;
+    if (payload.totalWeeks   !== undefined) mapped.total_weeks   = payload.totalWeeks;
+    if (payload.exercises    !== undefined) mapped.exercises      = payload.exercises;
+    if (payload.active       !== undefined) mapped.active         = payload.active;
+    if (payload.shareToken   !== undefined) mapped.share_token   = payload.shareToken;
+    const { error } = await db().from("workout_plans").update(mapped).eq("id", id);
     if (error) throw error;
   },
   async remove(id: string) {

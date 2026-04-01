@@ -2,6 +2,9 @@
 -- Trainers create intake links; clients submit via server-side API route
 -- (service role key), so no anon RLS policies are needed.
 
+-- pgcrypto is required for gen_random_bytes (token generation)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS intake_forms (
   id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   trainer_id   UUID        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -14,6 +17,9 @@ CREATE TABLE IF NOT EXISTS intake_forms (
 );
 
 ALTER TABLE intake_forms ENABLE ROW LEVEL SECURITY;
+
+-- Drop first in case of re-run
+DROP POLICY IF EXISTS "trainer_all" ON intake_forms;
 
 -- Trainers: full CRUD access to their own forms
 CREATE POLICY "trainer_all" ON intake_forms
