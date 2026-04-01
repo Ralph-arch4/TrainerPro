@@ -4,96 +4,87 @@ import { useFrame } from '@react-three/fiber'
 import { Float } from '@react-three/drei'
 import * as THREE from 'three'
 
-// ── Wireframe muscular arm in classic bicep-flex pose ──────────────────────
-function MuscularArm() {
+// ── Wireframe dumbbell ─────────────────────────────────────────────────────
+function Dumbbell() {
   const groupRef = useRef<THREE.Group>(null)
   useFrame((state) => {
     if (!groupRef.current) return
-    // Slow side-to-side sway
-    groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.25
+    groupRef.current.rotation.y = state.clock.elapsedTime * 0.18
   })
 
-  const wf  = { wireframe: true, transparent: true } as const
-  const mat  = (opacity: number, bright = false) => ({
+  // All cylinder parts share rotation [0,0,π/2] so they lie along the X axis
+  const H = [0, 0, Math.PI / 2] as [number, number, number]
+  const wf  = (opacity: number, bright = false) => ({
     color: bright ? '#FF9A6C' : '#FF6B2B',
-    ...wf, opacity,
+    wireframe: true,
+    transparent: true,
+    opacity,
   } as const)
 
   return (
-    <Float speed={0.8} floatIntensity={0.3}>
-      <group ref={groupRef} position={[0, -0.3, 0]}>
+    <Float speed={0.75} floatIntensity={0.28}>
+      {/* Slight tilt so it reads as 3-D at rest */}
+      <group ref={groupRef} rotation={[0.18, 0, -0.22]}>
 
-        {/* ── Shoulder cap ── */}
-        <mesh position={[0, 2.5, 0]}>
-          <sphereGeometry args={[0.62, 10, 7]} />
-          <meshBasicMaterial {...mat(0.50)} />
+        {/* ── Central bar ── */}
+        <mesh rotation={H}>
+          <cylinderGeometry args={[0.09, 0.09, 2.8, 10, 1]} />
+          <meshBasicMaterial {...wf(0.55, true)} />
         </mesh>
 
-        {/* ── Deltoid facets — trapezoid cap over shoulder ── */}
-        <mesh position={[0.28, 2.35, 0]} scale={[1.15, 0.7, 0.9]}>
-          <sphereGeometry args={[0.5, 8, 5]} />
-          <meshBasicMaterial {...mat(0.22, true)} />
-        </mesh>
+        {/* ── Collars (knurled grip section boundaries) ── */}
+        {([-1.05, 1.05] as const).map((x) => (
+          <mesh key={x} position={[x, 0, 0]} rotation={H}>
+            <cylinderGeometry args={[0.17, 0.17, 0.22, 10, 1]} />
+            <meshBasicMaterial {...wf(0.60)} />
+          </mesh>
+        ))}
 
-        {/* ── Upper arm — tapered cylinder ── */}
-        <mesh position={[0.08, 1.15, 0]}>
-          <cylinderGeometry args={[0.44, 0.52, 2.3, 10, 1]} />
-          <meshBasicMaterial {...mat(0.45)} />
-        </mesh>
+        {/* ── Inner weight plates ── */}
+        {([-1.32, 1.32] as const).map((x) => (
+          <mesh key={x} position={[x, 0, 0]} rotation={H}>
+            <cylinderGeometry args={[0.52, 0.52, 0.18, 12, 1]} />
+            <meshBasicMaterial {...wf(0.45)} />
+          </mesh>
+        ))}
 
-        {/* ── Bicep peak — stretched ellipsoid protruding outward ── */}
-        <mesh position={[0.52, 1.5, 0.12]} scale={[1.0, 0.82, 0.7]}>
-          <sphereGeometry args={[0.6, 10, 7]} />
-          <meshBasicMaterial {...mat(0.40, true)} />
-        </mesh>
+        {/* ── Outer weight plates (larger) ── */}
+        {([-1.56, 1.56] as const).map((x) => (
+          <mesh key={x} position={[x, 0, 0]} rotation={H}>
+            <cylinderGeometry args={[0.68, 0.68, 0.24, 14, 1]} />
+            <meshBasicMaterial {...wf(0.50)} />
+          </mesh>
+        ))}
 
-        {/* ── Bicep definition ring ── */}
-        <mesh position={[0.22, 1.3, 0]} rotation={[0, 0, 0.08]}>
-          <torusGeometry args={[0.53, 0.032, 4, 36]} />
-          <meshBasicMaterial color="#FF9A6C" transparent opacity={0.65} />
-        </mesh>
+        {/* ── End caps ── */}
+        {([-1.7, 1.7] as const).map((x) => (
+          <mesh key={x} position={[x, 0, 0]} rotation={H}>
+            <cylinderGeometry args={[0.14, 0.14, 0.12, 8, 1]} />
+            <meshBasicMaterial {...wf(0.55)} />
+          </mesh>
+        ))}
 
-        {/* ── Tricep bulge (back of upper arm) ── */}
-        <mesh position={[-0.3, 0.9, -0.18]} scale={[0.7, 1.1, 0.65]}>
-          <sphereGeometry args={[0.46, 8, 6]} />
-          <meshBasicMaterial {...mat(0.28)} />
-        </mesh>
+        {/* ── Dark fill inside outer plates — depth effect ── */}
+        {([-1.56, 1.56] as const).map((x) => (
+          <mesh key={`fill-${x}`} position={[x, 0, 0]} rotation={H}>
+            <cylinderGeometry args={[0.62, 0.62, 0.20, 14, 1]} />
+            <meshBasicMaterial color="#1a0800" transparent opacity={0.55} />
+          </mesh>
+        ))}
 
-        {/* ── Elbow ── */}
-        <mesh position={[0.18, 0.02, 0]}>
-          <sphereGeometry args={[0.4, 8, 6]} />
-          <meshBasicMaterial {...mat(0.42)} />
-        </mesh>
-
-        {/* ── Forearm — rotated ~52° toward top-right ── */}
-        <mesh position={[0.88, 0.82, 0]} rotation={[0, 0, -Math.PI * 0.29]}>
-          <cylinderGeometry args={[0.29, 0.38, 1.85, 9, 1]} />
-          <meshBasicMaterial {...mat(0.45)} />
-        </mesh>
-
-        {/* ── Forearm muscle band ── */}
-        <mesh position={[0.62, 0.48, 0]} rotation={[0, 0, -Math.PI * 0.29]}>
-          <torusGeometry args={[0.36, 0.028, 4, 28]} />
-          <meshBasicMaterial color="#FF9A6C" transparent opacity={0.55} />
-        </mesh>
-
-        {/* ── Wrist / clenched fist ── */}
-        <mesh position={[1.58, 1.58, 0]}>
-          <sphereGeometry args={[0.44, 9, 6]} />
-          <meshBasicMaterial {...mat(0.48)} />
-        </mesh>
-
-        {/* ── Knuckle band across fist ── */}
-        <mesh position={[1.58, 1.62, 0]} rotation={[0, 0, Math.PI * 0.5]}>
-          <torusGeometry args={[0.3, 0.028, 4, 24]} />
-          <meshBasicMaterial color="#FF9A6C" transparent opacity={0.55} />
-        </mesh>
-
-        {/* ── Dark interior fill — gives depth to upper arm ── */}
-        <mesh position={[0.08, 1.15, 0]}>
-          <cylinderGeometry args={[0.38, 0.46, 2.1, 10, 1]} />
-          <meshBasicMaterial color="#1a0800" transparent opacity={0.55} />
-        </mesh>
+        {/* ── Plate rim rings — decorative detail ── */}
+        {([-1.56, 1.56] as const).map((x) => (
+          <mesh key={`rim-${x}`} position={[x, 0, 0]}>
+            <torusGeometry args={[0.66, 0.028, 4, 40]} />
+            <meshBasicMaterial color="#FF9A6C" transparent opacity={0.70} />
+          </mesh>
+        ))}
+        {([-1.32, 1.32] as const).map((x) => (
+          <mesh key={`rim2-${x}`} position={[x, 0, 0]}>
+            <torusGeometry args={[0.50, 0.022, 4, 32]} />
+            <meshBasicMaterial color="#FF9A6C" transparent opacity={0.45} />
+          </mesh>
+        ))}
       </group>
     </Float>
   )
@@ -165,10 +156,10 @@ export default function HeroScene() {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
   return (
     <>
-      <MuscularArm />
-      <OrbitRing radius={2.8}  rotation={[0.3,  0,    0.1]}  speed={ 0.22}  opacity={0.5} />
-      <OrbitRing radius={3.2}  rotation={[-0.5, 0.25, 0.65]} speed={-0.13}  opacity={0.28} />
-      <OrbitRing radius={3.7}  rotation={[1.1,  0.4,  0.3]}  speed={ 0.08}  opacity={0.15} />
+      <Dumbbell />
+      <OrbitRing radius={2.9}  rotation={[0.3,  0,    0.1]}  speed={ 0.22}  opacity={0.45} />
+      <OrbitRing radius={3.3}  rotation={[-0.5, 0.25, 0.65]} speed={-0.13}  opacity={0.25} />
+      <OrbitRing radius={3.8}  rotation={[1.1,  0.4,  0.3]}  speed={ 0.08}  opacity={0.14} />
       <OrangeParticles count={isMobile ? 28 : 55} />
       <CyberGrid />
     </>
