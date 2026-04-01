@@ -28,7 +28,7 @@ CREATE INDEX IF NOT EXISTS idx_intake_forms_token
 -- phases, diet_plans, measurements, notes: all load by client_id
 CREATE INDEX IF NOT EXISTS idx_phases_client_id        ON phases        (client_id);
 CREATE INDEX IF NOT EXISTS idx_diet_plans_client_id    ON diet_plans    (client_id);
-CREATE INDEX IF NOT EXISTS idx_measurements_client_id  ON measurements  (client_id);
+CREATE INDEX IF NOT EXISTS idx_measurements_client_id  ON body_measurements  (client_id);
 CREATE INDEX IF NOT EXISTS idx_notes_client_id         ON notes         (client_id);
 
 
