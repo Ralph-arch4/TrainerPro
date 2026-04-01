@@ -143,7 +143,7 @@ export default function ClientDetailPage() {
     setNoteText("");
   }
 
-  const tabs: { key: Tab; label: string; icon: React.ElementType; count?: number }[] = [
+  const tabs: { key: Tab; label: string; icon: React.FC<{ size?: number; style?: React.CSSProperties; className?: string }>; count?: number }[] = [
     { key: "overview", label: "Overview", icon: BarChart2 },
     { key: "fasi", label: "Fasi", icon: Activity, count: client.phases.length },
     { key: "schede", label: "Schede", icon: Dumbbell, count: client.workoutPlans.length },

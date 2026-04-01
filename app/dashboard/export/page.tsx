@@ -37,7 +37,7 @@ export default function ExportPage() {
     setTimeout(() => setPrinted(false), 2000);
   }
 
-  const sectionOptions: { key: ExportSection; label: string; icon: React.ElementType; count?: number }[] = [
+  const sectionOptions: { key: ExportSection; label: string; icon: React.FC<{ size?: number; style?: React.CSSProperties }>; count?: number }[] = [
     { key: "anagrafica", label: "Dati anagrafici", icon: User },
     { key: "fasi", label: "Fasi di allenamento", icon: Activity, count: client?.phases.length },
     { key: "schede", label: "Schede allenamento", icon: Dumbbell, count: client?.workoutPlans.length },

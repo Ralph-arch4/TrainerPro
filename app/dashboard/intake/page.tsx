@@ -327,7 +327,7 @@ function ResponseDetail({ form }: { form: IntakeForm }) {
     setCreating(false);
   }
 
-  const Sec = ({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) => (
+  const Sec = ({ title, icon: Icon, children }: { title: string; icon: React.FC<{ size?: number; style?: React.CSSProperties }>; children: React.ReactNode }) => (
     <div className="mb-5">
       <div className="flex items-center gap-2 mb-2.5 pb-1.5" style={{ borderBottom: "1px solid rgba(255,107,43,0.08)" }}>
         <Icon size={13} style={{ color: "var(--accent)" }} />
