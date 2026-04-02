@@ -1,12 +1,13 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { checkLimit } from "@/lib/plan-limits";
 import { dbClients } from "@/lib/db";
 import {
-  Users, Plus, Search, Filter, ChevronRight,
-  Mail, Phone, Target, Activity, Loader2, X, AlertCircle
+  Users, Plus, Search, ChevronRight,
+  Mail, Phone, Activity, Loader2, X, AlertCircle
 } from "lucide-react";
 
 type Status = "tutti" | "attivo" | "in_pausa" | "inattivo";
@@ -58,6 +59,8 @@ const emptyForm: ClientFormData = {
 };
 
 export default function ClientiPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const user = useAppStore((s) => s.user);
   const clients = useAppStore((s) => s.clients);
   const addClient = useAppStore((s) => s.addClient);
@@ -67,6 +70,15 @@ export default function ClientiPage() {
   const [filterStatus, setFilterStatus] = useState<Status>("tutti");
   const [filterGoal, setFilterGoal] = useState<Goal>("tutti");
   const [showModal, setShowModal] = useState(false);
+
+  // Auto-open modal when navigating with ?new=1 (e.g. from dashboard quick actions)
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      openModal();
+      router.replace("/dashboard/clienti");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [form, setForm] = useState<ClientFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [limitError, setLimitError] = useState("");
@@ -92,24 +104,27 @@ export default function ClientiPage() {
     if (!form.name.trim() || !user) return;
     setSaving(true);
     setSaveError("");
-    const newClient = addClient({
-      userId: user.id,
-      name: form.name.trim(),
-      email: form.email.trim(),
-      phone: form.phone.trim(),
-      goal: form.goal as "dimagrimento" | "massa" | "tonificazione" | "performance" | undefined || undefined,
-      level: form.level as "principiante" | "intermedio" | "avanzato",
-      status: form.status as "attivo" | "inattivo" | "in_pausa",
+
+    const payload = {
+      userId:     user.id,
+      name:       form.name.trim(),
+      email:      form.email.trim(),
+      phone:      form.phone.trim(),
+      goal:       (form.goal || undefined) as "dimagrimento" | "massa" | "tonificazione" | "performance" | undefined,
+      level:      form.level as "principiante" | "intermedio" | "avanzato",
+      status:     form.status as "attivo" | "inattivo" | "in_pausa",
       monthlyFee: form.monthlyFee ? parseFloat(form.monthlyFee) : undefined,
-      birthDate: form.birthDate || undefined,
-      startDate: new Date().toISOString().split("T")[0],
-    });
+      birthDate:  form.birthDate || undefined,
+      startDate:  new Date().toISOString().split("T")[0],
+    };
+
+    const newClient = addClient(payload);
     try {
-      await dbClients.create({ ...(newClient as Parameters<typeof dbClients.create>[0]), id: newClient.id } as Parameters<typeof dbClients.create>[0]);
+      await dbClients.create({ ...payload, id: newClient.id } as Parameters<typeof dbClients.create>[0]);
       setSaving(false);
       setShowModal(false);
+      router.push(`/dashboard/clienti/${newClient.id}`);
     } catch (err) {
-      // Rollback optimistic add
       removeClient(newClient.id);
       setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio. Riprova.");
       setSaving(false);

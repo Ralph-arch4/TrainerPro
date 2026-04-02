@@ -145,7 +145,7 @@ export default function DashboardPage() {
             </div>
             <div className="space-y-1.5">
               {([
-                { icon: Users,         label: "Aggiungi il tuo primo cliente",   desc: "Nome, obiettivo, livello e dati personali", href: "/dashboard/clienti",    done: hasClients },
+                { icon: Users,         label: "Aggiungi il tuo primo cliente",   desc: "Nome, obiettivo, livello e dati personali", href: "/dashboard/clienti?new=1", done: hasClients },
                 { icon: Dumbbell,      label: "Crea una scheda di allenamento",  desc: "Organizza gli esercizi per giorno",         href: "/dashboard/clienti",    done: hasScheda },
                 { icon: Activity,      label: "Imposta una fase",                desc: "Bulk, Cut o Mantenimento con calorie target", href: "/dashboard/fasi",     done: hasPhase },
                 { icon: Share2,        label: "Condividi il link col cliente",   desc: "Il cliente traccia i progressi ogni settimana", href: "/dashboard/clienti", done: hasSharedLink },
@@ -217,7 +217,7 @@ export default function DashboardPage() {
           <h2 className="text-base font-semibold mb-4" style={{ color: "var(--ivory)" }}>Azioni rapide</h2>
           <div className="space-y-1.5">
             {([
-              { href: "/dashboard/clienti", icon: Users,         label: "Nuovo cliente",          desc: "Registra un nuovo cliente" },
+              { href: "/dashboard/clienti?new=1", icon: Users,    label: "Nuovo cliente",          desc: "Registra un nuovo cliente" },
               { href: "/dashboard/fasi",    icon: Activity,      label: "Crea una fase",           desc: "Bulk, cut o mantenimento" },
               { href: "/dashboard/diete",   icon: UtensilsCrossed, label: "Piano alimentare",     desc: "Calcola macro e calorie" },
               { href: "/dashboard/misurazioni", icon: TrendingUp, label: "Registra misurazioni",  desc: "Traccia i progressi fisici" },
