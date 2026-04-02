@@ -138,14 +138,34 @@ export const dbPhases = {
     const userId = await uid();
     const { data, error } = await db()
       .from("phases")
-      .insert({ ...payload, client_id: payload.clientId, user_id: userId })
+      .insert({
+        user_id:          userId,
+        client_id:        payload.clientId,
+        name:             payload.name,
+        type:             payload.type,
+        start_date:       payload.startDate,
+        end_date:         payload.endDate || null,
+        target_calories:  payload.targetCalories ?? null,
+        target_weight:    payload.targetWeight ?? null,
+        completed:        payload.completed ?? false,
+        notes:            payload.notes ?? null,
+      })
       .select()
       .single();
     if (error) throw error;
     return data;
   },
   async update(id: string, payload: Partial<Phase>) {
-    const { error } = await db().from("phases").update(payload).eq("id", id);
+    const mapped: Record<string, unknown> = {};
+    if (payload.name             !== undefined) mapped.name             = payload.name;
+    if (payload.type             !== undefined) mapped.type             = payload.type;
+    if (payload.startDate        !== undefined) mapped.start_date       = payload.startDate;
+    if (payload.endDate          !== undefined) mapped.end_date         = payload.endDate;
+    if (payload.targetCalories   !== undefined) mapped.target_calories  = payload.targetCalories;
+    if (payload.targetWeight     !== undefined) mapped.target_weight    = payload.targetWeight;
+    if (payload.completed        !== undefined) mapped.completed        = payload.completed;
+    if (payload.notes            !== undefined) mapped.notes            = payload.notes;
+    const { error } = await db().from("phases").update(mapped).eq("id", id);
     if (error) throw error;
   },
   async remove(id: string) {
@@ -169,14 +189,36 @@ export const dbDietPlans = {
     const userId = await uid();
     const { data, error } = await db()
       .from("diet_plans")
-      .insert({ ...payload, client_id: payload.clientId, user_id: userId })
+      .insert({
+        user_id:   userId,
+        client_id: payload.clientId,
+        phase_id:  payload.phaseId ?? null,
+        name:      payload.name,
+        calories:  payload.calories,
+        protein:   payload.protein,
+        carbs:     payload.carbs,
+        fat:       payload.fat,
+        meals:     payload.meals ?? null,
+        notes:     payload.notes ?? null,
+        active:    payload.active ?? true,
+      })
       .select()
       .single();
     if (error) throw error;
     return data;
   },
   async update(id: string, payload: Partial<DietPlan>) {
-    const { error } = await db().from("diet_plans").update(payload).eq("id", id);
+    const mapped: Record<string, unknown> = {};
+    if (payload.phaseId  !== undefined) mapped.phase_id = payload.phaseId;
+    if (payload.name     !== undefined) mapped.name     = payload.name;
+    if (payload.calories !== undefined) mapped.calories = payload.calories;
+    if (payload.protein  !== undefined) mapped.protein  = payload.protein;
+    if (payload.carbs    !== undefined) mapped.carbs    = payload.carbs;
+    if (payload.fat      !== undefined) mapped.fat      = payload.fat;
+    if (payload.meals    !== undefined) mapped.meals    = payload.meals;
+    if (payload.notes    !== undefined) mapped.notes    = payload.notes;
+    if (payload.active   !== undefined) mapped.active   = payload.active;
+    const { error } = await db().from("diet_plans").update(mapped).eq("id", id);
     if (error) throw error;
   },
   async remove(id: string) {
@@ -200,14 +242,36 @@ export const dbMeasurements = {
     const userId = await uid();
     const { data, error } = await db()
       .from("body_measurements")
-      .insert({ ...payload, client_id: payload.clientId, user_id: userId })
+      .insert({
+        user_id:   userId,
+        client_id: payload.clientId,
+        date:      payload.date,
+        weight:    payload.weight,
+        body_fat:  payload.bodyFat ?? null,
+        chest:     payload.chest ?? null,
+        waist:     payload.waist ?? null,
+        hips:      payload.hips ?? null,
+        arms:      payload.arms ?? null,
+        legs:      payload.legs ?? null,
+        notes:     payload.notes ?? null,
+      })
       .select()
       .single();
     if (error) throw error;
     return data;
   },
   async update(id: string, payload: Partial<BodyMeasurement>) {
-    const { error } = await db().from("body_measurements").update(payload).eq("id", id);
+    const mapped: Record<string, unknown> = {};
+    if (payload.date    !== undefined) mapped.date     = payload.date;
+    if (payload.weight  !== undefined) mapped.weight   = payload.weight;
+    if (payload.bodyFat !== undefined) mapped.body_fat = payload.bodyFat;
+    if (payload.chest   !== undefined) mapped.chest    = payload.chest;
+    if (payload.waist   !== undefined) mapped.waist    = payload.waist;
+    if (payload.hips    !== undefined) mapped.hips     = payload.hips;
+    if (payload.arms    !== undefined) mapped.arms     = payload.arms;
+    if (payload.legs    !== undefined) mapped.legs     = payload.legs;
+    if (payload.notes   !== undefined) mapped.notes    = payload.notes;
+    const { error } = await db().from("body_measurements").update(mapped).eq("id", id);
     if (error) throw error;
   },
   async remove(id: string) {
