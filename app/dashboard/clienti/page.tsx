@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
@@ -58,7 +58,7 @@ const emptyForm: ClientFormData = {
   status: "attivo", monthlyFee: "", birthDate: "",
 };
 
-export default function ClientiPage() {
+function ClientiPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const user = useAppStore((s) => s.user);
@@ -359,5 +359,13 @@ export default function ClientiPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ClientiPage() {
+  return (
+    <Suspense>
+      <ClientiPageInner />
+    </Suspense>
   );
 }
