@@ -50,6 +50,10 @@ export default function ClientDetailPage() {
   const [showWorkoutModal, setShowWorkoutModal] = useState(false);
   const [workoutForm, setWorkoutForm] = useState({ name: "", description: "", daysPerWeek: "3", totalWeeks: "12" });
 
+  // Workout plan edit modal
+  const [editingPlan, setEditingPlan] = useState<{ id: string; name: string; description: string; daysPerWeek: string; totalWeeks: string } | null>(null);
+  const updateWorkoutPlan = useAppStore((s) => s.updateWorkoutPlan);
+
   // Diet plan modal
   const [showDietModal, setShowDietModal] = useState(false);
   const [dietForm, setDietForm] = useState({ name: "", calories: "", protein: "", carbs: "", fat: "", notes: "" });
@@ -101,6 +105,21 @@ export default function ClientDetailPage() {
     setSaving(false);
     setShowWorkoutModal(false);
     setWorkoutForm({ name: "", description: "", daysPerWeek: "3", totalWeeks: "12" });
+  }
+
+  async function saveEditPlan() {
+    if (!editingPlan || !editingPlan.name.trim()) return;
+    setSaving(true);
+    const patch = {
+      name: editingPlan.name.trim(),
+      description: editingPlan.description.trim() || undefined,
+      daysPerWeek: parseInt(editingPlan.daysPerWeek),
+      totalWeeks: parseInt(editingPlan.totalWeeks) || 12,
+    };
+    updateWorkoutPlan(client!.id, editingPlan.id, patch);
+    try { await dbWorkoutPlans.update(editingPlan.id, patch); } catch {}
+    setSaving(false);
+    setEditingPlan(null);
   }
 
   async function saveDiet() {
@@ -322,43 +341,87 @@ export default function ClientDetailPage() {
       {tab === "schede" && (
         <div>
           <div className="flex justify-between items-center mb-4">
-            <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{client.workoutPlans.length} schede</p>
+            <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{client.workoutPlans.length} {client.workoutPlans.length === 1 ? "scheda" : "schede"}</p>
             <button onClick={() => setShowWorkoutModal(true)} className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm">
               <Plus size={14} /> Nuova scheda
             </button>
           </div>
+
           {client.workoutPlans.length === 0 ? (
             <div className="text-center py-16 card-luxury rounded-2xl">
               <Dumbbell size={40} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.25)" }} />
-              <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>Nessuna scheda di allenamento</p>
-              <button onClick={() => setShowWorkoutModal(true)} className="mt-3 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>Crea la prima scheda</button>
+              <p className="text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Nessuna scheda di allenamento</p>
+              <p className="text-xs mb-4" style={{ color: "rgba(245,240,232,0.35)" }}>Crea la prima scheda e condividi il link col cliente</p>
+              <button onClick={() => setShowWorkoutModal(true)} className="accent-btn px-5 py-2.5 rounded-xl text-sm inline-flex items-center gap-2">
+                <Plus size={14} /> Crea la prima scheda
+              </button>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 gap-4">
-              {client.workoutPlans.map((wp) => (
+            <div className="space-y-3">
+              {[...client.workoutPlans].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((wp) => (
                 <div key={wp.id} className="card-luxury rounded-2xl p-5">
+                  {/* Header row */}
                   <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 pr-3">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-semibold" style={{ color: "var(--ivory)" }}>{wp.name}</p>
-                        {wp.active && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Attiva</span>}
+                        {wp.active && (
+                          <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Attiva</span>
+                        )}
                       </div>
-                      {wp.description && <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.45)" }}>{wp.description}</p>}
+                      {wp.description && (
+                        <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.45)" }}>{wp.description}</p>
+                      )}
                     </div>
-                    <button onClick={async () => { removeWorkoutPlan(client!.id, wp.id); try { await dbWorkoutPlans.remove(wp.id); } catch {} }}
-                      className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all flex-shrink-0">
-                      <Trash2 size={14} style={{ color: "rgba(239,68,68,0.6)" }} />
-                    </button>
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => setEditingPlan({ id: wp.id, name: wp.name, description: wp.description ?? "", daysPerWeek: String(wp.daysPerWeek), totalWeeks: String(wp.totalWeeks ?? 12) })}
+                        className="p-1.5 rounded-lg hover:bg-white/5 transition-all"
+                        title="Modifica scheda">
+                        <Pencil size={13} style={{ color: "rgba(245,240,232,0.45)" }} />
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!confirm(`Eliminare la scheda "${wp.name}"?`)) return;
+                          removeWorkoutPlan(client!.id, wp.id);
+                          try { await dbWorkoutPlans.remove(wp.id); } catch {}
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all"
+                        title="Elimina scheda">
+                        <Trash2 size={13} style={{ color: "rgba(239,68,68,0.55)" }} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                    <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
-                      {wp.daysPerWeek} gg/sett · {(wp as { totalWeeks?: number }).totalWeeks ?? 12} sett · {wp.exercises.length} esercizi
-                    </p>
+
+                  {/* Stats row */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {[
+                      { label: `${wp.daysPerWeek} giorni/sett` },
+                      { label: `${wp.totalWeeks ?? 12} settimane` },
+                      { label: `${wp.exercises.length} esercizi` },
+                    ].map(({ label }) => (
+                      <span key={label} className="text-xs px-2.5 py-1 rounded-lg"
+                        style={{ background: "rgba(255,255,255,0.05)", color: "rgba(245,240,232,0.5)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Share link + open */}
+                  <div className="flex items-center gap-2 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                    {wp.shareToken && (
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs truncate" style={{ color: "rgba(245,240,232,0.3)" }}>
+                          Link cliente: …/scheda/{wp.shareToken.slice(0, 12)}…
+                        </p>
+                      </div>
+                    )}
                     <Link
                       href={`/dashboard/clienti/${id}/schede/${wp.id}`}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all"
-                      style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.18)", color: "var(--accent-light)" }}>
-                      <ExternalLink size={11} /> Apri scheda
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all ml-auto"
+                      style={{ background: "rgba(255,107,43,0.1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
+                      <ExternalLink size={11} /> Apri &amp; Modifica
                     </Link>
                   </div>
                 </div>
@@ -594,6 +657,58 @@ export default function ClientDetailPage() {
               <button onClick={() => setShowWorkoutModal(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>Annulla</button>
               <button onClick={saveWorkout} disabled={saving} className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Salva scheda
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit workout plan modal */}
+      {editingPlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setEditingPlan(null)}>
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
+          <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Modifica scheda</h3>
+              <button onClick={() => setEditingPlan(null)}><X size={16} style={{ color: "rgba(245,240,232,0.5)" }} /></button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Nome scheda *</label>
+                <input value={editingPlan.name} onChange={(e) => setEditingPlan({ ...editingPlan, name: e.target.value })}
+                  className={inputClass} style={inputStyle} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Descrizione</label>
+                <textarea value={editingPlan.description} onChange={(e) => setEditingPlan({ ...editingPlan, description: e.target.value })}
+                  rows={2} className={`${inputClass} resize-none`} style={inputStyle} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Giorni a settimana</label>
+                  <select value={editingPlan.daysPerWeek} onChange={(e) => setEditingPlan({ ...editingPlan, daysPerWeek: e.target.value })}
+                    className={inputClass} style={selectStyle}>
+                    {[2,3,4,5,6].map((d) => <option key={d} value={d}>{d} giorni</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Durata (settimane)</label>
+                  <select value={editingPlan.totalWeeks} onChange={(e) => setEditingPlan({ ...editingPlan, totalWeeks: e.target.value })}
+                    className={inputClass} style={selectStyle}>
+                    {[4,6,8,10,12,16,20,24].map((w) => <option key={w} value={w}>{w} settimane</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setEditingPlan(null)}
+                className="flex-1 py-2.5 rounded-xl text-sm"
+                style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>
+                Annulla
+              </button>
+              <button onClick={saveEditPlan} disabled={saving || !editingPlan.name.trim()}
+                className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Pencil size={14} />} Salva modifiche
               </button>
             </div>
           </div>

@@ -70,6 +70,7 @@ export default function ClientiPage() {
   const [form, setForm] = useState<ClientFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [limitError, setLimitError] = useState("");
+  const [saveError, setSaveError] = useState("");
 
   const filtered = clients.filter((c) => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -90,21 +91,29 @@ export default function ClientiPage() {
   async function handleSave() {
     if (!form.name.trim() || !user) return;
     setSaving(true);
+    setSaveError("");
     const newClient = addClient({
       userId: user.id,
       name: form.name.trim(),
       email: form.email.trim(),
       phone: form.phone.trim(),
-      goal: form.goal || undefined,
+      goal: form.goal as "dimagrimento" | "massa" | "tonificazione" | "performance" | undefined || undefined,
       level: form.level as "principiante" | "intermedio" | "avanzato",
       status: form.status as "attivo" | "inattivo" | "in_pausa",
       monthlyFee: form.monthlyFee ? parseFloat(form.monthlyFee) : undefined,
       birthDate: form.birthDate || undefined,
       startDate: new Date().toISOString().split("T")[0],
     });
-    try { await dbClients.create({ ...newClient }); } catch {}
-    setSaving(false);
-    setShowModal(false);
+    try {
+      await dbClients.create({ ...(newClient as Parameters<typeof dbClients.create>[0]), id: newClient.id } as Parameters<typeof dbClients.create>[0]);
+      setSaving(false);
+      setShowModal(false);
+    } catch (err) {
+      // Rollback optimistic add
+      removeClient(newClient.id);
+      setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio. Riprova.");
+      setSaving(false);
+    }
   }
 
   async function handleDelete(id: string, e: React.MouseEvent) {
@@ -242,10 +251,16 @@ export default function ClientiPage() {
             onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold" style={{ color: "var(--ivory)" }}>Nuovo cliente</h2>
-              <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg hover:bg-white/5">
+              <button onClick={() => { setShowModal(false); setSaveError(""); }} className="p-1.5 rounded-lg hover:bg-white/5">
                 <X size={16} style={{ color: "rgba(245,240,232,0.5)" }} />
               </button>
             </div>
+            {saveError && (
+              <div className="mb-4 p-3 rounded-xl flex items-center gap-2 text-xs"
+                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}>
+                <AlertCircle size={13} /> {saveError}
+              </div>
+            )}
 
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">

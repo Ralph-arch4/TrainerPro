@@ -33,14 +33,36 @@ export const dbClients = {
   async create(payload: Omit<Client, "id" | "createdAt" | "workoutPlans" | "phases" | "dietPlans" | "measurements" | "notes">) {
     const { data, error } = await db()
       .from("clients")
-      .insert({ ...payload, user_id: payload.userId })
+      .insert({
+        id:          (payload as { id?: string }).id,
+        user_id:     payload.userId,
+        name:        payload.name,
+        email:       payload.email || null,
+        phone:       payload.phone || null,
+        birth_date:  payload.birthDate || null,
+        goal:        payload.goal || null,
+        level:       payload.level || null,
+        status:      payload.status,
+        monthly_fee: payload.monthlyFee || null,
+        start_date:  payload.startDate || null,
+      })
       .select()
       .single();
     if (error) throw error;
     return data;
   },
   async update(id: string, payload: Partial<Client>) {
-    const { error } = await db().from("clients").update(payload).eq("id", id);
+    const mapped: Record<string, unknown> = {};
+    if (payload.name        !== undefined) mapped.name        = payload.name;
+    if (payload.email       !== undefined) mapped.email       = payload.email;
+    if (payload.phone       !== undefined) mapped.phone       = payload.phone;
+    if (payload.birthDate   !== undefined) mapped.birth_date  = payload.birthDate;
+    if (payload.goal        !== undefined) mapped.goal        = payload.goal;
+    if (payload.level       !== undefined) mapped.level       = payload.level;
+    if (payload.status      !== undefined) mapped.status      = payload.status;
+    if (payload.monthlyFee  !== undefined) mapped.monthly_fee = payload.monthlyFee;
+    if (payload.startDate   !== undefined) mapped.start_date  = payload.startDate;
+    const { error } = await db().from("clients").update(mapped).eq("id", id);
     if (error) throw error;
   },
   async remove(id: string) {
