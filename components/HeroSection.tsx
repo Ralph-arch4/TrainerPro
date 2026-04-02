@@ -71,17 +71,17 @@ export default function HeroSection() {
 
           <motion.div
             {...fade(0.3)}
-            className="flex flex-col sm:flex-row items-start gap-4 mb-8"
+            className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3 mb-8 w-full sm:w-auto"
           >
             <Link
               href="/register"
-              className="accent-btn flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-semibold"
+              className="accent-btn flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-base font-semibold"
             >
               Inizia gratis <ArrowRight size={16} />
             </Link>
             <Link
               href="/login"
-              className="flex items-center gap-2 px-8 py-3.5 rounded-xl text-base transition-all hover:bg-white/5"
+              className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-base transition-all hover:bg-white/5"
               style={{
                 border: '1px solid rgba(255,107,43,0.25)',
                 color: 'var(--ivory)',

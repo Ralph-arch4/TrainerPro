@@ -60,7 +60,7 @@ export default function FasiPage() {
   const cutCount = allPhases.filter((p) => p.type === "cut").length;
 
   return (
-    <div className="p-6 lg:p-8 fade-in">
+    <div className="p-4 pt-20 lg:pt-8 lg:p-8 fade-in">
       <div className="mb-6">
         <h1 className="text-2xl font-bold" style={{ color: "var(--ivory)" }}>Fasi & Piani</h1>
         <p className="text-sm mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>
@@ -77,7 +77,7 @@ export default function FasiPage() {
           { label: "Cut",          value: cutCount,  color: "rgba(255,107,43,0.65)"},
         ].map(({ label, value, color }) => (
           <div key={label} className="card-luxury rounded-2xl p-4 text-center">
-            <p className="text-2xl font-bold" style={{ color }}>{value}</p>
+            <p className="text-3xl font-bold" style={{ color }}>{value}</p>
             <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.45)" }}>{label}</p>
           </div>
         ))}

@@ -62,7 +62,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="p-6 lg:p-8 fade-in">
+    <div className="p-4 pt-20 lg:pt-8 lg:p-8 fade-in">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="mb-8">
@@ -78,17 +78,17 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Stats grid ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
         {stats.map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="card-luxury rounded-2xl p-4 lg:p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>{label}</p>
-                <p className="text-2xl lg:text-3xl font-bold" style={{ color: "var(--ivory)" }}>{value}</p>
+                <p className="text-3xl lg:text-3xl font-bold" style={{ color: "var(--ivory)" }}>{value}</p>
               </div>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{ background: `${color}22` }}>
-                <Icon size={17} style={{ color }} />
+                <Icon size={16} style={{ color }} />
               </div>
             </div>
           </div>

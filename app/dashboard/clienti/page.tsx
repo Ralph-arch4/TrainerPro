@@ -139,7 +139,7 @@ function ClientiPageInner() {
   }
 
   return (
-    <div className="p-6 lg:p-8 fade-in">
+    <div className="p-4 pt-20 lg:pt-8 lg:p-8 fade-in">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

@@ -85,26 +85,26 @@ export default function IntakePage() {
   const submitted = forms.filter((f) => f.status === "submitted");
 
   return (
-    <div className="p-6 lg:p-8 fade-in">
+    <div className="p-4 pt-20 lg:pt-8 lg:p-8 fade-in">
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
-        <div>
+      <div className="mb-8">
+        <div className="flex items-start justify-between gap-3 mb-1">
           <h1 className="text-2xl lg:text-3xl font-bold" style={{ color: "var(--ivory)" }}>
-            Form <span className="accent-text">Intake Clienti</span>
+            Form <span className="accent-text">Intake</span>
           </h1>
-          <p className="text-sm mt-1" style={{ color: "rgba(245,240,232,0.5)" }}>
-            Crea un link da inviare al cliente — compila il questionario senza registrarsi.
-          </p>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button onClick={load} className="p-2 rounded-xl transition-all hover:bg-white/5" title="Aggiorna">
+              <RefreshCw size={16} style={{ color: "rgba(245,240,232,0.4)" }} />
+            </button>
+            <button onClick={() => setShowCreate(true)}
+              className="accent-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm whitespace-nowrap">
+              <Plus size={16} /> <span className="hidden sm:inline">Nuovo</span> form
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={load} className="p-2 rounded-xl transition-all hover:bg-white/5" title="Aggiorna">
-            <RefreshCw size={16} style={{ color: "rgba(245,240,232,0.4)" }} />
-          </button>
-          <button onClick={() => setShowCreate(true)}
-            className="accent-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm">
-            <Plus size={16} /> Nuovo form
-          </button>
-        </div>
+        <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>
+          Crea un link da inviare al cliente — compila il questionario senza registrarsi.
+        </p>
       </div>
 
       {/* Create modal */}
