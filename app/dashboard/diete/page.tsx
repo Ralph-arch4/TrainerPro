@@ -47,10 +47,10 @@ export default function DietePage() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {[
-          { label: "Piani attivi", value: activeDiets, color: "var(--accent)" },
-          { label: "Media kcal", value: avgCalories ? `${avgCalories}` : "—", color: "#fbbf24" },
-          { label: "Media proteine", value: avgProtein ? `${avgProtein}g` : "—", color: "#a78bfa" },
-          { label: "Media carboidrati", value: avgCarbs ? `${avgCarbs}g` : "—", color: "#38bdf8" },
+          { label: "Piani attivi",     value: activeDiets,                           color: "var(--accent)"       },
+          { label: "Media kcal",       value: avgCalories ? `${avgCalories}` : "0", color: "var(--accent-light)"  },
+          { label: "Media proteine",   value: avgProtein  ? `${avgProtein}g`  : "0",color: "#CC5522"              },
+          { label: "Media carboidrati",value: avgCarbs    ? `${avgCarbs}g`    : "0",color: "rgba(255,107,43,0.65)"},
         ].map(({ label, value, color }) => (
           <div key={label} className="card-luxury rounded-2xl p-4 text-center">
             <p className="text-2xl font-bold" style={{ color }}>{value}</p>

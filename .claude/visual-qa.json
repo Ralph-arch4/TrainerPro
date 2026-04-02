@@ -1,27 +1,25 @@
 {
   "project": "TrainerPro",
   "url": "https://trainer-pro-phi.vercel.app",
-  "command": "node screenshots.mjs",
+  "command": "node screenshots-prod.mjs",
   "screenshots_dir": "screenshots",
   "pages": [
     { "file": "01-landing.png",    "label": "Landing",      "auth": false },
     { "file": "02-login.png",      "label": "Login",        "auth": false },
     { "file": "03-register.png",   "label": "Register",     "auth": false },
-    { "file": "04-dashboard.png",  "label": "Dashboard",    "auth": true },
-    { "file": "05-clienti.png",    "label": "Clienti",      "auth": true },
-    { "file": "06-fasi.png",       "label": "Fasi",         "auth": true },
-    { "file": "07-diete.png",      "label": "Diete",        "auth": true },
-    { "file": "08-misurazioni.png","label": "Misurazioni",  "auth": true },
-    { "file": "09-preventivi.png", "label": "Preventivi",   "auth": true },
-    { "file": "10-export.png",     "label": "Export",       "auth": true }
+    { "file": "04-dashboard.png",  "label": "Dashboard",    "auth": true  },
+    { "file": "05-clienti.png",    "label": "Clienti",      "auth": true  },
+    { "file": "06-fasi.png",       "label": "Fasi",         "auth": true  },
+    { "file": "07-diete.png",      "label": "Diete",        "auth": true  },
+    { "file": "08-intake.png",     "label": "Intake",       "auth": true  }
   ],
   "checklists": {
     "Landing": [
       "TrainerPro logo and headline visible",
       "CTA buttons (Inizia gratis / Accedi) present",
+      "3D dumbbell or hero graphic visible",
       "Features section rendered with icons",
       "Pricing tiers (Free / Personal Coach / Fitness Master) visible",
-      "FAQ section visible",
       "Dark background with orange accent color",
       "No broken layout or overflow"
     ],
@@ -38,16 +36,17 @@
       "Link back to login present"
     ],
     "Dashboard": [
-      "Sidebar navigation visible with all menu items",
+      "Sidebar with Dashboard, Clienti, Form Intake, Fasi, Diete nav items",
       "Welcome message with trainer name",
-      "Stats cards (Clienti, Fasi, Misurazioni) rendered",
+      "Stats cards (Clienti totali, Clienti attivi, Schede create, Piani alimentari) rendered",
       "Quick actions section visible",
-      "Orange accent color applied throughout"
+      "Orange accent color applied throughout",
+      "NO Misurazioni, Preventivi, or Export nav items"
     ],
     "Clienti": [
       "Page header with Clienti title",
       "Search and filter controls visible",
-      "Nuovo cliente button present",
+      "Nuovo cliente button present (top right)",
       "Empty state or client cards shown"
     ],
     "Fasi": [
@@ -61,22 +60,10 @@
       "Stats cards rendered",
       "Empty state or diet cards shown"
     ],
-    "Misurazioni": [
-      "Misurazioni Corporee title visible",
-      "Stats cards rendered",
-      "Empty state or measurement cards shown"
-    ],
-    "Preventivi": [
-      "Preventivi title visible",
-      "Nuovo preventivo button present",
-      "Split layout with quote list and editor"
-    ],
-    "Export": [
-      "Esporta PDF title visible",
-      "Client selector dropdown present",
-      "Section toggles visible",
-      "Genera PDF button present",
-      "Print preview panel visible"
+    "Intake": [
+      "Form Intake title visible",
+      "Link generation or form list present",
+      "Dark styled layout"
     ]
   }
 }

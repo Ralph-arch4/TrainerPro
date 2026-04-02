@@ -71,10 +71,10 @@ export default function FasiPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {[
-          { label: "Fasi attive", value: active, color: "var(--accent)" },
-          { label: "Completate", value: completed, color: "#22c55e" },
-          { label: "Bulk", value: bulkCount, color: "#a78bfa" },
-          { label: "Cut", value: cutCount, color: "#38bdf8" },
+          { label: "Fasi attive",  value: active,    color: "var(--accent)"       },
+          { label: "Completate",   value: completed, color: "var(--accent-light)"  },
+          { label: "Bulk",         value: bulkCount, color: "#CC5522"              },
+          { label: "Cut",          value: cutCount,  color: "rgba(255,107,43,0.65)"},
         ].map(({ label, value, color }) => (
           <div key={label} className="card-luxury rounded-2xl p-4 text-center">
             <p className="text-2xl font-bold" style={{ color }}>{value}</p>

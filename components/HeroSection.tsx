@@ -126,6 +126,15 @@ export default function HeroSection() {
           className="relative w-full"
           style={{ height: '520px' }}
         >
+          {/* CSS fallback visible until/if WebGL loads */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
+            <div style={{
+              width: 260, height: 260,
+              borderRadius: '50%',
+              background: 'radial-gradient(circle at 40% 40%, rgba(255,107,43,0.18) 0%, rgba(255,107,43,0.06) 55%, transparent 80%)',
+              boxShadow: '0 0 80px 20px rgba(255,107,43,0.10)',
+            }} />
+          </div>
           <HeroCanvas />
         </motion.div>
       </div>
