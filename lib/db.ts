@@ -82,11 +82,12 @@ export const dbWorkoutPlans = {
     if (error) throw error;
     return data;
   },
-  async create(payload: Omit<WorkoutPlan, "id" | "createdAt">) {
+  async create(payload: Omit<WorkoutPlan, "createdAt">) {
     const userId = await uid();
     const { data, error } = await db()
       .from("workout_plans")
       .insert({
+        id:            payload.id,
         name:          payload.name,
         description:   payload.description ?? null,
         client_id:     payload.clientId,
@@ -134,11 +135,12 @@ export const dbPhases = {
     if (error) throw error;
     return data;
   },
-  async create(payload: Omit<Phase, "id">) {
+  async create(payload: Phase) {
     const userId = await uid();
     const { data, error } = await db()
       .from("phases")
       .insert({
+        id:               payload.id,
         user_id:          userId,
         client_id:        payload.clientId,
         name:             payload.name,
@@ -185,11 +187,12 @@ export const dbDietPlans = {
     if (error) throw error;
     return data;
   },
-  async create(payload: Omit<DietPlan, "id" | "createdAt">) {
+  async create(payload: Omit<DietPlan, "createdAt">) {
     const userId = await uid();
     const { data, error } = await db()
       .from("diet_plans")
       .insert({
+        id:        payload.id,
         user_id:   userId,
         client_id: payload.clientId,
         phase_id:  payload.phaseId ?? null,
@@ -238,11 +241,12 @@ export const dbMeasurements = {
     if (error) throw error;
     return data;
   },
-  async create(payload: Omit<BodyMeasurement, "id">) {
+  async create(payload: BodyMeasurement) {
     const userId = await uid();
     const { data, error } = await db()
       .from("body_measurements")
       .insert({
+        id:        payload.id,
         user_id:   userId,
         client_id: payload.clientId,
         date:      payload.date,
@@ -450,11 +454,11 @@ export const dbNotes = {
     if (error) throw error;
     return data;
   },
-  async create(payload: Omit<Note, "id">) {
+  async create(payload: Note) {
     const userId = await uid();
     const { data, error } = await db()
       .from("notes")
-      .insert({ ...payload, client_id: payload.clientId, user_id: userId })
+      .insert({ id: payload.id, content: payload.content, client_id: payload.clientId, user_id: userId })
       .select()
       .single();
     if (error) throw error;

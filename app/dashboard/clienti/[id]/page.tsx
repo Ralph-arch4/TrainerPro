@@ -41,6 +41,7 @@ export default function ClientDetailPage() {
 
   const [tab, setTab] = useState<Tab>((searchParams.get("tab") as Tab) || "overview");
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   // Phase modal
   const [showPhaseModal, setShowPhaseModal] = useState(false);
@@ -78,7 +79,7 @@ export default function ClientDetailPage() {
 
   async function savePhase() {
     if (!phaseForm.name || !phaseForm.startDate || !phaseForm.endDate) return;
-    setSaving(true);
+    setSaving(true); setSaveError("");
     const p = addPhase(client!.id, {
       name: phaseForm.name, type: phaseForm.type as "bulk" | "cut" | "maintenance" | "custom",
       startDate: phaseForm.startDate, endDate: phaseForm.endDate,
@@ -86,30 +87,40 @@ export default function ClientDetailPage() {
       targetWeight: phaseForm.targetWeight ? parseFloat(phaseForm.targetWeight) : undefined,
       notes: phaseForm.notes || undefined, completed: false,
     });
-    try { await dbPhases.create(p); } catch {}
+    try {
+      await dbPhases.create(p);
+      setShowPhaseModal(false);
+      setPhaseForm({ name: "", type: "bulk", startDate: "", endDate: "", targetCalories: "", targetWeight: "", notes: "" });
+    } catch (err) {
+      removePhase(client!.id, p.id);
+      setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+    }
     setSaving(false);
-    setShowPhaseModal(false);
-    setPhaseForm({ name: "", type: "bulk", startDate: "", endDate: "", targetCalories: "", targetWeight: "", notes: "" });
   }
 
   async function saveWorkout() {
     if (!workoutForm.name) return;
-    setSaving(true);
+    setSaving(true); setSaveError("");
     const w = addWorkoutPlan(client!.id, {
       name: workoutForm.name, description: workoutForm.description,
       daysPerWeek: parseInt(workoutForm.daysPerWeek),
       totalWeeks: parseInt(workoutForm.totalWeeks) || 12,
       active: true,
     });
-    try { await dbWorkoutPlans.create(w); } catch {}
+    try {
+      await dbWorkoutPlans.create(w);
+      setShowWorkoutModal(false);
+      setWorkoutForm({ name: "", description: "", daysPerWeek: "3", totalWeeks: "12" });
+    } catch (err) {
+      removeWorkoutPlan(client!.id, w.id);
+      setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+    }
     setSaving(false);
-    setShowWorkoutModal(false);
-    setWorkoutForm({ name: "", description: "", daysPerWeek: "3", totalWeeks: "12" });
   }
 
   async function saveEditPlan() {
     if (!editingPlan || !editingPlan.name.trim()) return;
-    setSaving(true);
+    setSaving(true); setSaveError("");
     const patch = {
       name: editingPlan.name.trim(),
       description: editingPlan.description.trim() || undefined,
@@ -117,23 +128,32 @@ export default function ClientDetailPage() {
       totalWeeks: parseInt(editingPlan.totalWeeks) || 12,
     };
     updateWorkoutPlan(client!.id, editingPlan.id, patch);
-    try { await dbWorkoutPlans.update(editingPlan.id, patch); } catch {}
+    try {
+      await dbWorkoutPlans.update(editingPlan.id, patch);
+      setEditingPlan(null);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+    }
     setSaving(false);
-    setEditingPlan(null);
   }
 
   async function saveDiet() {
     if (!dietForm.name || !dietForm.calories) return;
-    setSaving(true);
+    setSaving(true); setSaveError("");
     const d = addDietPlan(client!.id, {
       name: dietForm.name, calories: parseInt(dietForm.calories),
       protein: parseFloat(dietForm.protein) || 0, carbs: parseFloat(dietForm.carbs) || 0,
       fat: parseFloat(dietForm.fat) || 0, meals: "[]", notes: dietForm.notes || undefined, active: true,
     });
-    try { await dbDietPlans.create(d); } catch {}
+    try {
+      await dbDietPlans.create(d);
+      setShowDietModal(false);
+      setDietForm({ name: "", calories: "", protein: "", carbs: "", fat: "", notes: "" });
+    } catch (err) {
+      removeDietPlan(client!.id, d.id);
+      setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+    }
     setSaving(false);
-    setShowDietModal(false);
-    setDietForm({ name: "", calories: "", protein: "", carbs: "", fat: "", notes: "" });
   }
 
   async function saveMeasurement() {
@@ -149,17 +169,27 @@ export default function ClientDetailPage() {
       legs: measForm.legs ? parseFloat(measForm.legs) : undefined,
       notes: measForm.notes || undefined,
     });
-    try { await dbMeasurements.create(m); } catch {}
+    try {
+      await dbMeasurements.create(m);
+      setShowMeasModal(false);
+      setMeasForm({ date: new Date().toISOString().split("T")[0], weight: "", bodyFat: "", chest: "", waist: "", hips: "", arms: "", legs: "", notes: "" });
+    } catch (err) {
+      removeMeasurement(client!.id, m.id);
+      setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+    }
     setSaving(false);
-    setShowMeasModal(false);
-    setMeasForm({ date: new Date().toISOString().split("T")[0], weight: "", bodyFat: "", chest: "", waist: "", hips: "", arms: "", legs: "", notes: "" });
   }
 
   async function saveNote() {
     if (!noteText.trim()) return;
     const n = addNote(client!.id, noteText.trim());
-    try { await dbNotes.create(n); } catch {}
-    setNoteText("");
+    try {
+      await dbNotes.create(n);
+      setNoteText("");
+    } catch (err) {
+      removeNote(client!.id, n.id);
+      setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+    }
   }
 
   const tabs: { key: Tab; label: string; icon: React.FC<{ size?: number; style?: React.CSSProperties; className?: string }>; count?: number }[] = [
@@ -208,6 +238,15 @@ export default function ClientDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Save error banner */}
+      {saveError && (
+        <div className="mb-4 p-3 rounded-xl flex items-center justify-between gap-2 text-xs"
+          style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}>
+          <span>⚠ {saveError}</span>
+          <button onClick={() => setSaveError("")} className="opacity-60 hover:opacity-100">✕</button>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 overflow-x-auto pb-1">
