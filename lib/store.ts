@@ -65,6 +65,7 @@ export interface WorkoutPlan {
   shareToken: string;
   createdAt: string;
   active: boolean;
+  dayLabels?: Record<number, string>; // e.g. { 1: "Pull Day", 2: "Push Day" }
 }
 
 // ─── Diet Plan ────────────────────────────────────────────────────────────────
@@ -147,7 +148,7 @@ interface AppState {
   removeClient: (id: string) => void;
 
   // WorkoutPlans
-  addWorkoutPlan: (clientId: string, data: { name: string; description?: string; daysPerWeek: number; totalWeeks: number; phaseId?: string; active: boolean }) => WorkoutPlan;
+  addWorkoutPlan: (clientId: string, data: { name: string; description?: string; daysPerWeek: number; totalWeeks: number; phaseId?: string; active: boolean; dayLabels?: Record<number, string> }) => WorkoutPlan;
   updateWorkoutPlan: (clientId: string, planId: string, data: Partial<WorkoutPlan>) => void;
   removeWorkoutPlan: (clientId: string, planId: string) => void;
 

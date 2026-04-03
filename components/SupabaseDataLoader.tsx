@@ -86,6 +86,7 @@ export default function SupabaseDataLoader() {
               shareToken: p.share_token,
               createdAt: p.created_at,
               active: p.active,
+              dayLabels: parseJsonb<Record<number, string>>(p.day_labels, {}),
             })),
           phases: (phases ?? [])
             .filter((p) => p.client_id === c.id)

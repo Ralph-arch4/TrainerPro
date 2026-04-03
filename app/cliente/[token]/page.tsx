@@ -16,6 +16,7 @@ interface PlanData {
   exercises: Exercise[];
   share_token: string;
   client_id: string;
+  day_labels: Record<number, string> | null;
 }
 
 interface DietData {
@@ -51,7 +52,7 @@ export default function ClientPortalPage() {
         // 1. Load workout plan by share token
         const { data: planRow, error: planErr } = await supabase
           .from("workout_plans")
-          .select("id, name, description, days_per_week, total_weeks, exercises, share_token, client_id")
+          .select("id, name, description, days_per_week, total_weeks, exercises, share_token, client_id, day_labels")
           .eq("share_token", token)
           .single();
 
@@ -265,6 +266,7 @@ export default function ClientPortalPage() {
                 totalWeeks={plan.total_weeks}
                 daysPerWeek={plan.days_per_week}
                 mode="client"
+                dayLabels={plan.day_labels ?? {}}
                 onUpsertLog={handleUpsertLog}
               />
             )}

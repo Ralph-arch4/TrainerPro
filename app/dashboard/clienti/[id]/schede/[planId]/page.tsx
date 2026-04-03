@@ -113,6 +113,18 @@ export default function WorkoutPlanPage() {
     }).catch(() => {});
   }
 
+  function handleUpdateDayLabel(day: number, label: string) {
+    if (!plan) return;
+    const updated: Record<number, string> = { ...((plan.dayLabels as Record<number, string>) ?? {}) };
+    if (label) {
+      updated[day] = label;
+    } else {
+      delete updated[day];
+    }
+    updateWorkoutPlan(id, planId, { dayLabels: updated });
+    dbWorkoutPlans.update(planId, { dayLabels: updated }).catch(() => {});
+  }
+
   return (
     <div className="p-4 pt-20 lg:pt-8 lg:p-8 fade-in">
       {/* Back button */}
@@ -148,6 +160,8 @@ export default function WorkoutPlanPage() {
         daysPerWeek={plan.daysPerWeek}
         mode="trainer"
         shareToken={plan.shareToken}
+        dayLabels={plan.dayLabels}
+        onUpdateDayLabel={handleUpdateDayLabel}
         onAddExercise={handleAddExercise}
         onUpdateExercise={handleUpdateExercise}
         onRemoveExercise={handleRemoveExercise}

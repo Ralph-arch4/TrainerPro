@@ -98,6 +98,7 @@ export const dbWorkoutPlans = {
         exercises:     payload.exercises,
         active:        payload.active,
         share_token:   payload.shareToken,
+        day_labels:    payload.dayLabels ?? null,
       })
       .select()
       .single();
@@ -115,6 +116,7 @@ export const dbWorkoutPlans = {
     if (payload.exercises    !== undefined) mapped.exercises      = payload.exercises;
     if (payload.active       !== undefined) mapped.active         = payload.active;
     if (payload.shareToken   !== undefined) mapped.share_token   = payload.shareToken;
+    if (payload.dayLabels    !== undefined) mapped.day_labels    = payload.dayLabels;
     const { error } = await db().from("workout_plans").update(mapped).eq("id", id);
     if (error) throw error;
   },

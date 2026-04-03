@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { Exercise, ExerciseLog } from "@/lib/store";
-import { Plus, Trash2, ChevronUp, ChevronDown, CheckCircle2, Copy, ExternalLink } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, CheckCircle2, Copy, ExternalLink, Pencil, Check } from "lucide-react";
 
 const MUSCLE_GROUPS = [
   "Petto", "Schiena", "Gambe", "Spalle", "Bicipiti",
@@ -17,6 +17,8 @@ interface Props {
   daysPerWeek?: number;
   mode: "trainer" | "client";
   shareToken?: string;
+  dayLabels?: Record<number, string>;
+  onUpdateDayLabel?: (day: number, label: string) => void;
   onAddExercise?: (data: Omit<Exercise, "id" | "order">) => void;
   onRemoveExercise?: (exerciseId: string) => void;
   onUpdateExercise?: (exerciseId: string, data: Partial<Exercise>) => void;
@@ -31,7 +33,8 @@ const selectStyle = { background: "rgba(26,26,26,1)", border: "1px solid rgba(25
 
 export default function WorkoutSpreadsheet({
   planName, exercises, logs, totalWeeks = 12, daysPerWeek = 3,
-  mode, shareToken, onAddExercise, onRemoveExercise, onUpdateExercise,
+  mode, shareToken, dayLabels = {}, onUpdateDayLabel,
+  onAddExercise, onRemoveExercise, onUpdateExercise,
   onMoveExercise, onUpsertLog,
 }: Props) {
   const weeks = Array.from({ length: totalWeeks }, (_, i) => i + 1);
@@ -44,15 +47,32 @@ export default function WorkoutSpreadsheet({
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: "", muscleGroup: "", sets: "3", targetReps: "8-10", notes: "" });
   const [copied, setCopied] = useState(false);
+  const [editingDayLabel, setEditingDayLabel] = useState<number | null>(null);
+  const [dayLabelDraft, setDayLabelDraft] = useState("");
 
   const shareUrl = typeof window !== "undefined" && shareToken
-    ? `${window.location.origin}/scheda/${shareToken}`
+    ? `${window.location.origin}/cliente/${shareToken}`
     : null;
 
   // Exercises for the active day (fallback: day=1 for legacy exercises with no day set)
   const dayExercises = [...exercises]
     .filter((e) => (e.day ?? 1) === activeDay)
     .sort((a, b) => a.order - b.order);
+
+  function getDayLabel(d: number) {
+    return dayLabels[d] || `Giorno ${d}`;
+  }
+
+  function startEditDayLabel(d: number) {
+    setEditingDayLabel(d);
+    setDayLabelDraft(dayLabels[d] || "");
+  }
+
+  function saveDayLabel(d: number) {
+    const trimmed = dayLabelDraft.trim();
+    onUpdateDayLabel?.(d, trimmed);
+    setEditingDayLabel(null);
+  }
 
   function getLog(exerciseId: string, week: number) {
     return logs.find((l) => l.exerciseId === exerciseId && l.weekNumber === week);
@@ -121,23 +141,55 @@ export default function WorkoutSpreadsheet({
       <div className="flex gap-1.5 mb-5 overflow-x-auto pb-1">
         {days.map((d) => {
           const count = exercises.filter((e) => (e.day ?? 1) === d).length;
+          const isActive = activeDay === d;
+          const isEditing = editingDayLabel === d;
           return (
-            <button key={d} onClick={() => { setActiveDay(d); setShowAddRow(false); setActiveCell(null); }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all"
-              style={{
-                background: activeDay === d ? "rgba(255,107,43,0.14)" : "rgba(255,255,255,0.04)",
-                color: activeDay === d ? "var(--accent-light)" : "rgba(245,240,232,0.5)",
-                border: `1px solid ${activeDay === d ? "rgba(255,107,43,0.3)" : "rgba(255,255,255,0.07)"}`,
-                fontWeight: activeDay === d ? "600" : "400",
-              }}>
-              <span>Giorno {d}</span>
-              {count > 0 && (
-                <span className="text-xs px-1.5 py-0.5 rounded-full"
-                  style={{ background: activeDay === d ? "rgba(255,107,43,0.2)" : "rgba(255,255,255,0.08)", color: activeDay === d ? "var(--accent-light)" : "rgba(245,240,232,0.4)" }}>
-                  {count}
-                </span>
+            <div key={d} className="relative flex-shrink-0">
+              {isEditing && mode === "trainer" ? (
+                <div className="flex items-center gap-1 px-2 py-1.5 rounded-xl"
+                  style={{ background: "rgba(255,107,43,0.14)", border: "1px solid rgba(255,107,43,0.3)" }}>
+                  <input
+                    autoFocus
+                    value={dayLabelDraft}
+                    onChange={(e) => setDayLabelDraft(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") saveDayLabel(d); if (e.key === "Escape") setEditingDayLabel(null); }}
+                    placeholder={`Giorno ${d}`}
+                    className="text-sm outline-none w-28 bg-transparent"
+                    style={{ color: "var(--accent-light)" }}
+                  />
+                  <button onClick={() => saveDayLabel(d)} className="p-0.5 rounded hover:bg-white/10">
+                    <Check size={12} style={{ color: "#22c55e" }} />
+                  </button>
+                  <button onClick={() => setEditingDayLabel(null)} className="p-0.5 rounded hover:bg-white/10 text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>✕</button>
+                </div>
+              ) : (
+                <button onClick={() => { setActiveDay(d); setShowAddRow(false); setActiveCell(null); }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all group/tab"
+                  style={{
+                    background: isActive ? "rgba(255,107,43,0.14)" : "rgba(255,255,255,0.04)",
+                    color: isActive ? "var(--accent-light)" : "rgba(245,240,232,0.5)",
+                    border: `1px solid ${isActive ? "rgba(255,107,43,0.3)" : "rgba(255,255,255,0.07)"}`,
+                    fontWeight: isActive ? "600" : "400",
+                  }}>
+                  <span>{getDayLabel(d)}</span>
+                  {count > 0 && (
+                    <span className="text-xs px-1.5 py-0.5 rounded-full"
+                      style={{ background: isActive ? "rgba(255,107,43,0.2)" : "rgba(255,255,255,0.08)", color: isActive ? "var(--accent-light)" : "rgba(245,240,232,0.4)" }}>
+                      {count}
+                    </span>
+                  )}
+                  {mode === "trainer" && isActive && (
+                    <span
+                      role="button"
+                      onClick={(e) => { e.stopPropagation(); startEditDayLabel(d); }}
+                      className="opacity-0 group-hover/tab:opacity-60 hover:!opacity-100 transition-opacity ml-0.5"
+                      title="Rinomina giorno">
+                      <Pencil size={10} />
+                    </span>
+                  )}
+                </button>
               )}
-            </button>
+            </div>
           );
         })}
       </div>
@@ -147,14 +199,14 @@ export default function WorkoutSpreadsheet({
         <button onClick={() => setShowAddRow(true)}
           className="flex items-center gap-2 mb-4 px-4 py-2 rounded-xl text-sm transition-all"
           style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
-          <Plus size={14} /> Aggiungi esercizio — Giorno {activeDay}
+          <Plus size={14} /> Aggiungi esercizio — {getDayLabel(activeDay)}
         </button>
       )}
 
       {/* Inline add form */}
       {mode === "trainer" && showAddRow && (
         <div className="mb-4 p-4 rounded-2xl" style={{ background: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.2)" }}>
-          <p className="text-xs font-semibold mb-3" style={{ color: "var(--accent-light)" }}>NUOVO ESERCIZIO — GIORNO {activeDay}</p>
+          <p className="text-xs font-semibold mb-3" style={{ color: "var(--accent-light)" }}>NUOVO ESERCIZIO — {getDayLabel(activeDay).toUpperCase()}</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
             <div className="sm:col-span-2">
               <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Nome *</label>
@@ -205,8 +257,8 @@ export default function WorkoutSpreadsheet({
         <div className="text-center py-14 rounded-2xl" style={{ border: "1px dashed rgba(255,107,43,0.15)" }}>
           <p className="text-sm" style={{ color: "rgba(245,240,232,0.35)" }}>
             {mode === "trainer"
-              ? `Nessun esercizio per il Giorno ${activeDay} — aggiungine uno sopra`
-              : `Nessun esercizio pianificato per il Giorno ${activeDay}`}
+              ? `Nessun esercizio per ${getDayLabel(activeDay)} — aggiungine uno sopra`
+              : `Nessun esercizio pianificato per ${getDayLabel(activeDay)}`}
           </p>
         </div>
       ) : (
@@ -218,7 +270,7 @@ export default function WorkoutSpreadsheet({
                 {mode === "trainer" && <th className="w-8 p-2" style={{ borderRight: "1px solid rgba(255,107,43,0.1)" }} />}
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wider"
                   style={{ color: "var(--accent-light)", minWidth: "200px", borderRight: "2px solid rgba(255,107,43,0.15)", position: "sticky", left: 0, background: "rgba(15,8,4,0.98)", zIndex: 10 }}>
-                  Esercizio · Giorno {activeDay}
+                  Esercizio · {getDayLabel(activeDay)}
                 </th>
                 {weeks.map((w) => (
                   <th key={w} className="text-center p-3 text-xs font-semibold"
@@ -352,7 +404,9 @@ export default function WorkoutSpreadsheet({
       )}
 
       <p className="text-xs mt-3" style={{ color: "rgba(245,240,232,0.22)" }}>
-        Clicca su una cella per inserire peso e ripetizioni · Invio per salvare · Esc per annullare
+        {mode === "trainer"
+          ? "Clicca sul nome del giorno per rinominarlo · Clicca su una cella per inserire peso e ripetizioni"
+          : "Clicca su una cella per inserire peso e ripetizioni · Invio per salvare · Esc per annullare"}
       </p>
     </div>
   );
