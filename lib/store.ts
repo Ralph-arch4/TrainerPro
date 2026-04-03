@@ -2,8 +2,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-function uid() { return Math.random().toString(36).slice(2, 10); }
-function genToken() { return `${uid()}${uid()}${uid()}`; }
+function uid() { return crypto.randomUUID(); }
+function genToken() { return crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, ""); }
 
 export type PlanTier = "free" | "personal_coach" | "fitness_master";
 

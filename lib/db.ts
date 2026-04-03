@@ -30,11 +30,11 @@ export const dbClients = {
     if (error) throw error;
     return data;
   },
-  async create(payload: Omit<Client, "id" | "createdAt" | "workoutPlans" | "phases" | "dietPlans" | "measurements" | "notes">) {
+  async create(payload: Omit<Client, "createdAt" | "workoutPlans" | "phases" | "dietPlans" | "measurements" | "notes">) {
     const { data, error } = await db()
       .from("clients")
       .insert({
-        id:          (payload as { id?: string }).id,
+        id:          payload.id,
         user_id:     payload.userId,
         name:        payload.name,
         email:       payload.email || null,

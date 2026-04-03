@@ -120,7 +120,7 @@ function ClientiPageInner() {
 
     const newClient = addClient(payload);
     try {
-      await dbClients.create({ ...payload, id: newClient.id } as Parameters<typeof dbClients.create>[0]);
+      await dbClients.create({ ...newClient });
       setSaving(false);
       setShowModal(false);
       router.push(`/dashboard/clienti/${newClient.id}`);
