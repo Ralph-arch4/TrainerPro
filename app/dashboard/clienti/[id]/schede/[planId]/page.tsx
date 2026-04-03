@@ -26,7 +26,29 @@ export default function WorkoutPlanPage() {
   const removeExercise = useAppStore((s) => s.removeExercise);
   const reorderExercises = useAppStore((s) => s.reorderExercises);
   const upsertLog = useAppStore((s) => s.upsertLog);
+  const removeLog = useAppStore((s) => s.removeLog);
   const updateWorkoutPlan = useAppStore((s) => s.updateWorkoutPlan);
+
+  // Fetch fresh logs from DB every time the trainer opens this plan.
+  // The Zustand store persists to localStorage and won't automatically pick up
+  // logs the client saved via the portal — so we sync from DB on mount.
+  useEffect(() => {
+    if (!plan) return;
+    dbExerciseLogs.listByPlan(planId).then((rows) => {
+      // Clear existing logs for this plan and replace with DB truth
+      plan.logs.forEach((l) => removeLog(id, planId, l.id));
+      rows.forEach((r) => {
+        upsertLog(id, planId, {
+          exerciseId: r.exercise_id,
+          weekNumber: r.week_number,
+          weight: r.weight ?? undefined,
+          reps: r.reps ?? undefined,
+          note: r.note ?? undefined,
+        });
+      });
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planId]);
 
   if (!client || !plan) {
     return (
