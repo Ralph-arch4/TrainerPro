@@ -303,14 +303,27 @@ function FormRow({ form, selected, onSelect, onCopy, copied, onDownload, downloa
 function ResponseDetail({ form }: { form: IntakeForm }) {
   const router = useRouter();
   const user = useAppStore((s) => s.user);
+  const clients = useAppStore((s) => s.clients);
   const addClient = useAppStore((s) => s.addClient);
+  const removeClient = useAppStore((s) => s.removeClient);
   const r = form.response!;
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState(false);
+  const [error, setError] = useState("");
+
+  // Check if a client with the same name already exists
+  const existingClient = clients.find(
+    (c) => c.name.trim().toLowerCase() === (r.fullName ?? "").trim().toLowerCase()
+  );
 
   async function handleCreateClient() {
-    if (!user) return;
+    if (!user || creating || created) return;
+    if (existingClient) {
+      setError(`Un cliente con questo nome esiste già. Vai su Clienti → ${existingClient.name}.`);
+      return;
+    }
     setCreating(true);
+    setError("");
     try {
       const today = new Date().toISOString().split("T")[0];
       const newClient = addClient({
@@ -320,9 +333,16 @@ function ResponseDetail({ form }: { form: IntakeForm }) {
         status: "attivo",
         startDate: today,
       });
-      await dbClients.create({ userId: user.id, name: r.fullName, email: "", status: "attivo", startDate: today });
+      try {
+        await dbClients.create({ ...newClient, userId: user.id });
+      } catch (dbErr) {
+        removeClient(newClient.id);
+        setError("Errore nel salvataggio. Riprova.");
+        setCreating(false);
+        return;
+      }
       setCreated(true);
-      setTimeout(() => router.push("/dashboard/clienti"), 1200);
+      setTimeout(() => router.push(`/dashboard/clienti/${newClient.id}`), 1200);
     } catch {}
     setCreating(false);
   }
@@ -362,19 +382,35 @@ function ResponseDetail({ form }: { form: IntakeForm }) {
             {form.label ? ` · ${form.label}` : ""}
           </p>
         </div>
-        {!created ? (
-          <button onClick={handleCreateClient} disabled={creating}
-            className="accent-btn flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold">
-            {creating ? <Loader2 size={13} className="animate-spin" /> : <UserPlus size={13} />}
-            {creating ? "Creazione…" : "Crea cliente"}
-          </button>
-        ) : (
+        {created ? (
           <span className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold"
             style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
             <CheckCircle2 size={13} /> Cliente creato!
           </span>
+        ) : existingClient ? (
+          <button
+            onClick={() => router.push(`/dashboard/clienti/${existingClient.id}`)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+            style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", color: "#f59e0b" }}>
+            <CheckCircle2 size={13} /> Già esistente — Apri
+          </button>
+        ) : (
+          <button onClick={handleCreateClient} disabled={creating}
+            className="accent-btn flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold disabled:opacity-60">
+            {creating ? <Loader2 size={13} className="animate-spin" /> : <UserPlus size={13} />}
+            {creating ? "Creazione…" : "Crea cliente"}
+          </button>
         )}
       </div>
+
+      {/* Error banner */}
+      {error && (
+        <div className="px-4 py-2.5 flex items-center justify-between gap-2 text-xs"
+          style={{ background: "rgba(239,68,68,0.08)", borderBottom: "1px solid rgba(239,68,68,0.15)", color: "#f87171" }}>
+          <span>⚠ {error}</span>
+          <button onClick={() => setError("")} className="opacity-60 hover:opacity-100">✕</button>
+        </div>
+      )}
 
       {/* Scrollable content */}
       <div className="p-5 overflow-auto" style={{ maxHeight: "calc(100vh - 260px)" }}>
