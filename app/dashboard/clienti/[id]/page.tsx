@@ -7,7 +7,7 @@ import Link from "next/link";
 import {
   ArrowLeft, Activity, UtensilsCrossed, TrendingUp, StickyNote,
   Dumbbell, Plus, X, Loader2, Pencil, Trash2, CheckCircle2, Circle,
-  Mail, Phone, Calendar, Target, BarChart2, ExternalLink
+  Mail, Phone, Calendar, Target, BarChart2, ExternalLink, Copy, Check
 } from "lucide-react";
 
 type Tab = "overview" | "fasi" | "schede" | "dieta" | "misurazioni" | "note";
@@ -65,6 +65,16 @@ export default function ClientDetailPage() {
 
   // Note
   const [noteText, setNoteText] = useState("");
+
+  // Portal link copy
+  const [copiedPlanId, setCopiedPlanId] = useState<string | null>(null);
+  function copyPortalLink(shareToken: string, planId: string) {
+    const url = `${window.location.origin}/cliente/${shareToken}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedPlanId(planId);
+      setTimeout(() => setCopiedPlanId(null), 2000);
+    });
+  }
 
   if (!client) {
     return (
@@ -448,13 +458,16 @@ export default function ClientDetailPage() {
                   </div>
 
                   {/* Share link + open */}
-                  <div className="flex items-center gap-2 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div className="flex items-center gap-2 pt-3 flex-wrap" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                     {wp.shareToken && (
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs truncate" style={{ color: "rgba(245,240,232,0.3)" }}>
-                          Link cliente: …/scheda/{wp.shareToken.slice(0, 12)}…
-                        </p>
-                      </div>
+                      <button
+                        onClick={() => copyPortalLink(wp.shareToken, wp.id)}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all"
+                        style={copiedPlanId === wp.id
+                          ? { background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", color: "#22c55e" }
+                          : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(245,240,232,0.5)" }}>
+                        {copiedPlanId === wp.id ? <><Check size={11} /> Link copiato!</> : <><Copy size={11} /> Portale cliente</>}
+                      </button>
                     )}
                     <Link
                       href={`/dashboard/clienti/${id}/schede/${wp.id}`}
