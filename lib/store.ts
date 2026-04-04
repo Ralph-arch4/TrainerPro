@@ -21,6 +21,7 @@ export interface Exercise {
   muscleGroup?: string;
   sets: number;
   targetReps: string; // e.g. "8-10", "12", "AMRAP"
+  restSeconds?: string; // e.g. "60", "60-90", "120"
   notes?: string;
   order: number;
   day: number; // 1-based day number

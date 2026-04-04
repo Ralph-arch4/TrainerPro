@@ -99,7 +99,7 @@ export const dbWorkoutPlans = {
         active:        payload.active,
         share_token:   payload.shareToken,
         day_labels:    payload.dayLabels ?? null,
-        rest_seconds:  payload.restSeconds ?? null,
+        ...(payload.restSeconds != null ? { rest_seconds: payload.restSeconds } : {}),
       })
       .select()
       .single();
@@ -202,7 +202,7 @@ export const dbDietPlans = {
         phase_id:  payload.phaseId ?? null,
         name:      payload.name,
         calories:      payload.calories,
-        calories_max:  payload.caloriesMax ?? null,
+        ...(payload.caloriesMax != null ? { calories_max: payload.caloriesMax } : {}),
         protein:       payload.protein,
         carbs:         payload.carbs,
         fat:           payload.fat,
