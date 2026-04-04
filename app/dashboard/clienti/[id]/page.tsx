@@ -66,7 +66,7 @@ export default function ClientDetailPage() {
 
   // Diet plan modal
   const [showDietModal, setShowDietModal] = useState(false);
-  const [dietForm, setDietForm] = useState({ name: "", calories: "", caloriesMax: "", protein: "", proteinMax: "", carbs: "", carbsMax: "", fat: "", fatMax: "", notes: "", phaseId: "" });
+  const [dietForm, setDietForm] = useState({ name: "", calories: "", protein: "", carbs: "", fat: "", notes: "", phaseId: "" });
 
   // Note
   const [noteText, setNoteText] = useState("");
@@ -82,17 +82,11 @@ export default function ClientDetailPage() {
     });
   }
 
-  // Live macro calculation for diet form (uses min values)
+  // Live macro calculation for diet form
   const computedKcal = (() => {
     const p = parseFloat(dietForm.protein) || 0;
     const c = parseFloat(dietForm.carbs) || 0;
     const f = parseFloat(dietForm.fat) || 0;
-    return p * 4 + c * 4 + f * 9;
-  })();
-  const computedKcalMax = (() => {
-    const p = parseFloat(dietForm.proteinMax || dietForm.protein) || 0;
-    const c = parseFloat(dietForm.carbsMax || dietForm.carbs) || 0;
-    const f = parseFloat(dietForm.fatMax || dietForm.fat) || 0;
     return p * 4 + c * 4 + f * 9;
   })();
   const enteredKcal = parseFloat(dietForm.calories) || 0;
@@ -207,17 +201,12 @@ export default function ClientDetailPage() {
   async function saveDiet() {
     if (!dietForm.name || !dietForm.calories) return;
     setSaving(true); setSaveError("");
-    const caloriesMax = parseInt(dietForm.caloriesMax) || undefined;
     const d = addDietPlan(client!.id, {
       name: dietForm.name,
       calories: parseInt(dietForm.calories),
-      caloriesMax,
       protein: parseFloat(dietForm.protein) || 0,
-      proteinMax: parseFloat(dietForm.proteinMax) || undefined,
       carbs: parseFloat(dietForm.carbs) || 0,
-      carbsMax: parseFloat(dietForm.carbsMax) || undefined,
       fat: parseFloat(dietForm.fat) || 0,
-      fatMax: parseFloat(dietForm.fatMax) || undefined,
       meals: "[]",
       notes: dietForm.notes || undefined,
       phaseId: dietForm.phaseId || undefined,
@@ -226,7 +215,7 @@ export default function ClientDetailPage() {
     try {
       await dbDietPlans.create(d);
       setShowDietModal(false);
-      setDietForm({ name: "", calories: "", caloriesMax: "", protein: "", proteinMax: "", carbs: "", carbsMax: "", fat: "", fatMax: "", notes: "", phaseId: "" });
+      setDietForm({ name: "", calories: "", protein: "", carbs: "", fat: "", notes: "", phaseId: "" });
       showToast("Piano alimentare salvato");
     } catch (err) {
       removeDietPlan(client!.id, d.id);
@@ -861,42 +850,24 @@ export default function ClientDetailPage() {
                 <input value={dietForm.name} onChange={(e) => setDietForm({ ...dietForm, name: e.target.value })} placeholder="es. Dieta Bulk — 3200 kcal" className={inputClass} style={inputStyle} />
               </div>
 
-              {/* Calorie range */}
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Calorie *</label>
-                <div className="flex items-center gap-2">
+              {/* Calorie + macros */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Calorie totali *</label>
                   <input type="number" value={dietForm.calories} onChange={(e) => setDietForm({ ...dietForm, calories: e.target.value })}
-                    placeholder="Min (es. 2800)" className={inputClass} style={inputStyle} />
-                  <span className="text-xs flex-shrink-0" style={{ color: "rgba(245,240,232,0.35)" }}>—</span>
-                  <input type="number" value={dietForm.caloriesMax} onChange={(e) => setDietForm({ ...dietForm, caloriesMax: e.target.value })}
-                    placeholder="Max (opz.)" className={inputClass} style={inputStyle} />
+                    placeholder="3200" className={inputClass} style={inputStyle} />
                 </div>
-                <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.35)" }}>Inserisci solo il minimo per un valore fisso, o entrambi per un range.</p>
-              </div>
-
-              {/* Macros with optional max */}
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Proteine (g)</label>
-                <div className="flex items-center gap-2">
-                  <input type="number" value={dietForm.protein} onChange={(e) => setDietForm({ ...dietForm, protein: e.target.value })} placeholder="Min (es. 200)" className={inputClass} style={inputStyle} />
-                  <span className="text-xs flex-shrink-0" style={{ color: "rgba(245,240,232,0.35)" }}>—</span>
-                  <input type="number" value={dietForm.proteinMax} onChange={(e) => setDietForm({ ...dietForm, proteinMax: e.target.value })} placeholder="Max (opz.)" className={inputClass} style={inputStyle} />
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Proteine (g)</label>
+                  <input type="number" value={dietForm.protein} onChange={(e) => setDietForm({ ...dietForm, protein: e.target.value })} placeholder="200" className={inputClass} style={inputStyle} />
                 </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Carboidrati (g)</label>
-                <div className="flex items-center gap-2">
-                  <input type="number" value={dietForm.carbs} onChange={(e) => setDietForm({ ...dietForm, carbs: e.target.value })} placeholder="Min (es. 300)" className={inputClass} style={inputStyle} />
-                  <span className="text-xs flex-shrink-0" style={{ color: "rgba(245,240,232,0.35)" }}>—</span>
-                  <input type="number" value={dietForm.carbsMax} onChange={(e) => setDietForm({ ...dietForm, carbsMax: e.target.value })} placeholder="Max (opz.)" className={inputClass} style={inputStyle} />
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Carboidrati (g)</label>
+                  <input type="number" value={dietForm.carbs} onChange={(e) => setDietForm({ ...dietForm, carbs: e.target.value })} placeholder="350" className={inputClass} style={inputStyle} />
                 </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Grassi (g)</label>
-                <div className="flex items-center gap-2">
-                  <input type="number" value={dietForm.fat} onChange={(e) => setDietForm({ ...dietForm, fat: e.target.value })} placeholder="Min (es. 70)" className={inputClass} style={inputStyle} />
-                  <span className="text-xs flex-shrink-0" style={{ color: "rgba(245,240,232,0.35)" }}>—</span>
-                  <input type="number" value={dietForm.fatMax} onChange={(e) => setDietForm({ ...dietForm, fatMax: e.target.value })} placeholder="Max (opz.)" className={inputClass} style={inputStyle} />
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Grassi (g)</label>
+                  <input type="number" value={dietForm.fat} onChange={(e) => setDietForm({ ...dietForm, fat: e.target.value })} placeholder="80" className={inputClass} style={inputStyle} />
                 </div>
               </div>
 
@@ -905,9 +876,7 @@ export default function ClientDetailPage() {
                 <div className="flex items-center justify-between px-3 py-2 rounded-xl text-xs"
                   style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                   <span style={{ color: "rgba(245,240,232,0.5)" }}>Kcal dai macros:</span>
-                  <span style={{ color: "var(--ivory)", fontWeight: 600 }}>
-                    {computedKcal.toFixed(0)}{computedKcalMax > computedKcal ? `–${computedKcalMax.toFixed(0)}` : ""} kcal
-                  </span>
+                  <span style={{ color: "var(--ivory)", fontWeight: 600 }}>{computedKcal.toFixed(0)} kcal</span>
                   {enteredKcal > 0 && (
                     <span style={{
                       color: Math.abs(kcalDiff) < 50 ? "#22c55e" : Math.abs(kcalDiff) < 150 ? "#f59e0b" : "#f87171",
