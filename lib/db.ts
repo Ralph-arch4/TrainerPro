@@ -204,8 +204,11 @@ export const dbDietPlans = {
         calories:      payload.calories,
         calories_max:  payload.caloriesMax ?? null,
         protein:       payload.protein,
+        protein_max:   payload.proteinMax ?? null,
         carbs:         payload.carbs,
+        carbs_max:     payload.carbsMax ?? null,
         fat:           payload.fat,
+        fat_max:       payload.fatMax ?? null,
         meals:         payload.meals ?? null,
         notes:         payload.notes ?? null,
         active:        payload.active ?? true,
@@ -221,9 +224,12 @@ export const dbDietPlans = {
     if (payload.name     !== undefined) mapped.name     = payload.name;
     if (payload.calories    !== undefined) mapped.calories     = payload.calories;
     if (payload.caloriesMax !== undefined) mapped.calories_max = payload.caloriesMax;
-    if (payload.protein  !== undefined) mapped.protein  = payload.protein;
-    if (payload.carbs    !== undefined) mapped.carbs    = payload.carbs;
-    if (payload.fat      !== undefined) mapped.fat      = payload.fat;
+    if (payload.protein    !== undefined) mapped.protein     = payload.protein;
+    if (payload.proteinMax !== undefined) mapped.protein_max  = payload.proteinMax;
+    if (payload.carbs      !== undefined) mapped.carbs        = payload.carbs;
+    if (payload.carbsMax   !== undefined) mapped.carbs_max    = payload.carbsMax;
+    if (payload.fat        !== undefined) mapped.fat          = payload.fat;
+    if (payload.fatMax     !== undefined) mapped.fat_max      = payload.fatMax;
     if (payload.meals    !== undefined) mapped.meals    = payload.meals;
     if (payload.notes    !== undefined) mapped.notes    = payload.notes;
     if (payload.active   !== undefined) mapped.active   = payload.active;

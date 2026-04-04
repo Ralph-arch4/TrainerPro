@@ -21,6 +21,7 @@ export interface Exercise {
   muscleGroup?: string;
   sets: number;
   targetReps: string; // e.g. "8-10", "12", "AMRAP"
+  restSeconds?: number; // rest between sets in seconds
   notes?: string;
   order: number;
   day: number; // 1-based day number
@@ -78,8 +79,11 @@ export interface DietPlan {
   calories: number;
   caloriesMax?: number; // if set, display as range (calories – caloriesMax kcal)
   protein: number;
+  proteinMax?: number;
   carbs: number;
+  carbsMax?: number;
   fat: number;
+  fatMax?: number;
   meals: string;
   notes?: string;
   createdAt: string;

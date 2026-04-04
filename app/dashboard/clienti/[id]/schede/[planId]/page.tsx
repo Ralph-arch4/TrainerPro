@@ -144,7 +144,7 @@ export default function WorkoutPlanPage() {
           <div>
             <h1 className="text-xl font-bold" style={{ color: "var(--ivory)" }}>{plan.name}</h1>
             <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>
-              {plan.daysPerWeek} giorni/sett · {plan.totalWeeks} settimane · {plan.exercises.length} esercizi
+              {plan.daysPerWeek} giorni/sett · {plan.totalWeeks} settimane · {plan.exercises.length} esercizi{plan.restSeconds ? ` · ⏱ ${plan.restSeconds < 60 ? `${plan.restSeconds}″` : `${Math.floor(plan.restSeconds / 60)}′${plan.restSeconds % 60 ? `${plan.restSeconds % 60}″` : ""}`}` : ""}
             </p>
           </div>
         </div>
@@ -158,6 +158,7 @@ export default function WorkoutPlanPage() {
         logs={plan.logs}
         totalWeeks={plan.totalWeeks}
         daysPerWeek={plan.daysPerWeek}
+        restSeconds={plan.restSeconds}
         mode="trainer"
         shareToken={plan.shareToken}
         dayLabels={plan.dayLabels}
