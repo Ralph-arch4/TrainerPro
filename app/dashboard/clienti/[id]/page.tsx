@@ -763,13 +763,6 @@ export default function ClientDetailPage() {
                     {[4,6,8,10,12,16,20,24].map((w) => <option key={w} value={w}>{w} settimane</option>)}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Recupero default (sec)</label>
-                  <select value={workoutForm.restSeconds} onChange={(e) => setWorkoutForm({ ...workoutForm, restSeconds: e.target.value })} className={inputClass} style={selectStyle}>
-                    <option value="">— nessuno —</option>
-                    {[30,45,60,90,120,150,180,240,300].map((s) => <option key={s} value={s}>{formatRestTime(s)}</option>)}
-                  </select>
-                </div>
                 {client.phases.length > 0 && (
                   <div>
                     <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Fase collegata</label>
@@ -824,14 +817,6 @@ export default function ClientDetailPage() {
                   <select value={editingPlan.totalWeeks} onChange={(e) => setEditingPlan({ ...editingPlan, totalWeeks: e.target.value })}
                     className={inputClass} style={selectStyle}>
                     {[4,6,8,10,12,16,20,24].map((w) => <option key={w} value={w}>{w} settimane</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Recupero default (sec)</label>
-                  <select value={editingPlan.restSeconds} onChange={(e) => setEditingPlan({ ...editingPlan, restSeconds: e.target.value })}
-                    className={inputClass} style={selectStyle}>
-                    <option value="">— nessuno —</option>
-                    {[30,45,60,90,120,150,180,240,300].map((s) => <option key={s} value={s}>{formatRestTime(s)}</option>)}
                   </select>
                 </div>
                 {client.phases.length > 0 && (
