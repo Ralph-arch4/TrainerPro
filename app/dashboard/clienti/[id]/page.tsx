@@ -66,7 +66,7 @@ export default function ClientDetailPage() {
 
   // Diet plan modal
   const [showDietModal, setShowDietModal] = useState(false);
-  const [dietForm, setDietForm] = useState({ name: "", calories: "", protein: "", carbs: "", fat: "", notes: "", phaseId: "" });
+  const [dietForm, setDietForm] = useState({ name: "", calories: "", protein: "", proteinMax: "", carbs: "", carbsMax: "", fat: "", fatMax: "", notes: "", phaseId: "" });
 
   // Note
   const [noteText, setNoteText] = useState("");
@@ -201,13 +201,24 @@ export default function ClientDetailPage() {
   async function saveDiet() {
     if (!dietForm.name || !dietForm.calories) return;
     setSaving(true); setSaveError("");
+    // Encode macro ranges into `meals` JSON (no migration needed)
+    const pMax = parseFloat(dietForm.proteinMax) || undefined;
+    const cMax = parseFloat(dietForm.carbsMax) || undefined;
+    const fMax = parseFloat(dietForm.fatMax) || undefined;
+    const hasMacroRanges = pMax !== undefined || cMax !== undefined || fMax !== undefined;
+    const mealsPayload = hasMacroRanges
+      ? JSON.stringify({ proteinMax: pMax, carbsMax: cMax, fatMax: fMax })
+      : "[]";
     const d = addDietPlan(client!.id, {
       name: dietForm.name,
       calories: parseInt(dietForm.calories),
       protein: parseFloat(dietForm.protein) || 0,
+      proteinMax: pMax,
       carbs: parseFloat(dietForm.carbs) || 0,
+      carbsMax: cMax,
       fat: parseFloat(dietForm.fat) || 0,
-      meals: "[]",
+      fatMax: fMax,
+      meals: mealsPayload,
       notes: dietForm.notes || undefined,
       phaseId: dietForm.phaseId || undefined,
       active: true,
@@ -215,7 +226,7 @@ export default function ClientDetailPage() {
     try {
       await dbDietPlans.create(d);
       setShowDietModal(false);
-      setDietForm({ name: "", calories: "", protein: "", carbs: "", fat: "", notes: "", phaseId: "" });
+      setDietForm({ name: "", calories: "", protein: "", proteinMax: "", carbs: "", carbsMax: "", fat: "", fatMax: "", notes: "", phaseId: "" });
       showToast("Piano alimentare salvato");
     } catch (err) {
       removeDietPlan(client!.id, d.id);
@@ -857,17 +868,32 @@ export default function ClientDetailPage() {
                   <input type="number" value={dietForm.calories} onChange={(e) => setDietForm({ ...dietForm, calories: e.target.value })}
                     placeholder="3200" className={inputClass} style={inputStyle} />
                 </div>
+                {/* Protein min → max */}
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Proteine (g)</label>
-                  <input type="number" value={dietForm.protein} onChange={(e) => setDietForm({ ...dietForm, protein: e.target.value })} placeholder="200" className={inputClass} style={inputStyle} />
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Proteine min (g)</label>
+                  <input type="number" value={dietForm.protein} onChange={(e) => setDietForm({ ...dietForm, protein: e.target.value })} placeholder="180" className={inputClass} style={inputStyle} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Carboidrati (g)</label>
-                  <input type="number" value={dietForm.carbs} onChange={(e) => setDietForm({ ...dietForm, carbs: e.target.value })} placeholder="350" className={inputClass} style={inputStyle} />
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Proteine max (g)</label>
+                  <input type="number" value={dietForm.proteinMax} onChange={(e) => setDietForm({ ...dietForm, proteinMax: e.target.value })} placeholder="210" className={inputClass} style={inputStyle} />
+                </div>
+                {/* Carbs min → max */}
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Carboidrati min (g)</label>
+                  <input type="number" value={dietForm.carbs} onChange={(e) => setDietForm({ ...dietForm, carbs: e.target.value })} placeholder="300" className={inputClass} style={inputStyle} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Grassi (g)</label>
-                  <input type="number" value={dietForm.fat} onChange={(e) => setDietForm({ ...dietForm, fat: e.target.value })} placeholder="80" className={inputClass} style={inputStyle} />
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Carboidrati max (g)</label>
+                  <input type="number" value={dietForm.carbsMax} onChange={(e) => setDietForm({ ...dietForm, carbsMax: e.target.value })} placeholder="370" className={inputClass} style={inputStyle} />
+                </div>
+                {/* Fat min → max */}
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Grassi min (g)</label>
+                  <input type="number" value={dietForm.fat} onChange={(e) => setDietForm({ ...dietForm, fat: e.target.value })} placeholder="70" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Grassi max (g)</label>
+                  <input type="number" value={dietForm.fatMax} onChange={(e) => setDietForm({ ...dietForm, fatMax: e.target.value })} placeholder="90" className={inputClass} style={inputStyle} />
                 </div>
               </div>
 

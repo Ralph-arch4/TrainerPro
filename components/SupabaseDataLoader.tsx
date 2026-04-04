@@ -105,24 +105,42 @@ export default function SupabaseDataLoader() {
             })),
           dietPlans: (dietPlans ?? [])
             .filter((dp) => dp.client_id === c.id)
-            .map((dp) => ({
-              id: dp.id,
-              clientId: dp.client_id,
-              phaseId: dp.phase_id ?? undefined,
-              name: dp.name,
-              calories: dp.calories,
-              caloriesMax: dp.calories_max ?? undefined,
-              protein: dp.protein,
-              proteinMax: dp.protein_max ?? undefined,
-              carbs: dp.carbs,
-              carbsMax: dp.carbs_max ?? undefined,
-              fat: dp.fat,
-              fatMax: dp.fat_max ?? undefined,
-              meals: dp.meals,
-              notes: dp.notes ?? undefined,
-              createdAt: dp.created_at,
-              active: dp.active,
-            })),
+            .map((dp) => {
+              // Macro ranges are stored in the `meals` JSON field as
+              // { proteinMax, carbsMax, fatMax } to avoid needing a migration.
+              // Old format is "[]" (plain array) → no ranges.
+              let proteinMax: number | undefined;
+              let carbsMax: number | undefined;
+              let fatMax: number | undefined;
+              let mealsRaw = dp.meals ?? "[]";
+              try {
+                const parsed = JSON.parse(dp.meals ?? "[]");
+                if (!Array.isArray(parsed)) {
+                  proteinMax = parsed.proteinMax ?? undefined;
+                  carbsMax = parsed.carbsMax ?? undefined;
+                  fatMax = parsed.fatMax ?? undefined;
+                  mealsRaw = "[]";
+                }
+              } catch { /* keep defaults */ }
+              return {
+                id: dp.id,
+                clientId: dp.client_id,
+                phaseId: dp.phase_id ?? undefined,
+                name: dp.name,
+                calories: dp.calories,
+                caloriesMax: dp.calories_max ?? undefined,
+                protein: dp.protein,
+                proteinMax,
+                carbs: dp.carbs,
+                carbsMax,
+                fat: dp.fat,
+                fatMax,
+                meals: mealsRaw,
+                notes: dp.notes ?? undefined,
+                createdAt: dp.created_at,
+                active: dp.active,
+              };
+            }),
           measurements: (measurements ?? [])
             .filter((m) => m.client_id === c.id)
             .map((m) => ({
