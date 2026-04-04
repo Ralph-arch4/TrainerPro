@@ -158,7 +158,6 @@ export default function WorkoutPlanPage() {
         logs={plan.logs}
         totalWeeks={plan.totalWeeks}
         daysPerWeek={plan.daysPerWeek}
-        restSeconds={plan.restSeconds}
         mode="trainer"
         shareToken={plan.shareToken}
         dayLabels={plan.dayLabels}
