@@ -87,6 +87,7 @@ export default function SupabaseDataLoader() {
               createdAt: p.created_at,
               active: p.active,
               dayLabels: parseJsonb<Record<number, string>>(p.day_labels, {}),
+              restSeconds: p.rest_seconds ?? undefined,
             })),
           phases: (phases ?? [])
             .filter((p) => p.client_id === c.id)
@@ -110,6 +111,7 @@ export default function SupabaseDataLoader() {
               phaseId: dp.phase_id ?? undefined,
               name: dp.name,
               calories: dp.calories,
+              caloriesMax: dp.calories_max ?? undefined,
               protein: dp.protein,
               carbs: dp.carbs,
               fat: dp.fat,

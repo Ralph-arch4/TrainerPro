@@ -1,5 +1,6 @@
 import AppNav from "@/components/AppNav";
 import SupabaseDataLoader from "@/components/SupabaseDataLoader";
+import ToastProvider from "@/components/Toast";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +10,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1 lg:ml-60 pt-14 lg:pt-0 min-h-screen">
         {children}
       </main>
+      <ToastProvider />
     </div>
   );
 }

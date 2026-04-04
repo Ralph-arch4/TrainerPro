@@ -99,6 +99,7 @@ export const dbWorkoutPlans = {
         active:        payload.active,
         share_token:   payload.shareToken,
         day_labels:    payload.dayLabels ?? null,
+        rest_seconds:  payload.restSeconds ?? null,
       })
       .select()
       .single();
@@ -117,6 +118,7 @@ export const dbWorkoutPlans = {
     if (payload.active       !== undefined) mapped.active         = payload.active;
     if (payload.shareToken   !== undefined) mapped.share_token   = payload.shareToken;
     if (payload.dayLabels    !== undefined) mapped.day_labels    = payload.dayLabels;
+    if (payload.restSeconds  !== undefined) mapped.rest_seconds  = payload.restSeconds;
     const { error } = await db().from("workout_plans").update(mapped).eq("id", id);
     if (error) throw error;
   },
@@ -199,13 +201,14 @@ export const dbDietPlans = {
         client_id: payload.clientId,
         phase_id:  payload.phaseId ?? null,
         name:      payload.name,
-        calories:  payload.calories,
-        protein:   payload.protein,
-        carbs:     payload.carbs,
-        fat:       payload.fat,
-        meals:     payload.meals ?? null,
-        notes:     payload.notes ?? null,
-        active:    payload.active ?? true,
+        calories:      payload.calories,
+        calories_max:  payload.caloriesMax ?? null,
+        protein:       payload.protein,
+        carbs:         payload.carbs,
+        fat:           payload.fat,
+        meals:         payload.meals ?? null,
+        notes:         payload.notes ?? null,
+        active:        payload.active ?? true,
       })
       .select()
       .single();
@@ -216,7 +219,8 @@ export const dbDietPlans = {
     const mapped: Record<string, unknown> = {};
     if (payload.phaseId  !== undefined) mapped.phase_id = payload.phaseId;
     if (payload.name     !== undefined) mapped.name     = payload.name;
-    if (payload.calories !== undefined) mapped.calories = payload.calories;
+    if (payload.calories    !== undefined) mapped.calories     = payload.calories;
+    if (payload.caloriesMax !== undefined) mapped.calories_max = payload.caloriesMax;
     if (payload.protein  !== undefined) mapped.protein  = payload.protein;
     if (payload.carbs    !== undefined) mapped.carbs    = payload.carbs;
     if (payload.fat      !== undefined) mapped.fat      = payload.fat;

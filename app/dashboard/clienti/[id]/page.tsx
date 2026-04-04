@@ -2,15 +2,16 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
-import { dbPhases, dbWorkoutPlans, dbDietPlans, dbMeasurements, dbNotes } from "@/lib/db";
+import { dbPhases, dbWorkoutPlans, dbDietPlans, dbNotes } from "@/lib/db";
+import { showToast } from "@/components/Toast";
 import Link from "next/link";
 import {
-  ArrowLeft, Activity, UtensilsCrossed, TrendingUp, StickyNote,
+  ArrowLeft, Activity, UtensilsCrossed, StickyNote,
   Dumbbell, Plus, X, Loader2, Pencil, Trash2, CheckCircle2, Circle,
-  Mail, Phone, Calendar, Target, BarChart2, ExternalLink, Copy, Check
+  Mail, Phone, Calendar, Target, BarChart2, ExternalLink, Copy, Check, Timer,
 } from "lucide-react";
 
-type Tab = "overview" | "fasi" | "schede" | "dieta" | "misurazioni" | "note";
+type Tab = "overview" | "fasi" | "schede" | "dieta" | "note";
 
 const goalLabel: Record<string, string> = { dimagrimento: "Dimagrimento", massa: "Massa", tonificazione: "Tonificazione", performance: "Performance" };
 const levelLabel: Record<string, string> = { principiante: "Principiante", intermedio: "Intermedio", avanzato: "Avanzato" };
@@ -21,6 +22,17 @@ const statusLabel: Record<string, string> = { attivo: "Attivo", in_pausa: "In pa
 
 function formatDate(d: string) { return new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" }); }
 
+function formatRestTime(sec: number): string {
+  if (sec < 60) return `${sec}″`;
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return s ? `${m}′${s}″` : `${m}′`;
+}
+
+function formatCalories(calories: number, caloriesMax?: number): string {
+  if (caloriesMax && caloriesMax > calories) return `${calories}–${caloriesMax} kcal`;
+  return `${calories} kcal`;
+}
+
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -30,14 +42,12 @@ export default function ClientDetailPage() {
   const updatePhase = useAppStore((s) => s.updatePhase);
   const removePhase = useAppStore((s) => s.removePhase);
   const addWorkoutPlan = useAppStore((s) => s.addWorkoutPlan);
+  const updateWorkoutPlan = useAppStore((s) => s.updateWorkoutPlan);
   const removeWorkoutPlan = useAppStore((s) => s.removeWorkoutPlan);
   const addDietPlan = useAppStore((s) => s.addDietPlan);
   const removeDietPlan = useAppStore((s) => s.removeDietPlan);
-  const addMeasurement = useAppStore((s) => s.addMeasurement);
-  const removeMeasurement = useAppStore((s) => s.removeMeasurement);
   const addNote = useAppStore((s) => s.addNote);
   const removeNote = useAppStore((s) => s.removeNote);
-  const updateClient = useAppStore((s) => s.updateClient);
 
   const [tab, setTab] = useState<Tab>((searchParams.get("tab") as Tab) || "overview");
   const [saving, setSaving] = useState(false);
@@ -49,25 +59,21 @@ export default function ClientDetailPage() {
 
   // Workout plan modal
   const [showWorkoutModal, setShowWorkoutModal] = useState(false);
-  const [workoutForm, setWorkoutForm] = useState({ name: "", description: "", daysPerWeek: "3", totalWeeks: "12" });
+  const [workoutForm, setWorkoutForm] = useState({ name: "", description: "", daysPerWeek: "3", totalWeeks: "12", restSeconds: "90", phaseId: "" });
 
   // Workout plan edit modal
-  const [editingPlan, setEditingPlan] = useState<{ id: string; name: string; description: string; daysPerWeek: string; totalWeeks: string } | null>(null);
-  const updateWorkoutPlan = useAppStore((s) => s.updateWorkoutPlan);
+  const [editingPlan, setEditingPlan] = useState<{ id: string; name: string; description: string; daysPerWeek: string; totalWeeks: string; restSeconds: string; phaseId: string } | null>(null);
 
   // Diet plan modal
   const [showDietModal, setShowDietModal] = useState(false);
-  const [dietForm, setDietForm] = useState({ name: "", calories: "", protein: "", carbs: "", fat: "", notes: "" });
-
-  // Measurement modal
-  const [showMeasModal, setShowMeasModal] = useState(false);
-  const [measForm, setMeasForm] = useState({ date: new Date().toISOString().split("T")[0], weight: "", bodyFat: "", chest: "", waist: "", hips: "", arms: "", legs: "", notes: "" });
+  const [dietForm, setDietForm] = useState({ name: "", calories: "", caloriesMax: "", protein: "", carbs: "", fat: "", notes: "", phaseId: "" });
 
   // Note
   const [noteText, setNoteText] = useState("");
 
   // Portal link copy
   const [copiedPlanId, setCopiedPlanId] = useState<string | null>(null);
+
   function copyPortalLink(shareToken: string, planId: string) {
     const url = `${window.location.origin}/cliente/${shareToken}`;
     navigator.clipboard.writeText(url).then(() => {
@@ -75,6 +81,17 @@ export default function ClientDetailPage() {
       setTimeout(() => setCopiedPlanId(null), 2000);
     });
   }
+
+  // Live macro calculation for diet form
+  const computedKcal = (() => {
+    const p = parseFloat(dietForm.protein) || 0;
+    const c = parseFloat(dietForm.carbs) || 0;
+    const f = parseFloat(dietForm.fat) || 0;
+    return p * 4 + c * 4 + f * 9;
+  })();
+  const enteredKcal = parseFloat(dietForm.calories) || 0;
+  const kcalDiff = enteredKcal - computedKcal;
+  const showMacroBadge = (parseFloat(dietForm.protein) || parseFloat(dietForm.carbs) || parseFloat(dietForm.fat)) > 0;
 
   if (!client) {
     return (
@@ -101,9 +118,11 @@ export default function ClientDetailPage() {
       await dbPhases.create(p);
       setShowPhaseModal(false);
       setPhaseForm({ name: "", type: "bulk", startDate: "", endDate: "", targetCalories: "", targetWeight: "", notes: "" });
+      showToast("Fase salvata");
     } catch (err) {
       removePhase(client!.id, p.id);
       setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+      showToast("Errore nel salvataggio", "error");
     }
     setSaving(false);
   }
@@ -111,19 +130,24 @@ export default function ClientDetailPage() {
   async function saveWorkout() {
     if (!workoutForm.name) return;
     setSaving(true); setSaveError("");
+    const rest = parseInt(workoutForm.restSeconds) || undefined;
     const w = addWorkoutPlan(client!.id, {
       name: workoutForm.name, description: workoutForm.description,
       daysPerWeek: parseInt(workoutForm.daysPerWeek),
       totalWeeks: parseInt(workoutForm.totalWeeks) || 12,
+      restSeconds: rest,
+      phaseId: workoutForm.phaseId || undefined,
       active: true,
     });
     try {
       await dbWorkoutPlans.create(w);
       setShowWorkoutModal(false);
-      setWorkoutForm({ name: "", description: "", daysPerWeek: "3", totalWeeks: "12" });
+      setWorkoutForm({ name: "", description: "", daysPerWeek: "3", totalWeeks: "12", restSeconds: "90", phaseId: "" });
+      showToast("Scheda creata");
     } catch (err) {
       removeWorkoutPlan(client!.id, w.id);
       setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+      showToast("Errore nel salvataggio", "error");
     }
     setSaving(false);
   }
@@ -136,56 +160,69 @@ export default function ClientDetailPage() {
       description: editingPlan.description.trim() || undefined,
       daysPerWeek: parseInt(editingPlan.daysPerWeek),
       totalWeeks: parseInt(editingPlan.totalWeeks) || 12,
+      restSeconds: parseInt(editingPlan.restSeconds) || undefined,
+      phaseId: editingPlan.phaseId || undefined,
     };
     updateWorkoutPlan(client!.id, editingPlan.id, patch);
     try {
       await dbWorkoutPlans.update(editingPlan.id, patch);
       setEditingPlan(null);
+      showToast("Scheda aggiornata");
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+      showToast("Errore nel salvataggio", "error");
     }
     setSaving(false);
+  }
+
+  async function duplicatePlan(wp: ReturnType<typeof useAppStore.getState>["clients"][0]["workoutPlans"][0]) {
+    const newPlan = addWorkoutPlan(client!.id, {
+      name: `${wp.name} (copia)`,
+      description: wp.description,
+      daysPerWeek: wp.daysPerWeek,
+      totalWeeks: wp.totalWeeks,
+      restSeconds: wp.restSeconds,
+      phaseId: wp.phaseId,
+      active: false,
+      dayLabels: wp.dayLabels,
+    });
+    // Copy exercises
+    const withExercises = { ...newPlan, exercises: wp.exercises.map((e) => ({ ...e, id: crypto.randomUUID() })) };
+    updateWorkoutPlan(client!.id, newPlan.id, { exercises: withExercises.exercises });
+    try {
+      await dbWorkoutPlans.create({ ...withExercises });
+      showToast("Scheda duplicata");
+    } catch (err) {
+      removeWorkoutPlan(client!.id, newPlan.id);
+      showToast("Errore nella duplicazione", "error");
+    }
   }
 
   async function saveDiet() {
     if (!dietForm.name || !dietForm.calories) return;
     setSaving(true); setSaveError("");
+    const caloriesMax = parseInt(dietForm.caloriesMax) || undefined;
     const d = addDietPlan(client!.id, {
-      name: dietForm.name, calories: parseInt(dietForm.calories),
-      protein: parseFloat(dietForm.protein) || 0, carbs: parseFloat(dietForm.carbs) || 0,
-      fat: parseFloat(dietForm.fat) || 0, meals: "[]", notes: dietForm.notes || undefined, active: true,
+      name: dietForm.name,
+      calories: parseInt(dietForm.calories),
+      caloriesMax,
+      protein: parseFloat(dietForm.protein) || 0,
+      carbs: parseFloat(dietForm.carbs) || 0,
+      fat: parseFloat(dietForm.fat) || 0,
+      meals: "[]",
+      notes: dietForm.notes || undefined,
+      phaseId: dietForm.phaseId || undefined,
+      active: true,
     });
     try {
       await dbDietPlans.create(d);
       setShowDietModal(false);
-      setDietForm({ name: "", calories: "", protein: "", carbs: "", fat: "", notes: "" });
+      setDietForm({ name: "", calories: "", caloriesMax: "", protein: "", carbs: "", fat: "", notes: "", phaseId: "" });
+      showToast("Piano alimentare salvato");
     } catch (err) {
       removeDietPlan(client!.id, d.id);
       setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
-    }
-    setSaving(false);
-  }
-
-  async function saveMeasurement() {
-    if (!measForm.weight) return;
-    setSaving(true);
-    const m = addMeasurement(client!.id, {
-      date: measForm.date, weight: parseFloat(measForm.weight),
-      bodyFat: measForm.bodyFat ? parseFloat(measForm.bodyFat) : undefined,
-      chest: measForm.chest ? parseFloat(measForm.chest) : undefined,
-      waist: measForm.waist ? parseFloat(measForm.waist) : undefined,
-      hips: measForm.hips ? parseFloat(measForm.hips) : undefined,
-      arms: measForm.arms ? parseFloat(measForm.arms) : undefined,
-      legs: measForm.legs ? parseFloat(measForm.legs) : undefined,
-      notes: measForm.notes || undefined,
-    });
-    try {
-      await dbMeasurements.create(m);
-      setShowMeasModal(false);
-      setMeasForm({ date: new Date().toISOString().split("T")[0], weight: "", bodyFat: "", chest: "", waist: "", hips: "", arms: "", legs: "", notes: "" });
-    } catch (err) {
-      removeMeasurement(client!.id, m.id);
-      setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+      showToast("Errore nel salvataggio", "error");
     }
     setSaving(false);
   }
@@ -196,9 +233,10 @@ export default function ClientDetailPage() {
     try {
       await dbNotes.create(n);
       setNoteText("");
+      showToast("Nota aggiunta");
     } catch (err) {
       removeNote(client!.id, n.id);
-      setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+      showToast("Errore nel salvataggio", "error");
     }
   }
 
@@ -207,13 +245,22 @@ export default function ClientDetailPage() {
     { key: "fasi", label: "Fasi", icon: Activity, count: client.phases.length },
     { key: "schede", label: "Schede", icon: Dumbbell, count: client.workoutPlans.length },
     { key: "dieta", label: "Dieta", icon: UtensilsCrossed, count: client.dietPlans.length },
-    { key: "misurazioni", label: "Misurazioni", icon: TrendingUp, count: client.measurements.length },
     { key: "note", label: "Note", icon: StickyNote, count: client.notes.length },
   ];
 
   const inputClass = "w-full px-3 py-2.5 rounded-xl text-sm outline-none";
   const inputStyle = { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" };
   const selectStyle = { background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" };
+
+  const activePhase = [...client.phases]
+    .filter((p) => !p.completed)
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())[0];
+
+  // Recent logs: last 2 weeks across all plans
+  const recentLogCount = client.workoutPlans.reduce((acc, wp) => {
+    const twoWeeksAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
+    return acc + wp.logs.filter((l) => new Date(l.loggedAt).getTime() > twoWeeksAgo).length;
+  }, 0);
 
   return (
     <div className="p-4 pt-20 lg:pt-8 lg:p-8 fade-in">
@@ -299,7 +346,7 @@ export default function ClientDetailPage() {
                 { label: "Fasi", value: client.phases.length, color: "#a78bfa" },
                 { label: "Schede", value: client.workoutPlans.length, color: "var(--accent)" },
                 { label: "Diete", value: client.dietPlans.length, color: "#34d399" },
-                { label: "Misurazioni", value: client.measurements.length, color: "#38bdf8" },
+                { label: "Log recenti", value: recentLogCount, color: "#38bdf8" },
               ].map(({ label, value, color }) => (
                 <div key={label} className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.04)" }}>
                   <p className="text-2xl font-bold" style={{ color }}>{value}</p>
@@ -309,21 +356,47 @@ export default function ClientDetailPage() {
             </div>
           </div>
 
-          {client.measurements.length > 0 && (
+          {activePhase && (
             <div className="card-luxury rounded-2xl p-5 sm:col-span-2">
-              <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--ivory)" }}>Ultima misurazione</h3>
-              {(() => {
-                const last = [...client.measurements].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-                return (
-                  <div className="flex flex-wrap gap-4">
-                    <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Peso</p><p className="text-xl font-bold" style={{ color: "var(--ivory)" }}>{last.weight} kg</p></div>
-                    {last.bodyFat && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Grasso</p><p className="text-xl font-bold" style={{ color: "var(--ivory)" }}>{last.bodyFat}%</p></div>}
-                    {last.waist && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Vita</p><p className="text-xl font-bold" style={{ color: "var(--ivory)" }}>{last.waist} cm</p></div>}
-                    {last.arms && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Braccia</p><p className="text-xl font-bold" style={{ color: "var(--ivory)" }}>{last.arms} cm</p></div>}
-                    <div className="ml-auto self-end"><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{formatDate(last.date)}</p></div>
-                  </div>
-                );
-              })()}
+              <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--ivory)" }}>Fase attiva</h3>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: phaseTypeColor[activePhase.type] }} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm" style={{ color: "var(--ivory)" }}>{activePhase.name}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>
+                    {formatDate(activePhase.startDate)} → {formatDate(activePhase.endDate)}
+                  </p>
+                </div>
+                <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: `${phaseTypeColor[activePhase.type]}18`, color: phaseTypeColor[activePhase.type] }}>
+                  {phaseTypeLabel[activePhase.type]}
+                </span>
+                {activePhase.targetCalories && (
+                  <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: "rgba(255,255,255,0.05)", color: "rgba(245,240,232,0.6)" }}>
+                    {activePhase.targetCalories} kcal target
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {recentLogCount > 0 && (
+            <div className="card-luxury rounded-2xl p-5 sm:col-span-2">
+              <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--ivory)" }}>Attività recente (14 giorni)</h3>
+              <div className="space-y-2">
+                {client.workoutPlans.map((wp) => {
+                  const twoWeeksAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
+                  const recentLogs = wp.logs.filter((l) => new Date(l.loggedAt).getTime() > twoWeeksAgo);
+                  if (recentLogs.length === 0) return null;
+                  const lastLog = [...recentLogs].sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime())[0];
+                  return (
+                    <div key={wp.id} className="flex items-center gap-3 text-sm">
+                      <Dumbbell size={13} style={{ color: "var(--accent)", flexShrink: 0 }} />
+                      <span className="flex-1" style={{ color: "rgba(245,240,232,0.7)" }}>{wp.name}</span>
+                      <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{recentLogs.length} log · ultima {formatDate(lastLog.loggedAt)}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
@@ -407,77 +480,93 @@ export default function ClientDetailPage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {[...client.workoutPlans].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((wp) => (
-                <div key={wp.id} className="card-luxury rounded-2xl p-5">
-                  {/* Header row */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0 pr-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold" style={{ color: "var(--ivory)" }}>{wp.name}</p>
-                        {wp.active && (
-                          <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Attiva</span>
+              {[...client.workoutPlans].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((wp) => {
+                const linkedPhase = client.phases.find((ph) => ph.id === wp.phaseId);
+                return (
+                  <div key={wp.id} className="card-luxury rounded-2xl p-5">
+                    {/* Header row */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0 pr-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold" style={{ color: "var(--ivory)" }}>{wp.name}</p>
+                          {wp.active && (
+                            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Attiva</span>
+                          )}
+                          {linkedPhase && (
+                            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `${phaseTypeColor[linkedPhase.type]}18`, color: phaseTypeColor[linkedPhase.type] }}>
+                              {linkedPhase.name}
+                            </span>
+                          )}
+                        </div>
+                        {wp.description && (
+                          <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.45)" }}>{wp.description}</p>
                         )}
                       </div>
-                      {wp.description && (
-                        <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.45)" }}>{wp.description}</p>
+                      {/* Action buttons */}
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => duplicatePlan(wp)}
+                          className="p-1.5 rounded-lg hover:bg-white/5 transition-all"
+                          title="Duplica scheda">
+                          <Copy size={13} style={{ color: "rgba(245,240,232,0.45)" }} />
+                        </button>
+                        <button
+                          onClick={() => setEditingPlan({ id: wp.id, name: wp.name, description: wp.description ?? "", daysPerWeek: String(wp.daysPerWeek), totalWeeks: String(wp.totalWeeks ?? 12), restSeconds: String(wp.restSeconds ?? 90), phaseId: wp.phaseId ?? "" })}
+                          className="p-1.5 rounded-lg hover:bg-white/5 transition-all"
+                          title="Modifica scheda">
+                          <Pencil size={13} style={{ color: "rgba(245,240,232,0.45)" }} />
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (!confirm(`Eliminare la scheda "${wp.name}"?`)) return;
+                            removeWorkoutPlan(client!.id, wp.id);
+                            try { await dbWorkoutPlans.remove(wp.id); } catch {}
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all"
+                          title="Elimina scheda">
+                          <Trash2 size={13} style={{ color: "rgba(239,68,68,0.55)" }} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Stats row */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {[
+                        { label: `${wp.daysPerWeek} giorni/sett` },
+                        { label: `${wp.totalWeeks ?? 12} settimane` },
+                        { label: `${wp.exercises.length} esercizi` },
+                        ...(wp.restSeconds ? [{ label: formatRestTime(wp.restSeconds), icon: true }] : []),
+                      ].map(({ label, icon }) => (
+                        <span key={label} className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg"
+                          style={{ background: "rgba(255,255,255,0.05)", color: "rgba(245,240,232,0.5)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                          {icon && <Timer size={10} />}
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Share link + open */}
+                    <div className="flex items-center gap-2 pt-3 flex-wrap" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                      {wp.shareToken && (
+                        <button
+                          onClick={() => copyPortalLink(wp.shareToken, wp.id)}
+                          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all"
+                          style={copiedPlanId === wp.id
+                            ? { background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", color: "#22c55e" }
+                            : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(245,240,232,0.5)" }}>
+                          {copiedPlanId === wp.id ? <><Check size={11} /> Link copiato!</> : <><Copy size={11} /> Portale cliente</>}
+                        </button>
                       )}
-                    </div>
-                    {/* Action buttons */}
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <button
-                        onClick={() => setEditingPlan({ id: wp.id, name: wp.name, description: wp.description ?? "", daysPerWeek: String(wp.daysPerWeek), totalWeeks: String(wp.totalWeeks ?? 12) })}
-                        className="p-1.5 rounded-lg hover:bg-white/5 transition-all"
-                        title="Modifica scheda">
-                        <Pencil size={13} style={{ color: "rgba(245,240,232,0.45)" }} />
-                      </button>
-                      <button
-                        onClick={async () => {
-                          if (!confirm(`Eliminare la scheda "${wp.name}"?`)) return;
-                          removeWorkoutPlan(client!.id, wp.id);
-                          try { await dbWorkoutPlans.remove(wp.id); } catch {}
-                        }}
-                        className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all"
-                        title="Elimina scheda">
-                        <Trash2 size={13} style={{ color: "rgba(239,68,68,0.55)" }} />
-                      </button>
+                      <Link
+                        href={`/dashboard/clienti/${id}/schede/${wp.id}`}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all ml-auto"
+                        style={{ background: "rgba(255,107,43,0.1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
+                        <ExternalLink size={11} /> Apri &amp; Modifica
+                      </Link>
                     </div>
                   </div>
-
-                  {/* Stats row */}
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {[
-                      { label: `${wp.daysPerWeek} giorni/sett` },
-                      { label: `${wp.totalWeeks ?? 12} settimane` },
-                      { label: `${wp.exercises.length} esercizi` },
-                    ].map(({ label }) => (
-                      <span key={label} className="text-xs px-2.5 py-1 rounded-lg"
-                        style={{ background: "rgba(255,255,255,0.05)", color: "rgba(245,240,232,0.5)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Share link + open */}
-                  <div className="flex items-center gap-2 pt-3 flex-wrap" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                    {wp.shareToken && (
-                      <button
-                        onClick={() => copyPortalLink(wp.shareToken, wp.id)}
-                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all"
-                        style={copiedPlanId === wp.id
-                          ? { background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", color: "#22c55e" }
-                          : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(245,240,232,0.5)" }}>
-                        {copiedPlanId === wp.id ? <><Check size={11} /> Link copiato!</> : <><Copy size={11} /> Portale cliente</>}
-                      </button>
-                    )}
-                    <Link
-                      href={`/dashboard/clienti/${id}/schede/${wp.id}`}
-                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all ml-auto"
-                      style={{ background: "rgba(255,107,43,0.1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
-                      <ExternalLink size={11} /> Apri &amp; Modifica
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -500,82 +589,44 @@ export default function ClientDetailPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {client.dietPlans.map((dp) => (
-                <div key={dp.id} className="card-luxury rounded-2xl p-5">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold" style={{ color: "var(--ivory)" }}>{dp.name}</p>
-                        {dp.active && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Attivo</span>}
+              {client.dietPlans.map((dp) => {
+                const linkedPhase = client.phases.find((ph) => ph.id === dp.phaseId);
+                return (
+                  <div key={dp.id} className="card-luxury rounded-2xl p-5">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold" style={{ color: "var(--ivory)" }}>{dp.name}</p>
+                          {dp.active && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Attivo</span>}
+                          {linkedPhase && (
+                            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `${phaseTypeColor[linkedPhase.type]}18`, color: phaseTypeColor[linkedPhase.type] }}>
+                              {linkedPhase.name}
+                            </span>
+                          )}
+                        </div>
                       </div>
+                      <button onClick={async () => { removeDietPlan(client!.id, dp.id); try { await dbDietPlans.remove(dp.id); } catch {} }}
+                        className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all">
+                        <Trash2 size={14} style={{ color: "rgba(239,68,68,0.6)" }} />
+                      </button>
                     </div>
-                    <button onClick={async () => { removeDietPlan(client!.id, dp.id); try { await dbDietPlans.remove(dp.id); } catch {} }}
-                      className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all">
-                      <Trash2 size={14} style={{ color: "rgba(239,68,68,0.6)" }} />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-4 gap-3">
-                    {[
-                      { label: "Calorie", value: `${dp.calories} kcal`, color: "var(--accent)" },
-                      { label: "Proteine", value: `${dp.protein}g`, color: "#a78bfa" },
-                      { label: "Carboidrati", value: `${dp.carbs}g`, color: "#38bdf8" },
-                      { label: "Grassi", value: `${dp.fat}g`, color: "#fbbf24" },
-                    ].map(({ label, value, color }) => (
-                      <div key={label} className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.04)" }}>
-                        <p className="text-sm font-bold" style={{ color }}>{value}</p>
-                        <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
-                      </div>
-                    ))}
-                  </div>
-                  {dp.notes && <p className="text-xs mt-3" style={{ color: "rgba(245,240,232,0.45)" }}>{dp.notes}</p>}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── MISURAZIONI ── */}
-      {tab === "misurazioni" && (
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{client.measurements.length} rilevazioni</p>
-            <button onClick={() => setShowMeasModal(true)} className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm">
-              <Plus size={14} /> Aggiungi
-            </button>
-          </div>
-          {client.measurements.length === 0 ? (
-            <div className="text-center py-16 card-luxury rounded-2xl">
-              <TrendingUp size={40} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.25)" }} />
-              <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>Nessuna misurazione registrata</p>
-              <button onClick={() => setShowMeasModal(true)} className="mt-3 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>Registra la prima</button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {[...client.measurements].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((m, i) => (
-                <div key={m.id} className="card-luxury rounded-2xl p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold" style={{ color: "var(--ivory)" }}>{formatDate(m.date)}</p>
-                      {i === 0 && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(255,107,43,0.12)", color: "var(--accent-light)" }}>Ultima</span>}
+                    <div className="grid grid-cols-4 gap-3">
+                      {[
+                        { label: "Calorie", value: formatCalories(dp.calories, dp.caloriesMax), color: "var(--accent)" },
+                        { label: "Proteine", value: `${dp.protein}g`, color: "#a78bfa" },
+                        { label: "Carboidrati", value: `${dp.carbs}g`, color: "#38bdf8" },
+                        { label: "Grassi", value: `${dp.fat}g`, color: "#fbbf24" },
+                      ].map(({ label, value, color }) => (
+                        <div key={label} className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.04)" }}>
+                          <p className="text-sm font-bold" style={{ color }}>{value}</p>
+                          <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
+                        </div>
+                      ))}
                     </div>
-                    <button onClick={async () => { removeMeasurement(client!.id, m.id); try { await dbMeasurements.remove(m.id); } catch {} }}
-                      className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all">
-                      <Trash2 size={14} style={{ color: "rgba(239,68,68,0.6)" }} />
-                    </button>
+                    {dp.notes && <p className="text-xs mt-3" style={{ color: "rgba(245,240,232,0.45)" }}>{dp.notes}</p>}
                   </div>
-                  <div className="flex flex-wrap gap-4">
-                    <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Peso</p><p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{m.weight} kg</p></div>
-                    {m.bodyFat && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>% grasso</p><p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{m.bodyFat}%</p></div>}
-                    {m.chest && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Petto</p><p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{m.chest} cm</p></div>}
-                    {m.waist && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Vita</p><p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{m.waist} cm</p></div>}
-                    {m.hips && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Fianchi</p><p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{m.hips} cm</p></div>}
-                    {m.arms && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Braccia</p><p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{m.arms} cm</p></div>}
-                    {m.legs && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Gambe</p><p className="text-lg font-bold" style={{ color: "var(--ivory)" }}>{m.legs} cm</p></div>}
-                  </div>
-                  {m.notes && <p className="text-xs mt-2" style={{ color: "rgba(245,240,232,0.4)" }}>{m.notes}</p>}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -703,6 +754,22 @@ export default function ClientDetailPage() {
                     {[4,6,8,10,12,16,20,24].map((w) => <option key={w} value={w}>{w} settimane</option>)}
                   </select>
                 </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Recupero default (sec)</label>
+                  <select value={workoutForm.restSeconds} onChange={(e) => setWorkoutForm({ ...workoutForm, restSeconds: e.target.value })} className={inputClass} style={selectStyle}>
+                    <option value="">— nessuno —</option>
+                    {[30,45,60,90,120,150,180,240,300].map((s) => <option key={s} value={s}>{formatRestTime(s)}</option>)}
+                  </select>
+                </div>
+                {client.phases.length > 0 && (
+                  <div>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Fase collegata</label>
+                    <select value={workoutForm.phaseId} onChange={(e) => setWorkoutForm({ ...workoutForm, phaseId: e.target.value })} className={inputClass} style={selectStyle}>
+                      <option value="">— nessuna —</option>
+                      {client.phases.map((ph) => <option key={ph.id} value={ph.id}>{ph.name}</option>)}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex gap-3 mt-5">
@@ -750,6 +817,24 @@ export default function ClientDetailPage() {
                     {[4,6,8,10,12,16,20,24].map((w) => <option key={w} value={w}>{w} settimane</option>)}
                   </select>
                 </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Recupero default (sec)</label>
+                  <select value={editingPlan.restSeconds} onChange={(e) => setEditingPlan({ ...editingPlan, restSeconds: e.target.value })}
+                    className={inputClass} style={selectStyle}>
+                    <option value="">— nessuno —</option>
+                    {[30,45,60,90,120,150,180,240,300].map((s) => <option key={s} value={s}>{formatRestTime(s)}</option>)}
+                  </select>
+                </div>
+                {client.phases.length > 0 && (
+                  <div>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Fase collegata</label>
+                    <select value={editingPlan.phaseId} onChange={(e) => setEditingPlan({ ...editingPlan, phaseId: e.target.value })}
+                      className={inputClass} style={selectStyle}>
+                      <option value="">— nessuna —</option>
+                      {client.phases.map((ph) => <option key={ph.id} value={ph.id}>{ph.name}</option>)}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex gap-3 mt-5">
@@ -781,11 +866,22 @@ export default function ClientDetailPage() {
                 <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Nome piano *</label>
                 <input value={dietForm.name} onChange={(e) => setDietForm({ ...dietForm, name: e.target.value })} placeholder="es. Dieta Bulk — 3200 kcal" className={inputClass} style={inputStyle} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Calorie totali *</label>
-                  <input type="number" value={dietForm.calories} onChange={(e) => setDietForm({ ...dietForm, calories: e.target.value })} placeholder="3200" className={inputClass} style={inputStyle} />
+
+              {/* Calorie range */}
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Calorie *</label>
+                <div className="flex items-center gap-2">
+                  <input type="number" value={dietForm.calories} onChange={(e) => setDietForm({ ...dietForm, calories: e.target.value })}
+                    placeholder="Min (es. 2800)" className={inputClass} style={inputStyle} />
+                  <span className="text-xs flex-shrink-0" style={{ color: "rgba(245,240,232,0.35)" }}>—</span>
+                  <input type="number" value={dietForm.caloriesMax} onChange={(e) => setDietForm({ ...dietForm, caloriesMax: e.target.value })}
+                    placeholder="Max (opz.)" className={inputClass} style={inputStyle} />
                 </div>
+                <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.35)" }}>Inserisci solo il minimo per un valore fisso, o entrambi per un range.</p>
+              </div>
+
+              {/* Macros */}
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Proteine (g)</label>
                   <input type="number" value={dietForm.protein} onChange={(e) => setDietForm({ ...dietForm, protein: e.target.value })} placeholder="200" className={inputClass} style={inputStyle} />
@@ -799,6 +895,34 @@ export default function ClientDetailPage() {
                   <input type="number" value={dietForm.fat} onChange={(e) => setDietForm({ ...dietForm, fat: e.target.value })} placeholder="80" className={inputClass} style={inputStyle} />
                 </div>
               </div>
+
+              {/* Live macro badge */}
+              {showMacroBadge && (
+                <div className="flex items-center justify-between px-3 py-2 rounded-xl text-xs"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <span style={{ color: "rgba(245,240,232,0.5)" }}>Calorie dai macros:</span>
+                  <span style={{ color: "var(--ivory)", fontWeight: 600 }}>{computedKcal.toFixed(0)} kcal</span>
+                  {enteredKcal > 0 && (
+                    <span style={{
+                      color: Math.abs(kcalDiff) < 50 ? "#22c55e" : Math.abs(kcalDiff) < 150 ? "#f59e0b" : "#f87171",
+                      fontWeight: 600,
+                    }}>
+                      {kcalDiff > 0 ? `+${kcalDiff.toFixed(0)}` : kcalDiff.toFixed(0)} vs inserite
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {client.phases.length > 0 && (
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Fase collegata</label>
+                  <select value={dietForm.phaseId} onChange={(e) => setDietForm({ ...dietForm, phaseId: e.target.value })} className={inputClass} style={selectStyle}>
+                    <option value="">— nessuna —</option>
+                    {client.phases.map((ph) => <option key={ph.id} value={ph.id}>{ph.name}</option>)}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Note</label>
                 <textarea value={dietForm.notes} onChange={(e) => setDietForm({ ...dietForm, notes: e.target.value })} rows={2} placeholder="Indicazioni, note…" className={`${inputClass} resize-none`} style={inputStyle} />
@@ -808,65 +932,6 @@ export default function ClientDetailPage() {
               <button onClick={() => setShowDietModal(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>Annulla</button>
               <button onClick={saveDiet} disabled={saving} className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Salva piano
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Measurement modal */}
-      {showMeasModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowMeasModal(false)}>
-          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
-          <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Nuova misurazione</h3>
-              <button onClick={() => setShowMeasModal(false)}><X size={16} style={{ color: "rgba(245,240,232,0.5)" }} /></button>
-            </div>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Data</label>
-                  <input type="date" value={measForm.date} onChange={(e) => setMeasForm({ ...measForm, date: e.target.value })} className={inputClass} style={inputStyle} />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Peso (kg) *</label>
-                  <input type="number" step="0.1" value={measForm.weight} onChange={(e) => setMeasForm({ ...measForm, weight: e.target.value })} placeholder="82.5" className={inputClass} style={inputStyle} />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>% Grasso</label>
-                  <input type="number" step="0.1" value={measForm.bodyFat} onChange={(e) => setMeasForm({ ...measForm, bodyFat: e.target.value })} placeholder="18" className={inputClass} style={inputStyle} />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Petto (cm)</label>
-                  <input type="number" step="0.5" value={measForm.chest} onChange={(e) => setMeasForm({ ...measForm, chest: e.target.value })} placeholder="105" className={inputClass} style={inputStyle} />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Vita (cm)</label>
-                  <input type="number" step="0.5" value={measForm.waist} onChange={(e) => setMeasForm({ ...measForm, waist: e.target.value })} placeholder="82" className={inputClass} style={inputStyle} />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Fianchi (cm)</label>
-                  <input type="number" step="0.5" value={measForm.hips} onChange={(e) => setMeasForm({ ...measForm, hips: e.target.value })} placeholder="98" className={inputClass} style={inputStyle} />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Braccia (cm)</label>
-                  <input type="number" step="0.5" value={measForm.arms} onChange={(e) => setMeasForm({ ...measForm, arms: e.target.value })} placeholder="40" className={inputClass} style={inputStyle} />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Gambe (cm)</label>
-                  <input type="number" step="0.5" value={measForm.legs} onChange={(e) => setMeasForm({ ...measForm, legs: e.target.value })} placeholder="62" className={inputClass} style={inputStyle} />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Note</label>
-                <textarea value={measForm.notes} onChange={(e) => setMeasForm({ ...measForm, notes: e.target.value })} rows={2} className={`${inputClass} resize-none`} style={inputStyle} />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-5">
-              <button onClick={() => setShowMeasModal(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>Annulla</button>
-              <button onClick={saveMeasurement} disabled={saving} className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
-                {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Salva
               </button>
             </div>
           </div>
