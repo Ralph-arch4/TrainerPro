@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import type { Exercise, ExerciseLog } from "@/lib/store";
-import { Plus, Trash2, ChevronUp, ChevronDown, CheckCircle2, Copy, ExternalLink, Pencil, Check, ChevronLeft, ChevronRight, Timer } from "lucide-react";
+import { Plus, Trash2, ChevronUp, ChevronDown, CheckCircle2, Copy, ExternalLink, Pencil, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { showToast } from "@/components/Toast";
 
 const MUSCLE_GROUPS = [
@@ -16,7 +16,6 @@ interface Props {
   logs: ExerciseLog[];
   totalWeeks?: number;
   daysPerWeek?: number;
-  restSeconds?: number; // plan-level default rest
   mode: "trainer" | "client";
   shareToken?: string;
   dayLabels?: Record<number, string>;
@@ -33,17 +32,8 @@ interface ActiveCell { exerciseId: string; week: number; weight: string; reps: s
 const inputStyle = { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" };
 const selectStyle = { background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" };
 
-function formatRest(sec: number) {
-  if (sec < 60) return `${sec}″`;
-  const m = Math.floor(sec / 60), s = sec % 60;
-  return s ? `${m}′${s}″` : `${m}′`;
-}
-
-const REST_OPTIONS = [30, 45, 60, 90, 120, 150, 180, 240, 300];
-
 export default function WorkoutSpreadsheet({
   planName, exercises, logs, totalWeeks = 12, daysPerWeek = 3,
-  restSeconds: planRestSeconds,
   mode, shareToken, dayLabels = {}, onUpdateDayLabel,
   onAddExercise, onRemoveExercise, onUpdateExercise,
   onMoveExercise, onUpsertLog,
@@ -124,7 +114,7 @@ export default function WorkoutSpreadsheet({
     onAddExercise({
       name: addForm.name, muscleGroup: addForm.muscleGroup || undefined,
       sets: parseInt(addForm.sets) || 3, targetReps: addForm.targetReps,
-      restSeconds: addForm.restSeconds ? parseInt(addForm.restSeconds) : planRestSeconds,
+      restSeconds: addForm.restSeconds || undefined,
       notes: addForm.notes || undefined, day: activeDay,
     });
     setAddForm({ name: "", muscleGroup: "", sets: "3", targetReps: "8-10", restSeconds: "", notes: "" });
@@ -134,12 +124,12 @@ export default function WorkoutSpreadsheet({
 
   function startEdit(ex: Exercise) {
     setEditId(ex.id);
-    setEditForm({ name: ex.name, muscleGroup: ex.muscleGroup ?? "", sets: ex.sets.toString(), targetReps: ex.targetReps, restSeconds: ex.restSeconds ? ex.restSeconds.toString() : "", notes: ex.notes ?? "" });
+    setEditForm({ name: ex.name, muscleGroup: ex.muscleGroup ?? "", sets: ex.sets.toString(), targetReps: ex.targetReps, restSeconds: ex.restSeconds ?? "", notes: ex.notes ?? "" });
   }
 
   function saveEdit() {
     if (!editId || !onUpdateExercise) return;
-    onUpdateExercise(editId, { name: editForm.name, muscleGroup: editForm.muscleGroup || undefined, sets: parseInt(editForm.sets) || 3, targetReps: editForm.targetReps, restSeconds: editForm.restSeconds ? parseInt(editForm.restSeconds) : undefined, notes: editForm.notes || undefined });
+    onUpdateExercise(editId, { name: editForm.name, muscleGroup: editForm.muscleGroup || undefined, sets: parseInt(editForm.sets) || 3, targetReps: editForm.targetReps, restSeconds: editForm.restSeconds || undefined, notes: editForm.notes || undefined });
     setEditId(null);
     showToast("Esercizio aggiornato");
   }
@@ -224,11 +214,8 @@ export default function WorkoutSpreadsheet({
                   placeholder="Rep (8-10)" className="px-3 py-2 rounded-xl text-xs outline-none" style={inputStyle} />
                 <input type="number" value={addForm.sets} onChange={(e) => setAddForm({ ...addForm, sets: e.target.value })}
                   placeholder="Serie" className="px-3 py-2 rounded-xl text-xs outline-none" style={inputStyle} />
-                <select value={addForm.restSeconds} onChange={(e) => setAddForm({ ...addForm, restSeconds: e.target.value })}
-                  className="px-3 py-2 rounded-xl text-xs outline-none" style={selectStyle}>
-                  <option value="">{planRestSeconds ? `Default (${formatRest(planRestSeconds)})` : "Recupero"}</option>
-                  {REST_OPTIONS.map((s) => <option key={s} value={s}>{formatRest(s)}</option>)}
-                </select>
+                <input value={addForm.restSeconds} onChange={(e) => setAddForm({ ...addForm, restSeconds: e.target.value })}
+                  placeholder="Rec. (60-90s)" className="px-3 py-2 rounded-xl text-xs outline-none" style={inputStyle} />
                 <input value={addForm.notes} onChange={(e) => setAddForm({ ...addForm, notes: e.target.value })}
                   placeholder="Note tecniche" className="px-3 py-2 rounded-xl text-xs outline-none col-span-2" style={inputStyle} />
               </div>
@@ -261,8 +248,7 @@ export default function WorkoutSpreadsheet({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{ex.name}</p>
                       <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>
-                        {ex.muscleGroup && `${ex.muscleGroup} · `}{ex.sets} serie × {ex.targetReps}
-                        {(ex.restSeconds ?? planRestSeconds) && ` · ⏱ ${formatRest(ex.restSeconds ?? planRestSeconds!)}`}
+                        {ex.muscleGroup && `${ex.muscleGroup} · `}{ex.sets} serie × {ex.targetReps}{ex.restSeconds && ` · rec. ${ex.restSeconds}s`}
                       </p>
                     </div>
                     {mode === "trainer" && (
@@ -292,11 +278,8 @@ export default function WorkoutSpreadsheet({
                           placeholder="Rep" className="px-2 py-1 rounded-lg text-xs outline-none" style={inputStyle} />
                         <input type="number" value={editForm.sets} onChange={(e) => setEditForm({ ...editForm, sets: e.target.value })}
                           placeholder="Serie" className="px-2 py-1 rounded-lg text-xs outline-none" style={inputStyle} />
-                        <select value={editForm.restSeconds} onChange={(e) => setEditForm({ ...editForm, restSeconds: e.target.value })}
-                          className="px-2 py-1 rounded-lg text-xs outline-none" style={selectStyle}>
-                          <option value="">{planRestSeconds ? `Default (${formatRest(planRestSeconds)})` : "Recupero"}</option>
-                          {REST_OPTIONS.map((s) => <option key={s} value={s}>{formatRest(s)}</option>)}
-                        </select>
+                        <input value={editForm.restSeconds} onChange={(e) => setEditForm({ ...editForm, restSeconds: e.target.value })}
+                          placeholder="Rec. (60-90s)" className="px-2 py-1 rounded-lg text-xs outline-none" style={inputStyle} />
                         <input value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                           placeholder="Note" className="px-2 py-1 rounded-lg text-xs outline-none col-span-2" style={inputStyle} />
                       </div>
@@ -467,12 +450,9 @@ export default function WorkoutSpreadsheet({
                 placeholder="8-10 / AMRAP / 12" className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
             </div>
             <div>
-              <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Recupero</label>
-              <select value={addForm.restSeconds} onChange={(e) => setAddForm({ ...addForm, restSeconds: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={selectStyle}>
-                <option value="">{planRestSeconds ? `Default (${formatRest(planRestSeconds)})` : "— nessuno —"}</option>
-                {REST_OPTIONS.map((s) => <option key={s} value={s}>{formatRest(s)}</option>)}
-              </select>
+              <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Recupero (sec)</label>
+              <input value={addForm.restSeconds} onChange={(e) => setAddForm({ ...addForm, restSeconds: e.target.value })}
+                placeholder="60-90 / 120" className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
             </div>
             <div>
               <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Note tecniche</label>
@@ -550,11 +530,8 @@ export default function WorkoutSpreadsheet({
                             placeholder="Rep" className="px-2 py-1 rounded-lg text-xs outline-none" style={inputStyle} />
                           <input type="number" value={editForm.sets} onChange={(e) => setEditForm({ ...editForm, sets: e.target.value })}
                             placeholder="Serie" className="px-2 py-1 rounded-lg text-xs outline-none" style={inputStyle} />
-                          <select value={editForm.restSeconds} onChange={(e) => setEditForm({ ...editForm, restSeconds: e.target.value })}
-                            className="px-2 py-1 rounded-lg text-xs outline-none" style={selectStyle}>
-                            <option value="">{planRestSeconds ? `Default (${formatRest(planRestSeconds)})` : "— recupero —"}</option>
-                            {REST_OPTIONS.map((s) => <option key={s} value={s}>{formatRest(s)}</option>)}
-                          </select>
+                          <input value={editForm.restSeconds} onChange={(e) => setEditForm({ ...editForm, restSeconds: e.target.value })}
+                            placeholder="Rec. (60-90s)" className="px-2 py-1 rounded-lg text-xs outline-none" style={inputStyle} />
                           <input value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                             placeholder="Note" className="px-2 py-1 rounded-lg text-xs outline-none col-span-2" style={inputStyle} />
                         </div>
@@ -572,12 +549,7 @@ export default function WorkoutSpreadsheet({
                           <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{ex.name}</p>
                           <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>
                             {ex.muscleGroup && <span>{ex.muscleGroup} · </span>}
-                            {ex.sets} serie × {ex.targetReps} rep
-                            {(ex.restSeconds ?? planRestSeconds) && (
-                              <span className="inline-flex items-center gap-0.5 ml-1.5">
-                                <Timer size={9} style={{ display: "inline" }} /> {formatRest(ex.restSeconds ?? planRestSeconds!)}
-                              </span>
-                            )}
+                            {ex.sets} serie × {ex.targetReps} rep{ex.restSeconds && ` · rec. ${ex.restSeconds}s`}
                           </p>
                           {ex.notes && <p className="text-xs mt-0.5 italic" style={{ color: "rgba(245,240,232,0.28)" }}>{ex.notes}</p>}
                         </div>
