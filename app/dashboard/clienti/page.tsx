@@ -7,7 +7,7 @@ import { checkLimit } from "@/lib/plan-limits";
 import { dbClients } from "@/lib/db";
 import {
   Users, Plus, Search, ChevronRight,
-  Mail, Phone, Activity, Loader2, X, AlertCircle
+  Mail, Phone, Activity, Loader2, X, AlertCircle, Trash2
 } from "lucide-react";
 
 type Status = "tutti" | "attivo" | "in_pausa" | "inattivo";
@@ -131,9 +131,10 @@ function ClientiPageInner() {
     }
   }
 
-  async function handleDelete(id: string, e: React.MouseEvent) {
+  async function handleDelete(id: string, name: string, e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+    if (!confirm(`Eliminare "${name}"? Questa azione è irreversibile.`)) return;
     removeClient(id);
     try { await dbClients.remove(id); } catch {}
   }
@@ -226,7 +227,15 @@ function ClientiPageInner() {
                   </div>
                 </div>
               </div>
-              <ChevronRight size={16} className="opacity-0 group-hover:opacity-100 transition-all mt-1" style={{ color: "var(--accent-light)" }} />
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={(e) => handleDelete(client.id, client.name, e)}
+                  className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-500/15 transition-all"
+                  title="Elimina cliente">
+                  <Trash2 size={14} style={{ color: "rgba(239,68,68,0.7)" }} />
+                </button>
+                <ChevronRight size={16} className="opacity-0 group-hover:opacity-100 transition-all mt-0.5" style={{ color: "var(--accent-light)" }} />
+              </div>
             </div>
 
             <div className="space-y-2 mb-4">
