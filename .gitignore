@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# claude session files that may contain secrets
+.claude/backend-verify.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
