@@ -1,11 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Exercise, ExerciseLog } from "@/lib/store";
 import {
   Plus, Trash2, ChevronUp, ChevronDown, CheckCircle2, Copy, ExternalLink,
   Pencil, Check, ChevronLeft, ChevronRight, Link as LinkIcon, X,
 } from "lucide-react";
 import { showToast } from "@/components/Toast";
+import { searchExercises, type LibraryExercise } from "@/lib/exerciseLibrary";
 
 const MUSCLE_GROUPS = [
   "Petto", "Schiena", "Gambe", "Spalle", "Bicipiti",
@@ -131,6 +132,37 @@ interface FormPanelProps {
 
 function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, compact }: FormPanelProps) {
   const sets = Math.max(1, parseInt(form.sets) || 3);
+  const [suggestions, setSuggestions] = useState<LibraryExercise[]>([]);
+  const [showSugg, setShowSugg] = useState(false);
+  const [activeSugg, setActiveSugg] = useState(-1);
+  const suggRef = useRef<HTMLDivElement>(null);
+
+  function handleNameChange(val: string) {
+    onChange({ ...form, name: val });
+    if (val.trim().length >= 2) {
+      const results = searchExercises(val, form.muscleGroup || undefined);
+      setSuggestions(results);
+      setShowSugg(results.length > 0);
+    } else {
+      setSuggestions([]);
+      setShowSugg(false);
+    }
+    setActiveSugg(-1);
+  }
+
+  function pickSuggestion(ex: LibraryExercise) {
+    onChange({ ...form, name: ex.name, muscleGroup: ex.muscleGroup });
+    setSuggestions([]);
+    setShowSugg(false);
+  }
+
+  function handleNameKeyDown(e: React.KeyboardEvent) {
+    if (!showSugg) { if (e.key === "Enter") onSubmit(); return; }
+    if (e.key === "ArrowDown") { e.preventDefault(); setActiveSugg((a) => Math.min(a + 1, suggestions.length - 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActiveSugg((a) => Math.max(a - 1, -1)); }
+    else if (e.key === "Enter") { e.preventDefault(); if (activeSugg >= 0) pickSuggestion(suggestions[activeSugg]); else onSubmit(); }
+    else if (e.key === "Escape") { setShowSugg(false); }
+  }
 
   function updateSets(val: string) {
     const n = Math.max(1, parseInt(val) || 1);
@@ -149,13 +181,34 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
     <div className={`space-y-3 ${compact ? "text-xs" : "text-sm"}`}>
       {/* Row 1: name + muscle */}
       <div className={`grid gap-2 ${compact ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-3"}`}>
-        <div className={compact ? "" : "sm:col-span-2"}>
+        <div className={`relative ${compact ? "" : "sm:col-span-2"}`}>
           {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Nome esercizio *</label>}
-          <input value={form.name} onChange={(e) => onChange({ ...form, name: e.target.value })}
-            onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-            placeholder="es. Lat Machine Triangolo, Panca Piana…" autoFocus
+          <input value={form.name} onChange={(e) => handleNameChange(e.target.value)}
+            onKeyDown={handleNameKeyDown}
+            onBlur={() => setTimeout(() => setShowSugg(false), 150)}
+            onFocus={() => { if (form.name.trim().length >= 2 && suggestions.length > 0) setShowSugg(true); }}
+            placeholder="es. Lat Machine, Panca Piana… (digita per suggerimenti)" autoFocus
             className={`w-full px-3 rounded-xl outline-none ${compact ? "py-2 text-xs" : "py-2.5 text-sm"}`}
             style={inputStyle} />
+          {showSugg && (
+            <div ref={suggRef} className="absolute left-0 right-0 z-50 mt-1 rounded-xl overflow-hidden shadow-2xl"
+              style={{ background: "#1a1a1a", border: "1px solid rgba(255,107,43,0.25)", top: "100%" }}>
+              {suggestions.map((ex, i) => (
+                <button key={ex.name} type="button"
+                  onMouseDown={() => pickSuggestion(ex)}
+                  className="w-full text-left px-3 py-2 flex items-center justify-between gap-2 transition-colors"
+                  style={{
+                    background: i === activeSugg ? "rgba(255,107,43,0.12)" : "transparent",
+                    borderBottom: i < suggestions.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                  }}>
+                  <span className="text-xs font-medium truncate" style={{ color: "var(--ivory)" }}>{ex.name}</span>
+                  <span className="text-xs shrink-0 px-1.5 py-0.5 rounded-md" style={{ background: "rgba(255,107,43,0.1)", color: "var(--accent-light)" }}>
+                    {ex.muscleGroup}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div>
           {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Gruppo muscolare</label>}
