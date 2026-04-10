@@ -23,9 +23,13 @@ interface DietData {
   id: string;
   name: string;
   calories: number;
+  calories_max?: number;
   protein: number;
+  protein_max?: number;
   carbs: number;
+  carbs_max?: number;
   fat: number;
+  fat_max?: number;
   meals: string | null;
   notes: string | null;
   active: boolean;
@@ -93,7 +97,7 @@ export default function ClientPortalPage() {
         // 3. Load diet plans for this client (public via migration 005 policy)
         const { data: dietRows } = await supabase
           .from("diet_plans")
-          .select("id, name, calories, protein, carbs, fat, meals, notes, active")
+          .select("id, name, calories, calories_max, protein, protein_max, carbs, carbs_max, fat, fat_max, meals, notes, active")
           .eq("client_id", planRow.client_id)
           .eq("active", true)
           .order("created_at", { ascending: false });
@@ -282,59 +286,96 @@ export default function ClientPortalPage() {
                 <p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>Il tuo trainer non ha ancora creato un piano alimentare.</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {diets.map((diet) => (
-                  <div key={diet.id} className="rounded-2xl p-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,107,43,0.12)" }}>
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h2 className="text-base font-bold" style={{ color: "var(--ivory)" }}>{diet.name}</h2>
-                        {diet.notes && (
-                          <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.45)" }}>{diet.notes}</p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold" style={{ color: "var(--accent)" }}>{diet.calories}</p>
-                        <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>kcal / giorno</p>
-                      </div>
-                    </div>
+              <div className="space-y-6">
+                {diets.map((diet) => {
+                  const meals: Array<{
+                    id: string; name: string; time?: string; notes?: string;
+                    items: Array<{ id: string; name: string; grams: number; gramsMax?: number; protein?: number; carbs?: number; fat?: number; notes?: string; }>;
+                  }> = (() => {
+                    try {
+                      const p = JSON.parse(diet.meals ?? "[]");
+                      if (Array.isArray(p) && p[0]?.items) return p;
+                    } catch {}
+                    return [];
+                  })();
 
-                    {/* Macro bars */}
-                    <div className="space-y-3">
-                      {[
-                        { label: "Proteine", value: diet.protein, unit: "g", color: "#FF6B2B", max: diet.protein + diet.carbs + diet.fat },
-                        { label: "Carboidrati", value: diet.carbs, unit: "g", color: "#FF9A6C", max: diet.protein + diet.carbs + diet.fat },
-                        { label: "Grassi", value: diet.fat, unit: "g", color: "#CC5522", max: diet.protein + diet.carbs + diet.fat },
-                      ].map(({ label, value, unit, color, max }) => (
-                        <div key={label}>
-                          <div className="flex justify-between text-xs mb-1" style={{ color: "rgba(245,240,232,0.55)" }}>
-                            <span>{label}</span>
-                            <span style={{ color }}>{value}{unit}</span>
+                  const fmt = (min: number, max?: number, unit = "g") =>
+                    max && max > min ? `${min}–${max}${unit}` : `${min}${unit}`;
+
+                  return (
+                    <div key={diet.id} className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,107,43,0.15)" }}>
+                      {/* Header */}
+                      <div className="p-5" style={{ background: "rgba(255,107,43,0.04)" }}>
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <h2 className="text-base font-bold" style={{ color: "var(--ivory)" }}>{diet.name}</h2>
+                            {diet.notes && <p className="text-xs mt-1 italic" style={{ color: "rgba(245,240,232,0.45)" }}>{diet.notes}</p>}
                           </div>
-                          <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-                            <div className="h-full rounded-full"
-                              style={{ width: `${Math.round((value / max) * 100)}%`, background: color }} />
+                          <div className="text-right">
+                            <p className="text-2xl font-bold" style={{ color: "var(--accent)" }}>
+                              {fmt(diet.calories, diet.calories_max, " kcal")}
+                            </p>
+                            <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>al giorno</p>
                           </div>
                         </div>
-                      ))}
-                    </div>
-
-                    {/* Macro pills */}
-                    <div className="grid grid-cols-3 gap-2 mt-4">
-                      {[
-                        { label: "Proteine", value: `${diet.protein}g`, kcal: diet.protein * 4 },
-                        { label: "Carboidrati", value: `${diet.carbs}g`, kcal: diet.carbs * 4 },
-                        { label: "Grassi", value: `${diet.fat}g`, kcal: diet.fat * 9 },
-                      ].map(({ label, value, kcal }) => (
-                        <div key={label} className="rounded-xl p-2.5 text-center"
-                          style={{ background: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.1)" }}>
-                          <p className="text-sm font-bold" style={{ color: "var(--ivory)" }}>{value}</p>
-                          <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
-                          <p className="text-xs" style={{ color: "rgba(255,107,43,0.5)" }}>{kcal} kcal</p>
+                        {/* Macro pills */}
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { label: "Proteine", min: diet.protein, max: diet.protein_max, color: "#a78bfa" },
+                            { label: "Carboidrati", min: diet.carbs, max: diet.carbs_max, color: "#38bdf8" },
+                            { label: "Grassi", min: diet.fat, max: diet.fat_max, color: "#fbbf24" },
+                          ].map(({ label, min, max, color }) => (
+                            <div key={label} className="rounded-xl p-3 text-center"
+                              style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${color}25` }}>
+                              <p className="text-sm font-bold" style={{ color }}>{fmt(min, max)}</p>
+                              <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      </div>
+
+                      {/* Meals */}
+                      {meals.length > 0 && (
+                        <div className="divide-y" style={{ borderTop: "1px solid rgba(255,107,43,0.1)", borderColor: "rgba(255,107,43,0.08)" }}>
+                          {meals.map((meal, mi) => (
+                            <div key={meal.id} className="p-4">
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center flex-shrink-0"
+                                  style={{ background: "rgba(255,107,43,0.15)", color: "var(--accent-light)" }}>{mi + 1}</span>
+                                <div className="flex items-baseline gap-2">
+                                  <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{meal.name}</p>
+                                  {meal.time && <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{meal.time}</span>}
+                                </div>
+                              </div>
+                              {meal.notes && <p className="text-xs mb-2 italic" style={{ color: "rgba(245,240,232,0.4)" }}>{meal.notes}</p>}
+                              {meal.items.length > 0 && (
+                                <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.05)" }}>
+                                  {meal.items.map((item, ii) => (
+                                    <div key={item.id}
+                                      className="flex items-center gap-3 px-3 py-2.5"
+                                      style={{ background: ii % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
+                                      <span className="flex-1 text-sm" style={{ color: "rgba(245,240,232,0.85)" }}>{item.name || "—"}</span>
+                                      <span className="text-sm font-bold flex-shrink-0" style={{ color: "var(--accent-light)" }}>
+                                        {item.gramsMax && item.gramsMax > item.grams ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
+                                      </span>
+                                      {(item.protein || item.carbs || item.fat) && (
+                                        <div className="hidden sm:flex items-center gap-2 text-xs flex-shrink-0" style={{ color: "rgba(245,240,232,0.35)" }}>
+                                          {item.protein ? <span style={{ color: "#a78bfa" }}>P {item.protein}g</span> : null}
+                                          {item.carbs ? <span style={{ color: "#38bdf8" }}>C {item.carbs}g</span> : null}
+                                          {item.fat ? <span style={{ color: "#fbbf24" }}>G {item.fat}g</span> : null}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

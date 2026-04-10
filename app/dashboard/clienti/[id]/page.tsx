@@ -1,14 +1,17 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
+import type { DietPlan } from "@/lib/store";
 import { dbPhases, dbWorkoutPlans, dbDietPlans, dbNotes } from "@/lib/db";
 import { showToast } from "@/components/Toast";
+import DietPlanEditor from "@/components/DietPlanEditor";
 import Link from "next/link";
 import {
   ArrowLeft, Activity, UtensilsCrossed, StickyNote,
   Dumbbell, Plus, X, Loader2, Pencil, Trash2, CheckCircle2, Circle,
   Mail, Phone, Calendar, Target, BarChart2, ExternalLink, Copy, Check, Timer,
+  ChevronDown, ChevronUp, Flame, Beef, Wheat, Droplets,
 } from "lucide-react";
 
 type Tab = "overview" | "fasi" | "schede" | "dieta" | "note";
@@ -45,6 +48,7 @@ export default function ClientDetailPage() {
   const updateWorkoutPlan = useAppStore((s) => s.updateWorkoutPlan);
   const removeWorkoutPlan = useAppStore((s) => s.removeWorkoutPlan);
   const addDietPlan = useAppStore((s) => s.addDietPlan);
+  const updateDietPlan = useAppStore((s) => s.updateDietPlan);
   const removeDietPlan = useAppStore((s) => s.removeDietPlan);
   const addNote = useAppStore((s) => s.addNote);
   const removeNote = useAppStore((s) => s.removeNote);
@@ -64,9 +68,11 @@ export default function ClientDetailPage() {
   // Workout plan edit modal
   const [editingPlan, setEditingPlan] = useState<{ id: string; name: string; description: string; daysPerWeek: string; totalWeeks: string; restSeconds: string; phaseId: string } | null>(null);
 
-  // Diet plan modal
-  const [showDietModal, setShowDietModal] = useState(false);
-  const [dietForm, setDietForm] = useState({ name: "", calories: "", protein: "", proteinMax: "", carbs: "", carbsMax: "", fat: "", fatMax: "", notes: "", phaseId: "" });
+  // Diet plan modal (create = null plan, edit = existing plan)
+  const [dietEditorOpen, setDietEditorOpen] = useState(false);
+  const [editingDietPlan, setEditingDietPlan] = useState<DietPlan | null>(null);
+  // expanded meal preview per diet card
+  const [expandedDietId, setExpandedDietId] = useState<string | null>(null);
 
   // Note
   const [noteText, setNoteText] = useState("");
@@ -82,16 +88,6 @@ export default function ClientDetailPage() {
     });
   }
 
-  // Live macro calculation for diet form
-  const computedKcal = (() => {
-    const p = parseFloat(dietForm.protein) || 0;
-    const c = parseFloat(dietForm.carbs) || 0;
-    const f = parseFloat(dietForm.fat) || 0;
-    return p * 4 + c * 4 + f * 9;
-  })();
-  const enteredKcal = parseFloat(dietForm.calories) || 0;
-  const kcalDiff = enteredKcal - computedKcal;
-  const showMacroBadge = (parseFloat(dietForm.protein) || parseFloat(dietForm.carbs) || parseFloat(dietForm.fat)) > 0;
 
   if (!client) {
     return (
@@ -198,40 +194,34 @@ export default function ClientDetailPage() {
     }
   }
 
-  async function saveDiet() {
-    if (!dietForm.name || !dietForm.calories) return;
+  async function handleDietSave(data: Omit<DietPlan, "id" | "clientId" | "createdAt">) {
     setSaving(true); setSaveError("");
-    // Encode macro ranges into `meals` JSON (no migration needed)
-    const pMax = parseFloat(dietForm.proteinMax) || undefined;
-    const cMax = parseFloat(dietForm.carbsMax) || undefined;
-    const fMax = parseFloat(dietForm.fatMax) || undefined;
-    const hasMacroRanges = pMax !== undefined || cMax !== undefined || fMax !== undefined;
-    const mealsPayload = hasMacroRanges
-      ? JSON.stringify({ proteinMax: pMax, carbsMax: cMax, fatMax: fMax })
-      : "[]";
-    const d = addDietPlan(client!.id, {
-      name: dietForm.name,
-      calories: parseInt(dietForm.calories),
-      protein: parseFloat(dietForm.protein) || 0,
-      proteinMax: pMax,
-      carbs: parseFloat(dietForm.carbs) || 0,
-      carbsMax: cMax,
-      fat: parseFloat(dietForm.fat) || 0,
-      fatMax: fMax,
-      meals: mealsPayload,
-      notes: dietForm.notes || undefined,
-      phaseId: dietForm.phaseId || undefined,
-      active: true,
-    });
-    try {
-      await dbDietPlans.create(d);
-      setShowDietModal(false);
-      setDietForm({ name: "", calories: "", protein: "", proteinMax: "", carbs: "", carbsMax: "", fat: "", fatMax: "", notes: "", phaseId: "" });
-      showToast("Piano alimentare salvato");
-    } catch (err) {
-      removeDietPlan(client!.id, d.id);
-      setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
-      showToast("Errore nel salvataggio", "error");
+    if (editingDietPlan) {
+      // Edit existing
+      updateDietPlan(client!.id, editingDietPlan.id, data);
+      try {
+        await dbDietPlans.update(editingDietPlan.id, data);
+        setDietEditorOpen(false);
+        setEditingDietPlan(null);
+        showToast("Piano aggiornato");
+      } catch (err) {
+        // Rollback
+        updateDietPlan(client!.id, editingDietPlan.id, editingDietPlan);
+        setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+        showToast("Errore nel salvataggio", "error");
+      }
+    } else {
+      // Create new
+      const d = addDietPlan(client!.id, data);
+      try {
+        await dbDietPlans.create(d);
+        setDietEditorOpen(false);
+        showToast("Piano alimentare creato");
+      } catch (err) {
+        removeDietPlan(client!.id, d.id);
+        setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+        showToast("Errore nel salvataggio", "error");
+      }
     }
     setSaving(false);
   }
@@ -586,53 +576,124 @@ export default function ClientDetailPage() {
         <div>
           <div className="flex justify-between items-center mb-4">
             <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{client.dietPlans.length} piani</p>
-            <button onClick={() => setShowDietModal(true)} className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm">
+            <button onClick={() => { setEditingDietPlan(null); setDietEditorOpen(true); }} className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm">
               <Plus size={14} /> Nuovo piano
             </button>
           </div>
           {client.dietPlans.length === 0 ? (
             <div className="text-center py-16 card-luxury rounded-2xl">
               <UtensilsCrossed size={40} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.25)" }} />
-              <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>Nessun piano alimentare</p>
-              <button onClick={() => setShowDietModal(true)} className="mt-3 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>Crea il primo piano</button>
+              <p className="text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Nessun piano alimentare</p>
+              <p className="text-xs mb-4" style={{ color: "rgba(245,240,232,0.35)" }}>Crea un piano con macro, range di grammi e pasti dettagliati</p>
+              <button onClick={() => { setEditingDietPlan(null); setDietEditorOpen(true); }}
+                className="accent-btn px-5 py-2.5 rounded-xl text-sm inline-flex items-center gap-2">
+                <Plus size={14} /> Crea il primo piano
+              </button>
             </div>
           ) : (
             <div className="space-y-4">
               {client.dietPlans.map((dp) => {
                 const linkedPhase = client.phases.find((ph) => ph.id === dp.phaseId);
+                const mealsData: Array<{ id: string; name: string; time?: string; items: Array<{ id: string; name: string; grams: number; gramsMax?: number; protein?: number; carbs?: number; fat?: number }> }> = (() => {
+                  try { const p = JSON.parse(dp.meals); if (Array.isArray(p) && p[0]?.items) return p; } catch {}
+                  return [];
+                })();
+                const isExpanded = expandedDietId === dp.id;
                 return (
-                  <div key={dp.id} className="card-luxury rounded-2xl p-5">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-semibold" style={{ color: "var(--ivory)" }}>{dp.name}</p>
-                          {dp.active && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Attivo</span>}
-                          {linkedPhase && (
-                            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `${phaseTypeColor[linkedPhase.type]}18`, color: phaseTypeColor[linkedPhase.type] }}>
-                              {linkedPhase.name}
-                            </span>
-                          )}
+                  <div key={dp.id} className="card-luxury rounded-2xl overflow-hidden">
+                    {/* Header */}
+                    <div className="p-5">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1 min-w-0 pr-3">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold" style={{ color: "var(--ivory)" }}>{dp.name}</p>
+                            {dp.active && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Attivo</span>}
+                            {linkedPhase && (
+                              <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `${phaseTypeColor[linkedPhase.type]}18`, color: phaseTypeColor[linkedPhase.type] }}>
+                                {linkedPhase.name}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button onClick={() => { setEditingDietPlan(dp); setDietEditorOpen(true); }}
+                            className="p-1.5 rounded-lg hover:bg-white/5 transition-all" title="Modifica piano">
+                            <Pencil size={13} style={{ color: "rgba(245,240,232,0.45)" }} />
+                          </button>
+                          <button onClick={async () => {
+                            if (!confirm(`Eliminare "${dp.name}"?`)) return;
+                            removeDietPlan(client!.id, dp.id);
+                            try { await dbDietPlans.remove(dp.id); } catch {}
+                          }} className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all">
+                            <Trash2 size={13} style={{ color: "rgba(239,68,68,0.55)" }} />
+                          </button>
                         </div>
                       </div>
-                      <button onClick={async () => { removeDietPlan(client!.id, dp.id); try { await dbDietPlans.remove(dp.id); } catch {} }}
-                        className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all">
-                        <Trash2 size={14} style={{ color: "rgba(239,68,68,0.6)" }} />
-                      </button>
+                      {/* Macro grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        {[
+                          { label: "Calorie", value: formatCalories(dp.calories, dp.caloriesMax), color: "var(--accent)", icon: <Flame size={11} /> },
+                          { label: "Proteine", value: dp.proteinMax ? `${dp.protein}–${dp.proteinMax}g` : `${dp.protein}g`, color: "#a78bfa", icon: <Beef size={11} /> },
+                          { label: "Carboidrati", value: dp.carbsMax ? `${dp.carbs}–${dp.carbsMax}g` : `${dp.carbs}g`, color: "#38bdf8", icon: <Wheat size={11} /> },
+                          { label: "Grassi", value: dp.fatMax ? `${dp.fat}–${dp.fatMax}g` : `${dp.fat}g`, color: "#fbbf24", icon: <Droplets size={11} /> },
+                        ].map(({ label, value, color, icon }) => (
+                          <div key={label} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.04)" }}>
+                            <div className="flex items-center gap-1.5 mb-1" style={{ color }}>
+                              {icon}
+                              <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
+                            </div>
+                            <p className="text-sm font-bold leading-tight" style={{ color }}>{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {dp.notes && <p className="text-xs mt-3 italic" style={{ color: "rgba(245,240,232,0.45)" }}>{dp.notes}</p>}
                     </div>
-                    <div className="grid grid-cols-4 gap-3">
-                      {[
-                        { label: "Calorie", value: formatCalories(dp.calories, dp.caloriesMax), color: "var(--accent)" },
-                        { label: "Proteine", value: dp.proteinMax ? `${dp.protein}–${dp.proteinMax}g` : `${dp.protein}g`, color: "#a78bfa" },
-                        { label: "Carboidrati", value: dp.carbsMax ? `${dp.carbs}–${dp.carbsMax}g` : `${dp.carbs}g`, color: "#38bdf8" },
-                        { label: "Grassi", value: dp.fatMax ? `${dp.fat}–${dp.fatMax}g` : `${dp.fat}g`, color: "#fbbf24" },
-                      ].map(({ label, value, color }) => (
-                        <div key={label} className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.04)" }}>
-                          <p className="text-sm font-bold leading-tight" style={{ color }}>{value}</p>
-                          <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
-                        </div>
-                      ))}
-                    </div>
-                    {dp.notes && <p className="text-xs mt-3" style={{ color: "rgba(245,240,232,0.45)" }}>{dp.notes}</p>}
+
+                    {/* Meals section */}
+                    {mealsData.length > 0 && (
+                      <div style={{ borderTop: "1px solid rgba(255,107,43,0.1)" }}>
+                        <button onClick={() => setExpandedDietId(isExpanded ? null : dp.id)}
+                          className="w-full flex items-center justify-between px-5 py-3 hover:bg-white/[0.02] transition-all"
+                          style={{ color: "rgba(245,240,232,0.5)" }}>
+                          <span className="text-xs font-medium flex items-center gap-2">
+                            <UtensilsCrossed size={12} style={{ color: "var(--accent)" }} />
+                            {mealsData.length} {mealsData.length === 1 ? "pasto" : "pasti"} nel piano
+                          </span>
+                          {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        </button>
+                        {isExpanded && (
+                          <div className="px-5 pb-4 space-y-3">
+                            {mealsData.map((meal, mi) => (
+                              <div key={meal.id} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,107,43,0.08)" }}>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="w-5 h-5 rounded-md text-xs font-bold flex items-center justify-center flex-shrink-0"
+                                    style={{ background: "rgba(255,107,43,0.15)", color: "var(--accent-light)" }}>{mi + 1}</span>
+                                  <span className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{meal.name}</span>
+                                  {meal.time && <span className="text-xs" style={{ color: "rgba(245,240,232,0.35)" }}>{meal.time}</span>}
+                                </div>
+                                {meal.items.length > 0 && (
+                                  <div className="space-y-1">
+                                    {meal.items.map((item) => (
+                                      <div key={item.id} className="flex items-center gap-2 text-xs" style={{ color: "rgba(245,240,232,0.65)" }}>
+                                        <span className="flex-1">{item.name || "—"}</span>
+                                        <span className="font-medium" style={{ color: "rgba(245,240,232,0.85)" }}>
+                                          {item.gramsMax ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
+                                        </span>
+                                        {(item.protein || item.carbs || item.fat) && (
+                                          <span className="text-xs" style={{ color: "rgba(245,240,232,0.35)" }}>
+                                            {item.protein ? `P:${item.protein}g` : ""}{item.carbs ? ` C:${item.carbs}g` : ""}{item.fat ? ` G:${item.fat}g` : ""}
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -846,97 +907,15 @@ export default function ClientDetailPage() {
         </div>
       )}
 
-      {/* Diet modal */}
-      {showDietModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowDietModal(false)}>
-          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
-          <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Nuovo piano alimentare</h3>
-              <button onClick={() => setShowDietModal(false)}><X size={16} style={{ color: "rgba(245,240,232,0.5)" }} /></button>
-            </div>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Nome piano *</label>
-                <input value={dietForm.name} onChange={(e) => setDietForm({ ...dietForm, name: e.target.value })} placeholder="es. Dieta Bulk — 3200 kcal" className={inputClass} style={inputStyle} />
-              </div>
-
-              {/* Calorie + macros */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Calorie totali *</label>
-                  <input type="number" value={dietForm.calories} onChange={(e) => setDietForm({ ...dietForm, calories: e.target.value })}
-                    placeholder="3200" className={inputClass} style={inputStyle} />
-                </div>
-                {/* Protein min → max */}
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Proteine min (g)</label>
-                  <input type="number" value={dietForm.protein} onChange={(e) => setDietForm({ ...dietForm, protein: e.target.value })} placeholder="180" className={inputClass} style={inputStyle} />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Proteine max (g)</label>
-                  <input type="number" value={dietForm.proteinMax} onChange={(e) => setDietForm({ ...dietForm, proteinMax: e.target.value })} placeholder="210" className={inputClass} style={inputStyle} />
-                </div>
-                {/* Carbs min → max */}
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Carboidrati min (g)</label>
-                  <input type="number" value={dietForm.carbs} onChange={(e) => setDietForm({ ...dietForm, carbs: e.target.value })} placeholder="300" className={inputClass} style={inputStyle} />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Carboidrati max (g)</label>
-                  <input type="number" value={dietForm.carbsMax} onChange={(e) => setDietForm({ ...dietForm, carbsMax: e.target.value })} placeholder="370" className={inputClass} style={inputStyle} />
-                </div>
-                {/* Fat min → max */}
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Grassi min (g)</label>
-                  <input type="number" value={dietForm.fat} onChange={(e) => setDietForm({ ...dietForm, fat: e.target.value })} placeholder="70" className={inputClass} style={inputStyle} />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Grassi max (g)</label>
-                  <input type="number" value={dietForm.fatMax} onChange={(e) => setDietForm({ ...dietForm, fatMax: e.target.value })} placeholder="90" className={inputClass} style={inputStyle} />
-                </div>
-              </div>
-
-              {/* Live macro badge */}
-              {showMacroBadge && (
-                <div className="flex items-center justify-between px-3 py-2 rounded-xl text-xs"
-                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  <span style={{ color: "rgba(245,240,232,0.5)" }}>Kcal dai macros:</span>
-                  <span style={{ color: "var(--ivory)", fontWeight: 600 }}>{computedKcal.toFixed(0)} kcal</span>
-                  {enteredKcal > 0 && (
-                    <span style={{
-                      color: Math.abs(kcalDiff) < 50 ? "#22c55e" : Math.abs(kcalDiff) < 150 ? "#f59e0b" : "#f87171",
-                      fontWeight: 600,
-                    }}>
-                      {kcalDiff > 0 ? `+${kcalDiff.toFixed(0)}` : kcalDiff.toFixed(0)} vs inserite
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {client.phases.length > 0 && (
-                <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Fase collegata</label>
-                  <select value={dietForm.phaseId} onChange={(e) => setDietForm({ ...dietForm, phaseId: e.target.value })} className={inputClass} style={selectStyle}>
-                    <option value="">— nessuna —</option>
-                    {client.phases.map((ph) => <option key={ph.id} value={ph.id}>{ph.name}</option>)}
-                  </select>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Note</label>
-                <textarea value={dietForm.notes} onChange={(e) => setDietForm({ ...dietForm, notes: e.target.value })} rows={2} placeholder="Indicazioni, note…" className={`${inputClass} resize-none`} style={inputStyle} />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-5">
-              <button onClick={() => setShowDietModal(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>Annulla</button>
-              <button onClick={saveDiet} disabled={saving} className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
-                {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Salva piano
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Diet plan editor (create / edit) */}
+      {dietEditorOpen && (
+        <DietPlanEditor
+          plan={editingDietPlan ?? undefined}
+          clientId={client.id}
+          phases={client.phases}
+          onSave={handleDietSave}
+          onClose={() => { setDietEditorOpen(false); setEditingDietPlan(null); }}
+        />
       )}
     </div>
   );

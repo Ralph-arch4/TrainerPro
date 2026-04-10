@@ -106,22 +106,24 @@ export default function SupabaseDataLoader() {
           dietPlans: (dietPlans ?? [])
             .filter((dp) => dp.client_id === c.id)
             .map((dp) => {
-              // Macro ranges are stored in the `meals` JSON field as
-              // { proteinMax, carbsMax, fatMax } to avoid needing a migration.
-              // Old format is "[]" (plain array) → no ranges.
-              let proteinMax: number | undefined;
-              let carbsMax: number | undefined;
-              let fatMax: number | undefined;
+              // Primary: use dedicated *_max columns (migration 007).
+              // Fallback: check the old meals-JSON hack for legacy records.
+              let proteinMax: number | undefined = dp.protein_max ?? undefined;
+              let carbsMax: number | undefined = dp.carbs_max ?? undefined;
+              let fatMax: number | undefined = dp.fat_max ?? undefined;
               let mealsRaw = dp.meals ?? "[]";
-              try {
-                const parsed = JSON.parse(dp.meals ?? "[]");
-                if (!Array.isArray(parsed)) {
-                  proteinMax = parsed.proteinMax ?? undefined;
-                  carbsMax = parsed.carbsMax ?? undefined;
-                  fatMax = parsed.fatMax ?? undefined;
-                  mealsRaw = "[]";
-                }
-              } catch { /* keep defaults */ }
+              // If no dedicated columns, try to migrate from legacy JSON hack
+              if (!proteinMax && !carbsMax && !fatMax) {
+                try {
+                  const parsed = JSON.parse(dp.meals ?? "[]");
+                  if (parsed && !Array.isArray(parsed) && (parsed.proteinMax || parsed.carbsMax || parsed.fatMax)) {
+                    proteinMax = parsed.proteinMax ?? undefined;
+                    carbsMax = parsed.carbsMax ?? undefined;
+                    fatMax = parsed.fatMax ?? undefined;
+                    mealsRaw = "[]";
+                  }
+                } catch { /* keep defaults */ }
+              }
               return {
                 id: dp.id,
                 clientId: dp.client_id,

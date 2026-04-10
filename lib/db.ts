@@ -196,18 +196,22 @@ export const dbDietPlans = {
     const { data, error } = await db()
       .from("diet_plans")
       .insert({
-        id:        payload.id,
-        user_id:   userId,
-        client_id: payload.clientId,
-        phase_id:  payload.phaseId ?? null,
-        name:      payload.name,
-        calories:  payload.calories,
-        protein:   payload.protein,
-        carbs:     payload.carbs,
-        fat:       payload.fat,
-        meals:         payload.meals ?? null,
-        notes:         payload.notes ?? null,
-        active:        payload.active ?? true,
+        id:           payload.id,
+        user_id:      userId,
+        client_id:    payload.clientId,
+        phase_id:     payload.phaseId ?? null,
+        name:         payload.name,
+        calories:     payload.calories,
+        calories_max: payload.caloriesMax ?? null,
+        protein:      payload.protein,
+        protein_max:  payload.proteinMax ?? null,
+        carbs:        payload.carbs,
+        carbs_max:    payload.carbsMax ?? null,
+        fat:          payload.fat,
+        fat_max:      payload.fatMax ?? null,
+        meals:        payload.meals ?? null,
+        notes:        payload.notes ?? null,
+        active:       payload.active ?? true,
       })
       .select()
       .single();

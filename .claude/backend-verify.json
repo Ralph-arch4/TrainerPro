@@ -1,0 +1,8 @@
+{
+  "supabaseUrl": "https://xkfbxjmecylfvdocpfkc.supabase.co",
+  "serviceRoleKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrZmJ4am1lY3lsZnZkb2NwZmtjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDcyMDU4OSwiZXhwIjoyMDkwMjk2NTg5fQ.kQBBmWscbaZTuNSfrg-I4mU6SoDmBQ-HuimdJaPOP84",
+  "anonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrZmJ4am1lY3lsZnZkb2NwZmtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3MjA1ODksImV4cCI6MjA5MDI5NjU4OX0.4kOdOOXJwC--YQmr3MNMUuZH5TcG9MAAVeZYY5jTdwU",
+  "testEmail": "renatominiomedia@gmail.com",
+  "testPassword": "Ciao04",
+  "projectRoot": "c:\\Users\\stefa\\OneDrive\\Desktop\\DAVIDEUS_PERSONAL_AI_TRAINER\\trainerpro"
+}

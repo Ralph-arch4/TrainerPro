@@ -20,11 +20,36 @@ export interface Exercise {
   name: string;
   muscleGroup?: string;
   sets: number;
-  targetReps: string; // e.g. "8-10", "12", "AMRAP"
-  restSeconds?: string; // e.g. "60", "60-90", "120"
+  targetReps: string;       // used when perSetReps is absent (e.g. "8-10", "12", "AMRAP")
+  perSetReps?: string[];    // per-set rep targets, one entry per set (e.g. ["12","10","8"])
+  restSeconds?: string;     // e.g. "60", "60-90", "120"
   notes?: string;
   order: number;
-  day: number; // 1-based day number
+  day: number;              // 1-based day number
+  supersetGroup?: string;   // e.g. "A", "B" — exercises sharing a letter are grouped
+  videoUrl?: string;        // optional demo video link
+}
+
+// ─── Meal Food Item ────────────────────────────────────────────────────────────
+export interface MealItem {
+  id: string;
+  name: string;
+  grams: number;
+  gramsMax?: number; // if set, show as range
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  calories?: number;
+  notes?: string;
+}
+
+// ─── Meal ─────────────────────────────────────────────────────────────────────
+export interface Meal {
+  id: string;
+  name: string; // e.g. "Colazione", "Pranzo", "Spuntino"
+  time?: string; // e.g. "07:30", "13:00"
+  items: MealItem[];
+  notes?: string;
 }
 
 // ─── Weekly log (filled by client via shared link) ────────────────────────────
@@ -84,7 +109,7 @@ export interface DietPlan {
   carbsMax?: number;
   fat: number;
   fatMax?: number;
-  meals: string;
+  meals: string; // JSON-encoded Meal[] array
   notes?: string;
   createdAt: string;
   active: boolean;
