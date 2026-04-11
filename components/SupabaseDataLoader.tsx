@@ -19,6 +19,7 @@ export default function SupabaseDataLoader() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      useAppStore.setState({ dataLoaded: false });
 
       useAppStore.setState({
         user: {
@@ -37,6 +38,7 @@ export default function SupabaseDataLoader() {
 
       if (!clients || clients.length === 0) {
         useAppStore.getState().setAllClients([]);
+        useAppStore.setState({ dataLoaded: true });
         return;
       }
 
@@ -55,6 +57,12 @@ export default function SupabaseDataLoader() {
         supabase.from("body_measurements").select("*").in("client_id", clientIds).order("date", { ascending: false }),
         supabase.from("notes").select("*").in("client_id", clientIds).order("created_at", { ascending: false }),
       ]);
+
+      // Fetch exercise logs for all workout plans
+      const planIds = (workoutPlans ?? []).map((p) => p.id);
+      const { data: exerciseLogs } = planIds.length > 0
+        ? await supabase.from("exercise_logs").select("*").in("workout_plan_id", planIds)
+        : { data: [] };
 
       useAppStore.getState().setAllClients(
         clients.map((c) => ({
@@ -82,7 +90,17 @@ export default function SupabaseDataLoader() {
               daysPerWeek: p.days_per_week,
               totalWeeks: p.total_weeks,
               exercises: parseJsonb<Exercise[]>(p.exercises, []),
-              logs: [],
+              logs: (exerciseLogs ?? [])
+                .filter((l) => l.workout_plan_id === p.id)
+                .map((l) => ({
+                  id: l.id,
+                  exerciseId: l.exercise_id,
+                  weekNumber: l.week_number,
+                  weight: l.weight ?? undefined,
+                  reps: l.reps ?? undefined,
+                  note: l.note ?? undefined,
+                  loggedAt: l.logged_at,
+                })),
               shareToken: p.share_token,
               createdAt: p.created_at,
               active: p.active,
@@ -169,6 +187,7 @@ export default function SupabaseDataLoader() {
             })),
         }))
       );
+      useAppStore.setState({ dataLoaded: true });
     }
 
     load();

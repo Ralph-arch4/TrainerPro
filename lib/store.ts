@@ -166,6 +166,7 @@ interface AppState {
   user: User | null;
   clients: Client[];
   activeClientId: string | null;
+  dataLoaded: boolean;
 
   // User
   setUser: (user: User) => void;
@@ -229,9 +230,10 @@ export const useAppStore = create<AppState>()(
       user: null,
       clients: [],
       activeClientId: null,
+      dataLoaded: false,
 
       setUser: (user) => set({ user }),
-      clearUser: () => set({ user: null, clients: [], activeClientId: null }),
+      clearUser: () => set({ user: null, clients: [], activeClientId: null, dataLoaded: false }),
 
       setActiveClient: (id) => set({ activeClientId: id }),
       setAllClients: (clients) => set({ clients }),

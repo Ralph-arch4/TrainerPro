@@ -9,8 +9,10 @@ import {
   User, Target, Dumbbell, UtensilsCrossed, Activity, Heart,
   ChevronRight, Loader2, RefreshCw, FileDown, UserPlus,
 } from "lucide-react";
+import { showToast } from "@/components/Toast";
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ||
+  (typeof window !== "undefined" ? window.location.origin : "");
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" });
@@ -32,7 +34,7 @@ export default function IntakePage() {
   async function load() {
     if (!user) return;
     setLoading(true);
-    try { setForms(await dbIntakeForms.list(user.id)); } catch {}
+    try { setForms(await dbIntakeForms.list(user.id)); } catch { showToast("Errore nel caricamento dei form", "error"); }
     setLoading(false);
   }
 
@@ -47,7 +49,7 @@ export default function IntakePage() {
       setForms((prev) => [form, ...prev]);
       setNewLabel("");
       setShowCreate(false);
-    } catch {}
+    } catch { showToast("Errore nella creazione del form", "error"); }
     setCreating(false);
   }
 
@@ -57,7 +59,7 @@ export default function IntakePage() {
       await dbIntakeForms.remove(id);
       setForms((prev) => prev.filter((f) => f.id !== id));
       if (selected?.id === id) setSelected(null);
-    } catch {}
+    } catch { showToast("Errore nell'eliminazione del form", "error"); }
     setDeleting(null);
   }
 
@@ -343,7 +345,7 @@ function ResponseDetail({ form }: { form: IntakeForm }) {
       }
       setCreated(true);
       setTimeout(() => router.push(`/dashboard/clienti/${newClient.id}`), 1200);
-    } catch {}
+    } catch { showToast("Errore durante la creazione del cliente", "error"); }
     setCreating(false);
   }
 

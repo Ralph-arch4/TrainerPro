@@ -17,8 +17,9 @@ function timeGreeting() {
 }
 
 export default function DashboardPage() {
-  const user    = useAppStore((s) => s.user);
-  const clients = useAppStore((s) => s.clients);
+  const user       = useAppStore((s) => s.user);
+  const clients    = useAppStore((s) => s.clients);
+  const dataLoaded = useAppStore((s) => s.dataLoaded);
 
   const plan       = user?.plan ?? "free";
   const firstName  = user?.name?.split(" ")[0] ?? "Trainer";
@@ -60,6 +61,30 @@ export default function DashboardPage() {
     { label: "Schede create",   value: totalWorkoutPlans,    icon: Dumbbell,        color: "#CC5522" },
     { label: "Piani alimentari",value: totalDietPlans,       icon: UtensilsCrossed, color: "rgba(255,154,108,0.85)" },
   ];
+
+  if (!dataLoaded) {
+    return (
+      <div className="p-4 pt-20 lg:pt-8 lg:p-8 fade-in">
+        <div className="mb-8">
+          <div className="h-8 w-56 rounded-xl mb-2 animate-pulse" style={{ background: "rgba(255,255,255,0.07)" }} />
+          <div className="h-4 w-36 rounded-lg animate-pulse" style={{ background: "rgba(255,255,255,0.04)" }} />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="card-luxury rounded-2xl p-5 animate-pulse">
+              <div className="h-8 w-12 rounded-lg mb-2" style={{ background: "rgba(255,255,255,0.07)" }} />
+              <div className="h-3 w-20 rounded" style={{ background: "rgba(255,255,255,0.04)" }} />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="card-luxury rounded-2xl p-5 animate-pulse" style={{ height: "180px" }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 pt-20 lg:pt-8 lg:p-8 fade-in">
