@@ -3,9 +3,9 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { dbExerciseLogs } from "@/lib/db";
-import WorkoutSpreadsheet from "@/components/WorkoutSpreadsheet";
-import type { Exercise, ExerciseLog } from "@/lib/store";
-import { Dumbbell, UtensilsCrossed, Loader2, AlertCircle, Copy, Check } from "lucide-react";
+import WorkoutLogbook from "@/components/WorkoutLogbook";
+import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
+import { Dumbbell, UtensilsCrossed, ShoppingBag, Loader2, AlertCircle, Copy, Check } from "lucide-react";
 
 interface PlanData {
   id: string;
@@ -17,6 +17,7 @@ interface PlanData {
   share_token: string;
   client_id: string;
   day_labels: Record<number, string> | null;
+  supplements: SupplementItem[] | null;
 }
 
 interface DietData {
@@ -35,7 +36,51 @@ interface DietData {
   active: boolean;
 }
 
-type Tab = "allenamento" | "dieta";
+type Tab = "allenamento" | "dieta" | "integratori";
+
+function SupplementClientCard({ item }: { item: SupplementItem }) {
+  const [copied, setCopied] = useState(false);
+  function copyCode() {
+    if (!item.discountCode) return;
+    navigator.clipboard.writeText(item.discountCode).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  }
+  return (
+    <div className="rounded-2xl p-4 flex flex-col gap-3"
+      style={{ background: "rgba(255,107,43,0.04)", border: "1px solid rgba(255,107,43,0.14)" }}>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="font-bold text-sm" style={{ color: "var(--ivory)" }}>{item.name}</p>
+          {item.brand && <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{item.brand}</p>}
+        </div>
+        <ShoppingBag size={18} style={{ color: "var(--accent)", flexShrink: 0, marginTop: 2 }} />
+      </div>
+      {item.notes && <p className="text-xs" style={{ color: "rgba(245,240,232,0.55)" }}>{item.notes}</p>}
+      <div className="flex gap-2 flex-wrap">
+        {item.productUrl && (
+          <a href={item.productUrl} target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold accent-btn">
+            <span>🛒</span> Acquista
+          </a>
+        )}
+        {item.discountCode && (
+          <button onClick={copyCode}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+            style={{
+              background: copied ? "rgba(52,211,153,0.12)" : "rgba(255,255,255,0.06)",
+              border: `1px solid ${copied ? "rgba(52,211,153,0.3)" : "rgba(255,255,255,0.1)"}`,
+              color: copied ? "#34d399" : "rgba(245,240,232,0.6)",
+            }}>
+            {copied ? <Check size={11} /> : <Copy size={11} />}
+            {copied ? "Copiato!" : `Codice: ${item.discountCode}`}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
@@ -56,7 +101,7 @@ export default function ClientPortalPage() {
         // 1. Load workout plan by share token
         const { data: planRow, error: planErr } = await supabase
           .from("workout_plans")
-          .select("id, name, description, days_per_week, total_weeks, exercises, share_token, client_id, day_labels")
+          .select("id, name, description, days_per_week, total_weeks, exercises, share_token, client_id, day_labels, supplements")
           .eq("share_token", token)
           .single();
 
@@ -74,7 +119,13 @@ export default function ClientPortalPage() {
             : (planRow.exercises as Exercise[]) ?? [];
         } catch {}
 
-        setPlan({ ...planRow, exercises });
+        let supplements: SupplementItem[] = [];
+        try {
+          supplements = typeof planRow.supplements === "string"
+            ? JSON.parse(planRow.supplements)
+            : planRow.supplements as SupplementItem[] ?? [];
+        } catch {}
+        setPlan({ ...planRow, exercises, supplements });
 
         // 2. Load exercise logs
         const { data: logRows } = await supabase
@@ -227,13 +278,14 @@ export default function ClientPortalPage() {
         </div>
 
         {/* ── Tabs ───────────────────────────────────────────────────────────── */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
           {([
-            { key: "allenamento" as Tab, icon: Dumbbell,       label: "Scheda allenamento" },
-            { key: "dieta"       as Tab, icon: UtensilsCrossed, label: `Piano dieta${diets.length > 0 ? ` (${diets.length})` : ""}` },
+            { key: "allenamento"  as Tab, icon: Dumbbell,        label: "Scheda allenamento" },
+            { key: "dieta"        as Tab, icon: UtensilsCrossed,  label: `Piano dieta${diets.length > 0 ? ` (${diets.length})` : ""}` },
+            { key: "integratori"  as Tab, icon: ShoppingBag,      label: `Integratori${(plan.supplements?.length ?? 0) > 0 ? ` (${plan.supplements!.length})` : ""}` },
           ]).map(({ key, icon: Icon, label }) => (
             <button key={key} onClick={() => setTab(key)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0"
               style={{
                 background: tab === key ? "rgba(255,107,43,0.12)" : "rgba(255,255,255,0.04)",
                 border: `1px solid ${tab === key ? "rgba(255,107,43,0.3)" : "rgba(255,255,255,0.07)"}`,
@@ -262,15 +314,15 @@ export default function ClientPortalPage() {
                 <p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>Il tuo trainer sta ancora preparando gli esercizi.</p>
               </div>
             ) : (
-              <WorkoutSpreadsheet
+              <WorkoutLogbook
                 planId={plan.id}
-                planName={plan.name}
                 exercises={plan.exercises}
                 logs={logs}
                 totalWeeks={plan.total_weeks}
                 daysPerWeek={plan.days_per_week}
                 mode="client"
                 dayLabels={plan.day_labels ?? {}}
+                supplements={[]}
                 onUpsertLog={handleUpsertLog}
               />
             )}
@@ -376,6 +428,29 @@ export default function ClientPortalPage() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── INTEGRATORI tab ─────────────────────────────────────────────────── */}
+        {tab === "integratori" && (
+          <div>
+            {(!plan.supplements || plan.supplements.length === 0) ? (
+              <div className="text-center py-16 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <ShoppingBag size={36} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.2)" }} />
+                <p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>Il tuo trainer non ha ancora aggiunto integratori consigliati.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs mb-4" style={{ color: "rgba(245,240,232,0.4)" }}>
+                  Integratori consigliati dal tuo trainer. Se presente un codice sconto, copialo prima di acquistare.
+                </p>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                  {plan.supplements.map((item) => (
+                    <SupplementClientCard key={item.id} item={item} />
+                  ))}
+                </div>
               </div>
             )}
           </div>

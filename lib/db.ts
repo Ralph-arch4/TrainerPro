@@ -119,6 +119,7 @@ export const dbWorkoutPlans = {
     if (payload.shareToken   !== undefined) mapped.share_token   = payload.shareToken;
     if (payload.dayLabels    !== undefined) mapped.day_labels    = payload.dayLabels;
     if (payload.restSeconds  !== undefined) mapped.rest_seconds  = payload.restSeconds;
+    if (payload.supplements  !== undefined) mapped.supplements   = payload.supplements;
     const { error } = await db().from("workout_plans").update(mapped).eq("id", id);
     if (error) throw error;
   },

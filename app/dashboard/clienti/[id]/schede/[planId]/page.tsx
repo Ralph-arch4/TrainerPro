@@ -4,8 +4,11 @@ import { useParams, useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { dbWorkoutPlans, dbExerciseLogs } from "@/lib/db";
 import WorkoutSpreadsheet from "@/components/WorkoutSpreadsheet";
-import type { Exercise } from "@/lib/store";
-import { ArrowLeft, Dumbbell } from "lucide-react";
+import WorkoutLogbook from "@/components/WorkoutLogbook";
+import type { Exercise, SupplementItem } from "@/lib/store";
+import { ArrowLeft, Dumbbell, LayoutGrid, Table2 } from "lucide-react";
+
+type ViewMode = "logbook" | "spreadsheet";
 
 export default function WorkoutPlanPage() {
   const { id, planId } = useParams<{ id: string; planId: string }>();
@@ -13,29 +16,26 @@ export default function WorkoutPlanPage() {
   const client = useAppStore((s) => s.clients.find((c) => c.id === id));
   const plan = client?.workoutPlans.find((p) => p.id === planId);
   const addExercise = useAppStore((s) => s.addExercise);
-  const synced = useRef(false);
-
-  // Auto-repair: if this plan has a shareToken in the store but it was never
-  // persisted to DB (created before the camelCase fix), write it now.
-  useEffect(() => {
-    if (!plan?.shareToken || synced.current) return;
-    synced.current = true;
-    dbWorkoutPlans.update(plan.id, { shareToken: plan.shareToken }).catch(() => {});
-  }, [plan?.id, plan?.shareToken]);
   const updateExercise = useAppStore((s) => s.updateExercise);
   const removeExercise = useAppStore((s) => s.removeExercise);
   const reorderExercises = useAppStore((s) => s.reorderExercises);
   const upsertLog = useAppStore((s) => s.upsertLog);
   const removeLog = useAppStore((s) => s.removeLog);
   const updateWorkoutPlan = useAppStore((s) => s.updateWorkoutPlan);
+  const synced = useRef(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("logbook");
 
-  // Fetch fresh logs from DB every time the trainer opens this plan.
-  // The Zustand store persists to localStorage and won't automatically pick up
-  // logs the client saved via the portal — so we sync from DB on mount.
+  // Auto-repair: ensure share_token is persisted to DB
+  useEffect(() => {
+    if (!plan?.shareToken || synced.current) return;
+    synced.current = true;
+    dbWorkoutPlans.update(plan.id, { shareToken: plan.shareToken }).catch(() => {});
+  }, [plan?.id, plan?.shareToken]);
+
+  // Fetch fresh logs from DB so trainer sees what the client logged
   useEffect(() => {
     if (!plan) return;
     dbExerciseLogs.listByPlan(planId).then((rows) => {
-      // Clear existing logs for this plan and replace with DB truth
       plan.logs.forEach((l) => removeLog(id, planId, l.id));
       rows.forEach((r) => {
         upsertLog(id, planId, {
@@ -61,8 +61,8 @@ export default function WorkoutPlanPage() {
     );
   }
 
-  function syncExercisesToDb(planId_: string, exercises: Exercise[]) {
-    dbWorkoutPlans.update(planId_, {
+  function syncExercisesToDb(exercises: Exercise[]) {
+    dbWorkoutPlans.update(planId, {
       exercises: JSON.stringify(exercises) as unknown as Exercise[],
     } as Parameters<typeof dbWorkoutPlans.update>[1]).catch(() => {});
   }
@@ -74,17 +74,17 @@ export default function WorkoutPlanPage() {
 
   function handleAddExercise(data: Omit<Exercise, "id" | "order">) {
     addExercise(id, planId, data);
-    syncExercisesToDb(planId, getExercises());
+    syncExercisesToDb(getExercises());
   }
 
   function handleUpdateExercise(exerciseId: string, data: Partial<Exercise>) {
     updateExercise(id, planId, exerciseId, data);
-    syncExercisesToDb(planId, getExercises());
+    syncExercisesToDb(getExercises());
   }
 
   function handleRemoveExercise(exerciseId: string) {
     removeExercise(id, planId, exerciseId);
-    syncExercisesToDb(planId, getExercises());
+    syncExercisesToDb(getExercises());
   }
 
   function handleMoveExercise(exerciseId: string, dir: "up" | "down") {
@@ -98,7 +98,7 @@ export default function WorkoutPlanPage() {
     [reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]];
     const withOrder = reordered.map((e, i) => ({ ...e, order: i }));
     reorderExercises(id, planId, withOrder);
-    syncExercisesToDb(planId, withOrder);
+    syncExercisesToDb(withOrder);
   }
 
   function handleUpsertLog(logData: Parameters<typeof upsertLog>[2]) {
@@ -116,18 +116,20 @@ export default function WorkoutPlanPage() {
   function handleUpdateDayLabel(day: number, label: string) {
     if (!plan) return;
     const updated: Record<number, string> = { ...((plan.dayLabels as Record<number, string>) ?? {}) };
-    if (label) {
-      updated[day] = label;
-    } else {
-      delete updated[day];
-    }
+    if (label) updated[day] = label;
+    else delete updated[day];
     updateWorkoutPlan(id, planId, { dayLabels: updated });
     dbWorkoutPlans.update(planId, { dayLabels: updated }).catch(() => {});
   }
 
+  function handleUpdateSupplements(items: SupplementItem[]) {
+    updateWorkoutPlan(id, planId, { supplements: items });
+    dbWorkoutPlans.update(planId, { supplements: items } as Parameters<typeof dbWorkoutPlans.update>[1]).catch(() => {});
+  }
+
   return (
     <div className="p-4 pt-20 lg:pt-8 lg:p-8 fade-in">
-      {/* Back button */}
+      {/* Back */}
       <button
         onClick={() => router.push(`/dashboard/clienti/${id}?tab=schede`)}
         className="flex items-center gap-2 text-sm mb-5 hover:opacity-80 transition-all"
@@ -135,8 +137,8 @@ export default function WorkoutPlanPage() {
         <ArrowLeft size={15} /> {client.name}
       </button>
 
-      {/* Plan header */}
-      <div className="flex items-center justify-between mb-6">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl accent-btn flex items-center justify-center flex-shrink-0">
             <Dumbbell size={18} />
@@ -144,30 +146,68 @@ export default function WorkoutPlanPage() {
           <div>
             <h1 className="text-xl font-bold" style={{ color: "var(--ivory)" }}>{plan.name}</h1>
             <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>
-              {plan.daysPerWeek} giorni/sett · {plan.totalWeeks} settimane · {plan.exercises.length} esercizi{plan.restSeconds ? ` · ⏱ ${plan.restSeconds < 60 ? `${plan.restSeconds}″` : `${Math.floor(plan.restSeconds / 60)}′${plan.restSeconds % 60 ? `${plan.restSeconds % 60}″` : ""}`}` : ""}
+              {plan.daysPerWeek} giorni/sett · {plan.totalWeeks} settimane · {plan.exercises.length} esercizi
             </p>
           </div>
         </div>
+
+        {/* View mode toggle */}
+        <div className="flex items-center gap-1 p-1 rounded-xl"
+          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          {([
+            { key: "logbook" as ViewMode,     icon: LayoutGrid, label: "Scheda" },
+            { key: "spreadsheet" as ViewMode, icon: Table2,     label: "Avanzato" },
+          ]).map(({ key, icon: Icon, label }) => (
+            <button key={key} onClick={() => setViewMode(key)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+              style={{
+                background: viewMode === key ? "rgba(255,107,43,0.14)" : "transparent",
+                color: viewMode === key ? "var(--accent-light)" : "rgba(245,240,232,0.45)",
+              }}>
+              <Icon size={13} /> {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* The spreadsheet */}
-      <WorkoutSpreadsheet
-        planId={planId}
-        planName={plan.name}
-        exercises={plan.exercises}
-        logs={plan.logs}
-        totalWeeks={plan.totalWeeks}
-        daysPerWeek={plan.daysPerWeek}
-        mode="trainer"
-        shareToken={plan.shareToken}
-        dayLabels={plan.dayLabels}
-        onUpdateDayLabel={handleUpdateDayLabel}
-        onAddExercise={handleAddExercise}
-        onUpdateExercise={handleUpdateExercise}
-        onRemoveExercise={handleRemoveExercise}
-        onMoveExercise={handleMoveExercise}
-        onUpsertLog={handleUpsertLog}
-      />
+      {/* ── Logbook view (Google Sheets style) ── */}
+      {viewMode === "logbook" && (
+        <WorkoutLogbook
+          planId={planId}
+          exercises={plan.exercises}
+          logs={plan.logs}
+          totalWeeks={plan.totalWeeks}
+          daysPerWeek={plan.daysPerWeek}
+          mode="trainer"
+          dayLabels={plan.dayLabels}
+          supplements={plan.supplements ?? []}
+          onUpdateExercise={handleUpdateExercise}
+          onRemoveExercise={handleRemoveExercise}
+          onUpdateSupplements={handleUpdateSupplements}
+          onUpsertLog={handleUpsertLog}
+        />
+      )}
+
+      {/* ── Advanced spreadsheet view (full exercise management + add/edit) ── */}
+      {viewMode === "spreadsheet" && (
+        <WorkoutSpreadsheet
+          planId={planId}
+          planName={plan.name}
+          exercises={plan.exercises}
+          logs={plan.logs}
+          totalWeeks={plan.totalWeeks}
+          daysPerWeek={plan.daysPerWeek}
+          mode="trainer"
+          shareToken={plan.shareToken}
+          dayLabels={plan.dayLabels}
+          onUpdateDayLabel={handleUpdateDayLabel}
+          onAddExercise={handleAddExercise}
+          onUpdateExercise={handleUpdateExercise}
+          onRemoveExercise={handleRemoveExercise}
+          onMoveExercise={handleMoveExercise}
+          onUpsertLog={handleUpsertLog}
+        />
+      )}
     </div>
   );
 }

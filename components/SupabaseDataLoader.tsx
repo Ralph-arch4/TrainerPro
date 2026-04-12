@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/lib/store";
-import type { PlanTier, Exercise } from "@/lib/store";
+import type { PlanTier, Exercise, SupplementItem } from "@/lib/store";
 
 function parseJsonb<T>(value: unknown, fallback: T): T {
   if (!value) return fallback;
@@ -106,6 +106,7 @@ export default function SupabaseDataLoader() {
               active: p.active,
               dayLabels: parseJsonb<Record<number, string>>(p.day_labels, {}),
               restSeconds: p.rest_seconds ?? undefined,
+              supplements: parseJsonb<SupplementItem[]>(p.supplements, []),
             })),
           phases: (phases ?? [])
             .filter((p) => p.client_id === c.id)

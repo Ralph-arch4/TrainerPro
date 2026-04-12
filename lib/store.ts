@@ -77,6 +77,16 @@ export interface Phase {
   notes?: string;
 }
 
+// ─── Supplement (recommended product per plan) ────────────────────────────────
+export interface SupplementItem {
+  id: string;
+  name: string;            // e.g. "Creatina Monoidrata"
+  brand?: string;          // e.g. "MyProtein"
+  productUrl?: string;     // affiliate link
+  discountCode?: string;   // e.g. "TRAINER20"
+  notes?: string;          // e.g. "3-5g al giorno post-workout"
+}
+
 // ─── Workout Plan ─────────────────────────────────────────────────────────────
 export interface WorkoutPlan {
   id: string;
@@ -93,6 +103,7 @@ export interface WorkoutPlan {
   createdAt: string;
   active: boolean;
   dayLabels?: Record<number, string>; // e.g. { 1: "Pull Day", 2: "Push Day" }
+  supplements?: SupplementItem[];     // recommended products with optional affiliate links
 }
 
 // ─── Diet Plan ────────────────────────────────────────────────────────────────
