@@ -24,7 +24,7 @@ export default function AppNav() {
   const pathname = usePathname();
   const router = useRouter();
   const user = useAppStore((s) => s.user);
-  const clients = useAppStore((s) => s.clients);
+  const clientCount = useAppStore((s) => s.clients.length);
   const [open, setOpen] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
 
@@ -68,13 +68,13 @@ export default function AppNav() {
           <div className="flex justify-between items-center">
             <span style={{ color: "rgba(245,240,232,0.6)" }}>Clienti attivi</span>
             <span style={{ color: "var(--accent)" }} className="font-semibold">
-              {clients.length} / {PLAN_LIMITS[plan].clients === 999999 ? "∞" : PLAN_LIMITS[plan].clients}
+              {clientCount} / {PLAN_LIMITS[plan].clients === 999999 ? "∞" : PLAN_LIMITS[plan].clients}
             </span>
           </div>
           <div className="mt-2 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
             <div className="h-1 rounded-full" style={{
               background: "var(--accent)",
-              width: PLAN_LIMITS[plan].clients === 999999 ? "20%" : `${Math.min((clients.length / PLAN_LIMITS[plan].clients) * 100, 100)}%`
+              width: PLAN_LIMITS[plan].clients === 999999 ? "20%" : `${Math.min((clientCount / PLAN_LIMITS[plan].clients) * 100, 100)}%`
             }} />
           </div>
         </div>

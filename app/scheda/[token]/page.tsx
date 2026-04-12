@@ -32,7 +32,7 @@ export default function PublicSchedaPage() {
         const supabase = createClient();
         const { data: planRow, error: planErr } = await supabase
           .from("workout_plans")
-          .select("id, name, description, days_per_week, total_weeks, exercises, share_token, supplements")
+          .select("*")
           .eq("share_token", token)
           .single();
 

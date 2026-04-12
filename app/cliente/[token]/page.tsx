@@ -101,7 +101,7 @@ export default function ClientPortalPage() {
         // 1. Load workout plan by share token
         const { data: planRow, error: planErr } = await supabase
           .from("workout_plans")
-          .select("id, name, description, days_per_week, total_weeks, exercises, share_token, client_id, day_labels, supplements")
+          .select("*")
           .eq("share_token", token)
           .single();
 

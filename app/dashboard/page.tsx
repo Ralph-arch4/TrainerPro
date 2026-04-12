@@ -24,11 +24,13 @@ export default function DashboardPage() {
   const plan       = user?.plan ?? "free";
   const firstName  = user?.name?.split(" ")[0] ?? "Trainer";
 
-  const activeClients    = clients.filter((c) => c.status === "attivo").length;
-  const totalWorkoutPlans = clients.reduce((acc, c) => acc + c.workoutPlans.length, 0);
-  const totalDietPlans   = clients.reduce((acc, c) => acc + c.dietPlans.length, 0);
-  const totalPhases      = clients.reduce((acc, c) => acc + c.phases.length, 0);
-  const totalMeasurements = clients.reduce((acc, c) => acc + c.measurements.length, 0);
+  const { activeClients, totalWorkoutPlans, totalDietPlans, totalPhases, totalMeasurements } = useMemo(() => ({
+    activeClients:     clients.filter((c) => c.status === "attivo").length,
+    totalWorkoutPlans: clients.reduce((acc, c) => acc + c.workoutPlans.length, 0),
+    totalDietPlans:    clients.reduce((acc, c) => acc + c.dietPlans.length, 0),
+    totalPhases:       clients.reduce((acc, c) => acc + c.phases.length, 0),
+    totalMeasurements: clients.reduce((acc, c) => acc + c.measurements.length, 0),
+  }), [clients]);
 
   const recentClients = useMemo(
     () => [...clients].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5),
