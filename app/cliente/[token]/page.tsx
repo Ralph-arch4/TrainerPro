@@ -98,20 +98,18 @@ export default function ClientPortalPage() {
       try {
         const supabase = createClient();
 
-        // 1. Load workout plan by share token
-        const { data: planRow, error: planErr } = await supabase
-          .from("workout_plans")
-          .select("*")
-          .eq("share_token", token)
-          .single();
+        // Single RPC call — validates token server-side, no enumeration possible
+        const { data, error: rpcErr } = await supabase
+          .rpc("get_portal_data", { p_token: token });
 
-        if (planErr || !planRow) {
+        if (rpcErr || !data || data.error === "not_found") {
           setError("Portale non trovato o link non più valido.");
           setLoading(false);
           return;
         }
 
-        // Parse exercises
+        const planRow = data.plan;
+
         let exercises: Exercise[] = [];
         try {
           exercises = typeof planRow.exercises === "string"
@@ -127,33 +125,19 @@ export default function ClientPortalPage() {
         } catch {}
         setPlan({ ...planRow, exercises, supplements });
 
-        // 2. Load exercise logs
-        const { data: logRows } = await supabase
-          .from("exercise_logs")
-          .select("*")
-          .eq("workout_plan_id", planRow.id);
-
-        if (logRows) {
-          setLogs(logRows.map((l) => ({
-            id: l.id,
-            exerciseId: l.exercise_id,
-            weekNumber: l.week_number,
-            weight: l.weight ?? undefined,
-            reps: l.reps ?? undefined,
-            note: l.note ?? undefined,
-            loggedAt: l.logged_at,
+        if (data.logs) {
+          setLogs((data.logs as Array<Record<string, unknown>>).map((l) => ({
+            id: l.id as string,
+            exerciseId: l.exercise_id as string,
+            weekNumber: l.week_number as number,
+            weight: (l.weight as number) ?? undefined,
+            reps: (l.reps as string) ?? undefined,
+            note: (l.note as string) ?? undefined,
+            loggedAt: l.logged_at as string,
           })));
         }
 
-        // 3. Load diet plans for this client (public via migration 005 policy)
-        const { data: dietRows } = await supabase
-          .from("diet_plans")
-          .select("id, name, calories, calories_max, protein, protein_max, carbs, carbs_max, fat, fat_max, meals, notes, active")
-          .eq("client_id", planRow.client_id)
-          .eq("active", true)
-          .order("created_at", { ascending: false });
-
-        if (dietRows) setDiets(dietRows);
+        if (data.diets) setDiets(data.diets as DietData[]);
 
       } catch {
         setError("Errore nel caricamento. Riprova.");

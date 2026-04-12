@@ -30,13 +30,18 @@ export default function PublicSchedaPage() {
       if (!token) { setError("Link non valido."); setLoading(false); return; }
       try {
         const supabase = createClient();
-        const { data: planRow, error: planErr } = await supabase
-          .from("workout_plans")
-          .select("*")
-          .eq("share_token", token)
-          .single();
 
-        if (planErr || !planRow) { setError("Scheda non trovata o link non più valido."); setLoading(false); return; }
+        // Single RPC call — validates token server-side, no enumeration possible
+        const { data, error: rpcErr } = await supabase
+          .rpc("get_portal_data", { p_token: token });
+
+        if (rpcErr || !data || data.error === "not_found") {
+          setError("Scheda non trovata o link non più valido.");
+          setLoading(false);
+          return;
+        }
+
+        const planRow = data.plan;
 
         let exercises: Exercise[] = [];
         try {
@@ -54,20 +59,15 @@ export default function PublicSchedaPage() {
 
         setPlan({ ...planRow, exercises, supplements });
 
-        const { data: logRows } = await supabase
-          .from("exercise_logs")
-          .select("*")
-          .eq("workout_plan_id", planRow.id);
-
-        if (logRows) {
-          setLogs(logRows.map((l) => ({
-            id: l.id,
-            exerciseId: l.exercise_id,
-            weekNumber: l.week_number,
-            weight: l.weight ?? undefined,
-            reps: l.reps ?? undefined,
-            note: l.note ?? undefined,
-            loggedAt: l.logged_at,
+        if (data.logs) {
+          setLogs((data.logs as Array<Record<string, unknown>>).map((l) => ({
+            id: l.id as string,
+            exerciseId: l.exercise_id as string,
+            weekNumber: l.week_number as number,
+            weight: (l.weight as number) ?? undefined,
+            reps: (l.reps as string) ?? undefined,
+            note: (l.note as string) ?? undefined,
+            loggedAt: l.logged_at as string,
           })));
         }
       } catch {
