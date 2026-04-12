@@ -42,11 +42,10 @@ BEGIN
   WHERE l.workout_plan_id = v_plan.id;
 
   -- Fetch active diet plan for this client only
-  SELECT json_agg(row_to_json(d)) INTO v_diet
+  SELECT json_agg(row_to_json(d) ORDER BY d.created_at DESC) INTO v_diet
   FROM public.diet_plans d
   WHERE d.client_id = v_plan.client_id
-    AND d.active = true
-  ORDER BY d.created_at DESC;
+    AND d.active = true;
 
   RETURN json_build_object(
     'plan', row_to_json(v_plan),
