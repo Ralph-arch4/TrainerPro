@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
-import type { DietPlan } from "@/lib/store";
-import { dbPhases, dbWorkoutPlans, dbDietPlans, dbNotes } from "@/lib/db";
+import type { DietPlan, BodyMeasurement } from "@/lib/store";
+import { dbPhases, dbWorkoutPlans, dbDietPlans, dbNotes, dbMeasurements } from "@/lib/db";
 import { showToast } from "@/components/Toast";
 import DietPlanEditor from "@/components/DietPlanEditor";
 import Link from "next/link";
@@ -11,10 +11,10 @@ import {
   ArrowLeft, Activity, UtensilsCrossed, StickyNote,
   Dumbbell, Plus, X, Loader2, Pencil, Trash2, CheckCircle2, Circle,
   Mail, Phone, Calendar, Target, BarChart2, ExternalLink, Copy, Check, Timer,
-  ChevronDown, ChevronUp, Flame, Beef, Wheat, Droplets,
+  ChevronDown, ChevronUp, Flame, Beef, Wheat, Droplets, TrendingUp,
 } from "lucide-react";
 
-type Tab = "overview" | "fasi" | "schede" | "dieta" | "note";
+type Tab = "overview" | "fasi" | "schede" | "dieta" | "misurazioni" | "note";
 
 const goalLabel: Record<string, string> = { dimagrimento: "Dimagrimento", massa: "Massa", tonificazione: "Tonificazione", performance: "Performance" };
 const levelLabel: Record<string, string> = { principiante: "Principiante", intermedio: "Intermedio", avanzato: "Avanzato" };
@@ -52,9 +52,43 @@ export default function ClientDetailPage() {
   const removeDietPlan = useAppStore((s) => s.removeDietPlan);
   const addNote = useAppStore((s) => s.addNote);
   const removeNote = useAppStore((s) => s.removeNote);
+  const addMeasurement = useAppStore((s) => s.addMeasurement);
+  const removeMeasurement = useAppStore((s) => s.removeMeasurement);
 
   const [tab, setTab] = useState<Tab>((searchParams.get("tab") as Tab) || "overview");
   const [saving, setSaving] = useState(false);
+
+  // Measurements form
+  const emptyMeasForm = () => ({
+    date: new Date().toISOString().split("T")[0],
+    weight: "", bodyFat: "", chest: "", waist: "", hips: "", arms: "", legs: "",
+  });
+  const [measForm, setMeasForm] = useState(emptyMeasForm);
+  const [measSaving, setMeasSaving] = useState(false);
+
+  async function saveMeasurement() {
+    if (!measForm.date || !measForm.weight) return;
+    setMeasSaving(true);
+    try {
+      const payload: BodyMeasurement = {
+        id: crypto.randomUUID(),
+        clientId: client!.id,
+        date: measForm.date,
+        weight: parseFloat(measForm.weight),
+        bodyFat: measForm.bodyFat ? parseFloat(measForm.bodyFat) : undefined,
+        chest: measForm.chest ? parseFloat(measForm.chest) : undefined,
+        waist: measForm.waist ? parseFloat(measForm.waist) : undefined,
+        hips: measForm.hips ? parseFloat(measForm.hips) : undefined,
+        arms: measForm.arms ? parseFloat(measForm.arms) : undefined,
+        legs: measForm.legs ? parseFloat(measForm.legs) : undefined,
+      };
+      addMeasurement(client!.id, payload);
+      await dbMeasurements.create(payload);
+      setMeasForm(emptyMeasForm());
+      showToast("Misurazione salvata");
+    } catch { showToast("Errore nel salvataggio"); }
+    finally { setMeasSaving(false); }
+  }
   const [saveError, setSaveError] = useState("");
 
   // Phase modal
@@ -244,6 +278,7 @@ export default function ClientDetailPage() {
     { key: "fasi", label: "Fasi", icon: Activity, count: client.phases.length },
     { key: "schede", label: "Schede", icon: Dumbbell, count: client.workoutPlans.length },
     { key: "dieta", label: "Dieta", icon: UtensilsCrossed, count: client.dietPlans.length },
+    { key: "misurazioni", label: "Misurazioni", icon: TrendingUp, count: client.measurements.length },
     { key: "note", label: "Note", icon: StickyNote, count: client.notes.length },
   ];
 
@@ -741,6 +776,151 @@ export default function ClientDetailPage() {
           )}
         </div>
       )}
+
+      {/* ── MISURAZIONI ── */}
+      {tab === "misurazioni" && (() => {
+        const sortedM = [...client.measurements].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const chartData = [...client.measurements].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        // SVG weight chart
+        const WeightChart = () => {
+          if (chartData.length < 2) return null;
+          const weights = chartData.map((m) => m.weight);
+          const minW = Math.min(...weights), maxW = Math.max(...weights);
+          const rangeW = maxW - minW || 1;
+          const W = 100, H = 60;
+          const pts = chartData.map((m, i) => {
+            const x = (i / (chartData.length - 1)) * W;
+            const y = H - ((m.weight - minW) / rangeW) * (H - 10) - 5;
+            return `${x.toFixed(2)},${y.toFixed(2)}`;
+          }).join(" ");
+          const areaPath = `M ${pts.split(" ")[0]} L ${pts.split(" ").slice(1).join(" L ")} L ${W},${H} L 0,${H} Z`;
+          return (
+            <div className="card-luxury rounded-2xl p-5 mb-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>Andamento peso</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-bold" style={{ color: "var(--accent)" }}>{chartData[chartData.length - 1].weight}</span>
+                  <span className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>kg</span>
+                  {chartData.length > 1 && (() => {
+                    const diff = chartData[chartData.length - 1].weight - chartData[0].weight;
+                    return (
+                      <span className="text-xs ml-1 font-semibold" style={{ color: diff < 0 ? "#22c55e" : diff > 0 ? "#f87171" : "rgba(245,240,232,0.4)" }}>
+                        {diff > 0 ? "+" : ""}{diff.toFixed(1)} kg
+                      </span>
+                    );
+                  })()}
+                </div>
+              </div>
+              <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height: "90px", display: "block" }}>
+                <defs>
+                  <linearGradient id="wgc" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#FF6B2B" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="#FF6B2B" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path d={areaPath} fill="url(#wgc)" />
+                <polyline points={pts} fill="none" stroke="#FF6B2B" strokeWidth="1.5"
+                  strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                {chartData.map((m, i) => {
+                  const x = (i / (chartData.length - 1)) * W;
+                  const y = H - ((m.weight - minW) / rangeW) * (H - 10) - 5;
+                  return <circle key={i} cx={x.toFixed(2)} cy={y.toFixed(2)} r="1.8" fill="#FF6B2B" vectorEffect="non-scaling-stroke" />;
+                })}
+              </svg>
+              <div className="flex justify-between text-xs mt-1" style={{ color: "rgba(245,240,232,0.3)" }}>
+                <span>{formatDate(chartData[0].date)}</span>
+                <span>{formatDate(chartData[chartData.length - 1].date)}</span>
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <div>
+            <WeightChart />
+
+            {/* Add form */}
+            <div className="card-luxury rounded-2xl p-5 mb-5">
+              <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--ivory)" }}>Nuova misurazione</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Data *</label>
+                  <input type="date" value={measForm.date} onChange={(e) => setMeasForm({ ...measForm, date: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Peso (kg) *</label>
+                  <input type="number" step="0.1" placeholder="82.5" value={measForm.weight} onChange={(e) => setMeasForm({ ...measForm, weight: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>% Grasso</label>
+                  <input type="number" step="0.1" placeholder="18.5" value={measForm.bodyFat} onChange={(e) => setMeasForm({ ...measForm, bodyFat: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mb-4">
+                {([
+                  { key: "chest", label: "Petto" },
+                  { key: "waist", label: "Vita" },
+                  { key: "hips",  label: "Fianchi" },
+                  { key: "arms",  label: "Braccia" },
+                  { key: "legs",  label: "Gambe" },
+                ] as const).map(({ key, label }) => (
+                  <div key={key}>
+                    <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>{label} (cm)</label>
+                    <input type="number" step="0.5" placeholder="—"
+                      value={measForm[key]}
+                      onChange={(e) => setMeasForm({ ...measForm, [key]: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
+                  </div>
+                ))}
+              </div>
+              <button onClick={saveMeasurement} disabled={!measForm.date || !measForm.weight || measSaving}
+                className="accent-btn px-5 py-2.5 rounded-xl text-sm flex items-center gap-1.5 disabled:opacity-40">
+                {measSaving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
+                Salva misurazione
+              </button>
+            </div>
+
+            {/* History */}
+            {sortedM.length === 0 ? (
+              <div className="text-center py-12 card-luxury rounded-2xl">
+                <TrendingUp size={32} className="mx-auto mb-2" style={{ color: "rgba(255,107,43,0.2)" }} />
+                <p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>Nessuna misurazione ancora</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {sortedM.map((m) => (
+                  <div key={m.id} className="card-luxury rounded-2xl p-4 flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-baseline gap-3 mb-1.5 flex-wrap">
+                        <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{formatDate(m.date)}</span>
+                        <span className="font-bold text-base" style={{ color: "var(--ivory)" }}>{m.weight} kg</span>
+                        {m.bodyFat && <span className="text-sm" style={{ color: "#a78bfa" }}>{m.bodyFat}% grasso</span>}
+                      </div>
+                      {(m.chest || m.waist || m.hips || m.arms || m.legs) && (
+                        <div className="flex flex-wrap gap-3">
+                          {m.chest && <span className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>Petto {m.chest}cm</span>}
+                          {m.waist && <span className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>Vita {m.waist}cm</span>}
+                          {m.hips  && <span className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>Fianchi {m.hips}cm</span>}
+                          {m.arms  && <span className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>Braccia {m.arms}cm</span>}
+                          {m.legs  && <span className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>Gambe {m.legs}cm</span>}
+                        </div>
+                      )}
+                    </div>
+                    <button onClick={async () => { removeMeasurement(client!.id, m.id); try { await dbMeasurements.remove(m.id); } catch {} }}
+                      className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all flex-shrink-0">
+                      <Trash2 size={13} style={{ color: "rgba(239,68,68,0.5)" }} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* ── MODALS ── */}
 
