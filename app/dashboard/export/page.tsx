@@ -234,16 +234,67 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
       {sections.schede && client.workoutPlans.length > 0 && (
         <section className="mb-6">
           <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#FF6B2B" : "var(--accent)" }}>Schede di Allenamento</h2>
-          <div className="space-y-2">
-            {client.workoutPlans.map((w) => (
-              <div key={w.id} className="rounded-xl p-3" style={{ background: bgCard, border: `1px solid ${borderColor}` }}>
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold">{w.name}</p>
-                  <p className="text-xs" style={{ color: mutedColor }}>{w.daysPerWeek} gg/sett.</p>
+          <div className="space-y-4">
+            {client.workoutPlans.map((w) => {
+              const days = Array.from({ length: w.daysPerWeek }, (_, i) => i + 1);
+              const dayLabel = (d: number) => (w.dayLabels as Record<number,string> | null)?.[d] ?? `Giorno ${d}`;
+              return (
+                <div key={w.id} className="rounded-xl overflow-hidden" style={{ border: `1px solid ${borderColor}` }}>
+                  {/* Plan header */}
+                  <div className="px-4 py-3 flex items-center justify-between" style={{ background: forPrint ? "#fff7f5" : "rgba(255,107,43,0.08)" }}>
+                    <div>
+                      <p className="font-bold">{w.name}</p>
+                      {w.description && <p className="text-xs mt-0.5" style={{ color: mutedColor }}>{w.description}</p>}
+                    </div>
+                    <p className="text-xs" style={{ color: mutedColor }}>{w.daysPerWeek} gg/sett · {w.totalWeeks} sett.</p>
+                  </div>
+                  {/* Exercises by day */}
+                  {days.map((d) => {
+                    const dayExs = [...(w.exercises ?? [])]
+                      .filter((e) => (e.day ?? 1) === d)
+                      .sort((a, b) => a.order - b.order);
+                    if (dayExs.length === 0) return null;
+                    return (
+                      <div key={d} className="px-4 py-3" style={{ borderTop: `1px solid ${borderColor}` }}>
+                        <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: forPrint ? "#FF6B2B" : "var(--accent-light)" }}>
+                          {dayLabel(d)}
+                        </p>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                          <thead>
+                            <tr style={{ color: mutedColor }}>
+                              <th style={{ textAlign: "left", paddingBottom: "4px", fontWeight: 600 }}>Esercizio</th>
+                              <th style={{ textAlign: "center", paddingBottom: "4px", fontWeight: 600, width: "60px" }}>Serie</th>
+                              <th style={{ textAlign: "center", paddingBottom: "4px", fontWeight: 600, width: "80px" }}>Rip.</th>
+                              <th style={{ textAlign: "center", paddingBottom: "4px", fontWeight: 600, width: "60px" }}>Riposo</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {dayExs.map((ex, idx) => (
+                              <tr key={ex.id} style={{ background: idx % 2 === 0 ? (forPrint ? "#f9fafb" : "rgba(255,255,255,0.02)") : "transparent" }}>
+                                <td style={{ padding: "4px 0" }}>
+                                  <span style={{ fontWeight: 500 }}>{ex.name}</span>
+                                  {ex.muscleGroup && <span style={{ color: mutedColor, marginLeft: "6px", fontSize: "11px" }}>({ex.muscleGroup})</span>}
+                                  {ex.supersetGroup && <span style={{ color: "#a78bfa", marginLeft: "4px", fontSize: "10px", fontWeight: 700 }}>SS-{ex.supersetGroup}</span>}
+                                </td>
+                                <td style={{ textAlign: "center", padding: "4px 0" }}>{ex.sets}</td>
+                                <td style={{ textAlign: "center", padding: "4px 0" }}>
+                                  {Array.isArray(ex.perSetReps) && ex.perSetReps.some(Boolean)
+                                    ? ex.perSetReps.join(" / ")
+                                    : ex.targetReps}
+                                </td>
+                                <td style={{ textAlign: "center", padding: "4px 0", color: mutedColor }}>
+                                  {ex.restSeconds ? `${ex.restSeconds}″` : "—"}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })}
                 </div>
-                {w.description && <p className="text-xs mt-1" style={{ color: mutedColor }}>{w.description}</p>}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}
@@ -252,21 +303,50 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
       {sections.dieta && client.dietPlans.length > 0 && (
         <section className="mb-6">
           <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#FF6B2B" : "var(--accent)" }}>Piani Alimentari</h2>
-          <div className="space-y-2">
-            {client.dietPlans.map((d) => (
-              <div key={d.id} className="rounded-xl p-3" style={{ background: bgCard, border: `1px solid ${borderColor}` }}>
-                <div className="flex items-start justify-between">
-                  <p className="font-semibold">{d.name}</p>
-                  <p className="font-bold" style={{ color: forPrint ? "#FF6B2B" : "var(--accent)" }}>{d.calories} kcal</p>
+          <div className="space-y-4">
+            {client.dietPlans.map((d) => {
+              const meals: Array<{ id: string; name: string; time?: string; notes?: string; items: Array<{ id: string; name: string; grams: number; gramsMax?: number; }> }> = (() => {
+                try { const p = JSON.parse(d.meals ?? "[]"); return Array.isArray(p) ? p : []; } catch { return []; }
+              })();
+              const fmt = (min: number, max?: number, unit = "g") => max && max > min ? `${min}–${max}${unit}` : `${min}${unit}`;
+              return (
+                <div key={d.id} className="rounded-xl overflow-hidden" style={{ border: `1px solid ${borderColor}` }}>
+                  <div className="px-4 py-3" style={{ background: forPrint ? "#fff7f5" : "rgba(255,107,43,0.08)" }}>
+                    <div className="flex items-start justify-between">
+                      <p className="font-bold">{d.name}</p>
+                      <p className="font-bold" style={{ color: forPrint ? "#FF6B2B" : "var(--accent)" }}>{fmt(d.calories, d.caloriesMax, " kcal")}</p>
+                    </div>
+                    <div className="flex gap-4 mt-1 text-xs" style={{ color: mutedColor }}>
+                      <span>Prot. {fmt(d.protein, d.proteinMax)}</span>
+                      <span>Carb. {fmt(d.carbs, d.carbsMax)}</span>
+                      <span>Grassi {fmt(d.fat, d.fatMax)}</span>
+                    </div>
+                    {d.notes && <p className="text-xs mt-1" style={{ color: mutedColor }}>{d.notes}</p>}
+                  </div>
+                  {meals.length > 0 && meals.map((meal, mi) => (
+                    <div key={meal.id} className="px-4 py-3" style={{ borderTop: `1px solid ${borderColor}` }}>
+                      <p className="text-xs font-bold mb-1.5" style={{ color: mutedColor }}>
+                        {mi + 1}. {meal.name}{meal.time ? ` — ${meal.time}` : ""}
+                      </p>
+                      {meal.items.length > 0 && (
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                          <tbody>
+                            {meal.items.map((item, ii) => (
+                              <tr key={item.id} style={{ background: ii % 2 === 0 ? (forPrint ? "#f9fafb" : "rgba(255,255,255,0.02)") : "transparent" }}>
+                                <td style={{ padding: "3px 0" }}>{item.name || "—"}</td>
+                                <td style={{ textAlign: "right", padding: "3px 0", color: mutedColor, paddingLeft: "12px", whiteSpace: "nowrap" }}>
+                                  {item.gramsMax && item.gramsMax > item.grams ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                <div className="flex gap-4 mt-1 text-xs" style={{ color: mutedColor }}>
-                  <span>Prot. {d.protein}g</span>
-                  <span>Carb. {d.carbs}g</span>
-                  <span>Grassi {d.fat}g</span>
-                </div>
-                {d.notes && <p className="text-xs mt-1" style={{ color: mutedColor }}>{d.notes}</p>}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}
