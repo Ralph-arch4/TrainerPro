@@ -5,7 +5,7 @@ import { useAppStore } from "@/lib/store";
 import { PLAN_LIMITS } from "@/lib/plan-limits";
 import {
   Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight,
-  Crown, CheckCircle2, Circle, Dumbbell, Share2, ClipboardList,
+  Crown, CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
 } from "lucide-react";
 
 function timeGreeting() {
@@ -24,13 +24,16 @@ export default function DashboardPage() {
   const plan       = user?.plan ?? "free";
   const firstName  = user?.name?.split(" ")[0] ?? "Trainer";
 
-  const { activeClients, totalWorkoutPlans, totalDietPlans, totalPhases, totalMeasurements } = useMemo(() => ({
-    activeClients:     clients.filter((c) => c.status === "attivo").length,
-    totalWorkoutPlans: clients.reduce((acc, c) => acc + c.workoutPlans.length, 0),
-    totalDietPlans:    clients.reduce((acc, c) => acc + c.dietPlans.length, 0),
-    totalPhases:       clients.reduce((acc, c) => acc + c.phases.length, 0),
-    totalMeasurements: clients.reduce((acc, c) => acc + c.measurements.length, 0),
-  }), [clients]);
+  const { activeClients, totalWorkoutPlans, totalPhases, totalMeasurements, monthlyRevenue } = useMemo(() => {
+    const active = clients.filter((c) => c.status === "attivo");
+    return {
+      activeClients:     active.length,
+      totalWorkoutPlans: clients.reduce((acc, c) => acc + c.workoutPlans.length, 0),
+      totalPhases:       clients.reduce((acc, c) => acc + c.phases.length, 0),
+      totalMeasurements: clients.reduce((acc, c) => acc + c.measurements.length, 0),
+      monthlyRevenue:    active.reduce((sum, c) => sum + (c.monthlyFee ?? 0), 0),
+    };
+  }, [clients]);
 
   const recentClients = useMemo(
     () => [...clients].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5),
@@ -57,11 +60,13 @@ export default function DashboardPage() {
     in_pausa: "#f59e0b",
   };
 
+  const revenueLabel = monthlyRevenue > 0 ? `€${monthlyRevenue.toLocaleString("it-IT")}/mese` : "—";
+
   const stats = [
-    { label: "Clienti totali",  value: clients.length,      icon: Users,           color: "#FF6B2B" },
-    { label: "Clienti attivi",  value: activeClients,        icon: Activity,        color: "#FF9A6C" },
-    { label: "Schede create",   value: totalWorkoutPlans,    icon: Dumbbell,        color: "#CC5522" },
-    { label: "Piani alimentari",value: totalDietPlans,       icon: UtensilsCrossed, color: "rgba(255,154,108,0.85)" },
+    { label: "Clienti totali",    value: clients.length,    icon: Users,      color: "#FF6B2B" },
+    { label: "Clienti attivi",    value: activeClients,      icon: Activity,   color: "#FF9A6C" },
+    { label: "Schede create",     value: totalWorkoutPlans,  icon: Dumbbell,   color: "#CC5522" },
+    { label: "Fatturato mensile", value: revenueLabel,       icon: Euro,       color: "#fbbf24" },
   ];
 
   if (!dataLoaded) {

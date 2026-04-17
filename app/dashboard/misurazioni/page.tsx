@@ -8,6 +8,27 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+function SparkLine({ data, positive }: { data: number[]; positive?: boolean }) {
+  if (data.length < 2) return null;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const W = 72, H = 24;
+  const pts = data
+    .map((v, i) => `${(i / (data.length - 1)) * W},${H - ((v - min) / range) * H}`)
+    .join(" ");
+  const color = positive ? "#22c55e" : "#f87171";
+  const endX = W;
+  const endY = H - ((data[data.length - 1] - min) / range) * H;
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5"
+        strokeLinejoin="round" strokeLinecap="round" opacity={0.7} />
+      <circle cx={endX} cy={endY} r="2.5" fill={color} />
+    </svg>
+  );
+}
+
 function WeightTrend({ current, prev }: { current: number; prev?: number }) {
   if (!prev) return <span style={{ color: "rgba(245,240,232,0.4)" }}><Minus size={13} /></span>;
   const diff = current - prev;
@@ -32,6 +53,14 @@ export default function MisurazioniPage() {
       const first = sorted[sorted.length - 1];
       const totalChange = first ? latest.weight - first.weight : 0;
       return { client: c, latest, prev, totalChange, count: c.measurements.length };
+    })
+    .map((s) => {
+      const weightHistory = s.client.measurements
+        .slice()
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .slice(-8)
+        .map((m) => m.weight);
+      return { ...s, weightHistory };
     })
     .filter((s) => s.client.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -116,7 +145,7 @@ export default function MisurazioniPage() {
 
       {/* Client measurement cards */}
       <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        {sorted.map(({ client, latest, prev, totalChange, count }) => (
+        {sorted.map(({ client, latest, prev, totalChange, count, weightHistory }) => (
           <Link key={client.id} href={`/dashboard/clienti/${client.id}?tab=misurazioni`}
             className="card-luxury rounded-2xl p-5 hover:border-[rgba(255,107,43,0.3)] transition-all group block">
             <div className="flex items-start justify-between mb-4">
@@ -132,7 +161,7 @@ export default function MisurazioniPage() {
               <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-all mt-1" style={{ color: "var(--accent-light)" }} />
             </div>
 
-            {/* Weight */}
+            {/* Weight + sparkline */}
             <div className="flex items-end justify-between mb-4">
               <div>
                 <p className="text-xs mb-1" style={{ color: "rgba(245,240,232,0.4)" }}>Peso attuale</p>
@@ -141,14 +170,14 @@ export default function MisurazioniPage() {
                   <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>kg</p>
                   <WeightTrend current={latest.weight} prev={prev?.weight} />
                 </div>
-              </div>
-              {count > 1 && (
-                <div className="text-right">
-                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Variazione totale</p>
-                  <p className="text-sm font-semibold" style={{ color: totalChange < 0 ? "#22c55e" : totalChange > 0 ? "#f87171" : "rgba(245,240,232,0.5)" }}>
-                    {totalChange > 0 ? "+" : ""}{totalChange.toFixed(1)} kg
+                {count > 1 && (
+                  <p className="text-xs mt-1" style={{ color: totalChange < 0 ? "#22c55e" : totalChange > 0 ? "#f87171" : "rgba(245,240,232,0.5)" }}>
+                    {totalChange > 0 ? "+" : ""}{totalChange.toFixed(1)} kg totale
                   </p>
-                </div>
+                )}
+              </div>
+              {weightHistory.length >= 2 && (
+                <SparkLine data={weightHistory} positive={totalChange <= 0} />
               )}
             </div>
 
