@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRef } from 'react'
 import { motion, useInView, useReducedMotion } from 'framer-motion'
-import { Dumbbell, ArrowRight, Zap, Shield, Clock } from 'lucide-react'
+import { ArrowRight, Zap, Shield, Clock } from 'lucide-react'
 
 // SSR-safe import — Three.js uses window/WebGL, unavailable in Node SSR
 const HeroCanvas = dynamic(() => import('./HeroCanvas'), { ssr: false })
@@ -30,7 +30,7 @@ export default function HeroSection() {
         className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse, rgba(255,107,43,0.09) 0%, transparent 68%)',
+            'radial-gradient(ellipse at 60% 50%, rgba(255,107,43,0.14) 0%, rgba(255,107,43,0.04) 50%, transparent 72%), radial-gradient(ellipse at 40% 70%, rgba(255,154,108,0.06) 0%, transparent 55%)',
         }}
       />
 
@@ -41,12 +41,20 @@ export default function HeroSection() {
             <div
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium mb-6"
               style={{
-                background: 'rgba(255,107,43,0.1)',
+                background: 'linear-gradient(135deg, rgba(255,107,43,0.08) 0%, rgba(255,154,108,0.16) 50%, rgba(255,107,43,0.08) 100%)',
+                backgroundSize: '200% auto',
+                animation: 'shimmer 3s linear infinite',
                 border: '1px solid rgba(255,107,43,0.25)',
                 color: 'var(--accent-light)',
               }}
             >
-              <Dumbbell size={12} />
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="3.5" r="2" fill="currentColor"/>
+                <path d="M6 8.5 C5 9 3.5 10.5 4 13 L5.5 13 C6 11 7 10 8 9.5 L10.5 9 L12 10 L13.5 9 L16 9.5 C17 10 18 11 18.5 13 L20 13 C20.5 10.5 19 9 18 8.5 L15 7.5 C14 7 13 6.5 12 6.5 C11 6.5 10 7 9 7.5 Z" fill="currentColor"/>
+                <path d="M8.5 13 L8 19 L10.5 19.5 L11 15 L13 15 L13.5 19.5 L16 19 L15.5 13 Z" fill="currentColor"/>
+                <path d="M4 10 L3 14 L5.5 14.5 Z" fill="currentColor"/>
+                <path d="M20 10 L21 14 L18.5 14.5 Z" fill="currentColor"/>
+              </svg>
               CRM per Personal Trainer · Fitness &amp; Bodybuilding
             </div>
           </motion.div>
@@ -55,9 +63,9 @@ export default function HeroSection() {
             {...fade(0.1)}
             className="text-4xl lg:text-6xl font-bold leading-tight mb-6"
           >
-            Gestisci i tuoi clienti
+            Allena di più,
             <br />
-            <span className="accent-text">come un professionista</span>
+            <span className="accent-text">gestisci da maestro.</span>
           </motion.h1>
 
           <motion.p
@@ -65,8 +73,7 @@ export default function HeroSection() {
             className="text-lg mb-10 max-w-lg"
             style={{ color: 'rgba(245,240,232,0.6)' }}
           >
-            Schede, diete, fasi e misurazioni — tutto in un posto. Condividi le
-            schede con un link, i clienti compilano i progressi settimanalmente.
+            L&apos;unico CRM pensato per chi trasforma i corpi. Schede, nutrizione e progressi — tutto sotto controllo, condiviso in un click.
           </motion.p>
 
           <motion.div

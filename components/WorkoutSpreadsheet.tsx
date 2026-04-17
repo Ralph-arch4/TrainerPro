@@ -3,10 +3,11 @@ import { useState, useEffect, useRef } from "react";
 import type { Exercise, ExerciseLog } from "@/lib/store";
 import {
   Plus, Trash2, ChevronUp, ChevronDown, CheckCircle2, Copy, ExternalLink,
-  Pencil, Check, ChevronLeft, ChevronRight, Link as LinkIcon, X,
+  Pencil, Check, ChevronLeft, ChevronRight, Link as LinkIcon, X, Upload,
 } from "lucide-react";
 import { showToast } from "@/components/Toast";
 import { searchExercises, type LibraryExercise } from "@/lib/exerciseLibrary";
+import { parseGoogleSheetCSV } from "@/lib/parseGoogleSheetCSV";
 
 const MUSCLE_GROUPS = [
   "Petto", "Schiena", "Gambe", "Spalle", "Bicipiti",
@@ -333,6 +334,7 @@ export default function WorkoutSpreadsheet({
   const [copied, setCopied] = useState(false);
   const [editingDayLabel, setEditingDayLabel] = useState<number | null>(null);
   const [dayLabelDraft, setDayLabelDraft] = useState("");
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   // Mobile state
   const [isMobile, setIsMobile] = useState(false);
@@ -362,6 +364,22 @@ export default function WorkoutSpreadsheet({
   function getDayLabel(d: number) { return dayLabels[d] || `Giorno ${d}`; }
   function startEditDayLabel(d: number) { setEditingDayLabel(d); setDayLabelDraft(dayLabels[d] || ""); }
   function saveDayLabel(d: number) { onUpdateDayLabel?.(d, dayLabelDraft.trim()); setEditingDayLabel(null); }
+
+  async function handleImportCSV(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !onAddExercise) return;
+    const text = await file.text();
+    const imported = parseGoogleSheetCSV(text);
+    if (imported.length === 0) {
+      showToast("Nessun esercizio trovato nel file");
+    } else {
+      for (const ex of imported) {
+        onAddExercise(ex);
+      }
+      showToast(`${imported.length} esercizi importati`);
+    }
+    e.target.value = "";
+  }
 
   function getLog(exerciseId: string, week: number) {
     return logs.find((l) => l.exerciseId === exerciseId && l.weekNumber === week);
@@ -460,11 +478,20 @@ export default function WorkoutSpreadsheet({
 
         {/* Add exercise (trainer) */}
         {mode === "trainer" && !showAddRow && !editId && (
-          <button onClick={() => setShowAddRow(true)}
-            className="flex items-center gap-2 mb-3 w-full px-4 py-2.5 rounded-xl text-sm"
-            style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
-            <Plus size={14} /> Aggiungi esercizio — {getDayLabel(activeDay)}
-          </button>
+          <div className="flex gap-2 mb-3">
+            <button onClick={() => setShowAddRow(true)}
+              className="flex items-center gap-2 flex-1 px-4 py-2.5 rounded-xl text-sm"
+              style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
+              <Plus size={14} /> Aggiungi esercizio
+            </button>
+            <button onClick={() => importInputRef.current?.click()}
+              className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm flex-shrink-0"
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.55)" }}
+              title="Importa da Google Sheets (CSV)">
+              <Upload size={14} /> CSV
+            </button>
+            <input ref={importInputRef} type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
+          </div>
         )}
 
         {mode === "trainer" && showAddRow && (
@@ -686,11 +713,19 @@ export default function WorkoutSpreadsheet({
 
       {/* Add exercise panel */}
       {mode === "trainer" && !showAddRow && (
-        <button onClick={() => { setShowAddRow(true); setEditId(null); }}
-          className="flex items-center gap-2 mb-4 px-4 py-2 rounded-xl text-sm transition-all"
-          style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
-          <Plus size={14} /> Aggiungi esercizio — {getDayLabel(activeDay)}
-        </button>
+        <div className="flex gap-2 mb-4">
+          <button onClick={() => { setShowAddRow(true); setEditId(null); }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all"
+            style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
+            <Plus size={14} /> Aggiungi esercizio — {getDayLabel(activeDay)}
+          </button>
+          <button onClick={() => importInputRef.current?.click()}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm transition-all"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.55)" }}
+            title="Importa da Google Sheets (CSV)">
+            <Upload size={14} /> Importa CSV
+          </button>
+        </div>
       )}
 
       {mode === "trainer" && showAddRow && (

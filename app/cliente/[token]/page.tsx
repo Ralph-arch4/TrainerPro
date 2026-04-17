@@ -249,17 +249,42 @@ export default function ClientPortalPage() {
           ))}
         </div>
 
-        {/* Progress bar */}
-        <div className="mb-6">
-          <div className="flex justify-between text-xs mb-1.5" style={{ color: "rgba(245,240,232,0.4)" }}>
-            <span>Avanzamento piano</span>
-            <span>{pct}%</span>
-          </div>
-          <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-            <div className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${pct}%`, background: "linear-gradient(90deg, #FF6B2B, #FF9A6C)" }} />
-          </div>
-        </div>
+        {/* Progress ring */}
+        {(() => {
+          const circ = 2 * Math.PI * 30;
+          return (
+            <div className="flex items-center gap-5 mb-6 p-4 rounded-2xl"
+              style={{ background: "rgba(255,107,43,0.04)", border: "1px solid rgba(255,107,43,0.1)" }}>
+              <div className="relative flex-shrink-0">
+                <svg width="72" height="72" viewBox="0 0 72 72">
+                  <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,107,43,0.1)" strokeWidth="6" />
+                  <circle cx="36" cy="36" r="30" fill="none"
+                    stroke="url(#prog-grad-c)" strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeDasharray={String(circ)}
+                    strokeDashoffset={String(circ * (1 - pct / 100))}
+                    transform="rotate(-90 36 36)"
+                    style={{ transition: "stroke-dashoffset 1s ease" }}
+                  />
+                  <defs>
+                    <linearGradient id="prog-grad-c" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#FF6B2B" />
+                      <stop offset="100%" stopColor="#FF9A6C" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-bold" style={{ color: "var(--ivory)" }}>{pct}%</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-base font-bold mb-0.5" style={{ color: "var(--ivory)" }}>Avanzamento piano</p>
+                <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{weeksLogged} di {plan.total_weeks} settimane completate</p>
+                <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.3)" }}>{logs.length} registrazioni totali</p>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── Tabs ───────────────────────────────────────────────────────────── */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
@@ -294,8 +319,11 @@ export default function ClientPortalPage() {
             </div>
             {plan.exercises.length === 0 ? (
               <div className="text-center py-16 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <Dumbbell size={36} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.2)" }} />
-                <p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>Il tuo trainer sta ancora preparando gli esercizi.</p>
+                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(255,107,43,0.08)" }}>
+                  <Dumbbell size={22} style={{ color: "rgba(255,107,43,0.4)" }} />
+                </div>
+                <p className="font-semibold text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Scheda in preparazione</p>
+                <p className="text-xs max-w-xs mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>Il tuo trainer sta costruendo la tua scheda personalizzata su misura. Torni tra poco.</p>
               </div>
             ) : (
               <WorkoutLogbook
@@ -318,8 +346,11 @@ export default function ClientPortalPage() {
           <div>
             {diets.length === 0 ? (
               <div className="text-center py-16 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <UtensilsCrossed size={36} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.2)" }} />
-                <p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>Il tuo trainer non ha ancora creato un piano alimentare.</p>
+                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(255,107,43,0.08)" }}>
+                  <UtensilsCrossed size={22} style={{ color: "rgba(255,107,43,0.4)" }} />
+                </div>
+                <p className="font-semibold text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Piano alimentare in preparazione</p>
+                <p className="text-xs max-w-xs mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>Il tuo piano alimentare personalizzato apparirà qui. Il trainer lo sta preparando su misura per i tuoi obiettivi.</p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -422,8 +453,11 @@ export default function ClientPortalPage() {
           <div>
             {(!plan.supplements || plan.supplements.length === 0) ? (
               <div className="text-center py-16 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <ShoppingBag size={36} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.2)" }} />
-                <p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>Il tuo trainer non ha ancora aggiunto integratori consigliati.</p>
+                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(255,107,43,0.08)" }}>
+                  <ShoppingBag size={22} style={{ color: "rgba(255,107,43,0.4)" }} />
+                </div>
+                <p className="font-semibold text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Integratori in arrivo</p>
+                <p className="text-xs max-w-xs mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>Il tuo trainer aggiungerà presto i consigli sugli integratori più adatti al tuo programma.</p>
               </div>
             ) : (
               <div className="space-y-3">
