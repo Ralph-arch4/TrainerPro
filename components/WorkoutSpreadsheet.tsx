@@ -790,10 +790,10 @@ export default function WorkoutSpreadsheet({
             style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
             <Plus size={14} /> Aggiungi esercizio — {getDayLabel(activeDay)}
           </button>
-          <button onClick={() => importInputRef.current?.click()}
+          <button onClick={() => setShowImportGuide(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm transition-all"
             style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.55)" }}
-            title="Importa da Google Sheets (CSV)">
+            title="Importa esercizi da CSV">
             <Upload size={14} /> Importa CSV
           </button>
         </div>
@@ -993,6 +993,7 @@ export default function WorkoutSpreadsheet({
           : "Clicca su una cella per inserire il peso e le ripetizioni · Invio per salvare"}
       </p>
 
+      <input ref={importInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleImportCSV} />
       {importGuideModal}
     </div>
   );

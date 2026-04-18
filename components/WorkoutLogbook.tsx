@@ -429,7 +429,7 @@ export default function WorkoutLogbook({
           style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
           <Dumbbell size={36} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.2)" }} />
           <p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>
-            {mode === "trainer" ? "Nessun esercizio per questo giorno. Aggiungine uno sotto." : "Il tuo trainer non ha ancora aggiunto esercizi per questo giorno."}
+            {mode === "trainer" ? "Nessun esercizio per questo giorno. Usa la vista Avanzato per aggiungere o importare esercizi." : "Il tuo trainer non ha ancora aggiunto esercizi per questo giorno."}
           </p>
         </div>
       ) : (
