@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc --noEmit *)",
+      "Bash(npx next build *)",
+      "Bash(node __backend_verify_temp.mjs)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git commit *)",
+      "Bash(git add *)",
+      "Bash(winget list *)",
+      "Bash(where *)",
+      "Bash(rm *)"
+    ]
+  }
+}
