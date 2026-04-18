@@ -135,11 +135,11 @@ export default function ClientDetailPage() {
   }
 
   async function savePhase() {
-    if (!phaseForm.name || !phaseForm.startDate || !phaseForm.endDate) return;
+    if (!phaseForm.name || !phaseForm.startDate) return;
     setSaving(true); setSaveError("");
     const p = addPhase(client!.id, {
       name: phaseForm.name, type: phaseForm.type as "bulk" | "cut" | "maintenance" | "custom",
-      startDate: phaseForm.startDate, endDate: phaseForm.endDate,
+      startDate: phaseForm.startDate, endDate: phaseForm.endDate || undefined,
       targetCalories: phaseForm.targetCalories ? parseInt(phaseForm.targetCalories) : undefined,
       targetWeight: phaseForm.targetWeight ? parseFloat(phaseForm.targetWeight) : undefined,
       notes: phaseForm.notes || undefined, completed: false,
@@ -398,7 +398,7 @@ export default function ClientDetailPage() {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm" style={{ color: "var(--ivory)" }}>{activePhase.name}</p>
                   <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>
-                    {formatDate(activePhase.startDate)} → {formatDate(activePhase.endDate)}
+                    {formatDate(activePhase.startDate)} → {activePhase.endDate ? formatDate(activePhase.endDate) : "In corso"}
                   </p>
                 </div>
                 <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: `${phaseTypeColor[activePhase.type]}18`, color: phaseTypeColor[activePhase.type] }}>
@@ -461,7 +461,7 @@ export default function ClientDetailPage() {
                       <div>
                         <p className="font-semibold" style={{ color: "var(--ivory)" }}>{phase.name}</p>
                         <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>
-                          {formatDate(phase.startDate)} → {formatDate(phase.endDate)}
+                          {formatDate(phase.startDate)} → {phase.endDate ? formatDate(phase.endDate) : "In corso"}
                         </p>
                       </div>
                     </div>
@@ -954,7 +954,7 @@ export default function ClientDetailPage() {
                   <input type="date" value={phaseForm.startDate} onChange={(e) => setPhaseForm({ ...phaseForm, startDate: e.target.value })} className={inputClass} style={inputStyle} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Data fine *</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Data fine</label>
                   <input type="date" value={phaseForm.endDate} onChange={(e) => setPhaseForm({ ...phaseForm, endDate: e.target.value })} className={inputClass} style={inputStyle} />
                 </div>
               </div>

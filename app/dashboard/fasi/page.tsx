@@ -14,14 +14,16 @@ function formatDate(d: string) {
   return new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-function getPhaseDuration(start: string, end: string) {
+function getPhaseDuration(start: string, end?: string) {
+  if (!end) return "In corso";
   const days = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000);
   if (days < 7) return `${days} giorni`;
   if (days < 30) return `${Math.round(days / 7)} settimane`;
   return `${Math.round(days / 30)} mesi`;
 }
 
-function getPhaseProgress(start: string, end: string) {
+function getPhaseProgress(start: string, end?: string) {
+  if (!end) return 50; // ongoing — show half-filled progress bar
   const now = Date.now();
   const s = new Date(start).getTime();
   const e = new Date(end).getTime();
@@ -154,7 +156,7 @@ export default function FasiPage() {
                       )}
                     </div>
                     <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>
-                      {formatDate(phase.startDate)} → {formatDate(phase.endDate)} · {duration}
+                      {formatDate(phase.startDate)} → {phase.endDate ? formatDate(phase.endDate) : "In corso"} · {duration}
                     </p>
                   </div>
                 </div>

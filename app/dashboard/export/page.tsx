@@ -216,7 +216,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-semibold">{p.name} <span style={{ color: mutedColor }}>({phaseTypeLabel[p.type]})</span></p>
-                    <p className="text-xs" style={{ color: mutedColor }}>{formatDate(p.startDate)} → {formatDate(p.endDate)}</p>
+                    <p className="text-xs" style={{ color: mutedColor }}>{formatDate(p.startDate)} → {p.endDate ? formatDate(p.endDate) : "In corso"}</p>
                   </div>
                   <div className="text-right text-xs">
                     {p.targetCalories && <p>{p.targetCalories} kcal</p>}

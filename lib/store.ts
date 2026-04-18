@@ -70,7 +70,7 @@ export interface Phase {
   name: string;
   type: "bulk" | "cut" | "maintenance" | "custom";
   startDate: string;
-  endDate: string;
+  endDate?: string;
   targetCalories?: number;
   targetWeight?: number;
   completed: boolean;
