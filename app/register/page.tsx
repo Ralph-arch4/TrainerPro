@@ -79,8 +79,8 @@ export default function RegisterPage() {
         {/* Center content */}
         <div className="relative z-10">
           <h2 className="text-4xl font-bold leading-tight mb-4" style={{ color: "var(--ivory)" }}>
-            Inizia gratis.<br />
-            <span className="accent-text">Cresci senza limiti.</span>
+            Tutto gratis.<br />
+            <span className="accent-text">Clienti illimitati.</span>
           </h2>
           <p className="text-base mb-10" style={{ color: "rgba(245,240,232,0.5)" }}>
             Crea il tuo account in 30 secondi. Nessuna carta di credito richiesta.
@@ -89,7 +89,7 @@ export default function RegisterPage() {
           {/* Benefits */}
           <div className="space-y-4">
             {[
-              { icon: Star, label: "Piano Free per sempre", desc: "Gestisci 1 cliente senza limiti di tempo", color: "#fbbf24" },
+              { icon: Star, label: "Accesso completo gratuito", desc: "Clienti illimitati, tutte le funzionalità", color: "#fbbf24" },
               { icon: Shield, label: "Dati al sicuro", desc: "Crittografia end-to-end su Supabase", color: "#34d399" },
               { icon: Zap, label: "Pronto in 2 minuti", desc: "Setup immediato, zero configurazione", color: "#818cf8" },
             ].map(({ icon: Icon, label, desc, color }) => (

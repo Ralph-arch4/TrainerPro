@@ -11,37 +11,6 @@ const features = [
   { icon: FileDown,        title: "Esporta in PDF",        desc: "Condividi schede e piani dietetici con i tuoi clienti in formato PDF." },
 ];
 
-const tiers = [
-  {
-    name: "Free",
-    price: "€0",
-    desc: "Per iniziare",
-    features: ["1 cliente", "Tutte le funzionalità base", "Dashboard completa"],
-    cta: "Inizia gratis",
-    href: "/register",
-    highlight: false,
-  },
-  {
-    name: "Personal Coach",
-    price: "€29",
-    period: "/mese",
-    desc: "Per i professionisti",
-    features: ["Fino a 15 clienti", "Tutte le funzionalità", "Supporto prioritario", "Export PDF illimitato"],
-    cta: "Scegli Personal Coach",
-    href: "/register",
-    highlight: true,
-  },
-  {
-    name: "Fitness Master Customized",
-    price: "Custom",
-    desc: "Pericolosamente personalizzato",
-    features: ["Clienti illimitati", "Personalizzato sul tuo modus operandi", "Setup dedicato", "SLA garantito"],
-    cta: "Contattaci",
-    href: "/register",
-    highlight: false,
-  },
-];
-
 export default function LandingPage() {
   return (
     <div style={{ background: "var(--black)", color: "var(--ivory)", minHeight: "100vh" }}>
@@ -114,48 +83,41 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* Free — tutto incluso */}
       <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(255,107,43,0.08)" }}>
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl lg:text-4xl font-bold text-center mb-4">
-            Prezzi <span className="accent-text">trasparenti</span>
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+            Tutto incluso, <span className="accent-text">gratis</span>
           </h2>
-          <p className="text-center text-base mb-12" style={{ color: "rgba(245,240,232,0.5)" }}>
-            Inizia gratis. Scala quando sei pronto.
+          <p className="text-base mb-10" style={{ color: "rgba(245,240,232,0.5)" }}>
+            Nessuna carta di credito. Nessun piano a pagamento. Accesso completo a tutte le funzionalità dal primo giorno.
           </p>
-          <div className="grid md:grid-cols-3 gap-5">
-            {tiers.map((tier) => (
-              <div key={tier.name} className={`rounded-2xl p-6 flex flex-col ${tier.highlight ? "" : "card-luxury"}`}
-                style={tier.highlight ? {
-                  background: "rgba(255,107,43,0.08)",
-                  border: "2px solid rgba(255,107,43,0.4)",
-                } : {}}>
-                {tier.highlight && (
-                  <div className="text-xs font-bold px-3 py-1 rounded-full self-start mb-4 accent-btn">
-                    Più popolare
-                  </div>
-                )}
-                <h3 className="font-bold text-lg mb-1" style={{ color: "var(--ivory)" }}>{tier.name}</h3>
-                <p className="text-xs mb-4" style={{ color: "rgba(245,240,232,0.4)" }}>{tier.desc}</p>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-4xl font-bold" style={{ color: "var(--ivory)" }}>{tier.price}</span>
-                  {tier.period && <span className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>{tier.period}</span>}
-                </div>
-                <ul className="space-y-2.5 mb-8 flex-1">
-                  {tier.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm" style={{ color: "rgba(245,240,232,0.7)" }}>
-                      <CheckCircle size={14} className="flex-shrink-0 mt-0.5" style={{ color: "var(--accent)" }} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href={tier.href}
-                  className={`w-full py-3 rounded-xl text-sm text-center font-semibold transition-all ${tier.highlight ? "accent-btn" : ""}`}
-                  style={!tier.highlight ? { border: "1px solid rgba(255,107,43,0.3)", color: "var(--accent-light)" } : {}}>
-                  {tier.cta}
-                </Link>
-              </div>
-            ))}
+          <div className="card-luxury rounded-2xl p-8 text-left max-w-md mx-auto">
+            <div className="flex items-baseline gap-2 mb-6">
+              <span className="text-5xl font-bold" style={{ color: "var(--ivory)" }}>€0</span>
+              <span className="text-base" style={{ color: "rgba(245,240,232,0.4)" }}>per sempre</span>
+            </div>
+            <ul className="space-y-3 mb-8">
+              {[
+                "Clienti illimitati",
+                "Schede di allenamento personalizzate",
+                "Piani alimentari con macro",
+                "Fasi: Bulk, Cut, Mantenimento",
+                "Misurazioni corporee",
+                "Form di intake per i clienti",
+                "Preventivi professionali",
+                "Export PDF completo",
+                "Link condiviso per ogni cliente",
+              ].map((f) => (
+                <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "rgba(245,240,232,0.75)" }}>
+                  <CheckCircle size={15} className="flex-shrink-0" style={{ color: "var(--accent)" }} />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <Link href="/register" className="accent-btn w-full py-3 rounded-xl text-sm text-center font-semibold block">
+              Crea account gratuito
+            </Link>
           </div>
         </div>
       </section>
@@ -167,10 +129,10 @@ export default function LandingPage() {
             Domande <span className="accent-text">frequenti</span>
           </h2>
           {[
-            { q: "Posso usare TrainerPro gratis per sempre?", a: "Sì. Il piano Free ti permette di gestire 1 cliente con tutte le funzionalità senza limiti di tempo." },
+            { q: "TrainerPro è davvero gratuito?", a: "Sì, completamente. Nessuna carta di credito, nessun piano a pagamento, nessun limite nascosto. Accesso completo a tutte le funzionalità." },
             { q: "Posso esportare i piani in PDF?", a: "Sì, tutti i piani di allenamento e le diete possono essere esportati in PDF per essere condivisi con i clienti." },
             { q: "I miei dati sono al sicuro?", a: "Assolutamente. I dati sono archiviati su Supabase con crittografia e accesso protetto da Row Level Security." },
-            { q: "Cos'è il piano Fitness Master Customized?", a: "È un piano completamente personalizzato sul tuo modo di lavorare, con funzionalità e limiti definiti insieme a noi." },
+            { q: "Quanti clienti posso gestire?", a: "Clienti illimitati. Non c'è nessun tetto massimo: puoi aggiungere tutti i clienti che vuoi dal primo giorno." },
           ].map(({ q, a }) => (
             <div key={q} className="mb-6 pb-6" style={{ borderBottom: "1px solid rgba(255,107,43,0.08)" }}>
               <h3 className="font-semibold mb-2" style={{ color: "var(--ivory)" }}>{q}</h3>

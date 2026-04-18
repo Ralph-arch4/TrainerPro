@@ -3,7 +3,6 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
-import { checkLimit } from "@/lib/plan-limits";
 import { dbClients } from "@/lib/db";
 import {
   Users, Plus, Search, ChevronRight,
@@ -81,7 +80,6 @@ function ClientiPageInner() {
   }, []);
   const [form, setForm] = useState<ClientFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
-  const [limitError, setLimitError] = useState("");
   const [saveError, setSaveError] = useState("");
 
   const filtered = clients.filter((c) => {
@@ -93,9 +91,6 @@ function ClientiPageInner() {
   });
 
   function openModal() {
-    const { allowed, message } = checkLimit(user?.plan ?? "free", "clients", clients.length);
-    if (!allowed) { setLimitError(message); return; }
-    setLimitError("");
     setForm(emptyForm);
     setShowModal(true);
   }
@@ -153,15 +148,6 @@ function ClientiPageInner() {
           <Plus size={16} /> Nuovo cliente
         </button>
       </div>
-
-      {/* Limit error */}
-      {limitError && (
-        <div className="mb-4 p-3 rounded-xl flex items-center gap-2 text-sm"
-          style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}>
-          <AlertCircle size={15} />
-          {limitError}
-        </div>
-      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">

@@ -2,10 +2,9 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
-import { PLAN_LIMITS } from "@/lib/plan-limits";
 import {
   Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight,
-  Crown, CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
+  CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
 } from "lucide-react";
 
 function timeGreeting() {
@@ -21,7 +20,6 @@ export default function DashboardPage() {
   const clients    = useAppStore((s) => s.clients);
   const dataLoaded = useAppStore((s) => s.dataLoaded);
 
-  const plan       = user?.plan ?? "free";
   const firstName  = user?.name?.split(" ")[0] ?? "Trainer";
 
   const { activeClients, totalWorkoutPlans, totalPhases, totalMeasurements, monthlyRevenue } = useMemo(() => {
@@ -125,36 +123,6 @@ export default function DashboardPage() {
             </div>
           </div>
         ))}
-      </div>
-
-      {/* ── Plan usage ─────────────────────────────────────────────────────── */}
-      <div className="card-luxury rounded-2xl p-5 mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Crown size={15} style={{ color: "var(--accent)" }} />
-            <span className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>
-              Piano {PLAN_LIMITS[plan].label}
-            </span>
-          </div>
-          <span className="text-xs" style={{ color: "var(--accent-light)" }}>
-            {clients.length} / {PLAN_LIMITS[plan].clients === 999999 ? "∞" : PLAN_LIMITS[plan].clients} clienti
-          </span>
-        </div>
-        <div className="h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
-          <div className="h-1.5 rounded-full transition-all" style={{
-            background: "linear-gradient(90deg, var(--accent), var(--accent-dark))",
-            width: PLAN_LIMITS[plan].clients === 999999
-              ? "8%"
-              : `${Math.min((clients.length / PLAN_LIMITS[plan].clients) * 100, 100)}%`,
-          }} />
-        </div>
-        {plan !== "fitness_master" && (
-          <p className="text-xs mt-2" style={{ color: "rgba(245,240,232,0.38)" }}>
-            {plan === "free"
-              ? <>Vuoi gestire più clienti? <span className="underline cursor-pointer" style={{ color: "var(--accent-light)" }}>Passa a Personal Coach</span></>
-              : <>Vuoi clienti illimitati? <span className="underline cursor-pointer" style={{ color: "var(--accent-light)" }}>Passa a Fitness Master</span></>}
-          </p>
-        )}
       </div>
 
       {/* ── Main content: onboarding OR active view ──────────────────────── */}
