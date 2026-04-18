@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { showToast } from "@/components/Toast";
 import { searchExercises, type LibraryExercise } from "@/lib/exerciseLibrary";
-import { parseGoogleSheetCSV } from "@/lib/parseGoogleSheetCSV";
+import { parseWorkoutCSV, generateCSVTemplate } from "@/lib/parseWorkoutCSV";
 
 const MUSCLE_GROUPS = [
   "Petto", "Schiena", "Gambe", "Spalle", "Bicipiti",
@@ -334,6 +334,7 @@ export default function WorkoutSpreadsheet({
   const [copied, setCopied] = useState(false);
   const [editingDayLabel, setEditingDayLabel] = useState<number | null>(null);
   const [dayLabelDraft, setDayLabelDraft] = useState("");
+  const [showImportGuide, setShowImportGuide] = useState(false);
   const importInputRef = useRef<HTMLInputElement>(null);
 
   // Mobile state
@@ -369,9 +370,10 @@ export default function WorkoutSpreadsheet({
     const file = e.target.files?.[0];
     if (!file || !onAddExercise) return;
     const text = await file.text();
-    const imported = parseGoogleSheetCSV(text);
+    const imported = parseWorkoutCSV(text);
     if (imported.length === 0) {
-      showToast("Nessun esercizio trovato nel file");
+      showToast("Nessun esercizio trovato — controlla il formato del file");
+      setShowImportGuide(true);
     } else {
       for (const ex of imported) {
         onAddExercise(ex);
@@ -379,6 +381,17 @@ export default function WorkoutSpreadsheet({
       showToast(`${imported.length} esercizi importati`);
     }
     e.target.value = "";
+  }
+
+  function handleDownloadTemplate() {
+    const csv = generateCSVTemplate(daysPerWeek);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "trainerpro_template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   function getLog(exerciseId: string, week: number) {
@@ -484,13 +497,13 @@ export default function WorkoutSpreadsheet({
               style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
               <Plus size={14} /> Aggiungi esercizio
             </button>
-            <button onClick={() => importInputRef.current?.click()}
+            <button onClick={() => setShowImportGuide(true)}
               className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm flex-shrink-0"
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.55)" }}
-              title="Importa da Google Sheets (CSV)">
+              title="Importa esercizi da CSV">
               <Upload size={14} /> CSV
             </button>
-            <input ref={importInputRef} type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
+            <input ref={importInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleImportCSV} />
           </div>
         )}
 
@@ -921,6 +934,64 @@ export default function WorkoutSpreadsheet({
           ? "Hover sul tab giorno per rinominarlo · Clicca su una cella per inserire peso/reps · SS-A/B = superset"
           : "Clicca su una cella per inserire il peso e le ripetizioni · Invio per salvare"}
       </p>
+
+      {/* ── CSV Import Guide Modal ── */}
+      {showImportGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowImportGuide(false)}>
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
+          <div className="relative w-full max-w-lg glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Upload size={16} style={{ color: "var(--accent)" }} />
+                <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Importa esercizi da CSV</h3>
+              </div>
+              <button onClick={() => setShowImportGuide(false)}>
+                <X size={16} style={{ color: "rgba(245,240,232,0.4)" }} />
+              </button>
+            </div>
+
+            <p className="text-xs mb-3" style={{ color: "rgba(245,240,232,0.55)" }}>
+              Il file CSV deve avere una riga di intestazione con queste colonne (l&apos;ordine non importa):
+            </p>
+
+            <div className="rounded-xl p-3 mb-4 text-xs font-mono overflow-x-auto" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }}>
+              <p style={{ color: "var(--accent-light)" }}>Esercizio,Giorno,Serie,Ripetizioni,Recupero,Gruppo</p>
+              <p style={{ color: "rgba(245,240,232,0.6)" }}>Panca Piana,1,4,8-10,120,Petto</p>
+              <p style={{ color: "rgba(245,240,232,0.6)" }}>Squat,1,4,10,90,Gambe</p>
+              <p style={{ color: "rgba(245,240,232,0.6)" }}>Curl Bilanciere,2,3,12,60,Bicipiti</p>
+              <p style={{ color: "rgba(245,240,232,0.6)" }}>Lat Machine,2,4,10,90,Schiena</p>
+            </div>
+
+            <div className="space-y-1.5 mb-5">
+              {[
+                ["Esercizio", "Nome esercizio (obbligatorio)"],
+                ["Giorno", "Numero giorno — 1, 2, 3... (default: 1)"],
+                ["Serie", "Numero di serie (default: 3)"],
+                ["Ripetizioni", "Target reps — es. 8-10 o 12 (default: 10)"],
+                ["Recupero", "Secondi di recupero — es. 90 (opzionale)"],
+                ["Gruppo", "Gruppo muscolare (opzionale)"],
+              ].map(([col, desc]) => (
+                <div key={col} className="flex items-baseline gap-2 text-xs">
+                  <span className="font-mono font-semibold w-24 flex-shrink-0" style={{ color: "var(--accent-light)" }}>{col}</span>
+                  <span style={{ color: "rgba(245,240,232,0.5)" }}>{desc}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={handleDownloadTemplate}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm flex-shrink-0"
+                style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
+                <Upload size={14} style={{ transform: "rotate(180deg)" }} /> Scarica template
+              </button>
+              <button onClick={() => { setShowImportGuide(false); importInputRef.current?.click(); }}
+                className="flex-1 accent-btn flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm">
+                <Upload size={14} /> Scegli file CSV
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
