@@ -91,6 +91,7 @@ export default function ClientPortalPage() {
   const [error, setError] = useState("");
   const [tab, setTab] = useState<Tab>("allenamento");
   const [copied, setCopied] = useState(false);
+  const [saveError, setSaveError] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -150,14 +151,15 @@ export default function ClientPortalPage() {
 
   async function handleUpsertLog(logData: Omit<ExerciseLog, "id" | "loggedAt">) {
     if (!plan) return;
+    setSaveError(false);
+    const snapshot = logs;
     setLogs((prev) => {
       const existing = prev.find((l) => l.exerciseId === logData.exerciseId && l.weekNumber === logData.weekNumber);
       if (existing) return prev.map((l) => l.exerciseId === logData.exerciseId && l.weekNumber === logData.weekNumber ? { ...l, ...logData, loggedAt: new Date().toISOString() } : l);
       return [...prev, { ...logData, id: `tmp_${Date.now()}`, loggedAt: new Date().toISOString() }];
     });
     try {
-      const saved = await dbExerciseLogs.upsert({
-        workout_plan_id: plan.id,
+      const saved = await dbExerciseLogs.upsertByToken(plan.share_token, {
         exercise_id: logData.exerciseId,
         week_number: logData.weekNumber,
         weight: logData.weight ?? null,
@@ -165,7 +167,10 @@ export default function ClientPortalPage() {
         note: logData.note ?? null,
       });
       setLogs((prev) => prev.map((l) => l.exerciseId === logData.exerciseId && l.weekNumber === logData.weekNumber ? { ...l, id: saved.id } : l));
-    } catch {}
+    } catch {
+      setLogs(snapshot);
+      setSaveError(true);
+    }
   }
 
   function copyLink() {
@@ -309,6 +314,13 @@ export default function ClientPortalPage() {
         {/* ── ALLENAMENTO tab ─────────────────────────────────────────────────── */}
         {tab === "allenamento" && (
           <div>
+            {saveError && (
+              <div className="mb-4 p-3 rounded-xl text-sm flex items-center justify-between gap-3"
+                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "rgba(239,68,68,0.9)" }}>
+                <span>Errore nel salvataggio. Controlla la connessione e riprova.</span>
+                <button onClick={() => setSaveError(false)} className="text-xs underline opacity-70 flex-shrink-0">Chiudi</button>
+              </div>
+            )}
             {plan.description && (
               <p className="text-sm mb-4" style={{ color: "rgba(245,240,232,0.5)" }}>{plan.description}</p>
             )}

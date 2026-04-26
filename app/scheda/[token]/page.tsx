@@ -88,6 +88,7 @@ export default function PublicSchedaPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tab, setTab] = useState<Tab>("allenamento");
+  const [saveError, setSaveError] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -145,6 +146,8 @@ export default function PublicSchedaPage() {
 
   async function handleUpsertLog(logData: Omit<ExerciseLog, "id" | "loggedAt">) {
     if (!plan) return;
+    setSaveError(false);
+    const snapshot = logs;
     setLogs((prev) => {
       const existing = prev.find((l) => l.exerciseId === logData.exerciseId && l.weekNumber === logData.weekNumber);
       if (existing) {
@@ -156,8 +159,7 @@ export default function PublicSchedaPage() {
       return [...prev, { ...logData, id: `tmp_${Date.now()}`, loggedAt: new Date().toISOString() }];
     });
     try {
-      const saved = await dbExerciseLogs.upsert({
-        workout_plan_id: plan.id,
+      const saved = await dbExerciseLogs.upsertByToken(plan.share_token, {
         exercise_id: logData.exerciseId,
         week_number: logData.weekNumber,
         weight: logData.weight ?? null,
@@ -170,7 +172,10 @@ export default function PublicSchedaPage() {
             ? { ...l, id: saved.id } : l
         )
       );
-    } catch {}
+    } catch {
+      setLogs(snapshot);
+      setSaveError(true);
+    }
   }
 
   if (loading) {
@@ -276,6 +281,13 @@ export default function PublicSchedaPage() {
         {/* ALLENAMENTO */}
         {tab === "allenamento" && (
           <div>
+            {saveError && (
+              <div className="mb-4 p-3 rounded-xl text-sm flex items-center justify-between gap-3"
+                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "rgba(239,68,68,0.9)" }}>
+                <span>Errore nel salvataggio. Controlla la connessione e riprova.</span>
+                <button onClick={() => setSaveError(false)} className="text-xs underline opacity-70 flex-shrink-0">Chiudi</button>
+              </div>
+            )}
             <div className="mb-5 p-3 rounded-xl text-sm flex items-start gap-2"
               style={{ background: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.12)", color: "rgba(245,240,232,0.6)" }}>
               <span className="text-base leading-none mt-0.5">💡</span>

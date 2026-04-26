@@ -326,6 +326,20 @@ export const dbExerciseLogs = {
     const { error } = await db().from("exercise_logs").delete().eq("id", id);
     if (error) throw error;
   },
+  // Client portal: upsert via share token (no auth — uses SECURITY DEFINER RPC)
+  async upsertByToken(token: string, payload: { exercise_id: string; week_number: number; weight?: number | null; reps?: string | null; note?: string | null }) {
+    const { data, error } = await db().rpc("upsert_exercise_log", {
+      p_token:       token,
+      p_exercise_id: payload.exercise_id,
+      p_week_number: payload.week_number,
+      p_weight:      payload.weight ?? null,
+      p_reps:        payload.reps   ?? null,
+      p_note:        payload.note   ?? null,
+    });
+    if (error) throw error;
+    if ((data as { error?: string })?.error === "not_found") throw new Error("Piano non trovato");
+    return data as { id: string };
+  },
   // Public access via share token (no auth)
   async listByShareToken(shareToken: string) {
     const { data: plan, error: planErr } = await db()
