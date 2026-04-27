@@ -91,13 +91,17 @@ export default function ClientDetailPage() {
   }
   const [saveError, setSaveError] = useState("");
 
-  // Phase modal
+  // Phase modal (create)
   const [showPhaseModal, setShowPhaseModal] = useState(false);
   const [phaseForm, setPhaseForm] = useState({ name: "", type: "bulk", startDate: "", endDate: "", targetCalories: "", targetWeight: "", notes: "" });
 
+  // Phase modal (edit)
+  const emptyPhaseEdit = () => ({ id: "", name: "", type: "bulk", startDate: "", endDate: "", targetCalories: "", targetWeight: "", notes: "" });
+  const [editingPhase, setEditingPhase] = useState<{ id: string; name: string; type: string; startDate: string; endDate: string; targetCalories: string; targetWeight: string; notes: string } | null>(null);
+
   // Workout plan modal
   const [showWorkoutModal, setShowWorkoutModal] = useState(false);
-  const [workoutForm, setWorkoutForm] = useState({ name: "", description: "", daysPerWeek: "3", totalWeeks: "12", restSeconds: "90", phaseId: "" });
+  const [workoutForm, setWorkoutForm] = useState({ name: "", description: "", daysPerWeek: "3", totalWeeks: "", restSeconds: "", phaseId: "" });
 
   // Workout plan edit modal
   const [editingPlan, setEditingPlan] = useState<{ id: string; name: string; description: string; daysPerWeek: string; totalWeeks: string; restSeconds: string; phaseId: string } | null>(null);
@@ -157,6 +161,30 @@ export default function ClientDetailPage() {
     setSaving(false);
   }
 
+  async function saveEditPhase() {
+    if (!editingPhase || !editingPhase.name || !editingPhase.startDate) return;
+    setSaving(true); setSaveError("");
+    const patch = {
+      name: editingPhase.name.trim(),
+      type: editingPhase.type as "bulk" | "cut" | "maintenance" | "custom",
+      startDate: editingPhase.startDate,
+      endDate: editingPhase.endDate || undefined,
+      targetCalories: editingPhase.targetCalories ? parseInt(editingPhase.targetCalories) : undefined,
+      targetWeight: editingPhase.targetWeight ? parseFloat(editingPhase.targetWeight) : undefined,
+      notes: editingPhase.notes || undefined,
+    };
+    updatePhase(client!.id, editingPhase.id, patch);
+    try {
+      await dbPhases.update(editingPhase.id, patch);
+      setEditingPhase(null);
+      showToast("Fase aggiornata");
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+      showToast("Errore nel salvataggio", "error");
+    }
+    setSaving(false);
+  }
+
   async function saveWorkout() {
     if (!workoutForm.name) return;
     setSaving(true); setSaveError("");
@@ -172,7 +200,7 @@ export default function ClientDetailPage() {
     try {
       await dbWorkoutPlans.create(w);
       setShowWorkoutModal(false);
-      setWorkoutForm({ name: "", description: "", daysPerWeek: "3", totalWeeks: "12", restSeconds: "90", phaseId: "" });
+      setWorkoutForm({ name: "", description: "", daysPerWeek: "3", totalWeeks: "", restSeconds: "", phaseId: "" });
       showToast("Scheda creata");
     } catch (err) {
       removeWorkoutPlan(client!.id, w.id);
@@ -469,6 +497,11 @@ export default function ClientDetailPage() {
                       <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: `${phaseTypeColor[phase.type]}18`, color: phaseTypeColor[phase.type] }}>
                         {phaseTypeLabel[phase.type]}
                       </span>
+                      <button
+                        onClick={() => setEditingPhase({ id: phase.id, name: phase.name, type: phase.type, startDate: phase.startDate, endDate: phase.endDate ?? "", targetCalories: phase.targetCalories ? String(phase.targetCalories) : "", targetWeight: phase.targetWeight ? String(phase.targetWeight) : "", notes: phase.notes ?? "" })}
+                        className="p-1.5 rounded-lg hover:bg-white/5 transition-all" title="Modifica fase">
+                        <Pencil size={13} style={{ color: "rgba(245,240,232,0.45)" }} />
+                      </button>
                       <button onClick={() => { updatePhase(client!.id, phase.id, { completed: !phase.completed }); dbPhases.update(phase.id, { completed: !phase.completed }).catch(() => {}); }}
                         className="p-1.5 rounded-lg hover:bg-white/5 transition-all">
                         {phase.completed ? <CheckCircle2 size={15} style={{ color: "#22c55e" }} /> : <Circle size={15} style={{ color: "rgba(245,240,232,0.35)" }} />}
@@ -566,8 +599,8 @@ export default function ClientDetailPage() {
                     {/* Stats row */}
                     <div className="flex flex-wrap gap-2 mb-3">
                       {[
-                        { label: `${wp.daysPerWeek} giorni/sett` },
-                        { label: `${wp.totalWeeks ?? 12} settimane` },
+                        { label: `${wp.daysPerWeek} gg/sett` },
+                        { label: wp.totalWeeks ? `${wp.totalWeeks} sett.` : "Durata libera" },
                         { label: `${wp.exercises.length} esercizi` },
                         ...(wp.restSeconds ? [{ label: formatRestTime(wp.restSeconds), icon: true }] : []),
                       ].map(({ label, icon }) => (
@@ -973,6 +1006,59 @@ export default function ClientDetailPage() {
         </div>
       )}
 
+      {/* Edit phase modal */}
+      {editingPhase && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setEditingPhase(null)}>
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
+          <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Modifica fase</h3>
+              <button onClick={() => setEditingPhase(null)}><X size={16} style={{ color: "rgba(245,240,232,0.5)" }} /></button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Nome fase *</label>
+                <input value={editingPhase.name} onChange={(e) => setEditingPhase({ ...editingPhase, name: e.target.value })} className={inputClass} style={inputStyle} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Tipo</label>
+                  <select value={editingPhase.type} onChange={(e) => setEditingPhase({ ...editingPhase, type: e.target.value })} className={inputClass} style={selectStyle}>
+                    <option value="bulk">Bulk</option><option value="cut">Cut</option><option value="maintenance">Mantenimento</option><option value="custom">Personalizzata</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Calorie target</label>
+                  <input type="number" value={editingPhase.targetCalories} onChange={(e) => setEditingPhase({ ...editingPhase, targetCalories: e.target.value })} placeholder="3200" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Data inizio *</label>
+                  <input type="date" value={editingPhase.startDate} onChange={(e) => setEditingPhase({ ...editingPhase, startDate: e.target.value })} className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Data fine</label>
+                  <input type="date" value={editingPhase.endDate} onChange={(e) => setEditingPhase({ ...editingPhase, endDate: e.target.value })} className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Peso target (kg)</label>
+                  <input type="number" step="0.5" value={editingPhase.targetWeight} onChange={(e) => setEditingPhase({ ...editingPhase, targetWeight: e.target.value })} placeholder="85" className={inputClass} style={inputStyle} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Note</label>
+                <textarea value={editingPhase.notes} onChange={(e) => setEditingPhase({ ...editingPhase, notes: e.target.value })} rows={2} placeholder="Obiettivi, indicazioni…" className={`${inputClass} resize-none`} style={inputStyle} />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setEditingPhase(null)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>Annulla</button>
+              <button onClick={saveEditPhase} disabled={saving || !editingPhase.name || !editingPhase.startDate} className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Pencil size={14} />} Salva modifiche
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Workout modal */}
       {showWorkoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowWorkoutModal(false)}>
@@ -1001,6 +1087,7 @@ export default function ClientDetailPage() {
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Durata (settimane)</label>
                   <select value={workoutForm.totalWeeks} onChange={(e) => setWorkoutForm({ ...workoutForm, totalWeeks: e.target.value })} className={inputClass} style={selectStyle}>
+                    <option value="">— Senza limite —</option>
                     {[4,6,8,10,12,16,20,24].map((w) => <option key={w} value={w}>{w} settimane</option>)}
                   </select>
                 </div>
@@ -1057,6 +1144,7 @@ export default function ClientDetailPage() {
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Durata (settimane)</label>
                   <select value={editingPlan.totalWeeks} onChange={(e) => setEditingPlan({ ...editingPlan, totalWeeks: e.target.value })}
                     className={inputClass} style={selectStyle}>
+                    <option value="">— Senza limite —</option>
                     {[4,6,8,10,12,16,20,24].map((w) => <option key={w} value={w}>{w} settimane</option>)}
                   </select>
                 </div>

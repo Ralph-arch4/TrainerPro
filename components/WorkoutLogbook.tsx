@@ -116,16 +116,10 @@ function ExerciseCard({ exercise, log, week, mode, onUpsertLog, onEdit, onDelete
   return (
     <div className="rounded-2xl overflow-hidden flex flex-col" style={{ border: cardBorder, background: "rgba(10,10,10,0.9)" }}>
 
-      {/* ── Row 1: recovery | date ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", borderBottom: rowBorder }}>
-        <div className="flex items-center gap-1 px-3 py-2 text-xs font-bold shrink-0"
-          style={{ background: "rgba(52,211,153,0.10)", color: "#34d399", borderRight: rowBorder, minWidth: "5.5rem" }}>
-          ⏱ {exercise.restSeconds ?? "—"}″
-        </div>
-        <div className="flex items-center justify-center px-2 py-2 text-xs font-bold"
-          style={{ background: "rgba(255,107,43,0.80)", color: "#fff", letterSpacing: "0.04em" }}>
-          {sessionDate}
-        </div>
+      {/* ── Row 1: date header ── */}
+      <div className="flex items-center justify-center px-2 py-2 text-xs font-bold"
+        style={{ background: "rgba(229,50,50,0.75)", color: "#fff", letterSpacing: "0.04em", borderBottom: rowBorder }}>
+        {sessionDate}
       </div>
 
       {/* ── Row 2: exercise name | trainer controls ── */}

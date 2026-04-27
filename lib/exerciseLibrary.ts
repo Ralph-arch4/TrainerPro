@@ -26,8 +26,6 @@ export const EXERCISE_LIBRARY: LibraryExercise[] = [
 
   // ── SCHIENA ────────────────────────────────────────────────────────────────
   { name: "Stacco da terra con bilanciere", muscleGroup: "Schiena", equipment: "Bilanciere", pattern: "hinge" },
-  { name: "Stacco Rumeno", muscleGroup: "Schiena", equipment: "Bilanciere", pattern: "hinge" },
-  { name: "Stacco Sumo", muscleGroup: "Schiena", equipment: "Bilanciere", pattern: "hinge" },
   { name: "Rematore con bilanciere", muscleGroup: "Schiena", equipment: "Bilanciere", pattern: "pull" },
   { name: "Rematore Singolo con Manubrio", muscleGroup: "Schiena", equipment: "Manubri", pattern: "pull" },
   { name: "Rematore al Cavo Basso", muscleGroup: "Schiena", equipment: "Cavo", pattern: "pull" },
@@ -39,33 +37,51 @@ export const EXERCISE_LIBRARY: LibraryExercise[] = [
   { name: "Pull-Up (Trazioni)", muscleGroup: "Schiena", equipment: "Corpo libero", pattern: "pull" },
   { name: "Chin-Up (Trazioni inverse)", muscleGroup: "Schiena", equipment: "Corpo libero", pattern: "pull" },
   { name: "Hyperextension", muscleGroup: "Schiena", equipment: "Corpo libero", pattern: "hinge" },
-  { name: "Good Morning con bilanciere", muscleGroup: "Schiena", equipment: "Bilanciere", pattern: "hinge" },
   { name: "T-Bar Row", muscleGroup: "Schiena", equipment: "Bilanciere", pattern: "pull" },
   { name: "Seated Row Machine", muscleGroup: "Schiena", equipment: "Macchina", pattern: "pull" },
   { name: "Face Pull al Cavo", muscleGroup: "Schiena", equipment: "Cavo", pattern: "pull" },
 
-  // ── GAMBE ──────────────────────────────────────────────────────────────────
-  { name: "Squat con bilanciere", muscleGroup: "Gambe", equipment: "Bilanciere", pattern: "squat" },
-  { name: "Squat con manubri", muscleGroup: "Gambe", equipment: "Manubri", pattern: "squat" },
-  { name: "Front Squat", muscleGroup: "Gambe", equipment: "Bilanciere", pattern: "squat" },
-  { name: "Squat al Multipower (Smith Machine)", muscleGroup: "Gambe", equipment: "Macchina", pattern: "squat" },
-  { name: "Hack Squat", muscleGroup: "Gambe", equipment: "Macchina", pattern: "squat" },
-  { name: "Leg Press 45°", muscleGroup: "Gambe", equipment: "Macchina", pattern: "squat" },
-  { name: "Pressa Orizzontale", muscleGroup: "Gambe", equipment: "Macchina", pattern: "squat" },
-  { name: "Affondi con bilanciere", muscleGroup: "Gambe", equipment: "Bilanciere", pattern: "squat" },
-  { name: "Affondi con manubri", muscleGroup: "Gambe", equipment: "Manubri", pattern: "squat" },
-  { name: "Affondi bulgari (Bulgarian Split Squat)", muscleGroup: "Gambe", equipment: "Manubri", pattern: "squat" },
-  { name: "Step-Up con manubri", muscleGroup: "Gambe", equipment: "Manubri", pattern: "squat" },
-  { name: "Leg Extension", muscleGroup: "Gambe", equipment: "Macchina", pattern: "squat" },
-  { name: "Leg Curl sdraiato", muscleGroup: "Gambe", equipment: "Macchina", pattern: "hinge" },
-  { name: "Leg Curl seduto", muscleGroup: "Gambe", equipment: "Macchina", pattern: "hinge" },
+  // ── QUADRICIPITI ───────────────────────────────────────────────────────────
+  { name: "Squat con bilanciere", muscleGroup: "Quadricipiti", equipment: "Bilanciere", pattern: "squat" },
+  { name: "Squat con manubri", muscleGroup: "Quadricipiti", equipment: "Manubri", pattern: "squat" },
+  { name: "Front Squat", muscleGroup: "Quadricipiti", equipment: "Bilanciere", pattern: "squat" },
+  { name: "Squat al Multipower (Smith Machine)", muscleGroup: "Quadricipiti", equipment: "Macchina", pattern: "squat" },
+  { name: "Hack Squat", muscleGroup: "Quadricipiti", equipment: "Macchina", pattern: "squat" },
+  { name: "Leg Press 45°", muscleGroup: "Quadricipiti", equipment: "Macchina", pattern: "squat" },
+  { name: "Pressa Orizzontale", muscleGroup: "Quadricipiti", equipment: "Macchina", pattern: "squat" },
+  { name: "Leg Extension", muscleGroup: "Quadricipiti", equipment: "Macchina", pattern: "squat" },
+  { name: "Affondi con bilanciere", muscleGroup: "Quadricipiti", equipment: "Bilanciere", pattern: "squat" },
+  { name: "Affondi con manubri", muscleGroup: "Quadricipiti", equipment: "Manubri", pattern: "squat" },
+  { name: "Affondi bulgari (Bulgarian Split Squat)", muscleGroup: "Quadricipiti", equipment: "Manubri", pattern: "squat" },
+  { name: "Step-Up con manubri", muscleGroup: "Quadricipiti", equipment: "Manubri", pattern: "squat" },
+  { name: "Box Jump", muscleGroup: "Quadricipiti", equipment: "Corpo libero", pattern: "squat" },
+  { name: "Sissy Squat", muscleGroup: "Quadricipiti", equipment: "Corpo libero", pattern: "squat" },
+  { name: "Wall Sit", muscleGroup: "Quadricipiti", equipment: "Corpo libero", pattern: "squat" },
+
+  // ── FEMORALI ───────────────────────────────────────────────────────────────
+  { name: "Leg Curl sdraiato", muscleGroup: "Femorali", equipment: "Macchina", pattern: "hinge" },
+  { name: "Leg Curl seduto", muscleGroup: "Femorali", equipment: "Macchina", pattern: "hinge" },
+  { name: "Stacco Rumeno con bilanciere", muscleGroup: "Femorali", equipment: "Bilanciere", pattern: "hinge" },
+  { name: "Stacco Rumeno con manubri", muscleGroup: "Femorali", equipment: "Manubri", pattern: "hinge" },
+  { name: "Good Morning con bilanciere", muscleGroup: "Femorali", equipment: "Bilanciere", pattern: "hinge" },
+  { name: "Nordic Curl", muscleGroup: "Femorali", equipment: "Corpo libero", pattern: "hinge" },
+  { name: "Leg Curl al cavo", muscleGroup: "Femorali", equipment: "Cavo", pattern: "hinge" },
+  { name: "Sumo Deadlift", muscleGroup: "Femorali", equipment: "Bilanciere", pattern: "hinge" },
+
+  // ── GLUTEI ─────────────────────────────────────────────────────────────────
   { name: "Hip Thrust con bilanciere", muscleGroup: "Glutei", equipment: "Bilanciere", pattern: "hinge" },
   { name: "Hip Thrust al Multipower", muscleGroup: "Glutei", equipment: "Macchina", pattern: "hinge" },
-  { name: "Abductor Machine", muscleGroup: "Gambe", equipment: "Macchina", pattern: "core" },
-  { name: "Adductor Machine", muscleGroup: "Gambe", equipment: "Macchina", pattern: "core" },
+  { name: "Abductor Machine", muscleGroup: "Glutei", equipment: "Macchina", pattern: "core" },
+  { name: "Adductor Machine", muscleGroup: "Glutei", equipment: "Macchina", pattern: "core" },
+  { name: "Cable Kickback", muscleGroup: "Glutei", equipment: "Cavo", pattern: "hinge" },
+  { name: "Donkey Kick", muscleGroup: "Glutei", equipment: "Corpo libero", pattern: "hinge" },
+  { name: "Glute Bridge", muscleGroup: "Glutei", equipment: "Corpo libero", pattern: "hinge" },
+
+  // ── POLPACCI ───────────────────────────────────────────────────────────────
   { name: "Calf Raise in piedi", muscleGroup: "Polpacci", equipment: "Macchina", pattern: "squat" },
   { name: "Calf Raise seduto", muscleGroup: "Polpacci", equipment: "Macchina", pattern: "squat" },
   { name: "Calf Raise alla Leg Press", muscleGroup: "Polpacci", equipment: "Macchina", pattern: "squat" },
+  { name: "Calf Raise con bilanciere", muscleGroup: "Polpacci", equipment: "Bilanciere", pattern: "squat" },
 
   // ── SPALLE ─────────────────────────────────────────────────────────────────
   { name: "Military Press con bilanciere", muscleGroup: "Spalle", equipment: "Bilanciere", pattern: "push" },
@@ -107,6 +123,14 @@ export const EXERCISE_LIBRARY: LibraryExercise[] = [
   { name: "Dips ai paralleli (tricipiti)", muscleGroup: "Tricipiti", equipment: "Corpo libero", pattern: "push" },
   { name: "Close Grip Bench Press", muscleGroup: "Tricipiti", equipment: "Bilanciere", pattern: "push" },
   { name: "Overhead Triceps Extension al cavo", muscleGroup: "Tricipiti", equipment: "Cavo", pattern: "push" },
+
+  // ── AVAMBRACCI ─────────────────────────────────────────────────────────────
+  { name: "Wrist Curl con bilanciere", muscleGroup: "Avambracci", equipment: "Bilanciere", pattern: "pull" },
+  { name: "Reverse Curl con bilanciere", muscleGroup: "Avambracci", equipment: "Bilanciere", pattern: "pull" },
+  { name: "Reverse Curl con manubri", muscleGroup: "Avambracci", equipment: "Manubri", pattern: "pull" },
+  { name: "Zottman Curl", muscleGroup: "Avambracci", equipment: "Manubri", pattern: "pull" },
+  { name: "Farmer's Walk", muscleGroup: "Avambracci", equipment: "Manubri", pattern: "carry" },
+  { name: "Plate Pinch", muscleGroup: "Avambracci", equipment: "Disco", pattern: "carry" },
 
   // ── ADDOMINALI ─────────────────────────────────────────────────────────────
   { name: "Crunch classico", muscleGroup: "Addominali", equipment: "Corpo libero", pattern: "core" },
