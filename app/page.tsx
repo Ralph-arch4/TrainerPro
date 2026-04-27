@@ -16,17 +16,19 @@ export default function LandingPage() {
     <div style={{ background: "var(--black)", color: "var(--ivory)", minHeight: "100vh" }}>
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-12 h-16 glass-dark">
+        {/* Subtle red line at bottom of nav */}
+        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(229,50,50,0.5) 30%, rgba(229,50,50,0.5) 70%, transparent)' }} />
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl accent-btn flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl accent-btn flex items-center justify-center pulse-glow">
             <Dumbbell size={18} />
           </div>
-          <span className="font-bold text-lg accent-text">TrainerPro</span>
+          <span className="font-black text-lg accent-text tracking-tight">TrainerPro</span>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm px-4 py-2 rounded-xl transition-all hover:bg-white/5" style={{ color: "rgba(245,240,232,0.7)" }}>
+          <Link href="/login" className="nav-ghost-link text-sm px-4 py-2 rounded-xl transition-all font-medium">
             Accedi
           </Link>
-          <Link href="/register" className="accent-btn text-sm px-5 py-2 rounded-xl">
+          <Link href="/register" className="accent-btn text-sm px-5 py-2.5 rounded-xl font-bold tracking-wide">
             Inizia gratis
           </Link>
         </div>
@@ -36,7 +38,7 @@ export default function LandingPage() {
       <HeroSection />
 
       {/* How it works */}
-      <section className="py-20 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(255,107,43,0.08)" }}>
+      <section className="py-20 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(229,50,50,0.08)" }}>
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl lg:text-4xl font-bold text-center mb-3">
             Come <span className="accent-text">funziona</span>
@@ -50,10 +52,13 @@ export default function LandingPage() {
               { step: "02", title: "Costruisci le schede", desc: "Crea schede di allenamento divise per giorni, aggiungi esercizi con serie e ripetizioni target." },
               { step: "03", title: "Condividi il link", desc: "Il cliente riceve un link personale e compila i progressi settimana per settimana — senza registrarsi." },
             ].map(({ step, title, desc }) => (
-              <div key={step} className="relative">
-                <div className="text-6xl font-bold mb-4 leading-none" style={{ color: "rgba(255,107,43,0.12)" }}>{step}</div>
-                <h3 className="font-bold mb-2" style={{ color: "var(--ivory)" }}>{title}</h3>
-                <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{desc}</p>
+              <div key={step} className="relative card-luxury rounded-2xl p-6">
+                <div className="text-7xl font-black mb-4 leading-none select-none" style={{
+                  background: 'linear-gradient(135deg, rgba(229,50,50,0.18), rgba(229,50,50,0.04))',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                }}>{step}</div>
+                <h3 className="font-bold mb-2 text-base" style={{ color: "var(--ivory)" }}>{title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: "rgba(245,240,232,0.5)" }}>{desc}</p>
               </div>
             ))}
           </div>
@@ -61,7 +66,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(255,107,43,0.08)" }}>
+      <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(229,50,50,0.08)" }}>
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl lg:text-4xl font-bold text-center mb-4">
             Tutto ciò che ti serve,<br /><span className="accent-text">niente di superfluo</span>
@@ -71,12 +76,17 @@ export default function LandingPage() {
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="card-luxury rounded-2xl p-6 hover:border-[rgba(255,107,43,0.25)] transition-all">
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4" style={{ background: "rgba(255,107,43,0.1)" }}>
+              <div key={title} className="card-luxury rounded-2xl p-6 group cursor-default">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(229,50,50,0.15), rgba(229,50,50,0.05))",
+                    border: "1px solid rgba(229,50,50,0.15)",
+                    boxShadow: "0 0 20px rgba(229,50,50,0.07)",
+                  }}>
                   <Icon size={20} style={{ color: "var(--accent)" }} />
                 </div>
-                <h3 className="font-semibold mb-2" style={{ color: "var(--ivory)" }}>{title}</h3>
-                <p className="text-sm" style={{ color: "rgba(245,240,232,0.55)" }}>{desc}</p>
+                <h3 className="font-bold mb-2 text-sm" style={{ color: "var(--ivory)" }}>{title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: "rgba(245,240,232,0.5)" }}>{desc}</p>
               </div>
             ))}
           </div>
@@ -84,7 +94,7 @@ export default function LandingPage() {
       </section>
 
       {/* Free — tutto incluso */}
-      <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(255,107,43,0.08)" }}>
+      <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(229,50,50,0.08)" }}>
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl lg:text-4xl font-bold mb-4">
             Tutto incluso, <span className="accent-text">gratis</span>
@@ -123,7 +133,7 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(255,107,43,0.08)" }}>
+      <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(229,50,50,0.08)" }}>
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">
             Domande <span className="accent-text">frequenti</span>
@@ -134,7 +144,7 @@ export default function LandingPage() {
             { q: "I miei dati sono al sicuro?", a: "Assolutamente. I dati sono archiviati su Supabase con crittografia e accesso protetto da Row Level Security." },
             { q: "Quanti clienti posso gestire?", a: "Clienti illimitati. Non c'è nessun tetto massimo: puoi aggiungere tutti i clienti che vuoi dal primo giorno." },
           ].map(({ q, a }) => (
-            <div key={q} className="mb-6 pb-6" style={{ borderBottom: "1px solid rgba(255,107,43,0.08)" }}>
+            <div key={q} className="mb-6 pb-6" style={{ borderBottom: "1px solid rgba(229,50,50,0.08)" }}>
               <h3 className="font-semibold mb-2" style={{ color: "var(--ivory)" }}>{q}</h3>
               <p className="text-sm" style={{ color: "rgba(245,240,232,0.55)" }}>{a}</p>
             </div>
@@ -143,22 +153,39 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 px-6 lg:px-12 text-center">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-3xl lg:text-4xl font-bold mb-4">
-            Pronto a fare il salto?
+      <section className="py-24 px-6 lg:px-12 text-center relative overflow-hidden">
+        {/* Laser beam bg */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+          {[
+            { top: '25%', op: 0.35, dur: '4s', delay: '0s'   },
+            { top: '55%', op: 0.5,  dur: '3s', delay: '1.2s' },
+            { top: '75%', op: 0.3,  dur: '5s', delay: '0.6s' },
+          ].map((b, i) => (
+            <div key={i} className="laser-line" style={{
+              top: b.top, height: '1.5px',
+              '--beam-op': b.op, '--beam-dur': b.dur, '--beam-delay': b.delay,
+            } as React.CSSProperties} />
+          ))}
+        </div>
+        <div className="max-w-2xl mx-auto relative z-10">
+          <div className="inline-block mb-6 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase"
+            style={{ background: 'rgba(229,50,50,0.08)', border: '1px solid rgba(229,50,50,0.25)', color: 'var(--accent-light)' }}>
+            Inizia oggi · Gratis
+          </div>
+          <h2 className="text-3xl lg:text-5xl font-black mb-4 tracking-tight">
+            Pronto a fare il <span className="accent-text">salto</span>?
           </h2>
-          <p className="text-base mb-8" style={{ color: "rgba(245,240,232,0.55)" }}>
+          <p className="text-base mb-10 leading-relaxed" style={{ color: "rgba(245,240,232,0.5)" }}>
             Unisciti ai personal trainer che usano TrainerPro per gestire il loro business in modo professionale.
           </p>
-          <Link href="/register" className="accent-btn inline-flex items-center gap-2 px-8 py-4 rounded-xl text-base">
+          <Link href="/register" className="accent-btn inline-flex items-center gap-2 px-10 py-4 rounded-xl text-base font-bold">
             Crea il tuo account gratuito <ArrowRight size={16} />
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="px-6 lg:px-12 py-8 text-center text-sm" style={{ borderTop: "1px solid rgba(255,107,43,0.08)", color: "rgba(245,240,232,0.3)" }}>
+      <footer className="px-6 lg:px-12 py-8 text-center text-sm" style={{ borderTop: "1px solid rgba(229,50,50,0.08)", color: "rgba(245,240,232,0.3)" }}>
         © {new Date().getFullYear()} TrainerPro · Tutti i diritti riservati
       </footer>
     </div>

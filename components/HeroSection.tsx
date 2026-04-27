@@ -22,15 +22,49 @@ export default function HeroSection() {
   return (
     <section
       ref={ref}
-      className="relative min-h-screen flex items-center overflow-hidden pt-16"
+      className="relative min-h-screen flex items-center overflow-hidden pt-16 grid-texture"
       style={{ background: 'var(--black)' }}
     >
+      {/* ── Laser beams ─────────────────────────────────────────────── */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        {[
+          { top: '18%', height: '1.5px', op: 0.55, dur: '3.2s', delay: '0s'   },
+          { top: '30%', height: '0.8px', op: 0.35, dur: '4.1s', delay: '0.7s' },
+          { top: '44%', height: '2.5px', op: 0.65, dur: '2.8s', delay: '1.4s' },
+          { top: '57%', height: '1px',   op: 0.4,  dur: '3.8s', delay: '0.3s' },
+          { top: '70%', height: '2px',   op: 0.5,  dur: '3.5s', delay: '1.8s' },
+          { top: '82%', height: '0.8px', op: 0.3,  dur: '4.5s', delay: '0.9s' },
+        ].map((beam, i) => (
+          <div
+            key={i}
+            className="laser-line"
+            style={{
+              top: beam.top,
+              height: beam.height,
+              '--beam-op': beam.op,
+              '--beam-dur': beam.dur,
+              '--beam-delay': beam.delay,
+              '--beam-angle': '-27deg',
+              filter: `blur(${parseFloat(beam.height) < 1 ? '0.8px' : '0.3px'})`,
+              boxShadow: `0 0 ${parseFloat(beam.height) * 12}px rgba(229,50,50,0.5), 0 0 ${parseFloat(beam.height) * 30}px rgba(229,50,50,0.2)`,
+            } as React.CSSProperties}
+          />
+        ))}
+      </div>
+
+      {/* ── Deep red ambient ────────────────────────────────────────── */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true"
+        style={{
+          background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(229,50,50,0.05) 0%, transparent 70%)',
+        }}
+      />
+
       {/* Ambient glow behind globe */}
       <div
-        className="absolute right-0 top-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none"
+        className="absolute right-0 top-1/2 -translate-y-1/2 w-[700px] h-[700px] pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse at 60% 50%, rgba(255,107,43,0.14) 0%, rgba(255,107,43,0.04) 50%, transparent 72%), radial-gradient(ellipse at 40% 70%, rgba(255,154,108,0.06) 0%, transparent 55%)',
+            'radial-gradient(ellipse at 60% 50%, rgba(229,50,50,0.16) 0%, rgba(200,20,20,0.06) 45%, transparent 70%), radial-gradient(ellipse at 35% 65%, rgba(255,80,30,0.07) 0%, transparent 55%)',
         }}
       />
 
@@ -39,13 +73,14 @@ export default function HeroSection() {
         <div className="flex flex-col items-start">
           <motion.div {...fade(0)}>
             <div
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium mb-6"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 tracking-wide"
               style={{
-                background: 'linear-gradient(135deg, rgba(255,107,43,0.08) 0%, rgba(255,154,108,0.16) 50%, rgba(255,107,43,0.08) 100%)',
+                background: 'linear-gradient(135deg, rgba(229,50,50,0.06) 0%, rgba(255,80,30,0.14) 50%, rgba(229,50,50,0.06) 100%)',
                 backgroundSize: '200% auto',
                 animation: 'shimmer 3s linear infinite',
-                border: '1px solid rgba(255,107,43,0.25)',
+                border: '1px solid rgba(229,50,50,0.3)',
                 color: 'var(--accent-light)',
+                boxShadow: '0 0 20px rgba(229,50,50,0.1)',
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -61,17 +96,17 @@ export default function HeroSection() {
 
           <motion.h1
             {...fade(0.1)}
-            className="text-4xl lg:text-6xl font-bold leading-tight mb-6"
+            className="text-4xl lg:text-6xl font-black leading-tight mb-6 tracking-tight"
           >
             Allena di più,
             <br />
-            <span className="accent-text">gestisci da maestro.</span>
+            <span className="accent-text glow-text-red">gestisci da maestro.</span>
           </motion.h1>
 
           <motion.p
             {...fade(0.2)}
-            className="text-lg mb-10 max-w-lg"
-            style={{ color: 'rgba(245,240,232,0.6)' }}
+            className="text-lg mb-10 max-w-lg leading-relaxed"
+            style={{ color: 'rgba(245,240,232,0.55)' }}
           >
             L&apos;unico CRM pensato per chi trasforma i corpi. Schede, nutrizione e progressi — tutto sotto controllo, condiviso in un click.
           </motion.p>
@@ -82,23 +117,26 @@ export default function HeroSection() {
           >
             <Link
               href="/register"
-              className="accent-btn flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-base font-semibold"
+              className="accent-btn flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-base font-bold"
             >
               Inizia gratis <ArrowRight size={16} />
             </Link>
             <Link
               href="/login"
-              className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-base transition-all hover:bg-white/5"
+              className="flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-base font-medium transition-all"
               style={{
-                border: '1px solid rgba(255,107,43,0.25)',
-                color: 'var(--ivory)',
+                border: '1px solid rgba(229,50,50,0.2)',
+                color: 'rgba(245,240,232,0.75)',
+                background: 'rgba(229,50,50,0.04)',
               }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(229,50,50,0.09)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(229,50,50,0.04)')}
             >
               Accedi al tuo account
             </Link>
           </motion.div>
 
-          <motion.p {...fade(0.35)} style={{ color: 'rgba(245,240,232,0.35)' }} className="text-xs mb-10">
+          <motion.p {...fade(0.35)} style={{ color: 'rgba(245,240,232,0.3)' }} className="text-xs mb-10 tracking-wide">
             Nessuna carta di credito richiesta · Piano gratuito per sempre
           </motion.p>
 
@@ -111,14 +149,14 @@ export default function HeroSection() {
             ].map(({ icon: Icon, value, label }) => (
               <div
                 key={label}
-                className="rounded-2xl p-3 text-center"
+                className="rounded-2xl p-3 text-center border-glow"
                 style={{
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,107,43,0.1)',
+                  background: 'linear-gradient(135deg, rgba(229,50,50,0.06), rgba(15,8,8,0.6))',
+                  border: '1px solid rgba(229,50,50,0.12)',
                 }}
               >
                 <Icon size={16} className="mx-auto mb-1.5" style={{ color: 'var(--accent)' }} />
-                <p className="text-xl font-bold mb-0.5" style={{ color: 'var(--ivory)' }}>{value}</p>
+                <p className="text-xl font-black mb-0.5" style={{ color: 'var(--ivory)' }}>{value}</p>
                 <p className="text-xs" style={{ color: 'rgba(245,240,232,0.4)' }}>{label}</p>
               </div>
             ))}

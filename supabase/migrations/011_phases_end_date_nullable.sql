@@ -3,3 +3,4 @@
 -- The UI can show "In corso" when end_date is NULL.
 ALTER TABLE public.phases
   ALTER COLUMN end_date DROP NOT NULL;
+
