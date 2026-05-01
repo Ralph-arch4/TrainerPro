@@ -1,38 +1,43 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
-import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp } from "lucide-react";
 import { showToast } from "@/components/Toast";
 
-// ── Per-set data (weight + reps per individual set) ───────────────────────────
-interface SetData { reps: string; weight: string; }
+// ── Per-set data: weight + actual reps + RPE ─────────────────────────────────
+interface SetData { reps: string; weight: string; rpe: string; }
 
-/** Parse log.reps — either JSON ([{r,w},...]) or legacy "12/10/8" slash format */
+/** Parse log.reps — JSON ([{r,w,e},...]) or legacy "12/10/8" */
 function parseSetData(log: ExerciseLog | undefined, sets: number): SetData[] {
-  const blank = (): SetData[] => Array.from({ length: sets }, () => ({ reps: "", weight: "" }));
+  const blank = (): SetData[] => Array.from({ length: sets }, () => ({ reps: "", weight: "", rpe: "" }));
   if (!log) return blank();
   try {
     const p = JSON.parse(log.reps ?? "");
     if (Array.isArray(p) && p[0] && "r" in p[0]) {
-      const result: SetData[] = p.map((x: { r: string; w: string }) => ({ reps: String(x.r ?? ""), weight: String(x.w ?? "") }));
-      while (result.length < sets) result.push({ reps: "", weight: "" });
+      const result: SetData[] = p.map((x: { r: string; w: string; e?: string }) => ({
+        reps: String(x.r ?? ""),
+        weight: String(x.w ?? ""),
+        rpe: String(x.e ?? ""),
+      }));
+      while (result.length < sets) result.push({ reps: "", weight: "", rpe: "" });
       return result.slice(0, sets);
     }
   } catch {}
-  // Legacy: "12/10/8", weight is a single number
+  // Legacy slash format
   const parts = (log.reps ?? "").split("/");
   const w = log.weight != null ? String(log.weight) : "";
-  return Array.from({ length: sets }, (_, i) => ({ reps: parts[i] ?? "", weight: w }));
+  return Array.from({ length: sets }, (_, i) => ({ reps: parts[i] ?? "", weight: w, rpe: "" }));
 }
 
-/** Serialize SetData[] back to reps string + weight for DB storage */
+/** Serialize back to DB storage */
 function serializeSetData(data: SetData[]): { reps?: string; weight?: number } {
   const hasW = data.some(s => s.weight.trim());
   const hasR = data.some(s => s.reps.trim());
-  if (!hasR && !hasW) return {};
-  if (hasW) {
+  const hasE = data.some(s => s.rpe.trim());
+  if (!hasR && !hasW && !hasE) return {};
+  if (hasW || hasE) {
     return {
-      reps: JSON.stringify(data.map(s => ({ r: s.reps.trim(), w: s.weight.trim() }))),
+      reps: JSON.stringify(data.map(s => ({ r: s.reps.trim(), w: s.weight.trim(), e: s.rpe.trim() }))),
       weight: parseFloat(data[0]?.weight) || undefined,
     };
   }
@@ -40,10 +45,33 @@ function serializeSetData(data: SetData[]): { reps?: string; weight?: number } {
 }
 
 function areDirty(a: SetData[], b: SetData[]) {
-  return a.some((s, i) => s.weight !== (b[i]?.weight ?? "") || s.reps !== (b[i]?.reps ?? ""));
+  return a.some((s, i) =>
+    s.weight !== (b[i]?.weight ?? "") ||
+    s.reps   !== (b[i]?.reps   ?? "") ||
+    s.rpe    !== (b[i]?.rpe    ?? "")
+  );
 }
 
-// ── Superset color palette ────────────────────────────────────────────────────
+// ── Progressive overload suggestion ──────────────────────────────────────────
+function calcSuggestion(prevData: SetData[]): { weight: number; delta: number; rpeAvg: number | null } | null {
+  const valid = prevData.filter(s => s.weight && parseFloat(s.weight) > 0);
+  if (!valid.length) return null;
+  const avgW = valid.reduce((s, d) => s + parseFloat(d.weight), 0) / valid.length;
+  const rpeValid = valid.filter(s => s.rpe && parseFloat(s.rpe) > 0);
+  const avgRpe = rpeValid.length ? rpeValid.reduce((s, d) => s + parseFloat(d.rpe), 0) / rpeValid.length : null;
+  let mult = 1.025;
+  if (avgRpe !== null) {
+    if (avgRpe <= 5)      mult = 1.05;
+    else if (avgRpe <= 7) mult = 1.025;
+    else if (avgRpe <= 8) mult = 1.0;
+    else if (avgRpe <= 9) mult = 1.0;
+    else                   mult = 0.975;
+  }
+  const suggested = Math.round(avgW * mult * 2) / 2;
+  return { weight: suggested, delta: suggested - avgW, rpeAvg: avgRpe };
+}
+
+// ── Superset colors ───────────────────────────────────────────────────────────
 const SS_COLORS: Record<string, string> = {
   A: "#a78bfa", B: "#38bdf8", C: "#34d399",
   D: "#fbbf24", E: "#f472b6", F: "#fb923c",
@@ -54,6 +82,7 @@ function ssColor(g?: string) { return g ? (SS_COLORS[g.toUpperCase()] ?? "#a78bf
 interface CardProps {
   exercise: Exercise;
   log: ExerciseLog | undefined;
+  lastWeekLog: ExerciseLog | undefined;
   week: number;
   mode: "trainer" | "client";
   onUpsertLog: (d: Omit<ExerciseLog, "id" | "loggedAt">) => void;
@@ -61,13 +90,12 @@ interface CardProps {
   onDelete?: () => void;
 }
 
-function ExerciseCard({ exercise, log, week, mode, onUpsertLog, onEdit, onDelete }: CardProps) {
+function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onEdit, onDelete }: CardProps) {
   const sets = Math.max(1, exercise.sets || 3);
-  const [data, setData] = useState<SetData[]>(() => parseSetData(log, sets));
-  const orig = useRef<SetData[]>(parseSetData(log, sets));
-  const dirty = areDirty(data, orig.current);
+  const [data, setData]   = useState<SetData[]>(() => parseSetData(log, sets));
+  const orig               = useRef<SetData[]>(parseSetData(log, sets));
+  const dirty              = areDirty(data, orig.current);
 
-  // Re-sync when parent's log changes (DB refresh)
   useEffect(() => {
     const parsed = parseSetData(log, sets);
     setData(parsed);
@@ -75,17 +103,10 @@ function ExerciseCard({ exercise, log, week, mode, onUpsertLog, onEdit, onDelete
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [log?.loggedAt, log?.reps, sets]);
 
-  function targetRep(i: number) {
-    return exercise.perSetReps?.[i] ?? exercise.targetReps ?? "—";
-  }
-
-  function updateWeight(i: number, val: string) {
-    setData(prev => { const n = [...prev]; n[i] = { ...n[i], weight: val }; return n; });
-  }
-
-  function updateReps(i: number, val: string) {
-    setData(prev => { const n = [...prev]; n[i] = { ...n[i], reps: val }; return n; });
-  }
+  function targetRep(i: number) { return exercise.perSetReps?.[i] ?? exercise.targetReps ?? "—"; }
+  function updateWeight(i: number, val: string) { setData(p => { const n = [...p]; n[i] = { ...n[i], weight: val }; return n; }); }
+  function updateReps(i: number, val: string)   { setData(p => { const n = [...p]; n[i] = { ...n[i], reps: val };   return n; }); }
+  function updateRpe(i: number, val: string)    { setData(p => { const n = [...p]; n[i] = { ...n[i], rpe: val };    return n; }); }
 
   function handleSave() {
     const { reps, weight } = serializeSetData(data);
@@ -93,9 +114,8 @@ function ExerciseCard({ exercise, log, week, mode, onUpsertLog, onEdit, onDelete
     orig.current = [...data];
     showToast("Salvato ✓");
   }
-
   function handleClear() {
-    const blank = Array.from({ length: sets }, () => ({ reps: "", weight: "" }));
+    const blank = Array.from({ length: sets }, () => ({ reps: "", weight: "", rpe: "" }));
     setData(blank);
     onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps: undefined, weight: undefined });
     orig.current = blank;
@@ -106,23 +126,28 @@ function ExerciseCard({ exercise, log, week, mode, onUpsertLog, onEdit, onDelete
     ? new Date(log.loggedAt).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" })
     : "— / — / ——";
 
-  const color = ssColor(exercise.supersetGroup);
+  const color      = ssColor(exercise.supersetGroup);
   const cardBorder = color ? `2px solid ${color}40` : "1px solid rgba(255,255,255,0.07)";
+  const rowBorder  = "1px solid rgba(255,255,255,0.05)";
 
-  // Table column widths
-  const cols = "4.5rem 1fr 1fr";
-  const rowBorder = "1px solid rgba(255,255,255,0.05)";
+  // Progressive overload suggestion (only for client, only from week 2+)
+  const suggestion = mode === "client" && week > 1
+    ? calcSuggestion(parseSetData(lastWeekLog, sets))
+    : null;
+
+  // Layout: client has 4 cols (set | reps | kg | RPE), trainer has 3
+  const cols = mode === "client" ? "3.5rem 1fr 1fr 2.8rem" : "4.5rem 1fr 1fr";
 
   return (
     <div className="rounded-2xl overflow-hidden flex flex-col" style={{ border: cardBorder, background: "rgba(10,10,10,0.9)" }}>
 
-      {/* ── Row 1: date header ── */}
-      <div className="flex items-center justify-center px-2 py-2 text-xs font-bold"
+      {/* Date header */}
+      <div className="flex items-center justify-center px-2 py-1.5 text-xs font-bold"
         style={{ background: "rgba(229,50,50,0.75)", color: "#fff", letterSpacing: "0.04em", borderBottom: rowBorder }}>
         {sessionDate}
       </div>
 
-      {/* ── Row 2: exercise name | trainer controls ── */}
+      {/* Exercise name */}
       <div className="flex items-center justify-between px-3 py-2.5 gap-2"
         style={{ background: "rgba(255,107,43,0.06)", borderBottom: rowBorder }}>
         <div className="flex items-center gap-2 min-w-0">
@@ -156,42 +181,86 @@ function ExerciseCard({ exercise, log, week, mode, onUpsertLog, onEdit, onDelete
         )}
       </div>
 
-      {/* ── Row 3: column headers ── */}
+      {/* Progressive overload suggestion */}
+      {suggestion && (
+        <div className="flex items-center gap-2 px-3 py-1.5 text-xs"
+          style={{ background: "rgba(52,211,153,0.07)", borderBottom: rowBorder, color: "#34d399" }}>
+          <TrendingUp size={11} />
+          <span>
+            Prova <strong>{suggestion.weight} kg</strong>
+            {suggestion.delta > 0 ? ` (+${suggestion.delta.toFixed(1)} kg)` : suggestion.delta < 0 ? ` (${suggestion.delta.toFixed(1)} kg)` : " (mantieni)"}
+            {suggestion.rpeAvg !== null ? ` · RPE scorsa: ${suggestion.rpeAvg.toFixed(1)}` : ""}
+          </span>
+        </div>
+      )}
+
+      {/* Column headers */}
       <div style={{ display: "grid", gridTemplateColumns: cols, borderBottom: rowBorder, background: "rgba(255,255,255,0.02)" }}>
-        <div className="px-3 py-1.5 text-xs" style={{ color: "transparent", borderRight: rowBorder }}>·</div>
-        <div className="px-3 py-1.5 text-xs font-semibold text-center"
-          style={{ color: "rgba(245,240,232,0.35)", borderRight: rowBorder }}>ripetizioni</div>
-        <div className="px-3 py-1.5 text-xs font-semibold text-center"
-          style={{ color: "rgba(245,240,232,0.35)" }}>carico (kg)</div>
+        <div className="px-2 py-1.5 text-xs" style={{ color: "transparent", borderRight: rowBorder }}>·</div>
+        <div className="px-2 py-1.5 text-xs font-semibold text-center"
+          style={{ color: "rgba(245,240,232,0.35)", borderRight: rowBorder }}>
+          {mode === "client" ? "rips" : "ripetizioni"}
+        </div>
+        <div className="px-2 py-1.5 text-xs font-semibold text-center"
+          style={{ color: "rgba(245,240,232,0.35)", borderRight: mode === "client" ? rowBorder : undefined }}>
+          kg
+        </div>
+        {mode === "client" && (
+          <div className="px-1 py-1.5 text-xs font-semibold text-center"
+            style={{ color: "rgba(245,240,232,0.35)" }}>
+            RPE
+          </div>
+        )}
       </div>
 
-      {/* ── Set rows ── */}
+      {/* Set rows */}
       {Array.from({ length: sets }, (_, i) => (
         <div key={i} style={{
           display: "grid", gridTemplateColumns: cols,
           borderBottom: i < sets - 1 ? rowBorder : undefined,
           background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.012)",
         }}>
-          {/* Label */}
-          <div className="flex items-center px-3 py-2.5 text-xs"
+          {/* Set label */}
+          <div className="flex flex-col items-center justify-center px-2 py-2 text-xs"
             style={{ color: "rgba(245,240,232,0.35)", borderRight: rowBorder }}>
-            serie {i + 1}
+            <span>{i + 1}</span>
+            {mode === "client" && (
+              <span className="text-xs mt-0.5 font-semibold" style={{ color: "var(--accent-light)", fontSize: "0.6rem" }}>
+                {targetRep(i)}
+              </span>
+            )}
           </div>
-          {/* Target reps */}
-          <div className="flex items-center justify-center px-2 py-2.5 text-xs font-semibold"
-            style={{ color: "var(--accent-light)", borderRight: rowBorder }}>
-            {targetRep(i)}
-          </div>
-          {/* Carico input (client) or logged value (trainer) */}
+
+          {/* Reps column */}
           {mode === "client" ? (
-            <div className="flex items-center gap-1 px-1.5">
+            <div className="flex items-center px-1" style={{ borderRight: rowBorder }}>
+              <input
+                type="number" min="0" step="1"
+                value={data[i]?.reps ?? ""}
+                onChange={e => updateReps(i, e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") handleSave(); }}
+                placeholder={String(targetRep(i))}
+                className="flex-1 text-center py-2 text-sm font-bold outline-none rounded-lg"
+                style={{ background: "transparent", color: "var(--ivory)", border: "none", minWidth: 0 }}
+              />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center px-2 py-2.5 text-xs font-semibold"
+              style={{ color: "var(--accent-light)", borderRight: rowBorder }}>
+              {targetRep(i)}
+            </div>
+          )}
+
+          {/* Weight column */}
+          {mode === "client" ? (
+            <div className="flex items-center px-1" style={{ borderRight: rowBorder }}>
               <input
                 type="number" min="0" step="0.5"
                 value={data[i]?.weight ?? ""}
                 onChange={e => updateWeight(i, e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") handleSave(); }}
                 placeholder="—"
-                className="flex-1 text-center py-2.5 text-sm font-bold outline-none rounded-xl"
+                className="flex-1 text-center py-2 text-sm font-bold outline-none rounded-lg"
                 style={{ background: "transparent", color: "var(--ivory)", border: "none", minWidth: 0 }}
               />
             </div>
@@ -201,10 +270,24 @@ function ExerciseCard({ exercise, log, week, mode, onUpsertLog, onEdit, onDelete
               {data[i]?.weight ? `${data[i].weight} kg` : "—"}
             </div>
           )}
+
+          {/* RPE column (client only) */}
+          {mode === "client" && (
+            <div className="flex items-center justify-center px-1">
+              <input
+                type="number" min="1" max="10" step="1"
+                value={data[i]?.rpe ?? ""}
+                onChange={e => { const v = e.target.value; if (v === "" || (parseFloat(v) >= 1 && parseFloat(v) <= 10)) updateRpe(i, v); }}
+                placeholder="—"
+                className="w-full text-center py-2 text-xs font-bold outline-none rounded-lg"
+                style={{ background: "transparent", color: "#34d399", border: "none", minWidth: 0 }}
+              />
+            </div>
+          )}
         </div>
       ))}
 
-      {/* ── Save / Clear bar (client only) ── */}
+      {/* Save / Clear (client) */}
       {mode === "client" && (
         <div className="flex gap-2 px-2.5 py-2" style={{ borderTop: rowBorder }}>
           <button onClick={handleClear}
@@ -224,7 +307,7 @@ function ExerciseCard({ exercise, log, week, mode, onUpsertLog, onEdit, onDelete
         </div>
       )}
 
-      {/* Trainer mode: note if any */}
+      {/* Trainer: note */}
       {mode === "trainer" && log?.note && (
         <div className="px-3 py-2 text-xs italic" style={{ borderTop: rowBorder, color: "rgba(245,240,232,0.35)" }}>
           📝 {log.note}
@@ -243,18 +326,13 @@ function ExerciseCard({ exercise, log, week, mode, onUpsertLog, onEdit, onDelete
   );
 }
 
-// ── Supplement Card (client read-only) ───────────────────────────────────────
+// ── Supplement Card ───────────────────────────────────────────────────────────
 function SupplementCard({ item }: { item: SupplementItem }) {
   const [copied, setCopied] = useState(false);
-
   function copyCode() {
     if (!item.discountCode) return;
-    navigator.clipboard.writeText(item.discountCode).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    navigator.clipboard.writeText(item.discountCode).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
   }
-
   return (
     <div className="rounded-2xl p-4 flex flex-col gap-3"
       style={{ background: "rgba(255,107,43,0.04)", border: "1px solid rgba(255,107,43,0.14)" }}>
@@ -265,9 +343,7 @@ function SupplementCard({ item }: { item: SupplementItem }) {
         </div>
         <ShoppingBag size={18} style={{ color: "var(--accent)", flexShrink: 0, marginTop: 2 }} />
       </div>
-      {item.notes && (
-        <p className="text-xs" style={{ color: "rgba(245,240,232,0.55)" }}>{item.notes}</p>
-      )}
+      {item.notes && <p className="text-xs" style={{ color: "rgba(245,240,232,0.55)" }}>{item.notes}</p>}
       <div className="flex gap-2 flex-wrap">
         {item.productUrl && (
           <a href={item.productUrl} target="_blank" rel="noopener noreferrer"
@@ -302,12 +378,10 @@ interface Props {
   mode: "trainer" | "client";
   dayLabels?: Record<number, string>;
   supplements?: SupplementItem[];
-  // PT-only callbacks
   onAddExercise?: (data: Omit<Exercise, "id" | "order">) => void;
   onUpdateExercise?: (exerciseId: string, data: Partial<Exercise>) => void;
   onRemoveExercise?: (exerciseId: string) => void;
   onUpdateSupplements?: (items: SupplementItem[]) => void;
-  // Logging
   onUpsertLog: (log: Omit<ExerciseLog, "id" | "loggedAt">) => void;
 }
 
@@ -320,20 +394,17 @@ export default function WorkoutLogbook({
   onUpdateSupplements, onUpsertLog,
 }: Props) {
   const weeks = Array.from({ length: totalWeeks }, (_, i) => i + 1);
-  const days = Array.from({ length: daysPerWeek }, (_, i) => i + 1);
+  const days  = Array.from({ length: daysPerWeek }, (_, i) => i + 1);
 
-  const [activeDay, setActiveDay] = useState(1);
+  const [activeDay,  setActiveDay]  = useState(1);
   const [activeWeek, setActiveWeek] = useState(1);
 
-  // Supplement editor state (PT only)
   const [suppEditing, setSuppEditing] = useState(false);
-  const [suppDraft, setSuppDraft] = useState<SupplementItem[]>(supplements);
-  const [newSupp, setNewSupp] = useState<Omit<SupplementItem, "id">>({ name: "", brand: "", productUrl: "", discountCode: "", notes: "" });
+  const [suppDraft,   setSuppDraft]   = useState<SupplementItem[]>(supplements);
+  const [newSupp, setNewSupp]         = useState<Omit<SupplementItem, "id">>({ name: "", brand: "", productUrl: "", discountCode: "", notes: "" });
 
-  // Sync supplement draft when props change
   useEffect(() => { setSuppDraft(supplements); }, [supplements]);
 
-  // Auto-select latest logged week for client
   useEffect(() => {
     if (mode === "client" && logs.length > 0) {
       const max = Math.min(Math.max(...logs.map(l => l.weekNumber)), totalWeeks);
@@ -342,7 +413,6 @@ export default function WorkoutLogbook({
   }, [mode, totalWeeks]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function getDayLabel(d: number) { return dayLabels[d] || `Giorno ${d}`; }
-
   function getLog(exerciseId: string, week: number) {
     return logs.find(l => l.exerciseId === exerciseId && l.weekNumber === week);
   }
@@ -351,30 +421,26 @@ export default function WorkoutLogbook({
     .filter(e => (e.day ?? 1) === activeDay)
     .sort((a, b) => a.order - b.order);
 
-  // ── Supplement management ──
   function saveSupplements(items: SupplementItem[]) {
     setSuppDraft(items);
     onUpdateSupplements?.(items);
     showToast("Integratori salvati ✓");
   }
-
   function addSupp() {
     if (!newSupp.name.trim()) return;
     const item: SupplementItem = { ...newSupp, id: uid() };
-    const updated = [...suppDraft, item];
-    saveSupplements(updated);
+    saveSupplements([...suppDraft, item]);
     setNewSupp({ name: "", brand: "", productUrl: "", discountCode: "", notes: "" });
   }
+  function removeSupp(id: string) { saveSupplements(suppDraft.filter(s => s.id !== id)); }
 
-  function removeSupp(id: string) {
-    saveSupplements(suppDraft.filter(s => s.id !== id));
-  }
+  // Week completion dots
+  const weekDots = weeks.map(w => logs.some(l => l.weekNumber === w));
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-5">
 
-      {/* ── Week navigator ── */}
+      {/* Week navigator */}
       <div className="flex items-center gap-3">
         <button onClick={() => setActiveWeek(w => Math.max(1, w - 1))} disabled={activeWeek === 1}
           className="p-2 rounded-xl transition-all disabled:opacity-30"
@@ -382,12 +448,8 @@ export default function WorkoutLogbook({
           <ChevronLeft size={16} style={{ color: "var(--ivory)" }} />
         </button>
         <div className="flex-1 text-center">
-          <span className="text-sm font-bold" style={{ color: "var(--ivory)" }}>
-            Settimana {activeWeek}
-          </span>
-          <span className="text-xs ml-2" style={{ color: "rgba(245,240,232,0.35)" }}>
-            di {totalWeeks}
-          </span>
+          <span className="text-sm font-bold" style={{ color: "var(--ivory)" }}>Settimana {activeWeek}</span>
+          <span className="text-xs ml-2" style={{ color: "rgba(245,240,232,0.35)" }}>di {totalWeeks}</span>
         </div>
         <button onClick={() => setActiveWeek(w => Math.min(totalWeeks, w + 1))} disabled={activeWeek === totalWeeks}
           className="p-2 rounded-xl transition-all disabled:opacity-30"
@@ -396,13 +458,26 @@ export default function WorkoutLogbook({
         </button>
       </div>
 
-      {/* ── Week progress mini-bar ── */}
-      <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-        <div className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${(activeWeek / totalWeeks) * 100}%`, background: "linear-gradient(90deg, #FF6B2B, #FF9A6C)" }} />
+      {/* Week progress dots */}
+      <div className="flex items-center gap-1.5 justify-center flex-wrap">
+        {weekDots.map((done, i) => (
+          <button key={i} onClick={() => setActiveWeek(i + 1)}
+            title={`Settimana ${i + 1}`}
+            className="transition-all"
+            style={{
+              width: activeWeek === i + 1 ? 20 : 8,
+              height: 8, borderRadius: 4,
+              background: activeWeek === i + 1
+                ? "var(--accent)"
+                : done
+                  ? "rgba(34,197,94,0.7)"
+                  : "rgba(255,255,255,0.1)",
+              transition: "width 0.3s ease, background 0.2s",
+            }} />
+        ))}
       </div>
 
-      {/* ── Day tabs ── */}
+      {/* Day tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {days.map(d => (
           <button key={d} onClick={() => setActiveDay(d)}
@@ -417,13 +492,22 @@ export default function WorkoutLogbook({
         ))}
       </div>
 
-      {/* ── Exercise grid (Google Sheets style) ── */}
+      {/* RPE legend (client mode) */}
+      {mode === "client" && (
+        <div className="text-xs px-1 flex items-center gap-1" style={{ color: "rgba(245,240,232,0.3)" }}>
+          <span style={{ color: "#34d399" }}>RPE</span>: 1–6 facile · 7–8 giusto · 9 al limite · 10 cedimento
+        </div>
+      )}
+
+      {/* Exercise grid */}
       {dayExercises.length === 0 ? (
         <div className="text-center py-16 rounded-2xl"
           style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
           <Dumbbell size={36} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.2)" }} />
           <p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>
-            {mode === "trainer" ? "Nessun esercizio per questo giorno. Usa la vista Avanzato per aggiungere o importare esercizi." : "Il tuo trainer non ha ancora aggiunto esercizi per questo giorno."}
+            {mode === "trainer"
+              ? "Nessun esercizio per questo giorno. Usa la vista Avanzato per aggiungere esercizi."
+              : "Il tuo trainer non ha ancora aggiunto esercizi per questo giorno."}
           </p>
         </div>
       ) : (
@@ -433,13 +517,14 @@ export default function WorkoutLogbook({
               key={ex.id}
               exercise={ex}
               log={getLog(ex.id, activeWeek)}
+              lastWeekLog={getLog(ex.id, activeWeek - 1)}
               week={activeWeek}
               mode={mode}
               onUpsertLog={onUpsertLog}
               onEdit={() => {
                 if (!onUpdateExercise) return;
                 const name = prompt("Nome esercizio:", ex.name);
-                if (name && name.trim()) onUpdateExercise(ex.id, { name: name.trim() });
+                if (name?.trim()) onUpdateExercise(ex.id, { name: name.trim() });
               }}
               onDelete={() => { if (confirm(`Eliminare "${ex.name}"?`)) onRemoveExercise?.(ex.id); }}
             />
@@ -447,15 +532,14 @@ export default function WorkoutLogbook({
         </div>
       )}
 
-      {/* ── PT: add exercise note ── */}
       {mode === "trainer" && onAddExercise && (
         <p className="text-xs text-center" style={{ color: "rgba(245,240,232,0.25)" }}>
           Usa la scheda laterale per aggiungere o riordinare gli esercizi.
         </p>
       )}
 
-      {/* ── Supplements section ── */}
-      {(mode === "client" && suppDraft.length > 0) && (
+      {/* Supplements — client read-only */}
+      {mode === "client" && suppDraft.length > 0 && (
         <div className="mt-6 space-y-4">
           <div className="flex items-center gap-2">
             <ShoppingBag size={16} style={{ color: "var(--accent)" }} />
@@ -467,7 +551,7 @@ export default function WorkoutLogbook({
         </div>
       )}
 
-      {/* ── PT: supplement manager ── */}
+      {/* Supplements — PT editor */}
       {mode === "trainer" && (
         <div className="mt-6 space-y-4">
           <div className="flex items-center justify-between">
@@ -476,7 +560,7 @@ export default function WorkoutLogbook({
               <h3 className="text-sm font-bold" style={{ color: "var(--ivory)" }}>
                 Integratori consigliati
                 <span className="ml-2 text-xs font-normal" style={{ color: "rgba(245,240,232,0.35)" }}>
-                  (visibili al cliente con link e codice sconto)
+                  (visibili al cliente)
                 </span>
               </h3>
             </div>
@@ -491,7 +575,6 @@ export default function WorkoutLogbook({
             </button>
           </div>
 
-          {/* Current supplements list */}
           {suppDraft.length > 0 && (
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
               {suppDraft.map(item => (
@@ -500,11 +583,7 @@ export default function WorkoutLogbook({
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{item.name}</p>
                     {item.brand && <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{item.brand}</p>}
-                    {item.discountCode && (
-                      <p className="text-xs mt-1 font-mono" style={{ color: "var(--accent-light)" }}>
-                        Codice: {item.discountCode}
-                      </p>
-                    )}
+                    {item.discountCode && <p className="text-xs mt-1 font-mono" style={{ color: "var(--accent-light)" }}>Codice: {item.discountCode}</p>}
                     {item.notes && <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.4)" }}>{item.notes}</p>}
                   </div>
                   <button onClick={() => removeSupp(item.id)}
@@ -517,19 +596,16 @@ export default function WorkoutLogbook({
             </div>
           )}
 
-          {/* Add new supplement form */}
           {suppEditing && (
             <div className="rounded-2xl p-4 space-y-3"
               style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <p className="text-xs font-semibold" style={{ color: "rgba(245,240,232,0.5)" }}>
-                Aggiungi integratore
-              </p>
+              <p className="text-xs font-semibold" style={{ color: "rgba(245,240,232,0.5)" }}>Aggiungi integratore</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
-                  { key: "name",         placeholder: "Nome prodotto *",         label: "Nome" },
-                  { key: "brand",        placeholder: "Brand (es. MyProtein)",   label: "Brand" },
-                  { key: "discountCode", placeholder: "Codice sconto (es. TRAINER20)", label: "Codice sconto" },
-                  { key: "productUrl",   placeholder: "Link affiliato",          label: "URL" },
+                  { key: "name",         placeholder: "Nome prodotto *" },
+                  { key: "brand",        placeholder: "Brand (es. MyProtein)" },
+                  { key: "discountCode", placeholder: "Codice sconto (es. TRAINER20)" },
+                  { key: "productUrl",   placeholder: "Link affiliato" },
                 ].map(({ key, placeholder }) => (
                   <input key={key}
                     value={(newSupp as Record<string, string>)[key] ?? ""}
@@ -540,9 +616,7 @@ export default function WorkoutLogbook({
                   />
                 ))}
               </div>
-              <input
-                value={newSupp.notes ?? ""}
-                onChange={e => setNewSupp(p => ({ ...p, notes: e.target.value }))}
+              <input value={newSupp.notes ?? ""} onChange={e => setNewSupp(p => ({ ...p, notes: e.target.value }))}
                 placeholder="Note dosaggio (es. 3-5g post-workout)"
                 className="w-full px-3 py-2 rounded-xl text-sm outline-none"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--ivory)" }}
@@ -556,7 +630,7 @@ export default function WorkoutLogbook({
 
           {suppDraft.length === 0 && !suppEditing && (
             <p className="text-xs" style={{ color: "rgba(245,240,232,0.25)" }}>
-              Nessun integratore aggiunto. Clicca "Gestisci" per aggiungerne uno con link affiliato e codice sconto.
+              Nessun integratore aggiunto. Clicca "Gestisci" per aggiungerne uno.
             </p>
           )}
         </div>
@@ -564,4 +638,3 @@ export default function WorkoutLogbook({
     </div>
   );
 }
-

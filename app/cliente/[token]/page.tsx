@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { dbExerciseLogs } from "@/lib/db";
 import WorkoutLogbook from "@/components/WorkoutLogbook";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
-import { Dumbbell, UtensilsCrossed, ShoppingBag, Loader2, AlertCircle, Copy, Check } from "lucide-react";
+import { Dumbbell, UtensilsCrossed, ShoppingBag, Loader2, AlertCircle, Copy, Check, Zap, Trophy, Flame } from "lucide-react";
 
 interface PlanData {
   id: string;
@@ -205,8 +205,35 @@ export default function ClientPortalPage() {
     );
   }
 
-  const weeksLogged = logs.length > 0 ? Math.max(...logs.map((l) => l.weekNumber)) : 0;
-  const pct = Math.round((weeksLogged / plan.total_weeks) * 100);
+  // Progress: count distinct weeks with at least one log
+  const uniqueWeeks     = new Set(logs.map(l => l.weekNumber));
+  const currentWeek     = uniqueWeeks.size > 0 ? Math.max(...uniqueWeeks) : 0;
+  // A week is "completed" only once the client moves past it
+  const weeksCompleted  = Math.max(0, currentWeek - 1);
+  const pct             = plan.total_weeks > 0 ? Math.round((weeksCompleted / plan.total_weeks) * 100) : 0;
+
+  // ── Gamification ─────────────────────────────────────────────────────────
+  const totalLogs  = logs.length;
+  const xpPerLog   = 10;
+  const xpPerWeek  = 50;
+  const totalXP    = totalLogs * xpPerLog + weeksCompleted * xpPerWeek;
+  const XP_PER_LVL = 150;
+  const level      = Math.floor(totalXP / XP_PER_LVL) + 1;
+  const xpInLevel  = totalXP % XP_PER_LVL;
+  const xpPct      = Math.round((xpInLevel / XP_PER_LVL) * 100);
+  const levelNames: Record<number, string> = { 1: "Novizio", 2: "Atleta", 3: "Guerriero", 4: "Campione", 5: "Élite" };
+  const levelName  = levelNames[Math.min(level, 5)] ?? "Leggenda";
+
+  // Achievements
+  const achievements: { icon: string; label: string; unlocked: boolean }[] = [
+    { icon: "🏋️", label: "Prima sessione",    unlocked: totalLogs >= 1 },
+    { icon: "🔥", label: "3 giorni di fila",  unlocked: uniqueWeeks.size >= 1 && totalLogs >= 3 },
+    { icon: "📅", label: "Settimana 1",       unlocked: currentWeek >= 1 },
+    { icon: "💪", label: "Settimana 3",       unlocked: currentWeek >= 3 },
+    { icon: "⚡", label: "20 registrazioni",  unlocked: totalLogs >= 20 },
+    { icon: "🏆", label: "Metà programma",    unlocked: pct >= 50 },
+  ];
+
   const activeDiet = diets[0] ?? null;
 
   return (
@@ -238,58 +265,102 @@ export default function ClientPortalPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-6">
 
+        {/* ── Level + XP card ────────────────────────────────────────────────── */}
+        <div className="mb-4 p-4 rounded-2xl relative overflow-hidden"
+          style={{ background: "linear-gradient(135deg, rgba(123,47,190,0.18), rgba(229,50,50,0.1))", border: "1px solid rgba(123,47,190,0.25)" }}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center font-black text-lg flex-shrink-0"
+                style={{ background: "linear-gradient(135deg, #a78bfa, #7B2FBE)", boxShadow: "0 0 20px rgba(123,47,190,0.4)" }}>
+                {level}
+              </div>
+              <div>
+                <p className="font-black text-base" style={{ color: "var(--ivory)" }}>{levelName}</p>
+                <p className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>Livello {level} · {totalXP} XP totali</p>
+              </div>
+            </div>
+            <div className="text-right flex-shrink-0">
+              <p className="text-xs font-semibold" style={{ color: "rgba(245,240,232,0.4)" }}>al prossimo liv.</p>
+              <p className="text-sm font-bold" style={{ color: "#a78bfa" }}>{XP_PER_LVL - xpInLevel} XP</p>
+            </div>
+          </div>
+          {/* XP bar */}
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
+            <div className="h-full rounded-full transition-all duration-700"
+              style={{ width: `${xpPct}%`, background: "linear-gradient(90deg, #7B2FBE, #a78bfa)" }} />
+          </div>
+          <p className="text-xs mt-1.5" style={{ color: "rgba(245,240,232,0.3)" }}>
+            Ogni sessione salvata = +10 XP · ogni settimana completata = +50 XP
+          </p>
+        </div>
+
         {/* ── Stats row ──────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           {[
-            { label: "Settimane completate", value: `${weeksLogged}/${plan.total_weeks}` },
-            { label: "Progressi",            value: `${pct}%`                           },
-            { label: "Giorni / settimana",   value: `${plan.days_per_week}`             },
-            { label: "Registrazioni",        value: String(logs.length)                 },
-          ].map(({ label, value }) => (
+            { label: "Settimane completate", value: `${weeksCompleted}/${plan.total_weeks}`, icon: <Trophy size={13} style={{ color: "#fbbf24" }} /> },
+            { label: "Completamento",        value: `${pct}%`,                               icon: <Flame size={13} style={{ color: "var(--accent)" }} /> },
+            { label: "Giorni / settimana",   value: `${plan.days_per_week}`,                 icon: <Dumbbell size={13} style={{ color: "#38bdf8" }} /> },
+            { label: "Registrazioni",        value: String(totalLogs),                       icon: <Zap size={13} style={{ color: "#a78bfa" }} /> },
+          ].map(({ label, value, icon }) => (
             <div key={label} className="rounded-2xl p-3 text-center"
-              style={{ background: "rgba(255,107,43,0.05)", border: "1px solid rgba(255,107,43,0.1)" }}>
-              <p className="text-xl font-bold" style={{ color: "var(--ivory)" }}>{value}</p>
-              <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div className="flex items-center justify-center gap-1 mb-1">{icon}</div>
+              <p className="text-xl font-black" style={{ color: "var(--ivory)" }}>{value}</p>
+              <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.38)" }}>{label}</p>
             </div>
           ))}
         </div>
 
-        {/* Progress ring */}
-        {(() => {
-          const circ = 2 * Math.PI * 30;
-          return (
-            <div className="flex items-center gap-5 mb-6 p-4 rounded-2xl"
-              style={{ background: "rgba(255,107,43,0.04)", border: "1px solid rgba(255,107,43,0.1)" }}>
-              <div className="relative flex-shrink-0">
-                <svg width="72" height="72" viewBox="0 0 72 72">
-                  <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,107,43,0.1)" strokeWidth="6" />
-                  <circle cx="36" cy="36" r="30" fill="none"
-                    stroke="url(#prog-grad-c)" strokeWidth="6"
-                    strokeLinecap="round"
-                    strokeDasharray={String(circ)}
-                    strokeDashoffset={String(circ * (1 - pct / 100))}
-                    transform="rotate(-90 36 36)"
-                    style={{ transition: "stroke-dashoffset 1s ease" }}
-                  />
-                  <defs>
-                    <linearGradient id="prog-grad-c" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#FF6B2B" />
-                      <stop offset="100%" stopColor="#FF9A6C" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm font-bold" style={{ color: "var(--ivory)" }}>{pct}%</span>
-                </div>
+        {/* ── Program progress bar ───────────────────────────────────────────── */}
+        <div className="mb-4 p-4 rounded-2xl"
+          style={{ background: "rgba(255,107,43,0.04)", border: "1px solid rgba(255,107,43,0.1)" }}>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-bold" style={{ color: "var(--ivory)" }}>Avanzamento programma</p>
+            <span className="text-sm font-black accent-text">{pct}%</span>
+          </div>
+          <div className="h-3 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+            <div className="h-full rounded-full transition-all duration-700"
+              style={{ width: `${Math.max(pct, pct > 0 ? 4 : 0)}%`, background: "linear-gradient(90deg, var(--accent), var(--accent-light))" }} />
+          </div>
+          <p className="text-xs mt-1.5" style={{ color: "rgba(245,240,232,0.35)" }}>
+            {weeksCompleted === 0
+              ? `Settimana ${currentWeek > 0 ? currentWeek : 1} in corso — continua così!`
+              : `${weeksCompleted} sett. completate · Settimana ${currentWeek} in corso`}
+          </p>
+        </div>
+
+        {/* ── Achievements ───────────────────────────────────────────────────── */}
+        <div className="mb-4 rounded-2xl overflow-hidden"
+          style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <Trophy size={13} style={{ color: "#fbbf24" }} />
+            <p className="text-xs font-bold" style={{ color: "rgba(245,240,232,0.6)" }}>
+              Obiettivi — {achievements.filter(a => a.unlocked).length}/{achievements.length} sbloccati
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-0">
+            {achievements.map((a, i) => (
+              <div key={i}
+                className="flex flex-col items-center gap-1.5 p-3 text-center"
+                style={{
+                  borderRight: i % 3 !== 2 ? "1px solid rgba(255,255,255,0.05)" : undefined,
+                  borderBottom: i < 3 ? "1px solid rgba(255,255,255,0.05)" : undefined,
+                  opacity: a.unlocked ? 1 : 0.3,
+                  filter: a.unlocked ? "none" : "grayscale(1)",
+                }}>
+                <span style={{ fontSize: "1.4rem" }}>{a.icon}</span>
+                <span className="text-xs font-semibold leading-tight" style={{ color: a.unlocked ? "var(--ivory)" : "rgba(245,240,232,0.4)" }}>
+                  {a.label}
+                </span>
+                {a.unlocked && (
+                  <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", fontSize: "0.6rem" }}>
+                    ✓
+                  </span>
+                )}
               </div>
-              <div>
-                <p className="text-base font-bold mb-0.5" style={{ color: "var(--ivory)" }}>Avanzamento piano</p>
-                <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{weeksLogged} di {plan.total_weeks} settimane completate</p>
-                <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.3)" }}>{logs.length} registrazioni totali</p>
-              </div>
-            </div>
-          );
-        })()}
+            ))}
+          </div>
+        </div>
 
         {/* ── Tabs ───────────────────────────────────────────────────────────── */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
