@@ -135,8 +135,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onE
     ? calcSuggestion(parseSetData(lastWeekLog, sets))
     : null;
 
-  // Layout: client has 4 cols (set | reps | kg | RPE), trainer has 3
-  const cols = mode === "client" ? "3.5rem 1fr 1fr 2.8rem" : "4.5rem 1fr 1fr";
+  const trainerCols = "4.5rem 1fr 1fr";
 
   return (
     <div className="rounded-2xl overflow-hidden flex flex-col" style={{ border: cardBorder, background: "rgba(10,10,10,0.9)" }}>
@@ -183,109 +182,120 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onE
 
       {/* Progressive overload suggestion */}
       {suggestion && (
-        <div className="flex items-center gap-2 px-3 py-1.5 text-xs"
+        <div className="flex items-center gap-2 px-3 py-2 text-xs"
           style={{ background: "rgba(52,211,153,0.07)", borderBottom: rowBorder, color: "#34d399" }}>
-          <TrendingUp size={11} />
+          <TrendingUp size={11} style={{ flexShrink: 0 }} />
           <span>
-            Prova <strong>{suggestion.weight} kg</strong>
-            {suggestion.delta > 0 ? ` (+${suggestion.delta.toFixed(1)} kg)` : suggestion.delta < 0 ? ` (${suggestion.delta.toFixed(1)} kg)` : " (mantieni)"}
-            {suggestion.rpeAvg !== null ? ` · RPE scorsa: ${suggestion.rpeAvg.toFixed(1)}` : ""}
+            Suggerimento settimana: <strong>{suggestion.weight} kg</strong>
+            {suggestion.delta > 0 ? ` (+${suggestion.delta.toFixed(1)})` : suggestion.delta < 0 ? ` (${suggestion.delta.toFixed(1)})` : " (mantieni)"}
+            {suggestion.rpeAvg !== null ? ` — RPE scorso: ${suggestion.rpeAvg.toFixed(1)}` : ""}
           </span>
         </div>
       )}
 
-      {/* Column headers */}
-      <div style={{ display: "grid", gridTemplateColumns: cols, borderBottom: rowBorder, background: "rgba(255,255,255,0.02)" }}>
-        <div className="px-2 py-1.5 text-xs" style={{ color: "transparent", borderRight: rowBorder }}>·</div>
-        <div className="px-2 py-1.5 text-xs font-semibold text-center"
-          style={{ color: "rgba(245,240,232,0.35)", borderRight: rowBorder }}>
-          {mode === "client" ? "rips" : "ripetizioni"}
+      {/* ── CLIENT mode: per-set rows with labeled boxes ── */}
+      {mode === "client" && (
+        <div className="px-3 pt-2 pb-1 space-y-2">
+          {Array.from({ length: sets }, (_, i) => (
+            <div key={i}>
+              {/* Serie label + target */}
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-bold" style={{ color: "rgba(245,240,232,0.4)", minWidth: "3.5rem" }}>
+                  Serie {i + 1}
+                </span>
+                <span className="text-xs" style={{ color: "rgba(245,240,232,0.28)" }}>
+                  Target: <span style={{ color: "var(--accent-light)", fontWeight: 700 }}>{targetRep(i)}</span> rip.
+                </span>
+              </div>
+              {/* Input boxes */}
+              <div className="flex gap-2">
+                {/* Rips effettive */}
+                <div className="flex-1 rounded-xl overflow-hidden"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)" }}>
+                  <p className="text-center pt-1.5 text-xs" style={{ color: "rgba(245,240,232,0.4)", fontSize: "0.62rem" }}>
+                    RIPS FATTE
+                  </p>
+                  <input
+                    type="number" min="0" step="1"
+                    value={data[i]?.reps ?? ""}
+                    onChange={e => updateReps(i, e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") handleSave(); }}
+                    placeholder={String(targetRep(i))}
+                    className="w-full text-center py-1.5 pb-2 text-base font-black outline-none"
+                    style={{ background: "transparent", color: "var(--ivory)", border: "none" }}
+                  />
+                </div>
+                {/* Carico kg — most prominent */}
+                <div className="flex-1 rounded-xl overflow-hidden"
+                  style={{ background: "rgba(255,107,43,0.1)", border: "1px solid rgba(255,107,43,0.3)" }}>
+                  <p className="text-center pt-1.5 text-xs font-bold" style={{ color: "var(--accent-light)", fontSize: "0.62rem" }}>
+                    CARICO (KG)
+                  </p>
+                  <input
+                    type="number" min="0" step="0.5"
+                    value={data[i]?.weight ?? ""}
+                    onChange={e => updateWeight(i, e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") handleSave(); }}
+                    placeholder="0"
+                    className="w-full text-center py-1.5 pb-2 text-base font-black outline-none"
+                    style={{ background: "transparent", color: "var(--ivory)", border: "none" }}
+                  />
+                </div>
+                {/* RPE */}
+                <div className="rounded-xl overflow-hidden" style={{ width: "3.5rem", background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.18)" }}>
+                  <p className="text-center pt-1.5 text-xs" style={{ color: "#34d399", fontSize: "0.62rem" }}>
+                    RPE
+                  </p>
+                  <input
+                    type="number" min="1" max="10" step="1"
+                    value={data[i]?.rpe ?? ""}
+                    onChange={e => {
+                      const v = e.target.value;
+                      if (v === "" || (parseFloat(v) >= 1 && parseFloat(v) <= 10)) updateRpe(i, v);
+                    }}
+                    placeholder="—"
+                    className="w-full text-center py-1.5 pb-2 text-sm font-black outline-none"
+                    style={{ background: "transparent", color: "#34d399", border: "none" }}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="px-2 py-1.5 text-xs font-semibold text-center"
-          style={{ color: "rgba(245,240,232,0.35)", borderRight: mode === "client" ? rowBorder : undefined }}>
-          kg
-        </div>
-        {mode === "client" && (
-          <div className="px-1 py-1.5 text-xs font-semibold text-center"
-            style={{ color: "rgba(245,240,232,0.35)" }}>
-            RPE
-          </div>
-        )}
-      </div>
+      )}
 
-      {/* Set rows */}
-      {Array.from({ length: sets }, (_, i) => (
-        <div key={i} style={{
-          display: "grid", gridTemplateColumns: cols,
-          borderBottom: i < sets - 1 ? rowBorder : undefined,
-          background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.012)",
-        }}>
-          {/* Set label */}
-          <div className="flex flex-col items-center justify-center px-2 py-2 text-xs"
-            style={{ color: "rgba(245,240,232,0.35)", borderRight: rowBorder }}>
-            <span>{i + 1}</span>
-            {mode === "client" && (
-              <span className="text-xs mt-0.5 font-semibold" style={{ color: "var(--accent-light)", fontSize: "0.6rem" }}>
+      {/* ── TRAINER mode: classic 3-col grid ── */}
+      {mode === "trainer" && (
+        <>
+          {/* Column headers */}
+          <div style={{ display: "grid", gridTemplateColumns: trainerCols, borderBottom: rowBorder, background: "rgba(255,255,255,0.02)" }}>
+            <div className="px-3 py-1.5 text-xs" style={{ color: "transparent", borderRight: rowBorder }}>·</div>
+            <div className="px-3 py-1.5 text-xs font-semibold text-center" style={{ color: "rgba(245,240,232,0.35)", borderRight: rowBorder }}>ripetizioni</div>
+            <div className="px-3 py-1.5 text-xs font-semibold text-center" style={{ color: "rgba(245,240,232,0.35)" }}>carico (kg)</div>
+          </div>
+          {Array.from({ length: sets }, (_, i) => (
+            <div key={i} style={{
+              display: "grid", gridTemplateColumns: trainerCols,
+              borderBottom: i < sets - 1 ? rowBorder : undefined,
+              background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.012)",
+            }}>
+              <div className="flex items-center px-3 py-2.5 text-xs" style={{ color: "rgba(245,240,232,0.35)", borderRight: rowBorder }}>
+                serie {i + 1}
+              </div>
+              <div className="flex items-center justify-center px-2 py-2.5 text-xs font-semibold"
+                style={{ color: "var(--accent-light)", borderRight: rowBorder }}>
                 {targetRep(i)}
-              </span>
-            )}
-          </div>
+              </div>
+              <div className="flex items-center justify-center px-2 py-2.5 text-sm font-bold"
+                style={{ color: data[i]?.weight ? "var(--ivory)" : "rgba(245,240,232,0.18)" }}>
+                {data[i]?.weight ? `${data[i].weight} kg` : "—"}
+                {data[i]?.rpe ? <span className="ml-2 text-xs" style={{ color: "#34d399" }}>RPE {data[i].rpe}</span> : null}
+              </div>
+            </div>
+          ))}
+        </>
+      )}
 
-          {/* Reps column */}
-          {mode === "client" ? (
-            <div className="flex items-center px-1" style={{ borderRight: rowBorder }}>
-              <input
-                type="number" min="0" step="1"
-                value={data[i]?.reps ?? ""}
-                onChange={e => updateReps(i, e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") handleSave(); }}
-                placeholder={String(targetRep(i))}
-                className="flex-1 text-center py-2 text-sm font-bold outline-none rounded-lg"
-                style={{ background: "transparent", color: "var(--ivory)", border: "none", minWidth: 0 }}
-              />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center px-2 py-2.5 text-xs font-semibold"
-              style={{ color: "var(--accent-light)", borderRight: rowBorder }}>
-              {targetRep(i)}
-            </div>
-          )}
-
-          {/* Weight column */}
-          {mode === "client" ? (
-            <div className="flex items-center px-1" style={{ borderRight: rowBorder }}>
-              <input
-                type="number" min="0" step="0.5"
-                value={data[i]?.weight ?? ""}
-                onChange={e => updateWeight(i, e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") handleSave(); }}
-                placeholder="—"
-                className="flex-1 text-center py-2 text-sm font-bold outline-none rounded-lg"
-                style={{ background: "transparent", color: "var(--ivory)", border: "none", minWidth: 0 }}
-              />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center px-2 py-2.5 text-sm font-bold"
-              style={{ color: data[i]?.weight ? "var(--ivory)" : "rgba(245,240,232,0.18)" }}>
-              {data[i]?.weight ? `${data[i].weight} kg` : "—"}
-            </div>
-          )}
-
-          {/* RPE column (client only) */}
-          {mode === "client" && (
-            <div className="flex items-center justify-center px-1">
-              <input
-                type="number" min="1" max="10" step="1"
-                value={data[i]?.rpe ?? ""}
-                onChange={e => { const v = e.target.value; if (v === "" || (parseFloat(v) >= 1 && parseFloat(v) <= 10)) updateRpe(i, v); }}
-                placeholder="—"
-                className="w-full text-center py-2 text-xs font-bold outline-none rounded-lg"
-                style={{ background: "transparent", color: "#34d399", border: "none", minWidth: 0 }}
-              />
-            </div>
-          )}
-        </div>
-      ))}
 
       {/* Save / Clear (client) */}
       {mode === "client" && (
