@@ -86,11 +86,16 @@ interface CardProps {
   week: number;
   mode: "trainer" | "client";
   onUpsertLog: (d: Omit<ExerciseLog, "id" | "loggedAt">) => void;
+  onStartTimer?: (secs: number, label: string) => void;
   onEdit?: () => void;
   onDelete?: () => void;
 }
 
-function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onEdit, onDelete }: CardProps) {
+function fmtTimer(s: number) {
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
+
+function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onStartTimer, onEdit, onDelete }: CardProps) {
   const sets = Math.max(1, exercise.sets || 3);
   const [data, setData]   = useState<SetData[]>(() => parseSetData(log, sets));
   const orig               = useRef<SetData[]>(parseSetData(log, sets));
@@ -297,13 +302,13 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onE
       )}
 
 
-      {/* Save / Clear (client) */}
+      {/* Save / Clear / Rest timer (client) */}
       {mode === "client" && (
         <div className="flex gap-2 px-2.5 py-2" style={{ borderTop: rowBorder }}>
           <button onClick={handleClear}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all hover:opacity-80"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs transition-all hover:opacity-80"
             style={{ border: "1px solid rgba(239,68,68,0.2)", color: "rgba(239,68,68,0.55)" }}>
-            <X size={10} /> Cancella
+            <X size={10} />
           </button>
           <button onClick={handleSave} disabled={!dirty}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
@@ -312,8 +317,18 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onE
               border: `1px solid ${dirty ? "rgba(255,107,43,0.4)" : "rgba(255,255,255,0.06)"}`,
               color: dirty ? "var(--accent-light)" : "rgba(245,240,232,0.18)",
             }}>
-            <Save size={10} /> {dirty ? "Salva" : "Salvato ✓"}
+            <Save size={10} /> {dirty ? "Salva" : "✓"}
           </button>
+          {exercise.restSeconds && onStartTimer && (
+            <button
+              onClick={() => onStartTimer(Number(exercise.restSeconds!), exercise.name)}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all hover:opacity-80"
+              style={{ background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)", color: "#34d399" }}
+              title={`Avvia recupero ${fmtTimer(Number(exercise.restSeconds))}`}
+            >
+              ⏱ {fmtTimer(Number(exercise.restSeconds))}
+            </button>
+          )}
         </div>
       )}
 
@@ -408,6 +423,48 @@ export default function WorkoutLogbook({
 
   const [activeDay,  setActiveDay]  = useState(1);
   const [activeWeek, setActiveWeek] = useState(1);
+
+  // ── Rest timer ──────────────────────────────────────────────────────────
+  const [restTimer, setRestTimer] = useState<{ secs: number; total: number; label: string } | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function playBeep() {
+    try {
+      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const tone = (freq: number, start: number, dur: number) => {
+        const osc = ctx.createOscillator();
+        const g   = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.type = "sine"; osc.frequency.value = freq;
+        g.gain.setValueAtTime(0, ctx.currentTime + start);
+        g.gain.linearRampToValueAtTime(0.45, ctx.currentTime + start + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+        osc.start(ctx.currentTime + start);
+        osc.stop(ctx.currentTime + start + dur + 0.05);
+      };
+      tone(880, 0, 0.18);
+      tone(880, 0.25, 0.18);
+      tone(1100, 0.5, 0.35);
+    } catch {}
+  }
+
+  function startRestTimer(secs: number, label: string) {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setRestTimer({ secs, total: secs, label });
+  }
+
+  useEffect(() => {
+    if (!restTimer) return;
+    if (restTimer.secs <= 0) {
+      playBeep();
+      timerRef.current = setTimeout(() => setRestTimer(null), 3500);
+      return;
+    }
+    timerRef.current = setTimeout(() => {
+      setRestTimer(t => t ? { ...t, secs: t.secs - 1 } : null);
+    }, 1000);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [restTimer?.secs]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [suppEditing, setSuppEditing] = useState(false);
   const [suppDraft,   setSuppDraft]   = useState<SupplementItem[]>(supplements);
@@ -531,6 +588,7 @@ export default function WorkoutLogbook({
               week={activeWeek}
               mode={mode}
               onUpsertLog={onUpsertLog}
+              onStartTimer={mode === "client" ? startRestTimer : undefined}
               onEdit={() => {
                 if (!onUpdateExercise) return;
                 const name = prompt("Nome esercizio:", ex.name);
@@ -643,6 +701,65 @@ export default function WorkoutLogbook({
               Nessun integratore aggiunto. Clicca "Gestisci" per aggiungerne uno.
             </p>
           )}
+        </div>
+      )}
+
+      {/* ── Rest timer overlay ── */}
+      {restTimer && (
+        <div
+          className="fixed z-50"
+          style={{ bottom: "90px", left: "50%", transform: "translateX(-50%)", maxWidth: "320px", width: "calc(100% - 32px)" }}
+        >
+          <div
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+            style={{
+              background: restTimer.secs === 0
+                ? "linear-gradient(135deg,rgba(34,197,94,0.25),rgba(34,197,94,0.12))"
+                : "rgba(12,8,28,0.96)",
+              border: `1px solid ${restTimer.secs === 0 ? "rgba(34,197,94,0.5)" : "rgba(52,211,153,0.35)"}`,
+              backdropFilter: "blur(24px)",
+              boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
+            }}
+          >
+            {/* Circular ring */}
+            <div className="relative flex-shrink-0">
+              <svg width="54" height="54" viewBox="0 0 54 54">
+                <circle cx="27" cy="27" r="23" fill="none" stroke="rgba(52,211,153,0.12)" strokeWidth="3.5" />
+                <circle cx="27" cy="27" r="23" fill="none"
+                  stroke={restTimer.secs === 0 ? "#22c55e" : "#34d399"}
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  strokeDasharray={String(2 * Math.PI * 23)}
+                  strokeDashoffset={String(2 * Math.PI * 23 * (restTimer.secs / restTimer.total))}
+                  transform="rotate(-90 27 27)"
+                  style={{ transition: "stroke-dashoffset 0.95s linear" }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-sm font-black"
+                  style={{ color: restTimer.secs === 0 ? "#22c55e" : "#34d399" }}>
+                  {restTimer.secs === 0 ? "VAI!" : fmtTimer(restTimer.secs)}
+                </span>
+              </div>
+            </div>
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <p className="text-xs mb-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>
+                {restTimer.secs === 0 ? "Recupero terminato" : "Recupero in corso"}
+              </p>
+              <p className="text-sm font-bold truncate" style={{ color: "var(--ivory)" }}>
+                {restTimer.label}
+              </p>
+            </div>
+            {/* Skip */}
+            <button
+              onClick={() => { if (timerRef.current) clearTimeout(timerRef.current); setRestTimer(null); }}
+              className="p-1.5 rounded-xl flex-shrink-0 hover:opacity-80 transition-opacity"
+              style={{ background: "rgba(255,255,255,0.07)" }}
+            >
+              <X size={14} style={{ color: "rgba(245,240,232,0.5)" }} />
+            </button>
+          </div>
         </div>
       )}
     </div>

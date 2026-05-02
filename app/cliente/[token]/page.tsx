@@ -5,7 +5,187 @@ import { createClient } from "@/lib/supabase/client";
 import { dbExerciseLogs } from "@/lib/db";
 import WorkoutLogbook from "@/components/WorkoutLogbook";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
-import { Dumbbell, UtensilsCrossed, ShoppingBag, Loader2, AlertCircle, Copy, Check, Zap, Trophy, Flame } from "lucide-react";
+import { Dumbbell, UtensilsCrossed, ShoppingBag, Loader2, AlertCircle, Copy, Check, Zap, Trophy, Flame, ChevronDown, ChevronUp, Calendar } from "lucide-react";
+
+// ── Meal library (Italian, based on sports nutrition guidelines) ─────────────
+interface MealTpl { name: string; ingredients: string[]; pro: number; cho: number; fat: number; kcal: number; }
+
+const MEAL_LIB: Record<"colazione" | "pranzo" | "cena" | "spuntino", MealTpl[]> = {
+  colazione: [
+    { name: "Avena con frutta e noci",         ingredients: ["80g fiocchi d'avena","200ml latte parz. scremato","15g noci","100g mirtilli"],                 pro:16,cho:55,fat:11,kcal:383 },
+    { name: "Yogurt greco con granola",          ingredients: ["200g yogurt greco 0%","40g granola integrale","150g fragole","1 cucch. miele"],               pro:22,cho:48,fat:4, kcal:316 },
+    { name: "Uova strapazzate e pane integrale", ingredients: ["3 uova intere","2 fette pane integrale","10ml olio EVO","manciata spinaci"],                  pro:26,cho:28,fat:18,kcal:378 },
+    { name: "Smoothie proteico",                 ingredients: ["30g whey protein","200ml latte","1 banana","30g fiocchi d'avena"],                            pro:32,cho:58,fat:6, kcal:418 },
+    { name: "Ricotta e pane tostato",            ingredients: ["150g ricotta magra","3 fette pane integrale","1 cucch. miele","1 arancia"],                   pro:20,cho:58,fat:6, kcal:370 },
+    { name: "Pancake proteici alla banana",      ingredients: ["2 uova","50g avena macinata","1 banana","1 cucch. miele"],                                   pro:20,cho:52,fat:10,kcal:378 },
+    { name: "Skyr con cereali e frutta",         ingredients: ["200g skyr naturale","30g muesli senza zucchero","100g fragole","10g mandorle"],               pro:24,cho:38,fat:7, kcal:311 },
+  ],
+  pranzo: [
+    { name: "Pasta integrale al pollo",          ingredients: ["100g pasta integrale","150g petto di pollo","200g zucchine","10ml olio EVO","pomodorini"],    pro:48,cho:80,fat:12,kcal:624 },
+    { name: "Riso basmati con salmone",          ingredients: ["100g riso basmati","150g salmone al forno","150g asparagi","10ml olio EVO"],                  pro:42,cho:80,fat:20,kcal:668 },
+    { name: "Farro con tonno e peperoni",        ingredients: ["90g farro","150g tonno al naturale","200g peperoni arrostiti","10ml olio EVO"],               pro:40,cho:68,fat:12,kcal:540 },
+    { name: "Tacchino con patate dolci",         ingredients: ["160g petto di tacchino","200g patate dolci","200g broccoli","10ml olio EVO"],                 pro:44,cho:60,fat:12,kcal:528 },
+    { name: "Quinoa con manzo e spinaci",        ingredients: ["90g quinoa","140g manzo magro","200g spinaci","10ml olio EVO","pomodori"],                    pro:42,cho:60,fat:14,kcal:538 },
+    { name: "Piadina integrale con pollo",       ingredients: ["1 piadina integrale","120g pollo","60g avocado","rucola","pomodorini"],                       pro:36,cho:52,fat:18,kcal:514 },
+    { name: "Merluzzo con patate e insalata",    ingredients: ["160g merluzzo al forno","200g patate","insalata mista","10ml olio EVO"],                      pro:36,cho:50,fat:12,kcal:456 },
+  ],
+  cena: [
+    { name: "Salmone al forno con riso",         ingredients: ["150g salmone","80g riso integrale","200g fagiolini","10ml olio EVO"],                         pro:40,cho:60,fat:18,kcal:566 },
+    { name: "Pollo grigliato con patate",        ingredients: ["180g petto di pollo","200g patate novelle","insalata verde","10ml olio EVO"],                 pro:46,cho:38,fat:10,kcal:430 },
+    { name: "Branzino con verdure grigliate",    ingredients: ["180g branzino","200g zucchine grigliate","150g patate dolci","10ml olio EVO"],                pro:36,cho:38,fat:12,kcal:406 },
+    { name: "Frittata proteica e pane",          ingredients: ["4 uova + 2 albumi","200g verdure miste","2 fette pane integrale","10ml olio EVO"],            pro:36,cho:30,fat:18,kcal:426 },
+    { name: "Tacchino con lenticchie",           ingredients: ["180g tacchino","150g lenticchie cotte","200g verdure stagione","10ml olio EVO"],              pro:46,cho:40,fat:10,kcal:434 },
+    { name: "Tonno fresco con quinoa",           ingredients: ["160g tonno fresco","80g quinoa","pomodori e olive","10ml olio EVO"],                          pro:40,cho:45,fat:14,kcal:466 },
+    { name: "Pollo al curry con riso",           ingredients: ["180g pollo","90g riso basmati","spinaci","100ml latte di cocco light"],                       pro:46,cho:62,fat:12,kcal:538 },
+  ],
+  spuntino: [
+    { name: "Yogurt greco e noci",               ingredients: ["150g yogurt greco 0%","15g noci","1 cucch. miele"],                                          pro:16,cho:12,fat:10,kcal:202 },
+    { name: "Banana e burro di mandorle",        ingredients: ["1 banana media","20g burro di mandorle"],                                                    pro:5, cho:30,fat:10,kcal:230 },
+    { name: "Fiocchi di latte e frutti di bosco",ingredients: ["180g fiocchi di latte","100g frutti di bosco misti"],                                        pro:22,cho:12,fat:2, kcal:154 },
+    { name: "Shake proteico",                    ingredients: ["30g whey protein","200ml acqua o latte scremato"],                                            pro:28,cho:6, fat:2, kcal:154 },
+    { name: "Gallette riso con ricotta",         ingredients: ["3 gallette riso integrale","60g ricotta","1 mela piccola"],                                   pro:8, cho:28,fat:4, kcal:180 },
+    { name: "Mix frutta secca",                  ingredients: ["30g mix mandorle, noci, pistacchi","1 mandarino"],                                            pro:7, cho:16,fat:16,kcal:232 },
+    { name: "Uova sode e frutto",                ingredients: ["2 uova sode","1 arancia media"],                                                             pro:14,cho:14,fat:10,kcal:202 },
+  ],
+};
+
+const MEAL_SPLITS = { colazione: 0.175, pranzo: 0.375, cena: 0.325, spuntino: 0.125 } as const;
+const DAY_LABELS  = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
+const MEAL_ICONS  = { colazione: "☀️", pranzo: "🍽️", cena: "🌙", spuntino: "🍎" };
+
+function scaleMeal(tpl: MealTpl, targetKcal: number) {
+  const k = targetKcal / tpl.kcal;
+  return {
+    ...tpl,
+    scale: k,
+    pro:  Math.round(tpl.pro  * k),
+    cho:  Math.round(tpl.cho  * k),
+    fat:  Math.round(tpl.fat  * k),
+    kcal: Math.round(tpl.kcal * k),
+    ingredients: tpl.ingredients.map(ing => {
+      const m = ing.match(/^(\d+(?:\.\d+)?)(g|ml|kg)\s(.+)$/);
+      if (m) return `${Math.round(parseFloat(m[1]) * k)}${m[2]} ${m[3]}`;
+      return ing;
+    }),
+  };
+}
+
+function WeeklyDietPlan({ calories, protein, carbs, fat }: { calories: number; protein: number; carbs: number; fat: number }) {
+  const [selectedDay, setSelectedDay] = useState(0);
+  const [expanded,    setExpanded]    = useState<string | null>(null);
+
+  const slots = Object.entries(MEAL_SPLITS) as [keyof typeof MEAL_SPLITS, number][];
+
+  return (
+    <div className="mt-6">
+      {/* Day selector */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide mb-4">
+        {DAY_LABELS.map((d, i) => (
+          <button key={i} onClick={() => setSelectedDay(i)}
+            className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold transition-all"
+            style={{
+              background: selectedDay === i ? "rgba(229,50,50,0.18)" : "rgba(255,255,255,0.04)",
+              border: `1px solid ${selectedDay === i ? "rgba(229,50,50,0.4)" : "rgba(255,255,255,0.07)"}`,
+              color: selectedDay === i ? "var(--accent-light)" : "rgba(245,240,232,0.5)",
+            }}>
+            {d.slice(0, 3)}
+          </button>
+        ))}
+      </div>
+
+      {/* Macro target banner */}
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        {[
+          { label: "Kcal",  val: `${calories}`,  color: "var(--accent)" },
+          { label: "Prot.", val: `${protein}g`,   color: "#a78bfa" },
+          { label: "Carb.", val: `${carbs}g`,     color: "#38bdf8" },
+          { label: "Grassi",val: `${fat}g`,       color: "#fbbf24" },
+        ].map(({ label, val, color }) => (
+          <div key={label} className="rounded-xl p-2 text-center"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <p className="text-sm font-black" style={{ color }}>{val}</p>
+            <p className="text-xs" style={{ color: "rgba(245,240,232,0.38)" }}>{label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Meals for the selected day */}
+      <div className="space-y-3">
+        {slots.map(([slot, pct]) => {
+          const targetKcal = Math.round(calories * pct);
+          const meal       = scaleMeal(MEAL_LIB[slot][selectedDay % 7], targetKcal);
+          const key        = `${selectedDay}-${slot}`;
+          const isOpen     = expanded === key;
+          return (
+            <div key={slot} className="rounded-2xl overflow-hidden"
+              style={{ border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.03)" }}>
+              {/* Header */}
+              <button className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-white/[0.03]"
+                onClick={() => setExpanded(isOpen ? null : key)}>
+                <span className="text-lg">{MEAL_ICONS[slot]}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>
+                    {slot.charAt(0).toUpperCase() + slot.slice(1)} · {targetKcal} kcal
+                  </p>
+                  <p className="text-sm font-bold truncate" style={{ color: "var(--ivory)" }}>{meal.name}</p>
+                </div>
+                {/* Macro pills */}
+                <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0">
+                  {[
+                    { v: meal.pro,  c: "#a78bfa", l: "P" },
+                    { v: meal.cho,  c: "#38bdf8", l: "C" },
+                    { v: meal.fat,  c: "#fbbf24", l: "G" },
+                  ].map(({ v, c, l }) => (
+                    <span key={l} className="text-xs px-1.5 py-0.5 rounded-md font-bold"
+                      style={{ background: `${c}18`, color: c }}>
+                      {l} {v}g
+                    </span>
+                  ))}
+                </div>
+                {isOpen ? <ChevronUp size={14} style={{ color: "rgba(245,240,232,0.4)", flexShrink: 0 }} /> : <ChevronDown size={14} style={{ color: "rgba(245,240,232,0.4)", flexShrink: 0 }} />}
+              </button>
+
+              {/* Expanded: ingredients + macros mobile */}
+              {isOpen && (
+                <div className="px-4 pb-4 space-y-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div className="flex items-center gap-2 flex-wrap pt-3">
+                    {[
+                      { v: meal.pro,  c: "#a78bfa", l: "Proteine" },
+                      { v: meal.cho,  c: "#38bdf8", l: "Carboidrati" },
+                      { v: meal.fat,  c: "#fbbf24", l: "Grassi" },
+                      { v: meal.kcal, c: "var(--accent)", l: "Kcal" },
+                    ].map(({ v, c, l }) => (
+                      <div key={l} className="rounded-xl px-3 py-1.5 text-center"
+                        style={{ background: `${c}12`, border: `1px solid ${c}30` }}>
+                        <p className="text-sm font-black" style={{ color: c }}>{v}{l === "Kcal" ? "" : "g"}</p>
+                        <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{l}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.35)" }}>Ingredienti</p>
+                    <div className="space-y-1">
+                      {meal.ingredients.map((ing, i) => (
+                        <div key={i} className="flex items-center gap-2 text-sm" style={{ color: "rgba(245,240,232,0.7)" }}>
+                          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "var(--accent)" }} />
+                          {ing}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="text-xs mt-4 text-center" style={{ color: "rgba(245,240,232,0.25)" }}>
+        Piano generato in base ai tuoi macro target · le porzioni si adattano automaticamente
+      </p>
+    </div>
+  );
+}
 
 interface PlanData {
   id: string;
@@ -435,7 +615,39 @@ export default function ClientPortalPage() {
                 <p className="font-semibold text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Piano alimentare in preparazione</p>
                 <p className="text-xs max-w-xs mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>Il tuo piano alimentare personalizzato apparirà qui. Il trainer lo sta preparando su misura per i tuoi obiettivi.</p>
               </div>
-            ) : (
+            ) : null}
+
+            {/* ── 7-day meal plan ── */}
+            {diets.length > 0 && (() => {
+              const d = diets[0];
+              return (
+                <div className="mb-6 rounded-2xl overflow-hidden"
+                  style={{ border: "1px solid rgba(229,50,50,0.2)", background: "linear-gradient(135deg,rgba(229,50,50,0.06),rgba(13,11,30,0.6))" }}>
+                  <div className="flex items-center gap-3 px-5 py-4">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ background: "rgba(229,50,50,0.12)", border: "1px solid rgba(229,50,50,0.2)" }}>
+                      <Calendar size={18} style={{ color: "var(--accent)" }} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-black" style={{ color: "var(--ivory)" }}>Piano alimentare 7 giorni</p>
+                      <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
+                        Pasti calcolati sui tuoi macro · {d.calories} kcal al giorno
+                      </p>
+                    </div>
+                  </div>
+                  <div className="px-4 pb-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                    <WeeklyDietPlan
+                      calories={d.calories}
+                      protein={d.protein}
+                      carbs={d.carbs}
+                      fat={d.fat}
+                    />
+                  </div>
+                </div>
+              );
+            })()}
+
+            {diets.length > 0 && (
               <div className="space-y-6">
                 {diets.map((diet) => {
                   const meals: Array<{
