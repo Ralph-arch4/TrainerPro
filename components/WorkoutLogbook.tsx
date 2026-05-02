@@ -256,7 +256,15 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
                     value={data[i]?.rpe ?? ""}
                     onChange={e => {
                       const v = e.target.value;
-                      if (v === "" || (parseFloat(v) >= 1 && parseFloat(v) <= 10)) updateRpe(i, v);
+                      if (v === "" || (parseFloat(v) >= 1 && parseFloat(v) <= 10)) {
+                        updateRpe(i, v);
+                        // Auto-start rest timer on RPE selection
+                        if (v !== "" && onStartTimer) {
+                          const rpe = parseFloat(v);
+                          const secs = rpe <= 6 ? 90 : 120;
+                          onStartTimer(secs, exercise.name);
+                        }
+                      }
                     }}
                     placeholder="—"
                     className="w-full text-center py-1.5 pb-2 text-sm font-black outline-none"
@@ -319,14 +327,14 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
             }}>
             <Save size={10} /> {dirty ? "Salva" : "✓"}
           </button>
-          {exercise.restSeconds && onStartTimer && (
+          {onStartTimer && (
             <button
-              onClick={() => onStartTimer(Number(exercise.restSeconds!), exercise.name)}
+              onClick={() => onStartTimer(90, exercise.name)}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all hover:opacity-80"
-              style={{ background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.25)", color: "#34d399" }}
-              title={`Avvia recupero ${fmtTimer(Number(exercise.restSeconds))}`}
+              style={{ background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.2)", color: "#34d399" }}
+              title="Avvia recupero manuale"
             >
-              ⏱ {fmtTimer(Number(exercise.restSeconds))}
+              ⏱
             </button>
           )}
         </div>
