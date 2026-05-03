@@ -508,6 +508,9 @@ export interface FeedbackNote {
   title: string;
   category: "bug" | "improvement" | "idea";
   description: string;
+  status: "nuovo" | "in_review" | "fatto";
+  trainer_name: string | null;
+  trainer_email: string | null;
   created_at: string;
 }
 
@@ -522,15 +525,37 @@ export const dbFeedback = {
     if (error) throw error;
     return (data ?? []) as FeedbackNote[];
   },
-  async create(payload: { title: string; category: string; description: string }): Promise<FeedbackNote> {
+  async create(payload: { title: string; category: string; description: string; trainerName?: string; trainerEmail?: string }): Promise<FeedbackNote> {
     const userId = await uid();
     const { data, error } = await db()
       .from("platform_feedback")
-      .insert({ user_id: userId, title: payload.title, category: payload.category, description: payload.description })
+      .insert({
+        user_id:       userId,
+        title:         payload.title,
+        category:      payload.category,
+        description:   payload.description,
+        trainer_name:  payload.trainerName ?? null,
+        trainer_email: payload.trainerEmail ?? null,
+      })
       .select()
       .single();
     if (error) throw error;
     return data as FeedbackNote;
+  },
+  async listAll(): Promise<FeedbackNote[]> {
+    const { data, error } = await db()
+      .from("platform_feedback")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as FeedbackNote[];
+  },
+  async updateStatus(id: string, status: string) {
+    const { error } = await db()
+      .from("platform_feedback")
+      .update({ status })
+      .eq("id", id);
+    if (error) throw error;
   },
   async remove(id: string) {
     const { error } = await db().from("platform_feedback").delete().eq("id", id);

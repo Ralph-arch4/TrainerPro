@@ -218,7 +218,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
                 <div className="flex-1 rounded-xl overflow-hidden"
                   style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)" }}>
                   <p className="text-center pt-1.5 text-xs" style={{ color: "rgba(245,240,232,0.4)", fontSize: "0.62rem" }}>
-                    RIPS FATTE
+                    REPS
                   </p>
                   <input
                     type="number" min="0" step="1"

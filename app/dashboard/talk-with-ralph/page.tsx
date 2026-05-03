@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { MessageSquare, Plus, Trash2, Loader2, Bug, Lightbulb, Zap, X } from "lucide-react";
 import { dbFeedback, type FeedbackNote } from "@/lib/db";
 import { showToast } from "@/components/Toast";
+import { useAppStore } from "@/lib/store";
+import { createClient } from "@/lib/supabase/client";
 
 type Category = "bug" | "improvement" | "idea";
 
@@ -20,6 +22,7 @@ export default function TalkWithRalphPage() {
   const [saving,  setSaving]  = useState(false);
   const [form,    setForm]    = useState(emptyForm());
   const [open,    setOpen]    = useState(false);
+  const userName = useAppStore(s => s.user?.name ?? "");
 
   useEffect(() => {
     dbFeedback.list()
@@ -32,7 +35,12 @@ export default function TalkWithRalphPage() {
     if (!form.title.trim() || !form.description.trim()) return;
     setSaving(true);
     try {
-      const created = await dbFeedback.create(form);
+      const { data: { user } } = await createClient().auth.getUser();
+      const created = await dbFeedback.create({
+        ...form,
+        trainerName:  userName || undefined,
+        trainerEmail: user?.email || undefined,
+      });
       setNotes(prev => [created, ...prev]);
       setForm(emptyForm());
       setOpen(false);
