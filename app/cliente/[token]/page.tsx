@@ -216,7 +216,7 @@ interface DietData {
   active: boolean;
 }
 
-type Tab = "allenamento" | "dieta" | "integratori";
+type Tab = "allenamento" | "dieta" | "integratori" | "record";
 
 function SupplementClientCard({ item }: { item: SupplementItem }) {
   const [copied, setCopied] = useState(false);
@@ -545,8 +545,9 @@ export default function ClientPortalPage() {
         {/* ── Tabs ───────────────────────────────────────────────────────────── */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
           {([
-            { key: "allenamento"  as Tab, icon: Dumbbell,        label: "Scheda allenamento" },
-            { key: "dieta"        as Tab, icon: UtensilsCrossed,  label: `Piano dieta${diets.length > 0 ? ` (${diets.length})` : ""}` },
+            { key: "allenamento"  as Tab, icon: Dumbbell,        label: "Scheda" },
+            { key: "record"       as Tab, icon: Trophy,           label: "Record" },
+            { key: "dieta"        as Tab, icon: UtensilsCrossed,  label: `Dieta${diets.length > 0 ? ` (${diets.length})` : ""}` },
             { key: "integratori"  as Tab, icon: ShoppingBag,      label: `Integratori${(plan.supplements?.length ?? 0) > 0 ? ` (${plan.supplements!.length})` : ""}` },
           ]).map(({ key, icon: Icon, label }) => (
             <button key={key} onClick={() => setTab(key)}
@@ -561,6 +562,153 @@ export default function ClientPortalPage() {
             </button>
           ))}
         </div>
+
+        {/* ── RECORD tab ──────────────────────────────────────────────────────── */}
+        {tab === "record" && (() => {
+          // ── Personal Records ──────────────────────────────────────────────
+          const prMap = new Map<string, { weight: number; week: number; date: string; isThisWeek: boolean }>();
+          const currentWeekNum = logs.length > 0 ? Math.max(...logs.map(l => l.weekNumber)) : 0;
+          plan.exercises.forEach(ex => {
+            let best = 0;
+            let bestLog: typeof logs[0] | null = null;
+            logs.filter(l => l.exerciseId === ex.id).forEach(l => {
+              const w = l.weight ?? 0;
+              if (w > best) { best = w; bestLog = l; }
+              try {
+                const sets = JSON.parse(l.reps ?? "");
+                if (Array.isArray(sets) && sets[0] && "w" in sets[0]) {
+                  const maxW = Math.max(...sets.map((s: { w: string }) => parseFloat(s.w) || 0));
+                  if (maxW > best) { best = maxW; bestLog = l; }
+                }
+              } catch {}
+            });
+            if (bestLog && best > 0) {
+              const prev = prMap.get(ex.name);
+              if (!prev || best > prev.weight) {
+                prMap.set(ex.name, {
+                  weight: best,
+                  week: (bestLog as typeof logs[0]).weekNumber,
+                  date: (bestLog as typeof logs[0]).loggedAt,
+                  isThisWeek: (bestLog as typeof logs[0]).weekNumber === currentWeekNum,
+                });
+              }
+            }
+          });
+          const prs = Array.from(prMap.entries())
+            .sort((a, b) => b[1].weight - a[1].weight);
+
+          // ── Training heatmap ───────────────────────────────────────────────
+          const today = new Date();
+          const heatDays = Array.from({ length: 56 }, (_, i) => {
+            const d = new Date(today);
+            d.setDate(today.getDate() - (55 - i));
+            return d.toISOString().slice(0, 10);
+          });
+          const logsByDay = new Map<string, number>();
+          logs.forEach(l => {
+            const day = new Date(l.loggedAt).toISOString().slice(0, 10);
+            logsByDay.set(day, (logsByDay.get(day) ?? 0) + 1);
+          });
+          const totalTrainingDays = logsByDay.size;
+          const weekLabels = ["L", "M", "M", "G", "V", "S", "D"];
+          const firstDow = (new Date(heatDays[0]).getDay() + 6) % 7; // Monday=0
+
+          return (
+            <div className="space-y-5">
+              {/* Heatmap */}
+              <div className="rounded-2xl p-4" style={{ border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.02)" }}>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-bold" style={{ color: "var(--ivory)" }}>Attività — ultimi 8 settimane</p>
+                  <span className="text-xs font-bold" style={{ color: "var(--accent-light)" }}>{totalTrainingDays} giorni allenati</span>
+                </div>
+                {/* Day labels */}
+                <div className="flex gap-1 mb-1 pl-0">
+                  {weekLabels.map((l, i) => (
+                    <div key={i} className="text-center flex-1 text-xs" style={{ color: "rgba(245,240,232,0.25)", fontSize: "0.6rem" }}>{l}</div>
+                  ))}
+                </div>
+                {/* Grid: 7 cols × 8 rows */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "3px" }}>
+                  {Array.from({ length: firstDow }, (_, i) => (
+                    <div key={`e${i}`} style={{ aspectRatio: "1", borderRadius: "3px" }} />
+                  ))}
+                  {heatDays.map(day => {
+                    const count = logsByDay.get(day) ?? 0;
+                    const isToday = day === today.toISOString().slice(0, 10);
+                    return (
+                      <div key={day} title={`${day}: ${count} log`}
+                        style={{
+                          aspectRatio: "1",
+                          borderRadius: "3px",
+                          background: count === 0
+                            ? "rgba(255,255,255,0.05)"
+                            : count <= 2
+                              ? "rgba(229,50,50,0.35)"
+                              : "rgba(229,50,50,0.75)",
+                          border: isToday ? "1px solid rgba(229,50,50,0.8)" : "none",
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="flex items-center gap-2 mt-2 justify-end">
+                  <span className="text-xs" style={{ color: "rgba(245,240,232,0.25)" }}>meno</span>
+                  {["rgba(255,255,255,0.05)", "rgba(229,50,50,0.25)", "rgba(229,50,50,0.5)", "rgba(229,50,50,0.8)"].map((bg, i) => (
+                    <div key={i} style={{ width: 12, height: 12, borderRadius: 3, background: bg }} />
+                  ))}
+                  <span className="text-xs" style={{ color: "rgba(245,240,232,0.25)" }}>più</span>
+                </div>
+              </div>
+
+              {/* Personal Records */}
+              <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
+                <div className="px-4 py-3 flex items-center justify-between" style={{ background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  <p className="text-sm font-bold" style={{ color: "var(--ivory)" }}>Personal Record</p>
+                  <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{prs.length} esercizi tracciati</span>
+                </div>
+                {prs.length === 0 ? (
+                  <div className="text-center py-12" style={{ color: "rgba(245,240,232,0.35)" }}>
+                    <p className="text-sm">Ancora nessun record.</p>
+                    <p className="text-xs mt-1">Inserisci i pesi durante l&apos;allenamento e i tuoi PR appariranno qui.</p>
+                  </div>
+                ) : (
+                  <div>
+                    {prs.map(([name, pr], idx) => (
+                      <div key={name}
+                        className="flex items-center gap-3 px-4 py-3"
+                        style={{ borderBottom: idx < prs.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                        <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-black"
+                          style={{
+                            background: idx === 0 ? "rgba(255,210,63,0.18)" : idx === 1 ? "rgba(200,200,200,0.12)" : idx === 2 ? "rgba(205,127,50,0.12)" : "rgba(255,255,255,0.05)",
+                            color: idx === 0 ? "#fbbf24" : idx === 1 ? "#d1d5db" : idx === 2 ? "#cd7f32" : "rgba(245,240,232,0.35)",
+                          }}>
+                          {idx + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold truncate" style={{ color: "var(--ivory)" }}>{name}</p>
+                          <p className="text-xs" style={{ color: "rgba(245,240,232,0.35)" }}>
+                            Sett. {pr.week} · {new Date(pr.date).toLocaleDateString("it-IT", { day: "2-digit", month: "short" })}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {pr.isThisWeek && (
+                            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                              style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                              Nuovo!
+                            </span>
+                          )}
+                          <span className="text-base font-black" style={{ color: "var(--accent)" }}>
+                            {pr.weight} kg
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── ALLENAMENTO tab ─────────────────────────────────────────────────── */}
         {tab === "allenamento" && (

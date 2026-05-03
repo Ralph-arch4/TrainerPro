@@ -6,18 +6,19 @@ import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/lib/store";
 import {
   Dumbbell, LayoutDashboard, Users, Activity, UtensilsCrossed,
-  TrendingUp, Calculator, FileDown, LogOut, Menu, X, ClipboardList,
+  TrendingUp, Calculator, FileDown, LogOut, Menu, X, ClipboardList, MessageSquare,
 } from "lucide-react";
 
 const navItems = [
-  { href: "/dashboard",             icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/dashboard/clienti",     icon: Users,           label: "Clienti" },
-  { href: "/dashboard/intake",      icon: ClipboardList,   label: "Form Intake" },
-  { href: "/dashboard/fasi",        icon: Activity,        label: "Fasi & Piani" },
-  { href: "/dashboard/diete",       icon: UtensilsCrossed, label: "Diete" },
-  { href: "/dashboard/misurazioni", icon: TrendingUp,      label: "Misurazioni" },
-  { href: "/dashboard/preventivi",  icon: Calculator,      label: "Preventivi" },
-  { href: "/dashboard/export",      icon: FileDown,        label: "Esporta PDF" },
+  { href: "/dashboard",                    icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/dashboard/clienti",            icon: Users,           label: "Clienti" },
+  { href: "/dashboard/intake",             icon: ClipboardList,   label: "Form Intake" },
+  { href: "/dashboard/fasi",               icon: Activity,        label: "Fasi & Piani" },
+  { href: "/dashboard/diete",              icon: UtensilsCrossed, label: "Diete" },
+  { href: "/dashboard/misurazioni",        icon: TrendingUp,      label: "Misurazioni" },
+  { href: "/dashboard/preventivi",         icon: Calculator,      label: "Preventivi" },
+  { href: "/dashboard/export",             icon: FileDown,        label: "Esporta PDF" },
+  { href: "/dashboard/talk-with-ralph",    icon: MessageSquare,   label: "Talk with Ralph" },
 ];
 
 export default function AppNav() {

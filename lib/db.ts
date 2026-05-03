@@ -500,3 +500,40 @@ export const dbNotes = {
     if (error) throw error;
   },
 };
+
+// ─── Platform Feedback (Talk with Ralph) ──────────────────────────────────────
+export interface FeedbackNote {
+  id: string;
+  user_id: string;
+  title: string;
+  category: "bug" | "improvement" | "idea";
+  description: string;
+  created_at: string;
+}
+
+export const dbFeedback = {
+  async list(): Promise<FeedbackNote[]> {
+    const userId = await uid();
+    const { data, error } = await db()
+      .from("platform_feedback")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as FeedbackNote[];
+  },
+  async create(payload: { title: string; category: string; description: string }): Promise<FeedbackNote> {
+    const userId = await uid();
+    const { data, error } = await db()
+      .from("platform_feedback")
+      .insert({ user_id: userId, title: payload.title, category: payload.category, description: payload.description })
+      .select()
+      .single();
+    if (error) throw error;
+    return data as FeedbackNote;
+  },
+  async remove(id: string) {
+    const { error } = await db().from("platform_feedback").delete().eq("id", id);
+    if (error) throw error;
+  },
+};

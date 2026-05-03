@@ -22,14 +22,34 @@ export default function DashboardPage() {
 
   const firstName  = user?.name?.split(" ")[0] ?? "Trainer";
 
-  const { activeClients, totalWorkoutPlans, totalPhases, totalMeasurements, monthlyRevenue } = useMemo(() => {
-    const active = clients.filter((c) => c.status === "attivo");
+  const { activeClients, totalWorkoutPlans, totalPhases, totalMeasurements, monthlyRevenue, logsThisMonth, inactiveCount, avgRevenue } = useMemo(() => {
+    const active  = clients.filter((c) => c.status === "attivo");
+    const revenue = active.reduce((sum, c) => sum + (c.monthlyFee ?? 0), 0);
+    const cutoff  = Date.now() - 14 * 24 * 60 * 60 * 1000;
+    const now     = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+    let logsMonth = 0;
+    let inactiveClients = 0;
+    clients.forEach(c => {
+      const recentLogs = c.workoutPlans.flatMap(p => p.logs).filter(l => new Date(l.loggedAt).getTime() > cutoff);
+      if (c.status === "attivo" && recentLogs.length === 0) inactiveClients++;
+      c.workoutPlans.forEach(p => {
+        p.logs.forEach(l => {
+          if (new Date(l.loggedAt).getTime() >= monthStart) logsMonth++;
+        });
+      });
+    });
+
     return {
       activeClients:     active.length,
       totalWorkoutPlans: clients.reduce((acc, c) => acc + c.workoutPlans.length, 0),
       totalPhases:       clients.reduce((acc, c) => acc + c.phases.length, 0),
       totalMeasurements: clients.reduce((acc, c) => acc + c.measurements.length, 0),
-      monthlyRevenue:    active.reduce((sum, c) => sum + (c.monthlyFee ?? 0), 0),
+      monthlyRevenue:    revenue,
+      logsThisMonth:     logsMonth,
+      inactiveCount:     inactiveClients,
+      avgRevenue:        active.length > 0 ? Math.round(revenue / active.length) : 0,
     };
   }, [clients]);
 
@@ -61,10 +81,10 @@ export default function DashboardPage() {
   const revenueLabel = monthlyRevenue > 0 ? `€${monthlyRevenue.toLocaleString("it-IT")}/mese` : "—";
 
   const stats = [
-    { label: "Clienti totali",    value: clients.length,    icon: Users,      color: "#FF6B2B" },
-    { label: "Clienti attivi",    value: activeClients,      icon: Activity,   color: "#FF9A6C" },
-    { label: "Schede create",     value: totalWorkoutPlans,  icon: Dumbbell,   color: "#CC5522" },
-    { label: "Fatturato mensile", value: revenueLabel,       icon: Euro,       color: "#fbbf24" },
+    { label: "Clienti attivi",      value: `${activeClients} / ${clients.length}`,   icon: Users,       color: "#FF6B2B" },
+    { label: "Fatturato mensile",   value: revenueLabel,                              icon: Euro,        color: "#fbbf24" },
+    { label: "Log questo mese",     value: String(logsThisMonth),                     icon: TrendingUp,  color: "#34d399" },
+    { label: "Senza attività (14g)",value: inactiveCount > 0 ? String(inactiveCount) : "—", icon: Activity, color: inactiveCount > 0 ? "#f87171" : "#6b7280" },
   ];
 
   if (!dataLoaded) {
@@ -124,6 +144,34 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* ── Secondary metrics row ─────────────────────────────────────────── */}
+      {activeClients > 0 && (
+        <div className="flex gap-3 mb-6 flex-wrap">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <Euro size={13} style={{ color: "#fbbf24" }} />
+            <span style={{ color: "rgba(245,240,232,0.5)" }}>Media/cliente:</span>
+            <span className="font-bold" style={{ color: "var(--ivory)" }}>
+              {avgRevenue > 0 ? `€${avgRevenue}/mese` : "—"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <Dumbbell size={13} style={{ color: "var(--accent)" }} />
+            <span style={{ color: "rgba(245,240,232,0.5)" }}>Schede totali:</span>
+            <span className="font-bold" style={{ color: "var(--ivory)" }}>{totalWorkoutPlans}</span>
+          </div>
+          {inactiveCount > 0 && (
+            <Link href="/dashboard/clienti"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all hover:opacity-80"
+              style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171" }}>
+              <Activity size={13} />
+              {inactiveCount} {inactiveCount === 1 ? "cliente" : "clienti"} senza attività da 14 giorni
+            </Link>
+          )}
+        </div>
+      )}
 
       {/* ── Main content: onboarding OR active view ──────────────────────── */}
       <div className="grid lg:grid-cols-2 gap-6">
