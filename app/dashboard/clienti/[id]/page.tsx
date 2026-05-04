@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import type { DietPlan, BodyMeasurement } from "@/lib/store";
@@ -12,9 +12,75 @@ import {
   Dumbbell, Plus, X, Loader2, Pencil, Trash2, CheckCircle2, Circle,
   Mail, Phone, Calendar, Target, BarChart2, ExternalLink, Copy, Check, Timer,
   ChevronDown, ChevronUp, Flame, Beef, Wheat, Droplets, TrendingUp,
+  Camera, Lock, Upload, Eye, EyeOff,
 } from "lucide-react";
+import { dbProgressPhotos, type ProgressPhoto } from "@/lib/db";
+import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 
-type Tab = "overview" | "fasi" | "schede" | "dieta" | "misurazioni" | "note";
+type Tab = "overview" | "fasi" | "schede" | "dieta" | "misurazioni" | "note" | "foto";
+
+const PHOTO_PASSWORD = "admin 1";
+
+async function resizeImage(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const MAX = 1200;
+      const r = Math.min(MAX / img.width, MAX / img.height, 1);
+      const canvas = document.createElement("canvas");
+      canvas.width  = Math.round(img.width  * r);
+      canvas.height = Math.round(img.height * r);
+      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error("blob")), "image/jpeg", 0.85);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+function PhotoCard({ photo, onDelete }: { photo: ProgressPhoto; onDelete: () => void }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [showDelete, setShowDelete] = useState(false);
+  useEffect(() => {
+    dbProgressPhotos.getSignedUrl(photo.storage_path).then(setUrl);
+  }, [photo.storage_path]);
+  return (
+    <div className="relative rounded-2xl overflow-hidden group"
+      style={{ aspectRatio: "3/4", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+      {url ? (
+        <img src={url} alt={photo.taken_at} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <Loader2 size={20} className="animate-spin" style={{ color: "rgba(255,107,43,0.4)" }} />
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+        <p className="text-xs font-bold text-white">{new Date(photo.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" })}</p>
+        {photo.notes && <p className="text-xs text-white/70 mt-0.5 truncate">{photo.notes}</p>}
+        <button onClick={() => setShowDelete(true)}
+          className="mt-2 flex items-center gap-1 text-xs px-2 py-1 rounded-lg w-fit"
+          style={{ background: "rgba(239,68,68,0.2)", color: "#f87171" }}>
+          <Trash2 size={10} /> Elimina
+        </button>
+      </div>
+      {showDelete && (
+        <div className="absolute inset-0 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.85)" }}>
+          <div className="text-center">
+            <p className="text-sm font-bold text-white mb-1">Eliminare la foto?</p>
+            <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.5)" }}>Azione irreversibile</p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowDelete(false)} className="flex-1 py-1.5 rounded-lg text-xs" style={{ border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.6)" }}>Annulla</button>
+              <button onClick={onDelete} className="flex-1 py-1.5 rounded-lg text-xs font-bold" style={{ background: "rgba(239,68,68,0.3)", color: "#f87171" }}>Elimina</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const goalLabel: Record<string, string> = { dimagrimento: "Dimagrimento", massa: "Massa", tonificazione: "Tonificazione", performance: "Performance" };
 const levelLabel: Record<string, string> = { principiante: "Principiante", intermedio: "Intermedio", avanzato: "Avanzato" };
@@ -114,6 +180,56 @@ export default function ClientDetailPage() {
 
   // Note
   const [noteText, setNoteText] = useState("");
+
+  // Progress photos
+  const [photoUnlocked, setPhotoUnlocked] = useState(false);
+  const [photoPassword, setPhotoPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [pwError, setPwError] = useState(false);
+  const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
+  const [photosLoaded, setPhotosLoaded] = useState(false);
+  const [uploadDate, setUploadDate] = useState(new Date().toISOString().slice(0, 10));
+  const [uploadNotes, setUploadNotes] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  async function unlockPhotos() {
+    if (photoPassword === PHOTO_PASSWORD) {
+      setPhotoUnlocked(true);
+      setPwError(false);
+      if (!photosLoaded) {
+        const list = await dbProgressPhotos.list(client!.id);
+        setPhotos(list);
+        setPhotosLoaded(true);
+      }
+    } else {
+      setPwError(true);
+      setPhotoPassword("");
+    }
+  }
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    e.target.value = "";
+    setUploading(true);
+    try {
+      const { data: { user } } = await createSupabaseClient().auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const resized = await resizeImage(file);
+      const path = await dbProgressPhotos.upload(client!.id, resized, uploadDate);
+      const record = await dbProgressPhotos.create({ clientId: client!.id, storagePath: path, takenAt: uploadDate, notes: uploadNotes || undefined });
+      setPhotos(prev => [record, ...prev]);
+      setUploadNotes("");
+      showToast("Foto caricata");
+    } catch { showToast("Errore nel caricamento", "error"); }
+    finally { setUploading(false); }
+  }
+
+  async function handlePhotoDelete(photo: ProgressPhoto) {
+    setPhotos(prev => prev.filter(p => p.id !== photo.id));
+    try { await dbProgressPhotos.remove(photo.id, photo.storage_path); }
+    catch { showToast("Errore nell'eliminazione", "error"); }
+  }
 
   // Portal link copy
   const [copiedPlanId, setCopiedPlanId] = useState<string | null>(null);
@@ -308,6 +424,7 @@ export default function ClientDetailPage() {
     { key: "dieta", label: "Dieta", icon: UtensilsCrossed, count: client.dietPlans.length },
     { key: "misurazioni", label: "Misurazioni", icon: TrendingUp, count: client.measurements.length },
     { key: "note", label: "Note", icon: StickyNote, count: client.notes.length },
+    { key: "foto", label: "Foto", icon: Camera, count: photosLoaded ? photos.length : undefined },
   ];
 
   const inputClass = "w-full px-3 py-2.5 rounded-xl text-sm outline-none";
@@ -805,6 +922,104 @@ export default function ClientDetailPage() {
                   <p className="text-xs mt-2" style={{ color: "rgba(245,240,232,0.3)" }}>{formatDate(note.createdAt)}</p>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── FOTO ── */}
+      {tab === "foto" && (
+        <div>
+          {!photoUnlocked ? (
+            /* Password gate */
+            <div className="max-w-sm mx-auto mt-8">
+              <div className="text-center mb-6">
+                <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+                  style={{ background: "rgba(255,107,43,0.1)", border: "1px solid rgba(255,107,43,0.2)" }}>
+                  <Lock size={24} style={{ color: "var(--accent)" }} />
+                </div>
+                <h2 className="text-lg font-bold mb-1" style={{ color: "var(--ivory)" }}>Sezione protetta</h2>
+                <p className="text-sm" style={{ color: "rgba(245,240,232,0.45)" }}>
+                  Le foto di progresso richiedono una password aggiuntiva per la privacy del cliente.
+                </p>
+              </div>
+              <div className="card-luxury rounded-2xl p-5 space-y-3">
+                <div className="relative">
+                  <input
+                    type={showPw ? "text" : "password"}
+                    value={photoPassword}
+                    onChange={e => { setPhotoPassword(e.target.value); setPwError(false); }}
+                    onKeyDown={e => e.key === "Enter" && unlockPhotos()}
+                    placeholder="Password"
+                    className="w-full px-4 py-3 rounded-xl text-sm outline-none pr-12"
+                    style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${pwError ? "rgba(239,68,68,0.5)" : "rgba(255,107,43,0.2)"}`, color: "var(--ivory)" }}
+                    autoFocus
+                  />
+                  <button onClick={() => setShowPw(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    style={{ color: "rgba(245,240,232,0.4)" }}>
+                    {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {pwError && <p className="text-xs" style={{ color: "#f87171" }}>Password errata</p>}
+                <button onClick={unlockPhotos}
+                  className="w-full accent-btn py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+                  <Lock size={14} /> Sblocca sezione
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Photo gallery + upload */
+            <div>
+              {/* Upload form */}
+              <div className="card-luxury rounded-2xl p-5 mb-5">
+                <h3 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--ivory)" }}>
+                  <Upload size={15} style={{ color: "var(--accent)" }} /> Aggiungi foto
+                </h3>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div>
+                    <label className="block text-xs mb-1.5" style={{ color: "rgba(245,240,232,0.5)" }}>Data foto *</label>
+                    <input type="date" value={uploadDate} onChange={e => setUploadDate(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl text-sm outline-none"
+                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1.5" style={{ color: "rgba(245,240,232,0.5)" }}>Note (opzionale)</label>
+                    <input type="text" value={uploadNotes} onChange={e => setUploadNotes(e.target.value)}
+                      placeholder="es. Settimana 4 bulk"
+                      className="w-full px-3 py-2 rounded-xl text-sm outline-none"
+                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />
+                  </div>
+                </div>
+                <label className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all ${uploading ? "opacity-60 pointer-events-none" : "hover:opacity-90"} accent-btn`}>
+                  {uploading ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
+                  {uploading ? "Caricamento..." : "Seleziona foto"}
+                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
+                </label>
+                <p className="text-xs mt-2 text-center" style={{ color: "rgba(245,240,232,0.25)" }}>
+                  Ridimensionata automaticamente · Mai visibile al cliente · URL firmato 1h
+                </p>
+              </div>
+
+              {/* Gallery */}
+              {photos.length === 0 ? (
+                <div className="text-center py-16 card-luxury rounded-2xl">
+                  <Camera size={40} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.2)" }} />
+                  <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>Nessuna foto ancora</p>
+                  <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.3)" }}>Le foto di progresso appariranno qui</p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-xs mb-3" style={{ color: "rgba(245,240,232,0.4)" }}>
+                    {photos.length} {photos.length === 1 ? "foto" : "foto"} · hover per eliminare
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {photos.map(photo => (
+                      <PhotoCard key={photo.id} photo={photo} onDelete={() => handlePhotoDelete(photo)} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

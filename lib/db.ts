@@ -562,3 +562,68 @@ export const dbFeedback = {
     if (error) throw error;
   },
 };
+
+// ─── Progress Photos ──────────────────────────────────────────────────────────
+export interface ProgressPhoto {
+  id: string;
+  client_id: string;
+  user_id: string;
+  storage_path: string;
+  taken_at: string;
+  notes: string | null;
+  created_at: string;
+}
+
+const PHOTO_BUCKET = "progress-photos";
+
+export const dbProgressPhotos = {
+  async list(clientId: string): Promise<ProgressPhoto[]> {
+    const { data, error } = await db()
+      .from("progress_photos")
+      .select("*")
+      .eq("client_id", clientId)
+      .order("taken_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as ProgressPhoto[];
+  },
+
+  async upload(clientId: string, blob: Blob, takenAt: string): Promise<string> {
+    const userId = await uid();
+    const path = `${userId}/${clientId}/${takenAt}-${crypto.randomUUID().slice(0, 8)}.jpg`;
+    const { error } = await db().storage
+      .from(PHOTO_BUCKET)
+      .upload(path, blob, { contentType: "image/jpeg", upsert: false });
+    if (error) throw error;
+    return path;
+  },
+
+  async create(payload: { clientId: string; storagePath: string; takenAt: string; notes?: string }): Promise<ProgressPhoto> {
+    const userId = await uid();
+    const { data, error } = await db()
+      .from("progress_photos")
+      .insert({
+        client_id:    payload.clientId,
+        user_id:      userId,
+        storage_path: payload.storagePath,
+        taken_at:     payload.takenAt,
+        notes:        payload.notes ?? null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return data as ProgressPhoto;
+  },
+
+  async remove(id: string, storagePath: string) {
+    await db().storage.from(PHOTO_BUCKET).remove([storagePath]);
+    const { error } = await db().from("progress_photos").delete().eq("id", id);
+    if (error) throw error;
+  },
+
+  async getSignedUrl(storagePath: string): Promise<string | null> {
+    const { data } = await db().storage
+      .from(PHOTO_BUCKET)
+      .createSignedUrl(storagePath, 3600);
+    return data?.signedUrl ?? null;
+  },
+};
