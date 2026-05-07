@@ -426,7 +426,11 @@ export default function WorkoutLogbook({
   onAddExercise, onUpdateExercise, onRemoveExercise,
   onUpdateSupplements, onUpsertLog,
 }: Props) {
-  const weeks = Array.from({ length: totalWeeks }, (_, i) => i + 1);
+  const isUnlimited = totalWeeks === 0;
+  const maxLoggedWeek = logs.length > 0 ? Math.max(...logs.map(l => l.weekNumber)) : 0;
+  // For unlimited plans: allow navigating up to one week beyond last logged
+  const effectiveMax = isUnlimited ? Math.max(maxLoggedWeek + 1, 1) : totalWeeks;
+  const weeks = Array.from({ length: isUnlimited ? maxLoggedWeek : totalWeeks }, (_, i) => i + 1);
   const days  = Array.from({ length: daysPerWeek }, (_, i) => i + 1);
 
   const [activeDay,  setActiveDay]  = useState(1);
@@ -482,8 +486,8 @@ export default function WorkoutLogbook({
 
   useEffect(() => {
     if (mode === "client" && logs.length > 0) {
-      const max = Math.min(Math.max(...logs.map(l => l.weekNumber)), totalWeeks);
-      setActiveWeek(max);
+      const max = Math.max(...logs.map(l => l.weekNumber));
+      setActiveWeek(isUnlimited ? max : Math.min(max, totalWeeks));
     }
   }, [mode, totalWeeks]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -509,8 +513,13 @@ export default function WorkoutLogbook({
   }
   function removeSupp(id: string) { saveSupplements(suppDraft.filter(s => s.id !== id)); }
 
-  // Week completion dots
+  // Week completion dots (compact if > 16 weeks)
   const weekDots = weeks.map(w => logs.some(l => l.weekNumber === w));
+  const DOTS_LIMIT = 16;
+  const dotsToShow = weekDots.length > DOTS_LIMIT
+    ? weekDots.slice(-DOTS_LIMIT)
+    : weekDots;
+  const dotsOffset = weekDots.length > DOTS_LIMIT ? weekDots.length - DOTS_LIMIT : 0;
 
   return (
     <div className="space-y-5">
@@ -524,33 +533,55 @@ export default function WorkoutLogbook({
         </button>
         <div className="flex-1 text-center">
           <span className="text-sm font-bold" style={{ color: "var(--ivory)" }}>Settimana {activeWeek}</span>
-          <span className="text-xs ml-2" style={{ color: "rgba(245,240,232,0.35)" }}>di {totalWeeks}</span>
+          <span className="text-xs ml-2" style={{ color: "rgba(245,240,232,0.35)" }}>
+            {isUnlimited ? "· piano aperto" : `di ${totalWeeks}`}
+          </span>
         </div>
-        <button onClick={() => setActiveWeek(w => Math.min(totalWeeks, w + 1))} disabled={activeWeek === totalWeeks}
+        <button onClick={() => setActiveWeek(w => Math.min(effectiveMax, w + 1))} disabled={activeWeek >= effectiveMax}
           className="p-2 rounded-xl transition-all disabled:opacity-30"
           style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
           <ChevronRight size={16} style={{ color: "var(--ivory)" }} />
         </button>
       </div>
 
-      {/* Week progress dots */}
-      <div className="flex items-center gap-1.5 justify-center flex-wrap">
-        {weekDots.map((done, i) => (
-          <button key={i} onClick={() => setActiveWeek(i + 1)}
-            title={`Settimana ${i + 1}`}
-            className="transition-all"
-            style={{
-              width: activeWeek === i + 1 ? 20 : 8,
-              height: 8, borderRadius: 4,
-              background: activeWeek === i + 1
-                ? "var(--accent)"
-                : done
-                  ? "rgba(34,197,94,0.7)"
-                  : "rgba(255,255,255,0.1)",
-              transition: "width 0.3s ease, background 0.2s",
-            }} />
-        ))}
-      </div>
+      {/* Week progress dots (max 16 shown; compact overflow from left) */}
+      {weekDots.length > 0 && (
+        <div className="flex items-center gap-1.5 justify-center flex-wrap">
+          {dotsOffset > 0 && (
+            <span className="text-xs" style={{ color: "rgba(245,240,232,0.2)" }}>+{dotsOffset}</span>
+          )}
+          {dotsToShow.map((done, i) => {
+            const weekNum = dotsOffset + i + 1;
+            return (
+              <button key={weekNum} onClick={() => setActiveWeek(weekNum)}
+                title={`Settimana ${weekNum}`}
+                className="transition-all"
+                style={{
+                  width: activeWeek === weekNum ? 20 : 8,
+                  height: 8, borderRadius: 4,
+                  background: activeWeek === weekNum
+                    ? "var(--accent)"
+                    : done
+                      ? "rgba(34,197,94,0.7)"
+                      : "rgba(255,255,255,0.1)",
+                  transition: "width 0.3s ease, background 0.2s",
+                }} />
+            );
+          })}
+          {isUnlimited && (
+            <button onClick={() => setActiveWeek(maxLoggedWeek + 1)}
+              title={`Settimana ${maxLoggedWeek + 1}`}
+              className="transition-all"
+              style={{
+                width: activeWeek === maxLoggedWeek + 1 ? 20 : 8,
+                height: 8, borderRadius: 4,
+                background: activeWeek === maxLoggedWeek + 1 ? "var(--accent)" : "rgba(255,255,255,0.05)",
+                border: "1px dashed rgba(255,255,255,0.2)",
+                transition: "width 0.3s ease",
+              }} />
+          )}
+        </div>
+      )}
 
       {/* Day tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">

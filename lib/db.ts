@@ -574,7 +574,7 @@ export interface ProgressPhoto {
   created_at: string;
 }
 
-const PHOTO_BUCKET = "progress-photos";
+const PHOTO_BUCKET = "Trainer Progress Bar";
 
 export const dbProgressPhotos = {
   async list(clientId: string): Promise<ProgressPhoto[]> {

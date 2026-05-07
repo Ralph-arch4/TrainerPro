@@ -390,7 +390,32 @@ export default function ClientPortalPage() {
   const currentWeek     = uniqueWeeks.size > 0 ? Math.max(...uniqueWeeks) : 0;
   // A week is "completed" only once the client moves past it
   const weeksCompleted  = Math.max(0, currentWeek - 1);
-  const pct             = plan.total_weeks > 0 ? Math.round((weeksCompleted / plan.total_weeks) * 100) : 0;
+  const isUnlimited     = plan.total_weeks === 0;
+  // null = no percentage (unlimited plan)
+  const pct: number | null = isUnlimited ? null : Math.round((weeksCompleted / plan.total_weeks) * 100);
+
+  // ── Streak (consecutive calendar days with a log) ─────────────────────────
+  const logsByDayGlobal = new Map<string, number>();
+  logs.forEach(l => {
+    const day = new Date(l.loggedAt).toISOString().slice(0, 10);
+    logsByDayGlobal.set(day, (logsByDayGlobal.get(day) ?? 0) + 1);
+  });
+  let streak = 0;
+  const sortedLogDays = Array.from(logsByDayGlobal.keys()).sort();
+  if (sortedLogDays.length > 0) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const lastDay  = sortedLogDays[sortedLogDays.length - 1];
+    const diffToday = Math.floor((new Date(todayStr).getTime() - new Date(lastDay).getTime()) / 86400000);
+    if (diffToday <= 1) {
+      streak = 1;
+      let prev = lastDay;
+      for (let i = sortedLogDays.length - 2; i >= 0; i--) {
+        const cur = sortedLogDays[i];
+        const gap = Math.floor((new Date(prev).getTime() - new Date(cur).getTime()) / 86400000);
+        if (gap === 1) { streak++; prev = cur; } else break;
+      }
+    }
+  }
 
   // ── Gamification ─────────────────────────────────────────────────────────
   const totalLogs  = logs.length;
@@ -407,11 +432,11 @@ export default function ClientPortalPage() {
   // Achievements
   const achievements: { icon: string; label: string; unlocked: boolean }[] = [
     { icon: "🏋️", label: "Prima sessione",    unlocked: totalLogs >= 1 },
-    { icon: "🔥", label: "3 giorni di fila",  unlocked: uniqueWeeks.size >= 1 && totalLogs >= 3 },
+    { icon: "🔥", label: "3 giorni di fila",  unlocked: streak >= 3 },
     { icon: "📅", label: "Settimana 1",       unlocked: currentWeek >= 1 },
     { icon: "💪", label: "Settimana 3",       unlocked: currentWeek >= 3 },
     { icon: "⚡", label: "20 registrazioni",  unlocked: totalLogs >= 20 },
-    { icon: "🏆", label: "Metà programma",    unlocked: pct >= 50 },
+    { icon: "🏆", label: "Metà programma",    unlocked: !isUnlimited && pct !== null && pct >= 50 },
   ];
 
   const activeDiet = diets[0] ?? null;
@@ -477,37 +502,60 @@ export default function ClientPortalPage() {
         {/* ── Stats row ──────────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           {[
-            { label: "Settimane completate", value: `${weeksCompleted}/${plan.total_weeks}`, icon: <Trophy size={13} style={{ color: "#fbbf24" }} /> },
-            { label: "Completamento",        value: `${pct}%`,                               icon: <Flame size={13} style={{ color: "var(--accent)" }} /> },
-            { label: "Giorni / settimana",   value: `${plan.days_per_week}`,                 icon: <Dumbbell size={13} style={{ color: "#38bdf8" }} /> },
-            { label: "Registrazioni",        value: String(totalLogs),                       icon: <Zap size={13} style={{ color: "#a78bfa" }} /> },
-          ].map(({ label, value, icon }) => (
+            {
+              label: "Settimane",
+              value: isUnlimited ? `${weeksCompleted}` : `${weeksCompleted}/${plan.total_weeks}`,
+              sub: isUnlimited ? "piano aperto" : "completate",
+              icon: <Trophy size={13} style={{ color: "#fbbf24" }} />,
+            },
+            {
+              label: "Streak",
+              value: `${streak}`,
+              sub: streak === 1 ? "giorno" : "giorni di fila",
+              icon: <Flame size={13} style={{ color: "var(--accent)" }} />,
+            },
+            {
+              label: "Sessioni salvate",
+              value: String(totalLogs),
+              sub: "totali",
+              icon: <Zap size={13} style={{ color: "#a78bfa" }} />,
+            },
+            {
+              label: "Giorni / sett.",
+              value: `${plan.days_per_week}`,
+              sub: "nel programma",
+              icon: <Dumbbell size={13} style={{ color: "#38bdf8" }} />,
+            },
+          ].map(({ label, value, sub, icon }) => (
             <div key={label} className="rounded-2xl p-3 text-center"
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
               <div className="flex items-center justify-center gap-1 mb-1">{icon}</div>
               <p className="text-xl font-black" style={{ color: "var(--ivory)" }}>{value}</p>
               <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.38)" }}>{label}</p>
+              <p className="text-xs" style={{ color: "rgba(245,240,232,0.22)" }}>{sub}</p>
             </div>
           ))}
         </div>
 
-        {/* ── Program progress bar ───────────────────────────────────────────── */}
-        <div className="mb-4 p-4 rounded-2xl"
-          style={{ background: "rgba(255,107,43,0.04)", border: "1px solid rgba(255,107,43,0.1)" }}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-bold" style={{ color: "var(--ivory)" }}>Avanzamento programma</p>
-            <span className="text-sm font-black accent-text">{pct}%</span>
+        {/* ── Program progress bar (hidden for unlimited plans) ──────────────── */}
+        {!isUnlimited && pct !== null && (
+          <div className="mb-4 p-4 rounded-2xl"
+            style={{ background: "rgba(255,107,43,0.04)", border: "1px solid rgba(255,107,43,0.1)" }}>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-bold" style={{ color: "var(--ivory)" }}>Avanzamento programma</p>
+              <span className="text-sm font-black accent-text">{pct}%</span>
+            </div>
+            <div className="h-3 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+              <div className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${Math.max(pct, pct > 0 ? 4 : 0)}%`, background: "linear-gradient(90deg, var(--accent), var(--accent-light))" }} />
+            </div>
+            <p className="text-xs mt-1.5" style={{ color: "rgba(245,240,232,0.35)" }}>
+              {weeksCompleted === 0
+                ? `Settimana ${currentWeek > 0 ? currentWeek : 1} in corso — continua così!`
+                : `${weeksCompleted} sett. completate · Settimana ${currentWeek} in corso`}
+            </p>
           </div>
-          <div className="h-3 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-            <div className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${Math.max(pct, pct > 0 ? 4 : 0)}%`, background: "linear-gradient(90deg, var(--accent), var(--accent-light))" }} />
-          </div>
-          <p className="text-xs mt-1.5" style={{ color: "rgba(245,240,232,0.35)" }}>
-            {weeksCompleted === 0
-              ? `Settimana ${currentWeek > 0 ? currentWeek : 1} in corso — continua così!`
-              : `${weeksCompleted} sett. completate · Settimana ${currentWeek} in corso`}
-          </p>
-        </div>
+        )}
 
         {/* ── Achievements ───────────────────────────────────────────────────── */}
         <div className="mb-4 rounded-2xl overflow-hidden"
@@ -604,11 +652,7 @@ export default function ClientPortalPage() {
             d.setDate(today.getDate() - (55 - i));
             return d.toISOString().slice(0, 10);
           });
-          const logsByDay = new Map<string, number>();
-          logs.forEach(l => {
-            const day = new Date(l.loggedAt).toISOString().slice(0, 10);
-            logsByDay.set(day, (logsByDay.get(day) ?? 0) + 1);
-          });
+          const logsByDay = logsByDayGlobal;
           const totalTrainingDays = logsByDay.size;
           const weekLabels = ["L", "M", "M", "G", "V", "S", "D"];
           const firstDow = (new Date(heatDays[0]).getDay() + 6) % 7; // Monday=0
