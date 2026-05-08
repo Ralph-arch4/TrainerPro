@@ -54,10 +54,15 @@ export default function HeroCanvas() {
           inset: 0,
           width: '100%',
           height: '100%',
-          objectFit: 'cover',
-          objectPosition: 'center 10%',
+          objectFit: 'contain',
+          objectPosition: 'center 12%',
           mixBlendMode: 'screen',
-          filter: 'saturate(1.2) contrast(1.1) brightness(1.0)',
+          /* contrast(2.5) pushes dark room pixels toward pure black
+             before screen blend — pure black on screen = invisible */
+          filter: 'contrast(2.5) brightness(0.82) saturate(1.3)',
+          /* radial mask: keep center (the figure), fade out sides (the room) */
+          maskImage: 'radial-gradient(ellipse 48% 88% at 50% 46%, black 28%, rgba(0,0,0,0.6) 52%, transparent 78%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 48% 88% at 50% 46%, black 28%, rgba(0,0,0,0.6) 52%, transparent 78%)',
           pointerEvents: 'none',
           userSelect: 'none',
           zIndex: 1,
