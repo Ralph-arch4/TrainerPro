@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { dbExerciseLogs } from "@/lib/db";
 import WorkoutLogbook from "@/components/WorkoutLogbook";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
-import { Dumbbell, UtensilsCrossed, ShoppingBag, Loader2, AlertCircle, Copy, Check, Zap, Trophy, Flame, ChevronDown, ChevronUp, Calendar } from "lucide-react";
+import { Dumbbell, UtensilsCrossed, ShoppingBag, Loader2, AlertCircle, Copy, Check, Zap, Trophy, Flame, ChevronDown, ChevronUp, Calendar, MessageSquare } from "lucide-react";
 
 // ── Meal library (Italian, based on sports nutrition guidelines) ─────────────
 interface MealTpl { name: string; ingredients: string[]; pro: number; cho: number; fat: number; kcal: number; }
@@ -470,6 +470,40 @@ export default function ClientPortalPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-6">
 
+        {/* ── Messaggio dal Trainer ─────────────────────────────────────────── */}
+        {plan.description && (
+          <div className="mb-4 p-5 rounded-2xl relative overflow-hidden"
+            style={{
+              background: "linear-gradient(135deg, rgba(229,50,50,0.07), rgba(255,154,108,0.03))",
+              border: "1px solid rgba(229,50,50,0.22)",
+            }}>
+            <div className="absolute top-2 right-4 text-7xl font-black leading-none select-none pointer-events-none"
+              style={{ color: "rgba(229,50,50,0.07)", fontFamily: "Georgia, serif", lineHeight: 1 }}>
+              &ldquo;
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+                style={{ background: "rgba(229,50,50,0.14)", border: "1px solid rgba(229,50,50,0.28)" }}>
+                <MessageSquare size={15} style={{ color: "var(--accent)" }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold uppercase tracking-widest mb-2"
+                  style={{ color: "rgba(229,50,50,0.65)", letterSpacing: "0.12em" }}>
+                  Messaggio dal tuo Trainer
+                </p>
+                <p className="text-sm leading-relaxed"
+                  style={{ color: "rgba(245,240,232,0.82)", fontStyle: "italic" }}>
+                  &ldquo;{plan.description}&rdquo;
+                </p>
+                <p className="text-xs mt-3 font-semibold"
+                  style={{ color: "rgba(229,50,50,0.48)" }}>
+                  — Il tuo Trainer
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── Level + XP card ────────────────────────────────────────────────── */}
         <div className="mb-4 p-4 rounded-2xl relative overflow-hidden"
           style={{ background: "linear-gradient(135deg, rgba(123,47,190,0.18), rgba(229,50,50,0.1))", border: "1px solid rgba(123,47,190,0.25)" }}>
@@ -763,9 +797,6 @@ export default function ClientPortalPage() {
                 <span>Errore nel salvataggio. Controlla la connessione e riprova.</span>
                 <button onClick={() => setSaveError(false)} className="text-xs underline opacity-70 flex-shrink-0">Chiudi</button>
               </div>
-            )}
-            {plan.description && (
-              <p className="text-sm mb-4" style={{ color: "rgba(245,240,232,0.5)" }}>{plan.description}</p>
             )}
             <div className="mb-4 p-3 rounded-xl text-sm flex items-start gap-2"
               style={{ background: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.12)", color: "rgba(245,240,232,0.6)" }}>
