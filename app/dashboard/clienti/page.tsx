@@ -6,8 +6,9 @@ import { useAppStore } from "@/lib/store";
 import { dbClients } from "@/lib/db";
 import {
   Users, Plus, Search, ChevronRight,
-  Mail, Phone, Activity, Loader2, X, AlertCircle, Trash2
+  Mail, Phone, Activity, Loader2, X, AlertCircle, Trash2, TrendingDown
 } from "lucide-react";
+import type { Client } from "@/lib/store";
 
 type Status = "tutti" | "attivo" | "in_pausa" | "inattivo";
 type Goal = "tutti" | "dimagrimento" | "massa" | "tonificazione" | "performance";
@@ -40,6 +41,21 @@ const levelLabel: Record<string, string> = {
   intermedio: "Intermedio",
   avanzato: "Avanzato",
 };
+
+function getLastLogDate(client: Client): Date | null {
+  const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
+  if (!allLogs.length) return null;
+  return new Date(Math.max(...allLogs.map(l => new Date(l.loggedAt).getTime())));
+}
+
+function getRiskDays(client: Client): number | null {
+  if (client.status !== "attivo") return null;
+  const last = getLastLogDate(client);
+  const ref = last ?? (client.startDate ? new Date(client.startDate) : null);
+  if (!ref) return null;
+  const days = Math.floor((Date.now() - ref.getTime()) / 86400000);
+  return days >= 7 ? days : null;
+}
 
 interface ClientFormData {
   name: string;
@@ -197,9 +213,26 @@ function ClientiPageInner() {
 
       {/* Client grid */}
       <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filtered.map((client) => (
+        {filtered.map((client) => {
+          const riskDays = getRiskDays(client);
+          return (
           <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
-            className="card-luxury rounded-2xl p-5 hover:border-[rgba(255,107,43,0.3)] transition-all group block">
+            className="card-luxury rounded-2xl p-5 transition-all group block"
+            style={{ borderColor: riskDays ? "rgba(239,68,68,0.25)" : undefined }}>
+            {/* A rischio banner */}
+            {riskDays && (
+              <div className="flex items-center gap-2 -mx-5 -mt-5 mb-4 px-4 py-2 rounded-t-2xl"
+                style={{ background: "rgba(239,68,68,0.1)", borderBottom: "1px solid rgba(239,68,68,0.2)" }}>
+                <span className="relative flex h-2 w-2 flex-shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#f87171" }} />
+                  <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#ef4444" }} />
+                </span>
+                <TrendingDown size={11} style={{ color: "#f87171" }} />
+                <span className="text-xs font-bold" style={{ color: "#f87171" }}>
+                  Nessun log da {riskDays} giorni — a rischio
+                </span>
+              </div>
+            )}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl accent-btn flex items-center justify-center text-base font-bold flex-shrink-0">
@@ -250,7 +283,8 @@ function ClientiPageInner() {
               </div>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
 
       {/* Add client modal */}

@@ -113,11 +113,22 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
   function updateReps(i: number, val: string)   { setData(p => { const n = [...p]; n[i] = { ...n[i], reps: val };   return n; }); }
   function updateRpe(i: number, val: string)    { setData(p => { const n = [...p]; n[i] = { ...n[i], rpe: val };    return n; }); }
 
+  const MOTIVATIONAL = [
+    "Sessione salvata. Ogni rep conta.",
+    "Fatto. La costanza batte il talento.",
+    "Salvato. Stai costruendo qualcosa di solido.",
+    "Un'altra sessione archiviata. Avanti così.",
+    "Registrato. Il tuo futuro io ti ringrazierà.",
+  ];
+
   function handleSave() {
     const { reps, weight } = serializeSetData(data);
     onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps, weight });
     orig.current = [...data];
-    showToast("Salvato ✓");
+    const msg = mode === "client"
+      ? MOTIVATIONAL[Math.floor(Math.random() * MOTIVATIONAL.length)]
+      : "Salvato ✓";
+    showToast(msg);
   }
   function handleClear() {
     const blank = Array.from({ length: sets }, () => ({ reps: "", weight: "", rpe: "" }));

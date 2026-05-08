@@ -417,6 +417,14 @@ export default function ClientPortalPage() {
     }
   }
 
+  // ── Day on journey ───────────────────────────────────────────────────────
+  const firstLogDate = logs.length > 0
+    ? new Date(Math.min(...logs.map(l => new Date(l.loggedAt).getTime())))
+    : null;
+  const dayOnJourney = firstLogDate
+    ? Math.floor((Date.now() - firstLogDate.getTime()) / 86400000) + 1
+    : null;
+
   // ── Gamification ─────────────────────────────────────────────────────────
   const totalLogs  = logs.length;
   const xpPerLog   = 10;
@@ -528,9 +536,17 @@ export default function ClientPortalPage() {
             <div className="h-full rounded-full transition-all duration-700"
               style={{ width: `${xpPct}%`, background: "linear-gradient(90deg, #7B2FBE, #a78bfa)" }} />
           </div>
-          <p className="text-xs mt-1.5" style={{ color: "rgba(245,240,232,0.3)" }}>
-            Ogni sessione salvata = +10 XP · ogni settimana completata = +50 XP
-          </p>
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-xs" style={{ color: "rgba(245,240,232,0.3)" }}>
+              +10 XP per sessione · +50 XP per settimana completata
+            </p>
+            {dayOnJourney !== null && (
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0"
+                style={{ background: "rgba(245,240,232,0.06)", color: "rgba(245,240,232,0.45)" }}>
+                Giorno {dayOnJourney}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* ── Stats row ──────────────────────────────────────────────────────── */}
