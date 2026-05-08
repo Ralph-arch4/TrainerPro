@@ -44,7 +44,7 @@ export default function HeroCanvas() {
       {/* ── Athlete image — screen blend removes dark bg, keeps glow ── */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/athlete-hero.png"
+        src="/Gemini_Generated_Image_nr1p2znr1p2znr1p.png"
         alt=""
         aria-hidden
         style={{
