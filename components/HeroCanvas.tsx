@@ -46,7 +46,7 @@ export default function HeroCanvas() {
       {/* ── Athlete image (layer 1) ── */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/Gemini_Generated_Image_nr1p2znr1p2znr1p.png"
+        src="/Gemini_Generated_Image_s3s2fbs3s2fbs3s2.png"
         alt=""
         aria-hidden
         style={{
@@ -54,10 +54,10 @@ export default function HeroCanvas() {
           inset: 0,
           width: '100%',
           height: '100%',
-          objectFit: 'contain',
-          objectPosition: 'center 15%',
+          objectFit: 'cover',
+          objectPosition: 'center 10%',
           mixBlendMode: 'screen',
-          filter: 'saturate(1.25) contrast(1.15) brightness(1.05)',
+          filter: 'saturate(1.2) contrast(1.1) brightness(1.0)',
           pointerEvents: 'none',
           userSelect: 'none',
           zIndex: 1,
