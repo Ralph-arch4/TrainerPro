@@ -39,9 +39,11 @@ export default function HeroCanvas() {
   }).join(' ')
 
   return (
-    <div className="w-full h-full relative" style={{ minHeight: 400 }}>
+    /* isolation: isolate is REQUIRED for mix-blend-mode: screen to composite
+       against the page background (var(--black)) and not bleed through */
+    <div className="w-full h-full" style={{ position: 'relative', minHeight: 400, isolation: 'isolate' }}>
 
-      {/* ── Athlete image — screen blend removes dark bg, keeps glow ── */}
+      {/* ── Athlete image (layer 1) ── */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/Gemini_Generated_Image_nr1p2znr1p2znr1p.png"
@@ -53,19 +55,20 @@ export default function HeroCanvas() {
           width: '100%',
           height: '100%',
           objectFit: 'contain',
-          objectPosition: 'center',
+          objectPosition: 'center 15%',
           mixBlendMode: 'screen',
-          filter: 'saturate(1.15) contrast(1.05)',
+          filter: 'saturate(1.25) contrast(1.15) brightness(1.05)',
           pointerEvents: 'none',
           userSelect: 'none',
+          zIndex: 1,
         }}
       />
 
-      {/* ── HUD overlay — SVG panels on top of the image ── */}
+      {/* ── HUD SVG overlay (layer 2) ── */}
       <svg
         viewBox="0 0 520 580"
         width="100%" height="100%"
-        style={{ position: 'relative', overflow: 'visible' }}
+        style={{ position: 'absolute', inset: 0, zIndex: 2 }}
         aria-hidden
       >
         <defs>
