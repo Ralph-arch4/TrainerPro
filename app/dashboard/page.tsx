@@ -5,6 +5,7 @@ import { useAppStore } from "@/lib/store";
 import {
   Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight,
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
+  Flame, AlertTriangle, Trophy,
 } from "lucide-react";
 
 function timeGreeting() {
@@ -57,6 +58,27 @@ export default function DashboardPage() {
     () => [...clients].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5),
     [clients]
   );
+
+  // Radar attività: chi sta performando vs chi rischia abbandono
+  const { topClients, atRiskClients } = useMemo(() => {
+    const week7 = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const scored = clients
+      .filter(c => c.status === "attivo")
+      .map(c => {
+        const allLogs = c.workoutPlans.flatMap(p => p.logs ?? []);
+        const weekLogs = allLogs.filter(l => new Date(l.loggedAt).getTime() > week7).length;
+        const lastLog = allLogs.length > 0
+          ? new Date(Math.max(...allLogs.map(l => new Date(l.loggedAt).getTime())))
+          : null;
+        const daysSinceLast = lastLog
+          ? Math.floor((Date.now() - lastLog.getTime()) / 86400000)
+          : (c.startDate ? Math.floor((Date.now() - new Date(c.startDate).getTime()) / 86400000) : 999);
+        return { client: c, weekLogs, daysSinceLast };
+      });
+    const top = scored.filter(s => s.weekLogs > 0).sort((a, b) => b.weekLogs - a.weekLogs).slice(0, 3);
+    const risk = scored.filter(s => s.daysSinceLast >= 7).sort((a, b) => b.daysSinceLast - a.daysSinceLast).slice(0, 3);
+    return { topClients: top, atRiskClients: risk };
+  }, [clients]);
 
   // Smart onboarding: check what's actually done
   const hasClients     = clients.length > 0;
@@ -169,6 +191,71 @@ export default function DashboardPage() {
               <Activity size={13} />
               {inactiveCount} {inactiveCount === 1 ? "cliente" : "clienti"} senza attività da 14 giorni
             </Link>
+          )}
+        </div>
+      )}
+
+      {/* ── Radar Attività ───────────────────────────────────────────────── */}
+      {(topClients.length > 0 || atRiskClients.length > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          {/* Top performers */}
+          {topClients.length > 0 && (
+            <div className="rounded-2xl p-4" style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.15)" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <Trophy size={14} style={{ color: "#fbbf24" }} />
+                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+                  In forma questa settimana
+                </p>
+              </div>
+              <div className="space-y-2">
+                {topClients.map(({ client, weekLogs }, idx) => (
+                  <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
+                    className="flex items-center gap-3 group">
+                    <span className="text-sm font-black w-4 flex-shrink-0"
+                      style={{ color: idx === 0 ? "#fbbf24" : idx === 1 ? "#d1d5db" : "#cd7f32" }}>
+                      {idx + 1}
+                    </span>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                      style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                      {client.name.charAt(0).toUpperCase()}
+                    </div>
+                    <p className="flex-1 text-sm font-semibold truncate group-hover:underline"
+                      style={{ color: "var(--ivory)" }}>{client.name}</p>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <Flame size={11} style={{ color: "#f97316" }} />
+                      <span className="text-xs font-bold" style={{ color: "#f97316" }}>{weekLogs}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* At risk */}
+          {atRiskClients.length > 0 && (
+            <div className="rounded-2xl p-4" style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.15)" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle size={14} style={{ color: "#f87171" }} />
+                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+                  Necessitano un messaggio
+                </p>
+              </div>
+              <div className="space-y-2">
+                {atRiskClients.map(({ client, daysSinceLast }) => (
+                  <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
+                    className="flex items-center gap-3 group">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                      style={{ background: "rgba(239,68,68,0.1)", color: "#f87171" }}>
+                      {client.name.charAt(0).toUpperCase()}
+                    </div>
+                    <p className="flex-1 text-sm font-semibold truncate group-hover:underline"
+                      style={{ color: "var(--ivory)" }}>{client.name}</p>
+                    <span className="text-xs flex-shrink-0 font-medium" style={{ color: "rgba(248,113,113,0.7)" }}>
+                      {daysSinceLast}gg fa
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       )}

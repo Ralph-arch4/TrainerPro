@@ -232,12 +232,12 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
                     REPS
                   </p>
                   <input
-                    type="number" min="0" step="1"
+                    type="text" inputMode="numeric" pattern="[0-9]*"
                     value={data[i]?.reps ?? ""}
-                    onChange={e => updateReps(i, e.target.value)}
+                    onChange={e => updateReps(i, e.target.value.replace(/[^0-9]/g, ""))}
                     onKeyDown={e => { if (e.key === "Enter") handleSave(); }}
                     placeholder={String(targetRep(i))}
-                    className="w-full text-center py-1.5 pb-2 text-base font-black outline-none"
+                    className="w-full text-center py-2 pb-2.5 text-lg font-black outline-none"
                     style={{ background: "transparent", color: "var(--ivory)", border: "none" }}
                   />
                 </div>
@@ -248,39 +248,44 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
                     CARICO (KG)
                   </p>
                   <input
-                    type="number" min="0" step="0.5"
+                    type="text" inputMode="decimal"
                     value={data[i]?.weight ?? ""}
-                    onChange={e => updateWeight(i, e.target.value)}
+                    onChange={e => updateWeight(i, e.target.value.replace(/[^0-9.,]/g, "").replace(",", "."))}
                     onKeyDown={e => { if (e.key === "Enter") handleSave(); }}
                     placeholder="0"
-                    className="w-full text-center py-1.5 pb-2 text-base font-black outline-none"
+                    className="w-full text-center py-2 pb-2.5 text-lg font-black outline-none"
                     style={{ background: "transparent", color: "var(--ivory)", border: "none" }}
                   />
                 </div>
-                {/* RPE */}
-                <div className="rounded-xl overflow-hidden" style={{ width: "3.5rem", background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.18)" }}>
-                  <p className="text-center pt-1.5 text-xs" style={{ color: "#34d399", fontSize: "0.62rem" }}>
+                {/* RPE — tap selector mobile-first */}
+                <div className="flex-1 rounded-xl overflow-hidden" style={{ background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.18)" }}>
+                  <p className="text-center pt-1.5 text-xs font-bold" style={{ color: "#34d399", fontSize: "0.62rem" }}>
                     RPE
                   </p>
-                  <input
-                    type="number" min="1" max="10" step="1"
-                    value={data[i]?.rpe ?? ""}
-                    onChange={e => {
-                      const v = e.target.value;
-                      if (v === "" || (parseFloat(v) >= 1 && parseFloat(v) <= 10)) {
-                        updateRpe(i, v);
-                        // Auto-start rest timer on RPE selection
-                        if (v !== "" && onStartTimer) {
-                          const rpe = parseFloat(v);
-                          const secs = rpe <= 6 ? 90 : 120;
-                          onStartTimer(secs, exercise.name);
-                        }
-                      }
-                    }}
-                    placeholder="—"
-                    className="w-full text-center py-1.5 pb-2 text-sm font-black outline-none"
-                    style={{ background: "transparent", color: "#34d399", border: "none" }}
-                  />
+                  <div className="flex justify-center flex-wrap gap-0.5 px-1 pb-1.5 pt-0.5">
+                    {[6,7,8,9,10].map(v => {
+                      const active = data[i]?.rpe === String(v);
+                      return (
+                        <button key={v} type="button"
+                          onClick={() => {
+                            const newV = active ? "" : String(v);
+                            updateRpe(i, newV);
+                            if (newV && onStartTimer) {
+                              onStartTimer(v <= 6 ? 90 : 120, exercise.name);
+                            }
+                          }}
+                          className="rounded-lg text-xs font-black transition-all"
+                          style={{
+                            width: "1.7rem", height: "1.7rem",
+                            background: active ? "rgba(52,211,153,0.3)" : "rgba(52,211,153,0.06)",
+                            border: `1px solid ${active ? "#34d399" : "rgba(52,211,153,0.15)"}`,
+                            color: active ? "#34d399" : "rgba(52,211,153,0.45)",
+                          }}>
+                          {v}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
@@ -323,28 +328,28 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
 
       {/* Save / Clear / Rest timer (client) */}
       {mode === "client" && (
-        <div className="flex gap-2 px-2.5 py-2" style={{ borderTop: rowBorder }}>
+        <div className="flex gap-2 px-3 py-2.5" style={{ borderTop: rowBorder }}>
           <button onClick={handleClear}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs transition-all hover:opacity-80"
-            style={{ border: "1px solid rgba(239,68,68,0.2)", color: "rgba(239,68,68,0.55)" }}>
-            <X size={10} />
+            className="flex items-center justify-center rounded-xl transition-all active:scale-95"
+            style={{ minWidth: "2.75rem", minHeight: "2.75rem", border: "1px solid rgba(239,68,68,0.2)", color: "rgba(239,68,68,0.55)" }}>
+            <X size={14} />
           </button>
           <button onClick={handleSave} disabled={!dirty}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+            className="flex-1 flex items-center justify-center gap-2 rounded-xl text-sm font-bold transition-all active:scale-95"
             style={{
-              background: dirty ? "rgba(255,107,43,0.14)" : "rgba(255,255,255,0.03)",
-              border: `1px solid ${dirty ? "rgba(255,107,43,0.4)" : "rgba(255,255,255,0.06)"}`,
+              minHeight: "2.75rem",
+              background: dirty ? "rgba(255,107,43,0.16)" : "rgba(255,255,255,0.03)",
+              border: `1px solid ${dirty ? "rgba(255,107,43,0.45)" : "rgba(255,255,255,0.06)"}`,
               color: dirty ? "var(--accent-light)" : "rgba(245,240,232,0.18)",
             }}>
-            <Save size={10} /> {dirty ? "Salva" : "✓"}
+            <Save size={13} /> {dirty ? "Salva sessione" : "Salvato ✓"}
           </button>
           {onStartTimer && (
             <button
               onClick={() => onStartTimer(90, exercise.name)}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all hover:opacity-80"
-              style={{ background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.2)", color: "#34d399" }}
-              title="Avvia recupero manuale"
-            >
+              className="flex items-center justify-center rounded-xl transition-all active:scale-95"
+              style={{ minWidth: "2.75rem", minHeight: "2.75rem", background: "rgba(52,211,153,0.07)", border: "1px solid rgba(52,211,153,0.2)", color: "#34d399", fontSize: "1rem" }}
+              title="Avvia recupero manuale">
               ⏱
             </button>
           )}

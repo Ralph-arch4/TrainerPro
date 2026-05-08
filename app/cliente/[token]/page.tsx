@@ -464,15 +464,12 @@ export default function ClientPortalPage() {
               <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Il tuo piano personale</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button onClick={copyLink}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all"
-              style={{ border: "1px solid rgba(255,107,43,0.2)", color: copied ? "#22c55e" : "rgba(245,240,232,0.55)" }}>
-              {copied ? <Check size={12} /> : <Copy size={12} />}
-              {copied ? "Copiato!" : "Copia link"}
-            </button>
-            <span className="text-xs font-semibold accent-text">TrainerPro</span>
-          </div>
+          <button onClick={copyLink}
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs transition-all active:scale-95"
+            style={{ border: "1px solid rgba(255,107,43,0.2)", color: copied ? "#22c55e" : "rgba(245,240,232,0.55)", minHeight: "2.5rem" }}>
+            {copied ? <Check size={13} /> : <Copy size={13} />}
+            <span className="hidden sm:inline">{copied ? "Copiato!" : "Copia link"}</span>
+          </button>
         </div>
       </div>
 
