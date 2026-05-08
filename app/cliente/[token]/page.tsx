@@ -262,6 +262,55 @@ function SupplementClientCard({ item }: { item: SupplementItem }) {
   );
 }
 
+function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToken }: {
+  planName: string; trainerName: string; daysPerWeek: number; totalWeeks: number; shareToken: string;
+}) {
+  const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
+  const cardNum  = shareToken.replace(/-/g, "").toUpperCase().slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
+  return (
+    <div className="mb-5 rounded-3xl overflow-hidden relative select-none"
+      style={{ background: "linear-gradient(135deg, rgba(12,4,4,0.98) 0%, rgba(45,8,8,0.92) 55%, rgba(18,6,6,0.98) 100%)", border: "1px solid rgba(229,50,50,0.22)", boxShadow: "0 8px 32px rgba(229,50,50,0.1), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
+      <div className="absolute top-0 right-0 w-56 h-56 pointer-events-none rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(229,50,50,0.09) 0%, transparent 70%)", transform: "translate(30%,-30%)" }} />
+      <div className="relative p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: "rgba(229,50,50,0.18)", border: "1px solid rgba(229,50,50,0.32)" }}>
+              <span className="text-xs font-black" style={{ color: "var(--accent)", lineHeight: 1 }}>TP</span>
+            </div>
+            <span className="text-xs font-bold tracking-[0.14em] uppercase" style={{ color: "rgba(245,240,232,0.3)" }}>TrainerPro</span>
+          </div>
+          <span className="text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider"
+            style={{ background: "rgba(229,50,50,0.1)", border: "1px solid rgba(229,50,50,0.22)", color: "rgba(229,50,50,0.75)" }}>
+            Piano Attivo
+          </span>
+        </div>
+        <h2 className="text-xl font-black tracking-tight leading-tight mb-1" style={{ color: "var(--ivory)" }}>{planName}</h2>
+        <p className="text-xs mb-4" style={{ color: "rgba(245,240,232,0.32)" }}>
+          {daysPerWeek} giorni/settimana · {totalWeeks > 0 ? `${totalWeeks} settimane` : "piano continuo"}
+        </p>
+        <div className="h-px mb-4" style={{ background: "linear-gradient(90deg, rgba(229,50,50,0.28), transparent)" }} />
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.16em] mb-1" style={{ color: "rgba(245,240,232,0.28)" }}>Creato da</p>
+            <p className="text-sm font-black uppercase tracking-wide" style={{ color: "var(--ivory)" }}>{trainerName}</p>
+          </div>
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full blur-md" style={{ background: "rgba(229,50,50,0.28)" }} />
+            <div className="relative w-12 h-12 rounded-full flex items-center justify-center"
+              style={{ background: "radial-gradient(circle at 38% 32%, rgba(229,50,50,0.32), rgba(8,8,8,0.9))", border: "1.5px solid rgba(229,50,50,0.55)", boxShadow: "0 0 0 3px rgba(229,50,50,0.08)" }}>
+              <span className="text-base font-black" style={{ color: "var(--accent)" }}>{initials}</span>
+            </div>
+          </div>
+        </div>
+        <p className="text-xs mt-3 font-mono" style={{ color: "rgba(245,240,232,0.1)", letterSpacing: "0.16em" }}>{cardNum}</p>
+      </div>
+      <div className="h-1" style={{ background: "linear-gradient(90deg, var(--accent), rgba(229,50,50,0.15), transparent)" }} />
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -272,6 +321,7 @@ export default function ClientPortalPage() {
   const [tab, setTab] = useState<Tab>("allenamento");
   const [copied, setCopied] = useState(false);
   const [saveError, setSaveError] = useState(false);
+  const [trainerName, setTrainerName] = useState("Il tuo Trainer");
 
   useEffect(() => {
     async function load() {
@@ -319,6 +369,7 @@ export default function ClientPortalPage() {
         }
 
         if (data.diets) setDiets(data.diets as DietData[]);
+        if (data.trainer_name) setTrainerName(data.trainer_name as string);
 
       } catch {
         setError("Errore nel caricamento. Riprova.");
@@ -475,6 +526,15 @@ export default function ClientPortalPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-6">
 
+        {/* ── Carta del Programma ───────────────────────────────────────────── */}
+        <ProgramCard
+          planName={plan.name}
+          trainerName={trainerName}
+          daysPerWeek={plan.days_per_week}
+          totalWeeks={plan.total_weeks}
+          shareToken={plan.share_token}
+        />
+
         {/* ── Messaggio dal Trainer ─────────────────────────────────────────── */}
         {plan.description && (
           <div className="mb-4 p-5 rounded-2xl relative overflow-hidden"
@@ -502,7 +562,7 @@ export default function ClientPortalPage() {
                 </p>
                 <p className="text-xs mt-3 font-semibold"
                   style={{ color: "rgba(229,50,50,0.48)" }}>
-                  — Il tuo Trainer
+                  — {trainerName}
                 </p>
               </div>
             </div>

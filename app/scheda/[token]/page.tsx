@@ -87,6 +87,7 @@ export default function PublicSchedaPage() {
   const [logs, setLogs] = useState<ExerciseLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [trainerName, setTrainerName] = useState("Trainer");
   const [tab, setTab] = useState<Tab>("allenamento");
   const [saveError, setSaveError] = useState(false);
 
@@ -135,6 +136,7 @@ export default function PublicSchedaPage() {
         }
 
         if (data.diets) setDiets(data.diets as DietData[]);
+        if (data.trainer_name) setTrainerName(data.trainer_name as string);
       } catch {
         setError("Errore nel caricamento della scheda. Riprova.");
       } finally {
@@ -216,7 +218,7 @@ export default function PublicSchedaPage() {
             <div className="min-w-0">
               <p className="text-sm font-bold truncate" style={{ color: "var(--ivory)" }}>{plan.name}</p>
               <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
-                {plan.days_per_week} giorni/sett · {plan.total_weeks} settimane
+                {plan.days_per_week} giorni/sett · {plan.total_weeks} sett · <span style={{ color: "rgba(229,50,50,0.7)" }}>{trainerName}</span>
               </p>
             </div>
           </div>
