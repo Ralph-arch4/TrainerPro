@@ -5,7 +5,7 @@ import { useAppStore } from "@/lib/store";
 import {
   Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight,
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
-  Flame, AlertTriangle, Trophy,
+  Flame, AlertTriangle, Trophy, Zap,
 } from "lucide-react";
 
 function timeGreeting() {
@@ -78,6 +78,36 @@ export default function DashboardPage() {
     const top = scored.filter(s => s.weekLogs > 0).sort((a, b) => b.weekLogs - a.weekLogs).slice(0, 3);
     const risk = scored.filter(s => s.daysSinceLast >= 7).sort((a, b) => b.daysSinceLast - a.daysSinceLast).slice(0, 3);
     return { topClients: top, atRiskClients: risk };
+  }, [clients]);
+
+  // Progression detector: exercises stalled at same weight for 3+ consecutive weeks
+  const progressionSuggestions = useMemo(() => {
+    const results: { clientName: string; clientId: string; exerciseName: string; weight: number; suggested: number }[] = [];
+    for (const client of clients.filter(c => c.status === "attivo")) {
+      for (const plan of client.workoutPlans) {
+        const byExercise: Record<string, typeof plan.logs> = {};
+        for (const log of plan.logs) {
+          if (!byExercise[log.exerciseId]) byExercise[log.exerciseId] = [];
+          byExercise[log.exerciseId].push(log);
+        }
+        for (const [exId, logs] of Object.entries(byExercise)) {
+          const sorted = [...logs].filter(l => l.weight != null).sort((a, b) => b.weekNumber - a.weekNumber);
+          if (sorted.length < 3) continue;
+          const last3 = sorted.slice(0, 3);
+          if (!last3.every(l => l.weight === last3[0].weight)) continue;
+          const ex = plan.exercises.find(e => e.id === exId);
+          if (!ex) continue;
+          results.push({
+            clientName: client.name,
+            clientId: client.id,
+            exerciseName: ex.name,
+            weight: last3[0].weight!,
+            suggested: Math.round((last3[0].weight! + 2.5) * 2) / 2,
+          });
+        }
+      }
+    }
+    return results.slice(0, 4);
   }, [clients]);
 
   // Smart onboarding: check what's actually done
@@ -257,6 +287,41 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Radar Progressione ───────────────────────────────────────────── */}
+      {progressionSuggestions.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.18)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <Zap size={14} style={{ color: "#fbbf24" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+              Progressione consigliata
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full ml-1 font-bold"
+              style={{ background: "rgba(251,191,36,0.18)", color: "#fbbf24" }}>
+              {progressionSuggestions.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {progressionSuggestions.map((s, i) => (
+              <Link key={i} href={`/dashboard/clienti/${s.clientId}`}
+                className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                  style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24" }}>
+                  {s.clientName.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate" style={{ color: "var(--ivory)" }}>{s.clientName}</p>
+                  <p className="text-xs truncate" style={{ color: "rgba(245,240,232,0.5)" }}>{s.exerciseName}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xs font-bold" style={{ color: "#fbbf24" }}>{s.weight}kg → {s.suggested}kg</p>
+                  <p className="text-xs" style={{ color: "rgba(251,191,36,0.6)" }}>3 sett. stabile</p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 
