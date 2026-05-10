@@ -5,7 +5,7 @@ import { useAppStore } from "@/lib/store";
 import {
   Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight,
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
-  Flame, AlertTriangle, Trophy, Zap,
+  Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle,
 } from "lucide-react";
 
 function timeGreeting() {
@@ -108,6 +108,26 @@ export default function DashboardPage() {
       }
     }
     return results.slice(0, 4);
+  }, [clients]);
+
+  // Birthday radar: clients with birthday in the next 7 days
+  const upcomingBirthdays = useMemo(() => {
+    const now = new Date();
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    return clients
+      .filter(c => c.status === "attivo" && c.birthDate)
+      .map(c => {
+        const bday = new Date(c.birthDate!);
+        let bdayThis = new Date(now.getFullYear(), bday.getMonth(), bday.getDate());
+        if (bdayThis.getTime() < todayMidnight) {
+          bdayThis = new Date(now.getFullYear() + 1, bday.getMonth(), bday.getDate());
+        }
+        const daysUntil = Math.floor((bdayThis.getTime() - todayMidnight) / 86400000);
+        const turnsAge = bdayThis.getFullYear() - bday.getFullYear();
+        return { client: c, daysUntil, turnsAge };
+      })
+      .filter(b => b.daysUntil <= 7)
+      .sort((a, b) => a.daysUntil - b.daysUntil);
   }, [clients]);
 
   // Smart onboarding: check what's actually done
@@ -320,6 +340,53 @@ export default function DashboardPage() {
                   <p className="text-xs" style={{ color: "rgba(251,191,36,0.6)" }}>3 sett. stabile</p>
                 </div>
               </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Compleanni imminenti ─────────────────────────────────────────── */}
+      {upcomingBirthdays.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(168,85,247,0.05)", border: "1px solid rgba(168,85,247,0.2)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <Gift size={14} style={{ color: "#c084fc" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+              Compleanni imminenti
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full ml-1 font-bold"
+              style={{ background: "rgba(168,85,247,0.18)", color: "#c084fc" }}>
+              {upcomingBirthdays.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {upcomingBirthdays.map(({ client, daysUntil, turnsAge }) => (
+              <div key={client.id} className="flex items-center gap-3 p-3 rounded-xl"
+                style={{ background: daysUntil === 0 ? "rgba(168,85,247,0.12)" : "rgba(168,85,247,0.06)" }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0"
+                  style={{ background: "rgba(168,85,247,0.18)", color: "#c084fc" }}>
+                  {client.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>
+                    {client.name}
+                    <span className="ml-1.5 text-xs font-normal" style={{ color: "rgba(192,132,252,0.65)" }}>
+                      {turnsAge} anni
+                    </span>
+                  </p>
+                  <p className="text-xs font-medium" style={{ color: daysUntil === 0 ? "#c084fc" : "rgba(245,240,232,0.45)" }}>
+                    {daysUntil === 0 ? "Oggi!" : daysUntil === 1 ? "Domani" : `Tra ${daysUntil} giorni`}
+                  </p>
+                </div>
+                {client.phone && (
+                  <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Tanti auguri ${client.name.split(" ")[0]}!`)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
+                    style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                    <MessageCircle size={11} />
+                    WA
+                  </a>
+                )}
+              </div>
             ))}
           </div>
         </div>
