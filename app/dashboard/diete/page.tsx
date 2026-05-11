@@ -7,7 +7,7 @@ import { UtensilsCrossed, ChevronRight, Search } from "lucide-react";
 type GoalFilter = "tutti" | "dimagrimento" | "massa" | "tonificazione" | "performance";
 
 const goalLabel: Record<string, string> = { dimagrimento: "Dimagrimento", massa: "Massa", tonificazione: "Tonificazione", performance: "Performance" };
-const goalColor: Record<string, string> = { dimagrimento: "#38bdf8", massa: "#a78bfa", tonificazione: "#34d399", performance: "#fb923c" };
+const goalColor: Record<string, string> = { dimagrimento: "#38bdf8", massa: "#a78bfa", tonificazione: "#34d399", performance: "#E53232" };
 
 export default function DietePage() {
   const clients = useAppStore((s) => s.clients);

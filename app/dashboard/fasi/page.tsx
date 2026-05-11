@@ -5,7 +5,7 @@ import { useAppStore } from "@/lib/store";
 import { Activity, CheckCircle2, Circle, ChevronRight, Filter } from "lucide-react";
 
 const phaseTypeLabel: Record<string, string> = { bulk: "Bulk", cut: "Cut", maintenance: "Mantenimento", custom: "Personalizzata" };
-const phaseTypeColor: Record<string, string> = { bulk: "#a78bfa", cut: "#38bdf8", maintenance: "#34d399", custom: "#fb923c" };
+const phaseTypeColor: Record<string, string> = { bulk: "#a78bfa", cut: "#38bdf8", maintenance: "#34d399", custom: "#f59e0b" };
 
 type FilterType = "tutte" | "bulk" | "cut" | "maintenance" | "custom";
 type FilterStatus = "tutte" | "attive" | "completate";
