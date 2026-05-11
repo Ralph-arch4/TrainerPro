@@ -262,11 +262,20 @@ function SupplementClientCard({ item }: { item: SupplementItem }) {
   );
 }
 
-function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToken }: {
-  planName: string; trainerName: string; daysPerWeek: number; totalWeeks: number; shareToken: string;
+function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToken, streak = 0 }: {
+  planName: string; trainerName: string; daysPerWeek: number; totalWeeks: number; shareToken: string; streak?: number;
 }) {
   const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
   const cardNum  = shareToken.replace(/-/g, "").toUpperCase().slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
+  const auraColor   = streak >= 14 ? "rgba(255,215,0,0.38)" : streak >= 7 ? "rgba(255,150,30,0.33)" : "rgba(229,50,50,0.28)";
+  const borderColor = streak >= 14 ? "rgba(255,215,0,0.72)" : streak >= 7 ? "rgba(255,150,30,0.68)" : "rgba(229,50,50,0.55)";
+  const glowShadow  = streak >= 14
+    ? "0 0 0 3px rgba(255,215,0,0.13), 0 0 22px rgba(255,215,0,0.38)"
+    : streak >= 7
+    ? "0 0 0 3px rgba(255,150,30,0.1), 0 0 16px rgba(255,150,30,0.32)"
+    : "0 0 0 3px rgba(229,50,50,0.08)";
+  const initialsColor = streak >= 14 ? "#FFD700" : streak >= 7 ? "#FF9620" : "var(--accent)";
+  const badgeBg       = streak >= 14 ? "#FFD700" : streak >= 7 ? "#FF9620" : "var(--accent)";
   return (
     <div className="mb-5 rounded-3xl overflow-hidden relative select-none"
       style={{ background: "linear-gradient(135deg, rgba(12,4,4,0.98) 0%, rgba(45,8,8,0.92) 55%, rgba(18,6,6,0.98) 100%)", border: "1px solid rgba(229,50,50,0.22)", boxShadow: "0 8px 32px rgba(229,50,50,0.1), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
@@ -295,13 +304,24 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
           <div>
             <p className="text-xs uppercase tracking-[0.16em] mb-1" style={{ color: "rgba(245,240,232,0.28)" }}>Creato da</p>
             <p className="text-sm font-black uppercase tracking-wide" style={{ color: "var(--ivory)" }}>{trainerName}</p>
+            {streak >= 3 && (
+              <p className="text-xs font-bold mt-0.5" style={{ color: streak >= 14 ? "rgba(255,215,0,0.82)" : streak >= 7 ? "rgba(255,150,30,0.78)" : "rgba(229,50,50,0.62)" }}>
+                {streak} giorni di fila
+              </p>
+            )}
           </div>
           <div className="relative">
-            <div className="absolute inset-0 rounded-full blur-md" style={{ background: "rgba(229,50,50,0.28)" }} />
+            <div className="absolute inset-0 rounded-full blur-md" style={{ background: auraColor }} />
             <div className="relative w-12 h-12 rounded-full flex items-center justify-center"
-              style={{ background: "radial-gradient(circle at 38% 32%, rgba(229,50,50,0.32), rgba(8,8,8,0.9))", border: "1.5px solid rgba(229,50,50,0.55)", boxShadow: "0 0 0 3px rgba(229,50,50,0.08)" }}>
-              <span className="text-base font-black" style={{ color: "var(--accent)" }}>{initials}</span>
+              style={{ background: "radial-gradient(circle at 38% 32%, rgba(229,50,50,0.32), rgba(8,8,8,0.9))", border: `1.5px solid ${borderColor}`, boxShadow: glowShadow }}>
+              <span className="text-base font-black" style={{ color: initialsColor }}>{initials}</span>
             </div>
+            {streak >= 3 && (
+              <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                style={{ background: badgeBg, border: "1.5px solid rgba(0,0,0,0.4)", fontSize: "9px", fontWeight: 900, color: "#000", lineHeight: 1 }}>
+                {streak >= 14 ? "★" : streak}
+              </div>
+            )}
           </div>
         </div>
         <p className="text-xs mt-3 font-mono" style={{ color: "rgba(245,240,232,0.1)", letterSpacing: "0.16em" }}>{cardNum}</p>
@@ -533,6 +553,7 @@ export default function ClientPortalPage() {
           daysPerWeek={plan.days_per_week}
           totalWeeks={plan.total_weeks}
           shareToken={plan.share_token}
+          streak={streak}
         />
 
         {/* ── Messaggio dal Trainer ─────────────────────────────────────────── */}
