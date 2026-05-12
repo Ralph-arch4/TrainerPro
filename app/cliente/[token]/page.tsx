@@ -335,6 +335,76 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
   );
 }
 
+function TrainerVoiceCard({ trainerName, daysSinceLastLog, streak, totalLogs }: {
+  trainerName: string; daysSinceLastLog: number | null; streak: number; totalLogs: number;
+}) {
+  const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
+
+  let message: string;
+  let color = "var(--accent)";
+
+  if (totalLogs === 0) {
+    message = `Benvenuto! Sono pronto ad accompagnarti in questo percorso. Inizia dalla prima settimana quando vuoi — ci sono.`;
+    color = "var(--accent)";
+  } else if (daysSinceLastLog === null || daysSinceLastLog === 0) {
+    if (streak >= 5) {
+      message = `${streak} giorni di fila — questo è il livello che fa la differenza. Sono fiero di te.`;
+      color = "#fbbf24";
+    } else {
+      message = `Ottimo lavoro oggi! Ogni sessione che completi mi rende orgoglioso di lavorare con te.`;
+      color = "#22c55e";
+    }
+  } else if (daysSinceLastLog === 1) {
+    message = `Pronto per oggi? Ieri hai fatto bene — continua su questa strada.`;
+    color = "var(--accent)";
+  } else if (daysSinceLastLog <= 3) {
+    message = `Qualche giorno di pausa fa parte del piano. Riprendi da dove hai lasciato — sai già come si fa.`;
+    color = "var(--accent)";
+  } else if (daysSinceLastLog <= 7) {
+    message = `Ti stavo pensando. ${daysSinceLastLog} giorni si recuperano in fretta — ricomincia con una sessione leggera e il ritmo torna subito.`;
+    color = "#fbbf24";
+  } else {
+    message = `Sono qui quando vuoi riprendere. Non importa quanto tempo è passato — il programma ti aspetta esattamente dove l'hai lasciato.`;
+    color = "#fbbf24";
+  }
+
+  const timeLabel = daysSinceLastLog === null
+    ? "in attesa"
+    : daysSinceLastLog === 0
+      ? "oggi attivo"
+      : daysSinceLastLog === 1
+        ? "ieri"
+        : `${daysSinceLastLog}g fa`;
+
+  return (
+    <div className="mb-4 rounded-2xl p-4 relative overflow-hidden"
+      style={{ background: "rgba(255,255,255,0.025)", border: `1px solid ${color}28` }}>
+      <div className="flex items-start gap-3">
+        <div className="relative flex-shrink-0">
+          <div className="w-11 h-11 rounded-full flex items-center justify-center font-black text-base"
+            style={{ background: `radial-gradient(circle at 38% 32%, ${color}35, rgba(8,8,8,0.92))`, border: `1.5px solid ${color}55` }}>
+            <span style={{ color, fontStyle: "normal" }}>{initials}</span>
+          </div>
+          <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2"
+            style={{ borderColor: "var(--black)", background: color, boxShadow: `0 0 7px ${color}` }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1.5">
+            <p className="text-xs font-bold" style={{ color }}>{trainerName}</p>
+            <span className="text-xs px-1.5 py-0.5 rounded-full font-semibold"
+              style={{ background: `${color}18`, color, fontSize: "0.6rem" }}>
+              {timeLabel}
+            </span>
+          </div>
+          <p className="text-sm leading-relaxed" style={{ color: "rgba(245,240,232,0.75)", fontStyle: "italic" }}>
+            &ldquo;{message}&rdquo;
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -492,6 +562,11 @@ export default function ClientPortalPage() {
     }
   }
 
+  // ── Days since last log ──────────────────────────────────────────────────
+  const daysSinceLastLog: number | null = sortedLogDays.length === 0
+    ? null
+    : Math.floor((Date.now() - new Date(sortedLogDays[sortedLogDays.length - 1]).getTime()) / 86400000);
+
   // ── Day on journey ───────────────────────────────────────────────────────
   const firstLogDate = logs.length > 0
     ? new Date(Math.min(...logs.map(l => new Date(l.loggedAt).getTime())))
@@ -557,6 +632,14 @@ export default function ClientPortalPage() {
           daysPerWeek={plan.days_per_week}
           totalWeeks={plan.total_weeks}
           shareToken={plan.share_token}
+        />
+
+        {/* ── Voce del Trainer ─────────────────────────────────────────────── */}
+        <TrainerVoiceCard
+          trainerName={trainerName}
+          daysSinceLastLog={daysSinceLastLog}
+          streak={streak}
+          totalLogs={totalLogs}
         />
 
         {/* ── Messaggio dal Trainer ─────────────────────────────────────────── */}
