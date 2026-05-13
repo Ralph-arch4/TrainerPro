@@ -41,7 +41,7 @@ export default function HeroCanvas() {
   return (
     /* isolation: isolate is REQUIRED for mix-blend-mode: screen to composite
        against the page background (var(--black)) and not bleed through */
-    <div className="w-full h-full" style={{ position: 'relative', minHeight: 400, isolation: 'isolate' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 320, isolation: 'isolate', overflow: 'hidden' }}>
 
       {/* ── Athlete image (layer 1) ── */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -54,15 +54,12 @@ export default function HeroCanvas() {
           inset: 0,
           width: '100%',
           height: '100%',
-          objectFit: 'contain',
-          objectPosition: 'center 12%',
+          objectFit: 'cover',
+          objectPosition: 'center center',
           mixBlendMode: 'screen',
-          /* contrast(2.5) pushes dark room pixels toward pure black
-             before screen blend — pure black on screen = invisible */
           filter: 'contrast(2.5) brightness(0.82) saturate(1.3)',
-          /* radial mask: keep center (the figure), fade out sides (the room) */
-          maskImage: 'radial-gradient(ellipse 48% 88% at 50% 46%, black 28%, rgba(0,0,0,0.6) 52%, transparent 78%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 48% 88% at 50% 46%, black 28%, rgba(0,0,0,0.6) 52%, transparent 78%)',
+          maskImage: 'radial-gradient(ellipse 55% 90% at 50% 50%, black 25%, rgba(0,0,0,0.55) 55%, transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 55% 90% at 50% 50%, black 25%, rgba(0,0,0,0.55) 55%, transparent 80%)',
           pointerEvents: 'none',
           userSelect: 'none',
           zIndex: 1,
@@ -73,7 +70,8 @@ export default function HeroCanvas() {
       <svg
         viewBox="0 0 520 580"
         width="100%" height="100%"
-        style={{ position: 'absolute', inset: 0, zIndex: 2 }}
+        style={{ position: 'absolute', inset: 0, zIndex: 2, overflow: 'hidden' }}
+        preserveAspectRatio="xMidYMid meet"
         aria-hidden
       >
         <defs>
