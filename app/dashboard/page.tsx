@@ -130,6 +130,48 @@ export default function DashboardPage() {
       .sort((a, b) => a.daysUntil - b.daysUntil);
   }, [clients]);
 
+  // Highlights settimana: PR battuti e ritorni dopo assenza lunga
+  const weekHighlights = useMemo(() => {
+    const results: Array<{
+      clientName: string; clientId: string;
+      type: "pr" | "comeback"; label: string; detail: string;
+    }> = [];
+    const weekAgo = Date.now() - 7 * 86400000;
+
+    for (const client of clients.filter(c => c.status === "attivo")) {
+      for (const plan of client.workoutPlans) {
+        const byEx: Record<string, typeof plan.logs> = {};
+        for (const log of plan.logs) {
+          if (!byEx[log.exerciseId]) byEx[log.exerciseId] = [];
+          byEx[log.exerciseId].push(log);
+        }
+        for (const [exId, logs] of Object.entries(byEx)) {
+          const withWeight = logs.filter(l => l.weight != null);
+          if (!withWeight.length) continue;
+          const thisWeek = withWeight.filter(l => new Date(l.loggedAt).getTime() > weekAgo);
+          if (!thisWeek.length) continue;
+          const best = Math.max(...thisWeek.map(l => l.weight!));
+          const allTime = Math.max(...withWeight.map(l => l.weight!));
+          if (best >= allTime && best > 0) {
+            const ex = plan.exercises.find(e => e.id === exId);
+            if (ex) results.push({ clientName: client.name, clientId: client.id, type: "pr", label: "Record personale", detail: `${ex.name}: ${best}kg` });
+          }
+        }
+        const thisWeekLogs = plan.logs.filter(l => new Date(l.loggedAt).getTime() > weekAgo);
+        if (thisWeekLogs.length) {
+          const before = plan.logs.filter(l => new Date(l.loggedAt).getTime() <= weekAgo);
+          if (before.length) {
+            const lastBefore = Math.max(...before.map(l => new Date(l.loggedAt).getTime()));
+            const gapDays = Math.floor((weekAgo - lastBefore) / 86400000);
+            if (gapDays >= 7) results.push({ clientName: client.name, clientId: client.id, type: "comeback", label: "Ritorno in palestra", detail: `Assente da ${gapDays + 7}gg` });
+          }
+        }
+      }
+    }
+    const seen = new Set<string>();
+    return results.filter(r => { const k = `${r.clientId}-${r.type}`; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
+  }, [clients]);
+
   // Smart onboarding: check what's actually done
   const hasClients     = clients.length > 0;
   const hasScheda      = clients.some((c) => c.workoutPlans.length > 0);
@@ -291,18 +333,29 @@ export default function DashboardPage() {
               </div>
               <div className="space-y-2">
                 {atRiskClients.map(({ client, daysSinceLast }) => (
-                  <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
-                    className="flex items-center gap-3 group">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                      style={{ background: "rgba(239,68,68,0.1)", color: "#f87171" }}>
-                      {client.name.charAt(0).toUpperCase()}
-                    </div>
-                    <p className="flex-1 text-sm font-semibold truncate group-hover:underline"
-                      style={{ color: "var(--ivory)" }}>{client.name}</p>
-                    <span className="text-xs flex-shrink-0 font-medium" style={{ color: "rgba(248,113,113,0.7)" }}>
-                      {daysSinceLast}gg fa
-                    </span>
-                  </Link>
+                  <div key={client.id} className="flex items-center gap-2">
+                    <Link href={`/dashboard/clienti/${client.id}`}
+                      className="flex items-center gap-3 flex-1 min-w-0 group">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                        style={{ background: "rgba(239,68,68,0.1)", color: "#f87171" }}>
+                        {client.name.charAt(0).toUpperCase()}
+                      </div>
+                      <p className="flex-1 text-sm font-semibold truncate group-hover:underline"
+                        style={{ color: "var(--ivory)" }}>{client.name}</p>
+                      <span className="text-xs flex-shrink-0 font-medium" style={{ color: "rgba(248,113,113,0.7)" }}>
+                        {daysSinceLast}gg fa
+                      </span>
+                    </Link>
+                    {client.phone && (
+                      <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}, sono passati ${daysSinceLast} giorni dall'ultima sessione. Quando riprendi?`)}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
+                        style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                        <MessageCircle size={11} />
+                        WA
+                      </a>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -338,6 +391,40 @@ export default function DashboardPage() {
                 <div className="text-right flex-shrink-0">
                   <p className="text-xs font-bold" style={{ color: "#fbbf24" }}>{s.weight}kg → {s.suggested}kg</p>
                   <p className="text-xs" style={{ color: "rgba(251,191,36,0.6)" }}>3 sett. stabile</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Highlights della settimana ──────────────────────────────────── */}
+      {weekHighlights.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.15)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <Trophy size={14} style={{ color: "#fbbf24" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+              Highlights della settimana
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full ml-1 font-bold"
+              style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24" }}>
+              {weekHighlights.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {weekHighlights.map((h, i) => (
+              <Link key={i} href={`/dashboard/clienti/${h.clientId}`}
+                className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: h.type === "pr" ? "rgba(251,191,36,0.15)" : "rgba(34,197,94,0.12)", color: h.type === "pr" ? "#fbbf24" : "#34d399" }}>
+                  {h.type === "pr" ? <Flame size={14} /> : <Zap size={14} />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold truncate" style={{ color: "var(--ivory)" }}>{h.clientName}</p>
+                  <p className="text-xs truncate">
+                    <span className="font-semibold" style={{ color: h.type === "pr" ? "#fbbf24" : "#34d399" }}>{h.label}</span>
+                    <span style={{ color: "rgba(245,240,232,0.45)" }}>{" · "}{h.detail}</span>
+                  </p>
                 </div>
               </Link>
             ))}
