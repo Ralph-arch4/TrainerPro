@@ -262,8 +262,9 @@ function SupplementClientCard({ item }: { item: SupplementItem }) {
   );
 }
 
-function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToken }: {
+function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToken, level, levelName, xpPct }: {
   planName: string; trainerName: string; daysPerWeek: number; totalWeeks: number; shareToken: string;
+  level: number; levelName: string; xpPct: number;
 }) {
   const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
   const cardNum  = shareToken.replace(/-/g, "").toUpperCase().slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
@@ -303,10 +304,16 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
               </div>
               <div style={{ position: "absolute", top: 3, bottom: 3, left: "50%", width: 1, background: "rgba(0,0,0,0.14)", transform: "translateX(-50%)" }} />
             </div>
-            <span className="text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider"
-              style={{ background: "rgba(229,50,50,0.1)", border: "1px solid rgba(229,50,50,0.22)", color: "rgba(229,50,50,0.75)" }}>
-              Piano Attivo
-            </span>
+            <div className="flex flex-col items-end gap-1">
+              <span className="text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider"
+                style={{ background: "rgba(229,50,50,0.1)", border: "1px solid rgba(229,50,50,0.22)", color: "rgba(229,50,50,0.75)" }}>
+                Piano Attivo
+              </span>
+              <span className="font-black uppercase tracking-wider"
+                style={{ background: "linear-gradient(90deg,#7B2FBE,#a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", fontSize: "0.6rem", letterSpacing: "0.14em" }}>
+                Lv.{level} {levelName}
+              </span>
+            </div>
           </div>
         </div>
         <h2 className="text-xl font-black tracking-tight leading-tight mb-1" style={{ color: "var(--ivory)" }}>{planName}</h2>
@@ -320,11 +327,32 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
             {/* Trainer signature — serif italic for handwritten feel */}
             <p className="text-base font-black" style={{ color: "var(--ivory)", fontStyle: "italic", fontFamily: "Georgia,'Times New Roman',serif", letterSpacing: "0.02em" }}>{trainerName}</p>
           </div>
-          <div className="relative">
-            <div className="absolute inset-0 rounded-full blur-md" style={{ background: "rgba(229,50,50,0.28)" }} />
-            <div className="relative w-12 h-12 rounded-full flex items-center justify-center"
-              style={{ background: "radial-gradient(circle at 38% 32%, rgba(229,50,50,0.32), rgba(8,8,8,0.9))", border: "1.5px solid rgba(229,50,50,0.55)", boxShadow: "0 0 0 3px rgba(229,50,50,0.08)" }}>
+          <div className="relative" style={{ width: 68, height: 68, flexShrink: 0 }}>
+            {/* XP progress ring */}
+            <svg width="68" height="68" viewBox="0 0 68 68" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
+              <defs>
+                <linearGradient id="xpRingGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#7B2FBE" />
+                  <stop offset="100%" stopColor="#a78bfa" />
+                </linearGradient>
+              </defs>
+              <circle cx="34" cy="34" r="30" fill="none" stroke="rgba(123,47,190,0.12)" strokeWidth="3.5" />
+              <circle cx="34" cy="34" r="30" fill="none" stroke="url(#xpRingGrad)" strokeWidth="3.5"
+                strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 30}`}
+                strokeDashoffset={`${2 * Math.PI * 30 * (1 - xpPct / 100)}`}
+                style={{ transition: "stroke-dashoffset 0.9s cubic-bezier(.4,0,.2,1)", filter: "drop-shadow(0 0 4px rgba(167,139,250,0.6))" }}
+              />
+            </svg>
+            {/* Glow */}
+            <div style={{ position: "absolute", inset: 8, borderRadius: "50%", background: "rgba(229,50,50,0.24)", filter: "blur(7px)" }} />
+            {/* Trainer initials */}
+            <div style={{ position: "absolute", inset: 8, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "radial-gradient(circle at 38% 32%, rgba(229,50,50,0.32), rgba(8,8,8,0.9))", border: "1.5px solid rgba(229,50,50,0.55)" }}>
               <span className="text-base font-black" style={{ color: "var(--accent)" }}>{initials}</span>
+            </div>
+            {/* Level badge */}
+            <div style={{ position: "absolute", bottom: 1, right: 1, width: 20, height: 20, borderRadius: "50%", background: "linear-gradient(135deg,#7B2FBE,#a78bfa)", border: "2px solid var(--black)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 8px rgba(123,47,190,0.55)" }}>
+              <span style={{ color: "#fff", fontSize: "0.55rem", fontWeight: 900, lineHeight: 1 }}>{level}</span>
             </div>
           </div>
         </div>
@@ -632,6 +660,9 @@ export default function ClientPortalPage() {
           daysPerWeek={plan.days_per_week}
           totalWeeks={plan.total_weeks}
           shareToken={plan.share_token}
+          level={level}
+          levelName={levelName}
+          xpPct={xpPct}
         />
 
         {/* ── Voce del Trainer ─────────────────────────────────────────────── */}
