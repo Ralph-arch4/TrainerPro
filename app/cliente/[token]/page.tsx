@@ -363,6 +363,50 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
   );
 }
 
+const JOURNEY_MILESTONES = [
+  { days: 7,   label: "1 settimana",   msg: "Il tuo percorso è ufficialmente iniziato. Ogni rep conta." },
+  { days: 14,  label: "2 settimane",   msg: "Due settimane. Stai costruendo qualcosa di reale." },
+  { days: 30,  label: "1 mese",        msg: "Un mese insieme. Il cambiamento è già in atto — anche se non lo vedi ancora allo specchio." },
+  { days: 60,  label: "2 mesi",        msg: "Due mesi di lavoro costante. I risultati si vedono perché ci sei ogni volta." },
+  { days: 90,  label: "3 mesi",        msg: "Un trimestre di dedizione. Pochi arrivano fin qui — tu ci sei." },
+  { days: 180, label: "6 mesi",        msg: "Metà anno. Una trasformazione autentica, costruita giorno per giorno." },
+  { days: 365, label: "1 anno",        msg: "Un anno intero insieme. Questo non è più un programma — è il tuo stile di vita." },
+];
+
+function MilestoneBanner({ dayOnJourney, trainerName }: { dayOnJourney: number | null; trainerName: string }) {
+  const [dismissed, setDismissed] = useState(false);
+  if (dayOnJourney === null || dismissed) return null;
+  const hit = JOURNEY_MILESTONES.find(m => dayOnJourney >= m.days && dayOnJourney < m.days + 7);
+  if (!hit) return null;
+  return (
+    <div className="mb-4 rounded-2xl p-5 relative overflow-hidden"
+      style={{ background: "linear-gradient(135deg, rgba(229,50,50,0.1), rgba(255,154,108,0.04))", border: "1px solid rgba(229,50,50,0.3)" }}>
+      <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(229,50,50,0.1), transparent)" }} />
+      <button onClick={() => setDismissed(true)}
+        className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full text-sm font-bold"
+        style={{ background: "rgba(255,255,255,0.07)", color: "rgba(245,240,232,0.35)" }}>
+        &times;
+      </button>
+      <div className="flex items-center gap-2 mb-2">
+        <Trophy size={14} style={{ color: "var(--accent)", flexShrink: 0 }} />
+        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(229,50,50,0.65)", letterSpacing: "0.13em" }}>
+          Traguardo raggiunto
+        </p>
+      </div>
+      <p className="text-xl font-black mb-1.5" style={{ color: "var(--ivory)" }}>
+        {hit.label} insieme
+      </p>
+      <p className="text-sm leading-relaxed" style={{ color: "rgba(245,240,232,0.68)", fontStyle: "italic" }}>
+        &ldquo;{hit.msg}&rdquo;
+      </p>
+      <p className="text-xs mt-3 font-semibold" style={{ color: "rgba(229,50,50,0.48)" }}>
+        — {trainerName}
+      </p>
+    </div>
+  );
+}
+
 function TrainerVoiceCard({ trainerName, daysSinceLastLog, streak, totalLogs }: {
   trainerName: string; daysSinceLastLog: number | null; streak: number; totalLogs: number;
 }) {
@@ -672,6 +716,9 @@ export default function ClientPortalPage() {
           streak={streak}
           totalLogs={totalLogs}
         />
+
+        {/* ── Banner milestone percorso ─────────────────────────────────────── */}
+        <MilestoneBanner dayOnJourney={dayOnJourney} trainerName={trainerName} />
 
         {/* ── Messaggio dal Trainer ─────────────────────────────────────────── */}
         {plan.description && (
