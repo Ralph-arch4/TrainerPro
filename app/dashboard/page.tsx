@@ -5,7 +5,7 @@ import { useAppStore } from "@/lib/store";
 import {
   Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight,
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
-  Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle,
+  Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle, Scale,
 } from "lucide-react";
 
 function timeGreeting() {
@@ -170,6 +170,23 @@ export default function DashboardPage() {
     }
     const seen = new Set<string>();
     return results.filter(r => { const k = `${r.clientId}-${r.type}`; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
+  }, [clients]);
+
+  // Stallo peso: clients with 3+ consecutive measurements within ±0.5kg
+  const measurementPlateauAlerts = useMemo(() => {
+    const results: { client: typeof clients[0]; weight: number; lastDate: string }[] = [];
+    for (const c of clients.filter(cl => cl.status === "attivo")) {
+      const sorted = [...c.measurements]
+        .filter(m => m.weight != null)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      if (sorted.length < 3) continue;
+      const last3 = sorted.slice(0, 3);
+      const max = Math.max(...last3.map(m => m.weight!));
+      const min = Math.min(...last3.map(m => m.weight!));
+      if (max - min > 0.5) continue;
+      results.push({ client: c, weight: last3[0].weight!, lastDate: last3[0].date });
+    }
+    return results.slice(0, 4);
   }, [clients]);
 
   // Smart onboarding: check what's actually done
@@ -474,6 +491,46 @@ export default function DashboardPage() {
                   </a>
                 )}
               </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Stallo peso corporeo ─────────────────────────────────────────── */}
+      {measurementPlateauAlerts.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(99,102,241,0.05)", border: "1px solid rgba(99,102,241,0.2)" }}>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <Scale size={14} style={{ color: "#818cf8" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+              Stallo peso corporeo
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+              style={{ background: "rgba(99,102,241,0.18)", color: "#818cf8" }}>
+              {measurementPlateauAlerts.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "rgba(245,240,232,0.35)" }}>
+              3 misurazioni stabili — valuta aggiustamenti
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {measurementPlateauAlerts.map((s, i) => (
+              <Link key={i} href={`/dashboard/clienti/${s.client.id}`}
+                className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                  style={{ background: "rgba(99,102,241,0.12)", color: "#818cf8" }}>
+                  {s.client.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate" style={{ color: "var(--ivory)" }}>{s.client.name}</p>
+                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>
+                    Ultima mis.: {new Date(s.lastDate).toLocaleDateString("it-IT", { day: "2-digit", month: "short" })}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xs font-bold" style={{ color: "#818cf8" }}>{s.weight} kg</p>
+                  <p className="text-xs" style={{ color: "rgba(130,138,252,0.6)" }}>≈ stabile</p>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
