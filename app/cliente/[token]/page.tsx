@@ -675,7 +675,7 @@ export default function ClientPortalPage() {
     <div className="min-h-screen" style={{ background: "var(--black)" }}>
 
       {/* ── Top bar ──────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-40 border-b" style={{ background: "rgba(10,10,10,0.95)", borderColor: "rgba(255,107,43,0.12)", backdropFilter: "blur(12px)" }}>
+      <div className="sticky top-0 z-40 border-b" style={{ background: "rgba(10,10,10,0.95)", borderColor: "rgba(229,50,50,0.14)", backdropFilter: "blur(12px)" }}>
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-lg accent-btn flex items-center justify-center flex-shrink-0">
@@ -688,7 +688,7 @@ export default function ClientPortalPage() {
           </div>
           <button onClick={copyLink}
             className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs transition-all active:scale-95"
-            style={{ border: "1px solid rgba(255,107,43,0.2)", color: copied ? "#22c55e" : "rgba(245,240,232,0.55)", minHeight: "2.5rem" }}>
+            style={{ border: "1px solid rgba(229,50,50,0.2)", color: copied ? "#22c55e" : "rgba(245,240,232,0.55)", minHeight: "2.5rem" }}>
             {copied ? <Check size={13} /> : <Copy size={13} />}
             <span className="hidden sm:inline">{copied ? "Copiato!" : "Copia link"}</span>
           </button>
@@ -756,11 +756,11 @@ export default function ClientPortalPage() {
 
         {/* ── Level + XP card ────────────────────────────────────────────────── */}
         <div className="mb-4 p-4 rounded-2xl relative overflow-hidden"
-          style={{ background: "linear-gradient(135deg, rgba(123,47,190,0.18), rgba(229,50,50,0.1))", border: "1px solid rgba(123,47,190,0.25)" }}>
+          style={{ background: "linear-gradient(135deg, rgba(229,50,50,0.1), rgba(170,21,21,0.05))", border: "1px solid rgba(229,50,50,0.22)" }}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl flex items-center justify-center font-black text-lg flex-shrink-0"
-                style={{ background: "linear-gradient(135deg, #a78bfa, #7B2FBE)", boxShadow: "0 0 20px rgba(123,47,190,0.4)" }}>
+                style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-dark))", boxShadow: "0 0 20px rgba(229,50,50,0.35)" }}>
                 {level}
               </div>
               <div>
@@ -770,13 +770,13 @@ export default function ClientPortalPage() {
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-xs font-semibold" style={{ color: "rgba(245,240,232,0.4)" }}>al prossimo liv.</p>
-              <p className="text-sm font-bold" style={{ color: "#a78bfa" }}>{XP_PER_LVL - xpInLevel} XP</p>
+              <p className="text-sm font-bold accent-text">{XP_PER_LVL - xpInLevel} XP</p>
             </div>
           </div>
           {/* XP bar */}
           <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
             <div className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${xpPct}%`, background: "linear-gradient(90deg, #7B2FBE, #a78bfa)" }} />
+              style={{ width: `${xpPct}%`, background: "linear-gradient(90deg, var(--accent-dark), var(--accent))" }} />
           </div>
           <div className="flex items-center justify-between mt-2">
             <p className="text-xs" style={{ color: "rgba(245,240,232,0.3)" }}>
@@ -784,7 +784,7 @@ export default function ClientPortalPage() {
             </p>
             {dayOnJourney !== null && (
               <span className="text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0"
-                style={{ background: "rgba(245,240,232,0.06)", color: "rgba(245,240,232,0.45)" }}>
+                style={{ background: "rgba(229,50,50,0.08)", color: "rgba(245,240,232,0.45)", border: "1px solid rgba(229,50,50,0.15)" }}>
                 Giorno {dayOnJourney}
               </span>
             )}
@@ -832,7 +832,7 @@ export default function ClientPortalPage() {
         {/* ── Program progress bar (hidden for unlimited plans) ──────────────── */}
         {!isUnlimited && pct !== null && (
           <div className="mb-4 p-4 rounded-2xl"
-            style={{ background: "rgba(255,107,43,0.04)", border: "1px solid rgba(255,107,43,0.1)" }}>
+            style={{ background: "rgba(229,50,50,0.04)", border: "1px solid rgba(229,50,50,0.12)" }}>
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-bold" style={{ color: "var(--ivory)" }}>Avanzamento programma</p>
               <span className="text-sm font-black accent-text">{pct}%</span>
@@ -893,8 +893,8 @@ export default function ClientPortalPage() {
             <button key={key} onClick={() => setTab(key)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0"
               style={{
-                background: tab === key ? "rgba(255,107,43,0.12)" : "rgba(255,255,255,0.04)",
-                border: `1px solid ${tab === key ? "rgba(255,107,43,0.3)" : "rgba(255,255,255,0.07)"}`,
+                background: tab === key ? "rgba(229,50,50,0.12)" : "rgba(255,255,255,0.04)",
+                border: `1px solid ${tab === key ? "rgba(229,50,50,0.32)" : "rgba(255,255,255,0.07)"}`,
                 color: tab === key ? "var(--accent-light)" : "rgba(245,240,232,0.5)",
               }}>
               <Icon size={14} />
@@ -1057,14 +1057,14 @@ export default function ClientPortalPage() {
               </div>
             )}
             <div className="mb-4 p-3 rounded-xl text-sm flex items-start gap-2"
-              style={{ background: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.12)", color: "rgba(245,240,232,0.6)" }}>
+              style={{ background: "rgba(229,50,50,0.06)", border: "1px solid rgba(229,50,50,0.14)", color: "rgba(245,240,232,0.6)" }}>
               <span className="text-base leading-none mt-0.5">💡</span>
               <span><strong style={{ color: "var(--accent-light)" }}>Come usare la scheda:</strong> clicca su una cella per inserire il peso e le ripetizioni. I dati vengono salvati automaticamente settimana per settimana.</span>
             </div>
             {plan.exercises.length === 0 ? (
               <div className="text-center py-16 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(255,107,43,0.08)" }}>
-                  <Dumbbell size={22} style={{ color: "rgba(255,107,43,0.4)" }} />
+                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(229,50,50,0.08)" }}>
+                  <Dumbbell size={22} style={{ color: "rgba(229,50,50,0.4)" }} />
                 </div>
                 <p className="font-semibold text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Scheda in preparazione</p>
                 <p className="text-xs max-w-xs mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>Il tuo trainer sta costruendo la tua scheda personalizzata su misura. Torni tra poco.</p>
@@ -1090,8 +1090,8 @@ export default function ClientPortalPage() {
           <div>
             {diets.length === 0 ? (
               <div className="text-center py-16 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(255,107,43,0.08)" }}>
-                  <UtensilsCrossed size={22} style={{ color: "rgba(255,107,43,0.4)" }} />
+                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(229,50,50,0.08)" }}>
+                  <UtensilsCrossed size={22} style={{ color: "rgba(229,50,50,0.4)" }} />
                 </div>
                 <p className="font-semibold text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Piano alimentare in preparazione</p>
                 <p className="text-xs max-w-xs mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>Il tuo piano alimentare personalizzato apparirà qui. Il trainer lo sta preparando su misura per i tuoi obiettivi.</p>
@@ -1103,7 +1103,7 @@ export default function ClientPortalPage() {
               const d = diets[0];
               return (
                 <div className="mb-6 rounded-2xl overflow-hidden"
-                  style={{ border: "1px solid rgba(229,50,50,0.2)", background: "linear-gradient(135deg,rgba(229,50,50,0.06),rgba(13,11,30,0.6))" }}>
+                  style={{ border: "1px solid rgba(229,50,50,0.2)", background: "linear-gradient(135deg,rgba(229,50,50,0.06),rgba(8,6,6,0.6))" }}>
                   <div className="flex items-center gap-3 px-5 py-4">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{ background: "rgba(229,50,50,0.12)", border: "1px solid rgba(229,50,50,0.2)" }}>
@@ -1146,9 +1146,9 @@ export default function ClientPortalPage() {
                     max && max > min ? `${min}–${max}${unit}` : `${min}${unit}`;
 
                   return (
-                    <div key={diet.id} className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,107,43,0.15)" }}>
+                    <div key={diet.id} className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(229,50,50,0.15)" }}>
                       {/* Header */}
-                      <div className="p-5" style={{ background: "rgba(255,107,43,0.04)" }}>
+                      <div className="p-5" style={{ background: "rgba(229,50,50,0.04)" }}>
                         <div className="flex items-start justify-between mb-4">
                           <div>
                             <h2 className="text-base font-bold" style={{ color: "var(--ivory)" }}>{diet.name}</h2>
@@ -1179,12 +1179,12 @@ export default function ClientPortalPage() {
 
                       {/* Meals */}
                       {meals.length > 0 && (
-                        <div className="divide-y" style={{ borderTop: "1px solid rgba(255,107,43,0.1)", borderColor: "rgba(255,107,43,0.08)" }}>
+                        <div className="divide-y" style={{ borderTop: "1px solid rgba(229,50,50,0.12)", borderColor: "rgba(229,50,50,0.08)" }}>
                           {meals.map((meal, mi) => (
                             <div key={meal.id} className="p-4">
                               <div className="flex items-center gap-2 mb-3">
                                 <span className="w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center flex-shrink-0"
-                                  style={{ background: "rgba(255,107,43,0.15)", color: "var(--accent-light)" }}>{mi + 1}</span>
+                                  style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent-light)" }}>{mi + 1}</span>
                                 <div className="flex items-baseline gap-2">
                                   <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{meal.name}</p>
                                   {meal.time && <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{meal.time}</span>}
@@ -1229,8 +1229,8 @@ export default function ClientPortalPage() {
           <div>
             {(!plan.supplements || plan.supplements.length === 0) ? (
               <div className="text-center py-16 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(255,107,43,0.08)" }}>
-                  <ShoppingBag size={22} style={{ color: "rgba(255,107,43,0.4)" }} />
+                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(229,50,50,0.08)" }}>
+                  <ShoppingBag size={22} style={{ color: "rgba(229,50,50,0.4)" }} />
                 </div>
                 <p className="font-semibold text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Integratori in arrivo</p>
                 <p className="text-xs max-w-xs mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>Il tuo trainer aggiungerà presto i consigli sugli integratori più adatti al tuo programma.</p>

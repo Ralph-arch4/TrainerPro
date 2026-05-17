@@ -627,3 +627,89 @@ export const dbProgressPhotos = {
     return data?.signedUrl ?? null;
   },
 };
+
+// ─── Fitness Scans ────────────────────────────────────────────────────────────
+export interface FitnessScan {
+  id: string;
+  client_id: string;
+  user_id: string;
+  storage_path: string;
+  taken_at: string;
+  notes: string | null;
+  ai_analysis: FitnessScanAnalysis | null;
+  created_at: string;
+}
+
+export interface FitnessScanAnalysis {
+  body_fat_est: number | null;
+  muscle_mass_est: string | null;
+  body_type: string | null;
+  summary: string;
+  recommendations: string[];
+  confidence: "low" | "medium" | "high";
+  analyzed_at: string;
+  model: string;
+}
+
+const SCAN_BUCKET = "fitness-scans";
+
+export const dbFitnessScans = {
+  async list(clientId: string): Promise<FitnessScan[]> {
+    const { data, error } = await db()
+      .from("fitness_scans")
+      .select("*")
+      .eq("client_id", clientId)
+      .order("taken_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as FitnessScan[];
+  },
+
+  async upload(clientId: string, blob: Blob, takenAt: string): Promise<string> {
+    const userId = await uid();
+    const path = `${userId}/${clientId}/${takenAt}-${crypto.randomUUID().slice(0, 8)}.jpg`;
+    const { error } = await db().storage
+      .from(SCAN_BUCKET)
+      .upload(path, blob, { contentType: "image/jpeg", upsert: false });
+    if (error) throw error;
+    return path;
+  },
+
+  async create(payload: { clientId: string; storagePath: string; takenAt: string; notes?: string }): Promise<FitnessScan> {
+    const userId = await uid();
+    const { data, error } = await db()
+      .from("fitness_scans")
+      .insert({
+        client_id:    payload.clientId,
+        user_id:      userId,
+        storage_path: payload.storagePath,
+        taken_at:     payload.takenAt,
+        notes:        payload.notes ?? null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return data as FitnessScan;
+  },
+
+  async saveAnalysis(id: string, analysis: FitnessScanAnalysis): Promise<void> {
+    const { error } = await db()
+      .from("fitness_scans")
+      .update({ ai_analysis: analysis })
+      .eq("id", id);
+    if (error) throw error;
+  },
+
+  async remove(id: string, storagePath: string): Promise<void> {
+    await db().storage.from(SCAN_BUCKET).remove([storagePath]);
+    const { error } = await db().from("fitness_scans").delete().eq("id", id);
+    if (error) throw error;
+  },
+
+  // Short TTL (5 min) — images must be fetched fresh, not cached
+  async getSignedUrl(storagePath: string): Promise<string | null> {
+    const { data } = await db().storage
+      .from(SCAN_BUCKET)
+      .createSignedUrl(storagePath, 300);
+    return data?.signedUrl ?? null;
+  },
+};
