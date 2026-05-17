@@ -5,8 +5,9 @@ import { createClient } from "@/lib/supabase/client";
 import { dbExerciseLogs } from "@/lib/db";
 import WorkoutLogbook from "@/components/WorkoutLogbook";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
-import { Dumbbell, UtensilsCrossed, ShoppingBag, Loader2, AlertCircle, Copy, Check, Zap, Trophy, Flame, ChevronDown, ChevronUp, Calendar, MessageSquare } from "lucide-react";
+import { Dumbbell, UtensilsCrossed, ShoppingBag, Loader2, AlertCircle, Copy, Check, Zap, Trophy, Flame, ChevronDown, ChevronUp, Calendar, MessageSquare, Scan, ShieldCheck, Brain, Sparkles, Trash2, Upload } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import type { FitnessScanAnalysis } from "@/lib/db";
 
 // ── Meal library (Italian, based on sports nutrition guidelines) ─────────────
 interface MealTpl { name: string; ingredients: string[]; pro: number; cho: number; fat: number; kcal: number; }
@@ -217,7 +218,37 @@ interface DietData {
   active: boolean;
 }
 
-type Tab = "allenamento" | "dieta" | "integratori" | "record";
+type Tab = "allenamento" | "dieta" | "integratori" | "record" | "scan";
+
+// ── Image resize (client-side canvas) ────────────────────────────────────────
+async function resizeImage(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const MAX = 1200;
+      const r = Math.min(MAX / img.width, MAX / img.height, 1);
+      const canvas = document.createElement("canvas");
+      canvas.width  = Math.round(img.width  * r);
+      canvas.height = Math.round(img.height * r);
+      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error("blob")), "image/jpeg", 0.82);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+// ── Client scan type (returned by /api/fitness-scan/client) ──────────────────
+interface ClientScan {
+  id: string;
+  taken_at: string;
+  notes: string | null;
+  ai_analysis: FitnessScanAnalysis | null;
+  signed_url: string | null;
+  created_at: string;
+}
 
 function SupplementClientCard({ item }: { item: SupplementItem }) {
   const [copied, setCopied] = useState(false);
@@ -489,6 +520,56 @@ export default function ClientPortalPage() {
   const [copied, setCopied] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [trainerName, setTrainerName] = useState("Il tuo Trainer");
+
+  // Fitness Scan state
+  const [scans, setScans] = useState<ClientScan[]>([]);
+  const [scansLoaded, setScansLoaded] = useState(false);
+  const [scanUploading, setScanUploading] = useState(false);
+  const [scanDeleting, setScanDeleting] = useState<string | null>(null);
+  const [scanUploadDate, setScanUploadDate] = useState(new Date().toISOString().slice(0, 10));
+  const [scanUploadNotes, setScanUploadNotes] = useState("");
+
+  async function loadScans() {
+    if (scansLoaded || !token) return;
+    try {
+      const resp = await fetch(`/api/fitness-scan/client?token=${encodeURIComponent(token)}`);
+      if (!resp.ok) return;
+      const { scans: list } = await resp.json();
+      setScans(list ?? []);
+    } catch {}
+    setScansLoaded(true);
+  }
+
+  async function handleScanUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith("image/") || !token) return;
+    e.target.value = "";
+    setScanUploading(true);
+    try {
+      const resized = await resizeImage(file);
+      const fd = new FormData();
+      fd.append("token",    token);
+      fd.append("taken_at", scanUploadDate);
+      if (scanUploadNotes) fd.append("notes", scanUploadNotes);
+      fd.append("file", resized, "scan.jpg");
+      const resp = await fetch("/api/fitness-scan/client", { method: "POST", body: fd });
+      if (!resp.ok) throw new Error("upload failed");
+      const { scan } = await resp.json();
+      setScans(prev => [scan, ...prev]);
+      setScanUploadNotes("");
+    } catch { /* silent — user will retry */ }
+    setScanUploading(false);
+  }
+
+  async function handleScanDelete(scan: ClientScan) {
+    if (!token) return;
+    setScanDeleting(scan.id);
+    setScans(prev => prev.filter(s => s.id !== scan.id));
+    try {
+      await fetch(`/api/fitness-scan/client?token=${encodeURIComponent(token)}&id=${scan.id}`, { method: "DELETE" });
+    } catch { setScans(prev => [scan, ...prev]); }
+    setScanDeleting(null);
+  }
 
   useEffect(() => {
     async function load() {
@@ -889,20 +970,27 @@ export default function ClientPortalPage() {
         {/* ── Tabs ───────────────────────────────────────────────────────────── */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
           {([
-            { key: "allenamento"  as Tab, icon: Dumbbell,        label: "Scheda" },
-            { key: "record"       as Tab, icon: Trophy,           label: "Record" },
-            { key: "dieta"        as Tab, icon: UtensilsCrossed,  label: `Dieta${diets.length > 0 ? ` (${diets.length})` : ""}` },
-            { key: "integratori"  as Tab, icon: ShoppingBag,      label: `Integratori${(plan.supplements?.length ?? 0) > 0 ? ` (${plan.supplements!.length})` : ""}` },
-          ]).map(({ key, icon: Icon, label }) => (
-            <button key={key} onClick={() => setTab(key)}
+            { key: "allenamento" as Tab, icon: Dumbbell,       label: "Scheda",       beta: false },
+            { key: "record"      as Tab, icon: Trophy,          label: "Record",        beta: false },
+            { key: "dieta"       as Tab, icon: UtensilsCrossed, label: `Dieta${diets.length > 0 ? ` (${diets.length})` : ""}`, beta: false },
+            { key: "integratori" as Tab, icon: ShoppingBag,     label: `Integratori${(plan.supplements?.length ?? 0) > 0 ? ` (${plan.supplements!.length})` : ""}`, beta: false },
+            { key: "scan"        as Tab, icon: Scan,            label: "Fitness Scan",  beta: true },
+          ]).map(({ key, icon: Icon, label, beta }) => (
+            <button key={key} onClick={() => { setTab(key); if (key === "scan") loadScans(); }}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0"
               style={{
                 background: tab === key ? "rgba(229,50,50,0.12)" : "var(--surface-sm)",
-                border: `1px solid ${tab === key ? "rgba(229,50,50,0.32)" : "var(--surface-md)"}`,
+                border: `1px solid ${tab === key ? "rgba(229,50,50,0.32)" : "var(--border-subtle)"}`,
                 color: tab === key ? "var(--accent-light)" : "var(--text-muted)",
               }}>
               <Icon size={14} />
               {label}
+              {beta && (
+                <span className="text-xs px-1.5 py-0.5 rounded-full font-bold"
+                  style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24", fontSize: "0.55rem", letterSpacing: "0.05em" }}>
+                  BETA
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -1253,6 +1341,191 @@ export default function ClientPortalPage() {
             )}
           </div>
         )}
+
+        {/* ── FITNESS SCAN tab ────────────────────────────────────────────────── */}
+        {tab === "scan" && (
+          <div className="pb-2">
+            {/* Privacy + beta header */}
+            <div className="rounded-2xl p-4 mb-5 flex items-start gap-3"
+              style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.18)" }}>
+              <ShieldCheck size={18} style={{ color: "#fbbf24", flexShrink: 0, marginTop: 2 }} />
+              <div>
+                <p className="text-xs font-bold mb-1" style={{ color: "#fbbf24" }}>
+                  Fitness Scan — BETA · I tuoi progressi sono al sicuro
+                </p>
+                <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                  Le tue foto vengono caricate in modo sicuro e sono visibili solo al tuo trainer.
+                  Nessun link pubblico, nessuna condivisione automatica. Il trainer potrà analizzare
+                  la composizione corporea con l&apos;AI per supportarti al meglio.
+                </p>
+              </div>
+            </div>
+
+            {/* Upload form */}
+            <div className="card-luxury rounded-2xl p-5 mb-5">
+              <h3 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--text)" }}>
+                <Upload size={15} style={{ color: "var(--accent)" }} /> Carica una foto di trasformazione
+              </h3>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Data foto *</label>
+                  <input type="date" value={scanUploadDate} onChange={e => setScanUploadDate(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl text-sm outline-none"
+                    style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" }} />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Note (opzionale)</label>
+                  <input type="text" value={scanUploadNotes} onChange={e => setScanUploadNotes(e.target.value)}
+                    placeholder="es. Fronte, Schiena, Lato…"
+                    className="w-full px-3 py-2 rounded-xl text-sm outline-none"
+                    style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" }} />
+                </div>
+              </div>
+              <label className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all ${scanUploading ? "opacity-60 pointer-events-none" : "hover:opacity-90"} accent-btn`}>
+                {scanUploading ? <Loader2 size={15} className="animate-spin" /> : <Scan size={15} />}
+                {scanUploading ? "Caricamento…" : "Seleziona foto"}
+                <input type="file" accept="image/*" className="hidden" onChange={handleScanUpload} disabled={scanUploading} />
+              </label>
+              <p className="text-xs mt-2 text-center" style={{ color: "var(--text-faint)" }}>
+                La foto viene compressa automaticamente · visibile solo al tuo trainer
+              </p>
+            </div>
+
+            {/* Scan list */}
+            {!scansLoaded ? (
+              <div className="text-center py-10">
+                <Loader2 size={24} className="animate-spin mx-auto mb-2" style={{ color: "rgba(229,50,50,0.5)" }} />
+                <p className="text-xs" style={{ color: "var(--text-dim)" }}>Caricamento…</p>
+              </div>
+            ) : scans.length === 0 ? (
+              <div className="text-center py-14 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
+                <Brain size={36} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
+                <p className="text-sm font-semibold mb-1" style={{ color: "var(--text-muted)" }}>Nessuna foto ancora</p>
+                <p className="text-xs" style={{ color: "var(--text-dim)" }}>
+                  Carica la tua prima foto di trasformazione — il trainer potrà analizzare la composizione corporea con l&apos;AI.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-xs" style={{ color: "var(--text-dim)" }}>
+                  {scans.length} {scans.length === 1 ? "foto caricata" : "foto caricate"} · visibili solo al tuo trainer
+                </p>
+                {scans.map(scan => {
+                  const analysis = scan.ai_analysis;
+                  return (
+                    <div key={scan.id} className="card-luxury rounded-2xl overflow-hidden">
+                      <div className="p-4">
+                        <div className="flex items-start gap-4">
+                          {/* Thumbnail */}
+                          <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 relative"
+                            style={{ background: "var(--surface-sm)", border: "1px solid rgba(229,50,50,0.12)" }}>
+                            {scan.signed_url ? (
+                              <img src={scan.signed_url} alt={scan.taken_at} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Scan size={18} style={{ color: "rgba(229,50,50,0.35)" }} />
+                              </div>
+                            )}
+                            <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                              style={{ background: "rgba(0,0,0,0.65)" }}>
+                              <ShieldCheck size={9} style={{ color: "#22c55e" }} />
+                            </div>
+                          </div>
+
+                          {/* Meta */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
+                                {new Date(scan.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })}
+                              </p>
+                              {analysis ? (
+                                <span className="text-xs px-1.5 py-0.5 rounded-full font-bold"
+                                  style={{ background: "rgba(229,50,50,0.12)", color: "var(--accent-light)", fontSize: "0.6rem" }}>
+                                  Analizzata
+                                </span>
+                              ) : (
+                                <span className="text-xs px-1.5 py-0.5 rounded-full"
+                                  style={{ background: "var(--surface-sm)", color: "var(--text-dim)", fontSize: "0.6rem" }}>
+                                  In attesa di analisi
+                                </span>
+                              )}
+                            </div>
+                            {scan.notes && (
+                              <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>{scan.notes}</p>
+                            )}
+                            <button
+                              onClick={() => handleScanDelete(scan)}
+                              disabled={scanDeleting === scan.id}
+                              className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl transition-all"
+                              style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.15)", color: "rgba(239,68,68,0.7)" }}>
+                              {scanDeleting === scan.id ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
+                              Elimina
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* AI Analysis (client-friendly view) */}
+                        {analysis && (
+                          <div className="mt-4 pt-4" style={{ borderTop: "1px solid rgba(229,50,50,0.1)" }}>
+                            <div className="flex items-center gap-2 mb-3">
+                              <Sparkles size={12} style={{ color: "var(--accent)" }} />
+                              <p className="text-xs font-bold" style={{ color: "var(--accent)", letterSpacing: "0.08em" }}>
+                                ANALISI DEL TUO TRAINER
+                              </p>
+                            </div>
+
+                            {/* Metrics */}
+                            <div className="grid grid-cols-3 gap-2 mb-3">
+                              {[
+                                { label: "Grasso stim.", value: analysis.body_fat_est != null ? `${analysis.body_fat_est}%` : "—", color: "#fbbf24" },
+                                { label: "Muscolarità",   value: analysis.muscle_mass_est ?? "—", color: "#a78bfa" },
+                                { label: "Somatotipo",    value: analysis.body_type ?? "—",        color: "#38bdf8" },
+                              ].map(({ label, value, color }) => (
+                                <div key={label} className="rounded-xl p-2 text-center"
+                                  style={{ background: "var(--surface-xs)", border: `1px solid ${color}22` }}>
+                                  <p className="text-sm font-bold capitalize" style={{ color }}>{value}</p>
+                                  <p className="text-xs mt-0.5" style={{ color: "var(--text-faint)", fontSize: "0.6rem" }}>{label}</p>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Summary */}
+                            <p className="text-xs leading-relaxed italic px-3 py-2 rounded-xl mb-3"
+                              style={{ color: "var(--text-muted)", background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
+                              {analysis.summary}
+                            </p>
+
+                            {/* Recommendations */}
+                            {analysis.recommendations?.length > 0 && (
+                              <div className="space-y-1.5">
+                                <p className="text-xs font-semibold mb-2" style={{ color: "var(--text-dim)", letterSpacing: "0.06em" }}>
+                                  CONSIGLI PERSONALIZZATI
+                                </p>
+                                {analysis.recommendations.map((rec, i) => (
+                                  <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
+                                    <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold"
+                                      style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent)" }}>
+                                      {i + 1}
+                                    </span>
+                                    {rec}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            <p className="text-xs mt-3" style={{ color: "var(--text-faint)" }}>
+                              Stima visiva AI · {new Date(analysis.analyzed_at).toLocaleDateString("it-IT")}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
 
       {/* ── Footer ───────────────────────────────────────────────────────────── */}

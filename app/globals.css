@@ -61,22 +61,22 @@
   /* Backgrounds */
   --bg:           #F8F3EE;
   --bg-card:      #FFFFFF;
-  --surface-xs:   rgba(0,0,0,0.02);
-  --surface-sm:   rgba(0,0,0,0.04);
-  --surface:      rgba(0,0,0,0.05);
-  --surface-md:   rgba(0,0,0,0.08);
-  --surface-card: rgba(255,255,255,0.97);
+  --surface-xs:   rgba(0,0,0,0.04);
+  --surface-sm:   rgba(0,0,0,0.07);   /* ghost button bg — needs contrast on cream */
+  --surface:      rgba(0,0,0,0.08);
+  --surface-md:   rgba(0,0,0,0.12);   /* pressed/active bg */
+  --surface-card: #FFFFFF;
   --surface-modal:rgba(0,0,0,0.60);
 
-  /* Borders */
-  --border-subtle: rgba(0,0,0,0.06);
-  --border:        rgba(0,0,0,0.09);
+  /* Borders — must be visible against white/cream */
+  --border-subtle: rgba(0,0,0,0.12);
+  --border:        rgba(0,0,0,0.18);
 
   /* Text */
   --text:       #1A0808;
-  --text-muted: rgba(26,8,8,0.58);
-  --text-dim:   rgba(26,8,8,0.44);
-  --text-faint: rgba(26,8,8,0.28);
+  --text-muted: rgba(26,8,8,0.68);
+  --text-dim:   rgba(26,8,8,0.50);
+  --text-faint: rgba(26,8,8,0.32);
 
   /* Glass */
   --glass-bg:      rgba(255,255,255,0.80);
@@ -172,6 +172,37 @@ html, body {
 }
 [data-theme="light"] .card-luxury:hover {
   box-shadow: 0 0 20px rgba(200,16,16,0.08), 0 8px 24px rgba(0,0,0,0.1);
+}
+
+/* ── LIGHT MODE: input + form visibility fixes ────────────────────────────────
+   Inline styles using var(--surface) / var(--border) already pick up the
+   stronger light-mode values defined in the :root override above.
+   These rules handle elements that set background/border via class or
+   that use direct rgba() values bypassing CSS vars.                           */
+
+[data-theme="light"] input,
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background-color: #FFFFFF !important;
+  border-color: rgba(0,0,0,0.18) !important;
+  color: var(--text) !important;
+}
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: rgba(26,8,8,0.38) !important;
+}
+
+/* Timer overlay stays dark in both themes (intentional cyberpunk lock-screen) */
+[data-theme="light"] .timer-overlay-dark { /* no override */ }
+
+/* Scrollbar in light */
+[data-theme="light"] ::-webkit-scrollbar-track { background: #EDE8E2; }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: var(--accent-dark); }
+
+/* Nav sidebar — add a right border in light mode for separation */
+[data-theme="light"] aside.glass-dark {
+  border-right: 1px solid rgba(0,0,0,0.1);
+  box-shadow: 2px 0 12px rgba(0,0,0,0.05);
 }
 
 /* ── LASER BEAMS ──────────────────────────────────────────────────────────────── */
