@@ -5,7 +5,7 @@ import { useAppStore } from "@/lib/store";
 import {
   Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight,
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
-  Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle, Scale,
+  Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle, Scale, TrendingDown,
 } from "lucide-react";
 
 function timeGreeting() {
@@ -170,6 +170,34 @@ export default function DashboardPage() {
     }
     const seen = new Set<string>();
     return results.filter(r => { const k = `${r.clientId}-${r.type}`; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6);
+  }, [clients]);
+
+  // Churn radar: clients whose weekly log frequency is declining (w-2 > w-1 > w-0)
+  const churnRiskClients = useMemo(() => {
+    const now = Date.now();
+    const results: {
+      client: typeof clients[0];
+      w2: number; w1: number; w0: number;
+      risk: "critico" | "alto" | "medio";
+    }[] = [];
+    for (const c of clients.filter(cl => cl.status === "attivo")) {
+      const allLogs = c.workoutPlans.flatMap(p => p.logs ?? []);
+      const inWindow = (from: number, to: number) =>
+        allLogs.filter(l => { const t = new Date(l.loggedAt).getTime(); return t > now - to * 86400000 && t <= now - from * 86400000; }).length;
+      const w2 = inWindow(21, 14);
+      const w1 = inWindow(14, 7);
+      const w0 = inWindow(7, 0);
+      if (w2 === 0 && w1 === 0) continue;
+      const baseline = Math.max(w2, w1);
+      if (w0 >= baseline) continue;
+      const risk: "critico" | "alto" | "medio" =
+        w0 === 0 && baseline > 0 ? "critico" :
+        w0 < baseline / 2 ? "alto" : "medio";
+      results.push({ client: c, w2, w1, w0, risk });
+    }
+    return results
+      .sort((a, b) => ({ critico: 0, alto: 1, medio: 2 }[a.risk] - { critico: 0, alto: 1, medio: 2 }[b.risk]))
+      .slice(0, 5);
   }, [clients]);
 
   // Stallo peso: clients with 3+ consecutive measurements within ±0.5kg
@@ -411,6 +439,70 @@ export default function DashboardPage() {
                 </div>
               </Link>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Radar Churn Predittivo ───────────────────────────────────────── */}
+      {churnRiskClients.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(249,115,22,0.05)", border: "1px solid rgba(249,115,22,0.2)" }}>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <TrendingDown size={14} style={{ color: "#fb923c" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+              Frequenza in calo
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+              style={{ background: "rgba(249,115,22,0.18)", color: "#fb923c" }}>
+              {churnRiskClients.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "rgba(245,240,232,0.35)" }}>
+              sessioni: -2sett / -1sett / questa sett
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            {churnRiskClients.map(({ client, w2, w1, w0, risk }) => {
+              const riskColor = risk === "critico" ? "#ef4444" : risk === "alto" ? "#f97316" : "#fbbf24";
+              const riskLabel = risk === "critico" ? "Critico" : risk === "alto" ? "Alto" : "Medio";
+              const maxW = Math.max(w2, w1, 1);
+              return (
+                <div key={client.id} className="flex items-center gap-3 p-3 rounded-xl"
+                  style={{ background: "rgba(249,115,22,0.04)" }}>
+                  <Link href={`/dashboard/clienti/${client.id}`}
+                    className="flex items-center gap-3 flex-1 min-w-0 group">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                      style={{ background: "rgba(249,115,22,0.12)", color: "#fb923c" }}>
+                      {client.name.charAt(0).toUpperCase()}
+                    </div>
+                    <p className="text-sm font-semibold truncate group-hover:underline flex-1"
+                      style={{ color: "var(--ivory)" }}>{client.name}</p>
+                    <div className="flex items-end gap-1 flex-shrink-0 mr-1" style={{ height: 20 }}>
+                      {[w2, w1, w0].map((v, i) => (
+                        <div key={i} className="w-3 rounded-sm"
+                          style={{
+                            height: Math.max(3, Math.round((v / maxW) * 18)),
+                            background: i === 2 ? riskColor : i === 1 ? "rgba(249,115,22,0.4)" : "rgba(249,115,22,0.2)",
+                            opacity: v === 0 && i === 2 ? 0.3 : 1,
+                          }} />
+                      ))}
+                    </div>
+                    <span className="text-xs font-mono flex-shrink-0" style={{ color: "rgba(245,240,232,0.4)" }}>
+                      {w2}→{w1}→{w0}
+                    </span>
+                    <span className="text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0"
+                      style={{ background: `${riskColor}18`, color: riskColor }}>{riskLabel}</span>
+                  </Link>
+                  {client.phone && (
+                    <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}, come stai? Noto che questa settimana non hai ancora allenato — tutto bene?`)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
+                      style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                      <MessageCircle size={11} />
+                      WA
+                    </a>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
