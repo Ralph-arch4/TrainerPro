@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
 import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2 } from "lucide-react";
@@ -136,8 +136,8 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
     : "— / — / ——";
 
   const color      = ssColor(exercise.supersetGroup);
-  const cardBorder = color ? `2px solid ${color}40` : "1px solid rgba(255,255,255,0.07)";
-  const rowBorder  = "1px solid rgba(255,255,255,0.05)";
+  const cardBorder = color ? `2px solid ${color}40` : "1px solid var(--border)";
+  const rowBorder  = "1px solid var(--border-subtle)";
 
   const suggestion = mode === "client" && week > 1
     ? calcSuggestion(parseSetData(lastWeekLog, sets))
@@ -146,7 +146,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
   const trainerCols = "4.5rem 1fr 1fr";
 
   return (
-    <div className="rounded-2xl overflow-hidden flex flex-col" style={{ border: cardBorder, background: "rgba(10,10,10,0.9)" }}>
+    <div className="rounded-2xl overflow-hidden flex flex-col" style={{ border: cardBorder, background: "var(--surface-card)" }}>
 
       {/* Date header */}
       <div className="flex items-center justify-center px-2 py-1.5 text-xs font-bold"
@@ -169,7 +169,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
           </span>
           {exercise.muscleGroup && (
             <span className="text-xs px-1.5 py-0.5 rounded-md shrink-0 hidden sm:inline"
-              style={{ background: "rgba(255,255,255,0.05)", color: "rgba(245,240,232,0.35)" }}>
+              style={{ background: "var(--surface)", color: "var(--text-dim)" }}>
               {exercise.muscleGroup}
             </span>
           )}
@@ -177,8 +177,8 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
         {mode === "trainer" && (
           <div className="flex gap-1.5 shrink-0">
             <button onClick={onEdit} className="p-1.5 rounded-lg hover:opacity-80 transition-opacity"
-              style={{ background: "rgba(255,255,255,0.06)" }}>
-              <Pencil size={11} style={{ color: "rgba(245,240,232,0.5)" }} />
+              style={{ background: "var(--surface-md)" }}>
+              <Pencil size={11} style={{ color: "var(--text-muted)" }} />
             </button>
             <button onClick={onDelete} className="p-1.5 rounded-lg hover:opacity-80 transition-opacity"
               style={{ background: "rgba(239,68,68,0.07)" }}>
@@ -207,18 +207,18 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
           {Array.from({ length: sets }, (_, i) => (
             <div key={i}>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-bold" style={{ color: "rgba(245,240,232,0.4)", minWidth: "3.5rem" }}>
+                <span className="text-xs font-bold" style={{ color: "var(--text-dim)", minWidth: "3.5rem" }}>
                   Serie {i + 1}
                 </span>
-                <span className="text-xs" style={{ color: "rgba(245,240,232,0.28)" }}>
+                <span className="text-xs" style={{ color: "var(--text-faint)" }}>
                   Target: <span style={{ color: "var(--accent-light)", fontWeight: 700 }}>{targetRep(i)}</span> rip.
                 </span>
               </div>
               <div className="flex gap-2">
                 {/* Reps */}
                 <div className="flex-1 rounded-xl overflow-hidden"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)" }}>
-                  <p className="text-center pt-1.5 text-xs" style={{ color: "rgba(245,240,232,0.4)", fontSize: "0.62rem" }}>REPS</p>
+                  style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+                  <p className="text-center pt-1.5 text-xs" style={{ color: "var(--text-dim)", fontSize: "0.62rem" }}>REPS</p>
                   <input
                     type="text" inputMode="numeric" pattern="[0-9]*"
                     value={data[i]?.reps ?? ""}
@@ -281,10 +281,10 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
       {/* ── TRAINER mode ── */}
       {mode === "trainer" && (
         <>
-          <div style={{ display: "grid", gridTemplateColumns: trainerCols, borderBottom: rowBorder, background: "rgba(255,255,255,0.02)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: trainerCols, borderBottom: rowBorder, background: "var(--surface-xs)" }}>
             <div className="px-3 py-1.5 text-xs" style={{ color: "transparent", borderRight: rowBorder }}>·</div>
-            <div className="px-3 py-1.5 text-xs font-semibold text-center" style={{ color: "rgba(245,240,232,0.35)", borderRight: rowBorder }}>ripetizioni</div>
-            <div className="px-3 py-1.5 text-xs font-semibold text-center" style={{ color: "rgba(245,240,232,0.35)" }}>carico (kg)</div>
+            <div className="px-3 py-1.5 text-xs font-semibold text-center" style={{ color: "var(--text-dim)", borderRight: rowBorder }}>ripetizioni</div>
+            <div className="px-3 py-1.5 text-xs font-semibold text-center" style={{ color: "var(--text-dim)" }}>carico (kg)</div>
           </div>
           {Array.from({ length: sets }, (_, i) => (
             <div key={i} style={{
@@ -292,12 +292,12 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
               borderBottom: i < sets - 1 ? rowBorder : undefined,
               background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.012)",
             }}>
-              <div className="flex items-center px-3 py-2.5 text-xs" style={{ color: "rgba(245,240,232,0.35)", borderRight: rowBorder }}>serie {i + 1}</div>
+              <div className="flex items-center px-3 py-2.5 text-xs" style={{ color: "var(--text-dim)", borderRight: rowBorder }}>serie {i + 1}</div>
               <div className="flex items-center justify-center px-2 py-2.5 text-xs font-semibold" style={{ color: "var(--accent-light)", borderRight: rowBorder }}>
                 {targetRep(i)}
               </div>
               <div className="flex items-center justify-center px-2 py-2.5 text-sm font-bold"
-                style={{ color: data[i]?.weight ? "var(--ivory)" : "rgba(245,240,232,0.18)" }}>
+                style={{ color: data[i]?.weight ? "var(--ivory)" : "var(--text-faint)" }}>
                 {data[i]?.weight ? `${data[i].weight} kg` : "—"}
                 {data[i]?.rpe ? <span className="ml-2 text-xs" style={{ color: "var(--accent-light)" }}>RPE {data[i].rpe}</span> : null}
               </div>
@@ -318,9 +318,9 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
             className="flex-1 flex items-center justify-center gap-2 rounded-xl text-sm font-bold transition-all active:scale-95"
             style={{
               minHeight: "2.75rem",
-              background: dirty ? "rgba(229,50,50,0.16)" : "rgba(255,255,255,0.03)",
-              border: `1px solid ${dirty ? "rgba(229,50,50,0.45)" : "rgba(255,255,255,0.06)"}`,
-              color: dirty ? "var(--accent-light)" : "rgba(245,240,232,0.18)",
+              background: dirty ? "rgba(229,50,50,0.16)" : "var(--surface-xs)",
+              border: `1px solid ${dirty ? "rgba(229,50,50,0.45)" : "var(--surface-md)"}`,
+              color: dirty ? "var(--accent-light)" : "var(--text-faint)",
             }}>
             <Save size={13} /> {dirty ? "Salva sessione" : "Salvato ✓"}
           </button>
@@ -343,7 +343,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
       )}
 
       {mode === "trainer" && log?.note && (
-        <div className="px-3 py-2 text-xs italic" style={{ borderTop: rowBorder, color: "rgba(245,240,232,0.35)" }}>
+        <div className="px-3 py-2 text-xs italic" style={{ borderTop: rowBorder, color: "var(--text-dim)" }}>
           📝 {log.note}
         </div>
       )}
@@ -372,11 +372,11 @@ function SupplementCard({ item }: { item: SupplementItem }) {
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-bold text-sm" style={{ color: "var(--ivory)" }}>{item.name}</p>
-          {item.brand && <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{item.brand}</p>}
+          {item.brand && <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>{item.brand}</p>}
         </div>
         <ShoppingBag size={18} style={{ color: "var(--accent)", flexShrink: 0, marginTop: 2 }} />
       </div>
-      {item.notes && <p className="text-xs" style={{ color: "rgba(245,240,232,0.55)" }}>{item.notes}</p>}
+      {item.notes && <p className="text-xs" style={{ color: "var(--text-muted)" }}>{item.notes}</p>}
       <div className="flex gap-2 flex-wrap">
         {item.productUrl && (
           <a href={item.productUrl} target="_blank" rel="noopener noreferrer"
@@ -388,9 +388,9 @@ function SupplementCard({ item }: { item: SupplementItem }) {
           <button onClick={copyCode}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
             style={{
-              background: copied ? "rgba(229,50,50,0.12)" : "rgba(255,255,255,0.06)",
-              border: `1px solid ${copied ? "rgba(229,50,50,0.3)" : "rgba(255,255,255,0.1)"}`,
-              color: copied ? "var(--accent-light)" : "rgba(245,240,232,0.6)",
+              background: copied ? "rgba(229,50,50,0.12)" : "var(--surface-md)",
+              border: `1px solid ${copied ? "rgba(229,50,50,0.3)" : "var(--surface-md)"}`,
+              color: copied ? "var(--accent-light)" : "var(--text-muted)",
             }}>
             {copied ? <Check size={11} /> : <Copy size={11} />}
             {copied ? "Copiato!" : `Codice: ${item.discountCode}`}
@@ -568,18 +568,18 @@ export default function WorkoutLogbook({
       <div className="flex items-center gap-3">
         <button onClick={() => setActiveWeek(w => Math.max(1, w - 1))} disabled={activeWeek === 1}
           className="p-2 rounded-xl transition-all disabled:opacity-30"
-          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <ChevronLeft size={16} style={{ color: "var(--ivory)" }} />
         </button>
         <div className="flex-1 text-center">
           <span className="text-sm font-bold" style={{ color: "var(--ivory)" }}>Settimana {activeWeek}</span>
-          <span className="text-xs ml-2" style={{ color: "rgba(245,240,232,0.35)" }}>
+          <span className="text-xs ml-2" style={{ color: "var(--text-dim)" }}>
             {isUnlimited ? "· piano aperto" : `di ${totalWeeks}`}
           </span>
         </div>
         <button onClick={() => setActiveWeek(w => Math.min(effectiveMax, w + 1))} disabled={activeWeek >= effectiveMax}
           className="p-2 rounded-xl transition-all disabled:opacity-30"
-          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <ChevronRight size={16} style={{ color: "var(--ivory)" }} />
         </button>
       </div>
@@ -588,7 +588,7 @@ export default function WorkoutLogbook({
       {weekDots.length > 0 && (
         <div className="flex items-center gap-1.5 justify-center flex-wrap">
           {dotsOffset > 0 && (
-            <span className="text-xs" style={{ color: "rgba(245,240,232,0.2)" }}>+{dotsOffset}</span>
+            <span className="text-xs" style={{ color: "var(--text-faint)" }}>+{dotsOffset}</span>
           )}
           {dotsToShow.map((done, i) => {
             const weekNum = dotsOffset + i + 1;
@@ -599,7 +599,7 @@ export default function WorkoutLogbook({
                   width: activeWeek === weekNum ? 20 : 8, height: 8, borderRadius: 4,
                   background: activeWeek === weekNum
                     ? "var(--accent)"
-                    : done ? "rgba(229,50,50,0.55)" : "rgba(255,255,255,0.1)",
+                    : done ? "rgba(229,50,50,0.55)" : "var(--surface-md)",
                   transition: "width 0.3s ease, background 0.2s",
                 }} />
             );
@@ -609,7 +609,7 @@ export default function WorkoutLogbook({
               className="transition-all"
               style={{
                 width: activeWeek === maxLoggedWeek + 1 ? 20 : 8, height: 8, borderRadius: 4,
-                background: activeWeek === maxLoggedWeek + 1 ? "var(--accent)" : "rgba(255,255,255,0.05)",
+                background: activeWeek === maxLoggedWeek + 1 ? "var(--accent)" : "var(--surface)",
                 border: "1px dashed rgba(255,255,255,0.2)",
                 transition: "width 0.3s ease",
               }} />
@@ -623,9 +623,9 @@ export default function WorkoutLogbook({
           <button key={d} onClick={() => setActiveDay(d)}
             className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap"
             style={{
-              background: activeDay === d ? "rgba(229,50,50,0.14)" : "rgba(255,255,255,0.04)",
-              border: `1px solid ${activeDay === d ? "rgba(229,50,50,0.35)" : "rgba(255,255,255,0.07)"}`,
-              color: activeDay === d ? "var(--accent-light)" : "rgba(245,240,232,0.5)",
+              background: activeDay === d ? "rgba(229,50,50,0.14)" : "var(--surface-sm)",
+              border: `1px solid ${activeDay === d ? "rgba(229,50,50,0.35)" : "var(--surface-md)"}`,
+              color: activeDay === d ? "var(--accent-light)" : "var(--text-muted)",
             }}>
             {getDayLabel(d)}
           </button>
@@ -634,7 +634,7 @@ export default function WorkoutLogbook({
 
       {/* RPE legend (client mode) */}
       {mode === "client" && (
-        <div className="text-xs px-1 flex items-center gap-1" style={{ color: "rgba(245,240,232,0.3)" }}>
+        <div className="text-xs px-1 flex items-center gap-1" style={{ color: "var(--text-dim)" }}>
           <span style={{ color: "var(--accent)" }}>RPE</span>: 1–6 facile · 7–8 giusto · 9 al limite · 10 cedimento
         </div>
       )}
@@ -642,9 +642,9 @@ export default function WorkoutLogbook({
       {/* Exercise grid */}
       {dayExercises.length === 0 ? (
         <div className="text-center py-16 rounded-2xl"
-          style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+          style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
           <Dumbbell size={36} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.25)" }} />
-          <p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>
+          <p className="text-sm" style={{ color: "var(--text-dim)" }}>
             {mode === "trainer"
               ? "Nessun esercizio per questo giorno. Usa la vista Avanzato per aggiungere esercizi."
               : "Il tuo trainer non ha ancora aggiunto esercizi per questo giorno."}
@@ -674,7 +674,7 @@ export default function WorkoutLogbook({
       )}
 
       {mode === "trainer" && onAddExercise && (
-        <p className="text-xs text-center" style={{ color: "rgba(245,240,232,0.25)" }}>
+        <p className="text-xs text-center" style={{ color: "var(--text-faint)" }}>
           Usa la scheda laterale per aggiungere o riordinare gli esercizi.
         </p>
       )}
@@ -700,15 +700,15 @@ export default function WorkoutLogbook({
               <ShoppingBag size={16} style={{ color: "var(--accent)" }} />
               <h3 className="text-sm font-bold" style={{ color: "var(--ivory)" }}>
                 Integratori consigliati
-                <span className="ml-2 text-xs font-normal" style={{ color: "rgba(245,240,232,0.35)" }}>(visibili al cliente)</span>
+                <span className="ml-2 text-xs font-normal" style={{ color: "var(--text-dim)" }}>(visibili al cliente)</span>
               </h3>
             </div>
             <button onClick={() => setSuppEditing(e => !e)}
               className="px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
               style={{
-                background: suppEditing ? "rgba(229,50,50,0.12)" : "rgba(255,255,255,0.05)",
-                border: `1px solid ${suppEditing ? "rgba(229,50,50,0.3)" : "rgba(255,255,255,0.08)"}`,
-                color: suppEditing ? "var(--accent-light)" : "rgba(245,240,232,0.5)",
+                background: suppEditing ? "rgba(229,50,50,0.12)" : "var(--surface)",
+                border: `1px solid ${suppEditing ? "rgba(229,50,50,0.3)" : "var(--surface-md)"}`,
+                color: suppEditing ? "var(--accent-light)" : "var(--text-muted)",
               }}>
               {suppEditing ? "Chiudi" : "Gestisci"}
             </button>
@@ -721,9 +721,9 @@ export default function WorkoutLogbook({
                   style={{ background: "rgba(229,50,50,0.03)", border: "1px solid rgba(229,50,50,0.1)" }}>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{item.name}</p>
-                    {item.brand && <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{item.brand}</p>}
+                    {item.brand && <p className="text-xs" style={{ color: "var(--text-dim)" }}>{item.brand}</p>}
                     {item.discountCode && <p className="text-xs mt-1 font-mono" style={{ color: "var(--accent-light)" }}>Codice: {item.discountCode}</p>}
-                    {item.notes && <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.4)" }}>{item.notes}</p>}
+                    {item.notes && <p className="text-xs mt-1" style={{ color: "var(--text-dim)" }}>{item.notes}</p>}
                   </div>
                   <button onClick={() => removeSupp(item.id)}
                     className="p-1.5 rounded-lg shrink-0 hover:opacity-80 transition-opacity"
@@ -737,8 +737,8 @@ export default function WorkoutLogbook({
 
           {suppEditing && (
             <div className="rounded-2xl p-4 space-y-3"
-              style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <p className="text-xs font-semibold" style={{ color: "rgba(245,240,232,0.5)" }}>Aggiungi integratore</p>
+              style={{ background: "var(--surface-xs)", border: "1px solid var(--border)" }}>
+              <p className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>Aggiungi integratore</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
                   { key: "name",         placeholder: "Nome prodotto *" },
@@ -751,14 +751,14 @@ export default function WorkoutLogbook({
                     onChange={e => setNewSupp(p => ({ ...p, [key]: e.target.value }))}
                     placeholder={placeholder}
                     className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(229,50,50,0.15)", color: "var(--ivory)" }}
+                    style={{ background: "var(--surface-sm)", border: "1px solid rgba(229,50,50,0.15)", color: "var(--ivory)" }}
                   />
                 ))}
               </div>
               <input value={newSupp.notes ?? ""} onChange={e => setNewSupp(p => ({ ...p, notes: e.target.value }))}
                 placeholder="Note dosaggio (es. 3-5g post-workout)"
                 className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(229,50,50,0.15)", color: "var(--ivory)" }}
+                style={{ background: "var(--surface-sm)", border: "1px solid rgba(229,50,50,0.15)", color: "var(--ivory)" }}
               />
               <button onClick={addSupp} disabled={!newSupp.name.trim()}
                 className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm disabled:opacity-40">
@@ -768,7 +768,7 @@ export default function WorkoutLogbook({
           )}
 
           {suppDraft.length === 0 && !suppEditing && (
-            <p className="text-xs" style={{ color: "rgba(245,240,232,0.25)" }}>
+            <p className="text-xs" style={{ color: "var(--text-faint)" }}>
               Nessun integratore aggiunto. Clicca &quot;Gestisci&quot; per aggiungerne uno.
             </p>
           )}
@@ -837,7 +837,7 @@ export default function WorkoutLogbook({
 
               {/* Exercise label */}
               <p className="text-base font-bold mb-1" style={{ color: "var(--ivory)" }}>{restTimer.label}</p>
-              <p className="text-xs mb-10" style={{ color: "rgba(245,240,232,0.35)" }}>
+              <p className="text-xs mb-10" style={{ color: "var(--text-dim)" }}>
                 {restTimer.secs === 0 ? "Recupero terminato — pronto per la prossima serie!" : `${restTimer.total - restTimer.secs}s trascorsi su ${restTimer.total}s`}
               </p>
 
@@ -845,7 +845,7 @@ export default function WorkoutLogbook({
               <div className="flex gap-3">
                 <button onClick={() => setTimerExpanded(false)}
                   className="flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold"
-                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.6)" }}>
+                  style={{ background: "var(--surface-md)", border: "1px solid var(--border)", color: "var(--text-muted)" }}>
                   <Minimize2 size={14} /> Minimizza
                 </button>
                 <button onClick={dismissTimer}
@@ -855,7 +855,7 @@ export default function WorkoutLogbook({
                 </button>
               </div>
 
-              <p className="absolute bottom-8 text-xs" style={{ color: "rgba(245,240,232,0.15)" }}>
+              <p className="absolute bottom-8 text-xs" style={{ color: "var(--text-faint)" }}>
                 tocca per minimizzare
               </p>
             </div>
@@ -918,7 +918,7 @@ export default function WorkoutLogbook({
                   <button
                     onClick={e => { e.stopPropagation(); dismissTimer(); }}
                     className="p-1.5 rounded-xl hover:opacity-80 transition-opacity"
-                    style={{ background: "rgba(255,255,255,0.06)", color: "rgba(245,240,232,0.5)" }}>
+                    style={{ background: "var(--surface-md)", color: "var(--text-muted)" }}>
                     <X size={13} />
                   </button>
                 </div>

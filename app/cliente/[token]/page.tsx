@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -6,6 +6,7 @@ import { dbExerciseLogs } from "@/lib/db";
 import WorkoutLogbook from "@/components/WorkoutLogbook";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
 import { Dumbbell, UtensilsCrossed, ShoppingBag, Loader2, AlertCircle, Copy, Check, Zap, Trophy, Flame, ChevronDown, ChevronUp, Calendar, MessageSquare } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 // ── Meal library (Italian, based on sports nutrition guidelines) ─────────────
 interface MealTpl { name: string; ingredients: string[]; pro: number; cho: number; fat: number; kcal: number; }
@@ -84,9 +85,9 @@ function WeeklyDietPlan({ calories, protein, carbs, fat }: { calories: number; p
           <button key={i} onClick={() => setSelectedDay(i)}
             className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold transition-all"
             style={{
-              background: selectedDay === i ? "rgba(229,50,50,0.18)" : "rgba(255,255,255,0.04)",
-              border: `1px solid ${selectedDay === i ? "rgba(229,50,50,0.4)" : "rgba(255,255,255,0.07)"}`,
-              color: selectedDay === i ? "var(--accent-light)" : "rgba(245,240,232,0.5)",
+              background: selectedDay === i ? "rgba(229,50,50,0.18)" : "var(--surface-sm)",
+              border: `1px solid ${selectedDay === i ? "rgba(229,50,50,0.4)" : "var(--surface-md)"}`,
+              color: selectedDay === i ? "var(--accent-light)" : "var(--text-muted)",
             }}>
             {d.slice(0, 3)}
           </button>
@@ -102,9 +103,9 @@ function WeeklyDietPlan({ calories, protein, carbs, fat }: { calories: number; p
           { label: "Grassi",val: `${fat}g`,       color: "#fbbf24" },
         ].map(({ label, val, color }) => (
           <div key={label} className="rounded-xl p-2 text-center"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            style={{ background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
             <p className="text-sm font-black" style={{ color }}>{val}</p>
-            <p className="text-xs" style={{ color: "rgba(245,240,232,0.38)" }}>{label}</p>
+            <p className="text-xs" style={{ color: "var(--text-dim)" }}>{label}</p>
           </div>
         ))}
       </div>
@@ -118,16 +119,16 @@ function WeeklyDietPlan({ calories, protein, carbs, fat }: { calories: number; p
           const isOpen     = expanded === key;
           return (
             <div key={slot} className="rounded-2xl overflow-hidden"
-              style={{ border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.03)" }}>
+              style={{ border: "1px solid var(--border)", background: "var(--surface-xs)" }}>
               {/* Header */}
               <button className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-white/[0.03]"
                 onClick={() => setExpanded(isOpen ? null : key)}>
                 <span className="text-lg">{MEAL_ICONS[slot]}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>
+                  <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: "var(--text-dim)" }}>
                     {slot.charAt(0).toUpperCase() + slot.slice(1)} · {targetKcal} kcal
                   </p>
-                  <p className="text-sm font-bold truncate" style={{ color: "var(--ivory)" }}>{meal.name}</p>
+                  <p className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>{meal.name}</p>
                 </div>
                 {/* Macro pills */}
                 <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0">
@@ -142,12 +143,12 @@ function WeeklyDietPlan({ calories, protein, carbs, fat }: { calories: number; p
                     </span>
                   ))}
                 </div>
-                {isOpen ? <ChevronUp size={14} style={{ color: "rgba(245,240,232,0.4)", flexShrink: 0 }} /> : <ChevronDown size={14} style={{ color: "rgba(245,240,232,0.4)", flexShrink: 0 }} />}
+                {isOpen ? <ChevronUp size={14} style={{ color: "var(--text-dim)", flexShrink: 0 }} /> : <ChevronDown size={14} style={{ color: "var(--text-dim)", flexShrink: 0 }} />}
               </button>
 
               {/* Expanded: ingredients + macros mobile */}
               {isOpen && (
-                <div className="px-4 pb-4 space-y-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                <div className="px-4 pb-4 space-y-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
                   <div className="flex items-center gap-2 flex-wrap pt-3">
                     {[
                       { v: meal.pro,  c: "#a78bfa", l: "Proteine" },
@@ -158,15 +159,15 @@ function WeeklyDietPlan({ calories, protein, carbs, fat }: { calories: number; p
                       <div key={l} className="rounded-xl px-3 py-1.5 text-center"
                         style={{ background: `${c}12`, border: `1px solid ${c}30` }}>
                         <p className="text-sm font-black" style={{ color: c }}>{v}{l === "Kcal" ? "" : "g"}</p>
-                        <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{l}</p>
+                        <p className="text-xs" style={{ color: "var(--text-dim)" }}>{l}</p>
                       </div>
                     ))}
                   </div>
                   <div>
-                    <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.35)" }}>Ingredienti</p>
+                    <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "var(--text-dim)" }}>Ingredienti</p>
                     <div className="space-y-1">
                       {meal.ingredients.map((ing, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm" style={{ color: "rgba(245,240,232,0.7)" }}>
+                        <div key={i} className="flex items-center gap-2 text-sm" style={{ color: "var(--text-muted)" }}>
                           <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "var(--accent)" }} />
                           {ing}
                         </div>
@@ -180,7 +181,7 @@ function WeeklyDietPlan({ calories, protein, carbs, fat }: { calories: number; p
         })}
       </div>
 
-      <p className="text-xs mt-4 text-center" style={{ color: "rgba(245,240,232,0.25)" }}>
+      <p className="text-xs mt-4 text-center" style={{ color: "var(--text-faint)" }}>
         Piano generato in base ai tuoi macro target · le porzioni si adattano automaticamente
       </p>
     </div>
@@ -232,12 +233,12 @@ function SupplementClientCard({ item }: { item: SupplementItem }) {
       style={{ background: "rgba(255,107,43,0.04)", border: "1px solid rgba(255,107,43,0.14)" }}>
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="font-bold text-sm" style={{ color: "var(--ivory)" }}>{item.name}</p>
-          {item.brand && <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{item.brand}</p>}
+          <p className="font-bold text-sm" style={{ color: "var(--text)" }}>{item.name}</p>
+          {item.brand && <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>{item.brand}</p>}
         </div>
         <ShoppingBag size={18} style={{ color: "var(--accent)", flexShrink: 0, marginTop: 2 }} />
       </div>
-      {item.notes && <p className="text-xs" style={{ color: "rgba(245,240,232,0.55)" }}>{item.notes}</p>}
+      {item.notes && <p className="text-xs" style={{ color: "var(--text-muted)" }}>{item.notes}</p>}
       <div className="flex gap-2 flex-wrap">
         {item.productUrl && (
           <a href={item.productUrl} target="_blank" rel="noopener noreferrer"
@@ -249,9 +250,9 @@ function SupplementClientCard({ item }: { item: SupplementItem }) {
           <button onClick={copyCode}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
             style={{
-              background: copied ? "rgba(52,211,153,0.12)" : "rgba(255,255,255,0.06)",
-              border: `1px solid ${copied ? "rgba(52,211,153,0.3)" : "rgba(255,255,255,0.1)"}`,
-              color: copied ? "#34d399" : "rgba(245,240,232,0.6)",
+              background: copied ? "rgba(52,211,153,0.12)" : "var(--surface-md)",
+              border: `1px solid ${copied ? "rgba(52,211,153,0.3)" : "var(--surface-md)"}`,
+              color: copied ? "#34d399" : "var(--text-muted)",
             }}>
             {copied ? <Check size={11} /> : <Copy size={11} />}
             {copied ? "Copiato!" : `Codice: ${item.discountCode}`}
@@ -289,7 +290,7 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
               style={{ background: "rgba(229,50,50,0.18)", border: "1px solid rgba(229,50,50,0.32)" }}>
               <span className="text-xs font-black" style={{ color: "var(--accent)", lineHeight: 1 }}>TP</span>
             </div>
-            <span className="text-xs font-bold tracking-[0.14em] uppercase" style={{ color: "rgba(245,240,232,0.3)" }}>TrainerPro</span>
+            <span className="text-xs font-bold tracking-[0.14em] uppercase" style={{ color: "var(--text-dim)" }}>TrainerPro</span>
           </div>
           <div className="flex items-center gap-2.5">
             {/* Gold EMV chip */}
@@ -316,16 +317,16 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
             </div>
           </div>
         </div>
-        <h2 className="text-xl font-black tracking-tight leading-tight mb-1" style={{ color: "var(--ivory)" }}>{planName}</h2>
-        <p className="text-xs mb-4" style={{ color: "rgba(245,240,232,0.32)" }}>
+        <h2 className="text-xl font-black tracking-tight leading-tight mb-1" style={{ color: "var(--text)" }}>{planName}</h2>
+        <p className="text-xs mb-4" style={{ color: "var(--text-dim)" }}>
           {daysPerWeek} giorni/settimana · {totalWeeks > 0 ? `${totalWeeks} settimane` : "piano continuo"}
         </p>
         <div className="h-px mb-4" style={{ background: "linear-gradient(90deg, rgba(229,50,50,0.28), transparent)" }} />
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.16em] mb-1" style={{ color: "rgba(245,240,232,0.28)" }}>Creato da</p>
+            <p className="text-xs uppercase tracking-[0.16em] mb-1" style={{ color: "var(--text-faint)" }}>Creato da</p>
             {/* Trainer signature — serif italic for handwritten feel */}
-            <p className="text-base font-black" style={{ color: "var(--ivory)", fontStyle: "italic", fontFamily: "Georgia,'Times New Roman',serif", letterSpacing: "0.02em" }}>{trainerName}</p>
+            <p className="text-base font-black" style={{ color: "var(--text)", fontStyle: "italic", fontFamily: "Georgia,'Times New Roman',serif", letterSpacing: "0.02em" }}>{trainerName}</p>
           </div>
           <div className="relative" style={{ width: 68, height: 68, flexShrink: 0 }}>
             {/* XP progress ring */}
@@ -356,7 +357,7 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
             </div>
           </div>
         </div>
-        <p className="text-xs mt-3 font-mono" style={{ color: "rgba(245,240,232,0.1)", letterSpacing: "0.16em" }}>{cardNum}</p>
+        <p className="text-xs mt-3 font-mono" style={{ color: "var(--text-faint)", letterSpacing: "0.16em" }}>{cardNum}</p>
       </div>
       <div className="h-1" style={{ background: "linear-gradient(90deg, var(--accent), rgba(229,50,50,0.15), transparent)" }} />
     </div>
@@ -385,7 +386,7 @@ function MilestoneBanner({ dayOnJourney, trainerName }: { dayOnJourney: number |
         style={{ background: "radial-gradient(circle, rgba(229,50,50,0.1), transparent)" }} />
       <button onClick={() => setDismissed(true)}
         className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full text-sm font-bold"
-        style={{ background: "rgba(255,255,255,0.07)", color: "rgba(245,240,232,0.35)" }}>
+        style={{ background: "var(--surface-md)", color: "var(--text-dim)" }}>
         &times;
       </button>
       <div className="flex items-center gap-2 mb-2">
@@ -394,7 +395,7 @@ function MilestoneBanner({ dayOnJourney, trainerName }: { dayOnJourney: number |
           Traguardo raggiunto
         </p>
       </div>
-      <p className="text-xl font-black mb-1.5" style={{ color: "var(--ivory)" }}>
+      <p className="text-xl font-black mb-1.5" style={{ color: "var(--text)" }}>
         {hit.label} insieme
       </p>
       <p className="text-sm leading-relaxed" style={{ color: "rgba(245,240,232,0.68)", fontStyle: "italic" }}>
@@ -450,7 +451,7 @@ function TrainerVoiceCard({ trainerName, daysSinceLastLog, streak, totalLogs }: 
 
   return (
     <div className="mb-4 rounded-2xl p-4 relative overflow-hidden"
-      style={{ background: "rgba(255,255,255,0.025)", border: `1px solid ${color}28` }}>
+      style={{ background: "var(--surface-xs)", border: `1px solid ${color}28` }}>
       <div className="flex items-start gap-3">
         <div className="relative flex-shrink-0">
           <div className="w-11 h-11 rounded-full flex items-center justify-center font-black text-base"
@@ -468,7 +469,7 @@ function TrainerVoiceCard({ trainerName, daysSinceLastLog, streak, totalLogs }: 
               {timeLabel}
             </span>
           </div>
-          <p className="text-sm leading-relaxed" style={{ color: "rgba(245,240,232,0.75)", fontStyle: "italic" }}>
+          <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
             &ldquo;{message}&rdquo;
           </p>
         </div>
@@ -580,10 +581,10 @@ export default function ClientPortalPage() {
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--black)" }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
         <div className="text-center">
           <Loader2 size={32} className="animate-spin mx-auto mb-3" style={{ color: "var(--accent)" }} />
-          <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>Caricamento portale…</p>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>Caricamento portale…</p>
         </div>
       </div>
     );
@@ -592,11 +593,11 @@ export default function ClientPortalPage() {
   // ── Error ────────────────────────────────────────────────────────────────────
   if (error || !plan) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "var(--black)" }}>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "var(--bg)" }}>
         <div className="text-center max-w-sm">
           <AlertCircle size={40} className="mx-auto mb-4" style={{ color: "rgba(239,68,68,0.6)" }} />
-          <p className="font-semibold mb-1" style={{ color: "var(--ivory)" }}>Portale non disponibile</p>
-          <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{error || "Link non valido."}</p>
+          <p className="font-semibold mb-1" style={{ color: "var(--text)" }}>Portale non disponibile</p>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>{error || "Link non valido."}</p>
         </div>
       </div>
     );
@@ -672,26 +673,29 @@ export default function ClientPortalPage() {
   const activeDiet = diets[0] ?? null;
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--black)" }}>
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
 
       {/* ── Top bar ──────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-40 border-b" style={{ background: "rgba(10,10,10,0.95)", borderColor: "rgba(229,50,50,0.14)", backdropFilter: "blur(12px)" }}>
+      <div className="sticky top-0 z-40 border-b glass-dark" style={{ borderColor: "rgba(229,50,50,0.14)" }}>
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-lg accent-btn flex items-center justify-center flex-shrink-0">
               <Dumbbell size={14} />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-bold truncate" style={{ color: "var(--ivory)" }}>{plan.name}</p>
-              <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Il tuo piano personale</p>
+              <p className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>{plan.name}</p>
+              <p className="text-xs" style={{ color: "var(--text-dim)" }}>Il tuo piano personale</p>
             </div>
           </div>
-          <button onClick={copyLink}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs transition-all active:scale-95"
-            style={{ border: "1px solid rgba(229,50,50,0.2)", color: copied ? "#22c55e" : "rgba(245,240,232,0.55)", minHeight: "2.5rem" }}>
-            {copied ? <Check size={13} /> : <Copy size={13} />}
-            <span className="hidden sm:inline">{copied ? "Copiato!" : "Copia link"}</span>
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <ThemeToggle size={14} />
+            <button onClick={copyLink}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs transition-all active:scale-95"
+              style={{ border: "1px solid rgba(229,50,50,0.2)", color: copied ? "#22c55e" : "var(--text-muted)", minHeight: "2.5rem" }}>
+              {copied ? <Check size={13} /> : <Copy size={13} />}
+              <span className="hidden sm:inline">{copied ? "Copiato!" : "Copia link"}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -742,7 +746,7 @@ export default function ClientPortalPage() {
                   Messaggio dal tuo Trainer
                 </p>
                 <p className="text-sm leading-relaxed"
-                  style={{ color: "rgba(245,240,232,0.82)", fontStyle: "italic" }}>
+                  style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
                   &ldquo;{plan.description}&rdquo;
                 </p>
                 <p className="text-xs mt-3 font-semibold"
@@ -764,27 +768,27 @@ export default function ClientPortalPage() {
                 {level}
               </div>
               <div>
-                <p className="font-black text-base" style={{ color: "var(--ivory)" }}>{levelName}</p>
-                <p className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>Livello {level} · {totalXP} XP totali</p>
+                <p className="font-black text-base" style={{ color: "var(--text)" }}>{levelName}</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>Livello {level} · {totalXP} XP totali</p>
               </div>
             </div>
             <div className="text-right flex-shrink-0">
-              <p className="text-xs font-semibold" style={{ color: "rgba(245,240,232,0.4)" }}>al prossimo liv.</p>
+              <p className="text-xs font-semibold" style={{ color: "var(--text-dim)" }}>al prossimo liv.</p>
               <p className="text-sm font-bold accent-text">{XP_PER_LVL - xpInLevel} XP</p>
             </div>
           </div>
           {/* XP bar */}
-          <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: "var(--surface-md)" }}>
             <div className="h-full rounded-full transition-all duration-700"
               style={{ width: `${xpPct}%`, background: "linear-gradient(90deg, var(--accent-dark), var(--accent))" }} />
           </div>
           <div className="flex items-center justify-between mt-2">
-            <p className="text-xs" style={{ color: "rgba(245,240,232,0.3)" }}>
+            <p className="text-xs" style={{ color: "var(--text-dim)" }}>
               +10 XP per sessione · +50 XP per settimana completata
             </p>
             {dayOnJourney !== null && (
               <span className="text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0"
-                style={{ background: "rgba(229,50,50,0.08)", color: "rgba(245,240,232,0.45)", border: "1px solid rgba(229,50,50,0.15)" }}>
+                style={{ background: "rgba(229,50,50,0.08)", color: "var(--text-muted)", border: "1px solid rgba(229,50,50,0.15)" }}>
                 Giorno {dayOnJourney}
               </span>
             )}
@@ -820,11 +824,11 @@ export default function ClientPortalPage() {
             },
           ].map(({ label, value, sub, icon }) => (
             <div key={label} className="rounded-2xl p-3 text-center"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+              style={{ background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
               <div className="flex items-center justify-center gap-1 mb-1">{icon}</div>
-              <p className="text-xl font-black" style={{ color: "var(--ivory)" }}>{value}</p>
-              <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.38)" }}>{label}</p>
-              <p className="text-xs" style={{ color: "rgba(245,240,232,0.22)" }}>{sub}</p>
+              <p className="text-xl font-black" style={{ color: "var(--text)" }}>{value}</p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>{label}</p>
+              <p className="text-xs" style={{ color: "var(--text-faint)" }}>{sub}</p>
             </div>
           ))}
         </div>
@@ -834,14 +838,14 @@ export default function ClientPortalPage() {
           <div className="mb-4 p-4 rounded-2xl"
             style={{ background: "rgba(229,50,50,0.04)", border: "1px solid rgba(229,50,50,0.12)" }}>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-bold" style={{ color: "var(--ivory)" }}>Avanzamento programma</p>
+              <p className="text-sm font-bold" style={{ color: "var(--text)" }}>Avanzamento programma</p>
               <span className="text-sm font-black accent-text">{pct}%</span>
             </div>
-            <div className="h-3 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+            <div className="h-3 rounded-full overflow-hidden" style={{ background: "var(--surface-md)" }}>
               <div className="h-full rounded-full transition-all duration-700"
                 style={{ width: `${Math.max(pct, pct > 0 ? 4 : 0)}%`, background: "linear-gradient(90deg, var(--accent), var(--accent-light))" }} />
             </div>
-            <p className="text-xs mt-1.5" style={{ color: "rgba(245,240,232,0.35)" }}>
+            <p className="text-xs mt-1.5" style={{ color: "var(--text-dim)" }}>
               {weeksCompleted === 0
                 ? `Settimana ${currentWeek > 0 ? currentWeek : 1} in corso — continua così!`
                 : `${weeksCompleted} sett. completate · Settimana ${currentWeek} in corso`}
@@ -851,10 +855,10 @@ export default function ClientPortalPage() {
 
         {/* ── Achievements ───────────────────────────────────────────────────── */}
         <div className="mb-4 rounded-2xl overflow-hidden"
-          style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
-          <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          style={{ border: "1px solid var(--border)" }}>
+          <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: "var(--surface-xs)", borderBottom: "1px solid var(--border-subtle)" }}>
             <Trophy size={13} style={{ color: "#fbbf24" }} />
-            <p className="text-xs font-bold" style={{ color: "rgba(245,240,232,0.6)" }}>
+            <p className="text-xs font-bold" style={{ color: "var(--text-muted)" }}>
               Obiettivi — {achievements.filter(a => a.unlocked).length}/{achievements.length} sbloccati
             </p>
           </div>
@@ -863,13 +867,13 @@ export default function ClientPortalPage() {
               <div key={i}
                 className="flex flex-col items-center gap-1.5 p-3 text-center"
                 style={{
-                  borderRight: i % 3 !== 2 ? "1px solid rgba(255,255,255,0.05)" : undefined,
-                  borderBottom: i < 3 ? "1px solid rgba(255,255,255,0.05)" : undefined,
+                  borderRight: i % 3 !== 2 ? "1px solid var(--border-subtle)" : undefined,
+                  borderBottom: i < 3 ? "1px solid var(--border-subtle)" : undefined,
                   opacity: a.unlocked ? 1 : 0.3,
                   filter: a.unlocked ? "none" : "grayscale(1)",
                 }}>
                 <span style={{ fontSize: "1.4rem" }}>{a.icon}</span>
-                <span className="text-xs font-semibold leading-tight" style={{ color: a.unlocked ? "var(--ivory)" : "rgba(245,240,232,0.4)" }}>
+                <span className="text-xs font-semibold leading-tight" style={{ color: a.unlocked ? "var(--ivory)" : "var(--text-dim)" }}>
                   {a.label}
                 </span>
                 {a.unlocked && (
@@ -893,9 +897,9 @@ export default function ClientPortalPage() {
             <button key={key} onClick={() => setTab(key)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0"
               style={{
-                background: tab === key ? "rgba(229,50,50,0.12)" : "rgba(255,255,255,0.04)",
-                border: `1px solid ${tab === key ? "rgba(229,50,50,0.32)" : "rgba(255,255,255,0.07)"}`,
-                color: tab === key ? "var(--accent-light)" : "rgba(245,240,232,0.5)",
+                background: tab === key ? "rgba(229,50,50,0.12)" : "var(--surface-sm)",
+                border: `1px solid ${tab === key ? "rgba(229,50,50,0.32)" : "var(--surface-md)"}`,
+                color: tab === key ? "var(--accent-light)" : "var(--text-muted)",
               }}>
               <Icon size={14} />
               {label}
@@ -952,15 +956,15 @@ export default function ClientPortalPage() {
           return (
             <div className="space-y-5">
               {/* Heatmap */}
-              <div className="rounded-2xl p-4" style={{ border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.02)" }}>
+              <div className="rounded-2xl p-4" style={{ border: "1px solid var(--border)", background: "var(--surface-xs)" }}>
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-sm font-bold" style={{ color: "var(--ivory)" }}>Attività — ultimi 8 settimane</p>
+                  <p className="text-sm font-bold" style={{ color: "var(--text)" }}>Attività — ultimi 8 settimane</p>
                   <span className="text-xs font-bold" style={{ color: "var(--accent-light)" }}>{totalTrainingDays} giorni allenati</span>
                 </div>
                 {/* Day labels */}
                 <div className="flex gap-1 mb-1 pl-0">
                   {weekLabels.map((l, i) => (
-                    <div key={i} className="text-center flex-1 text-xs" style={{ color: "rgba(245,240,232,0.25)", fontSize: "0.6rem" }}>{l}</div>
+                    <div key={i} className="text-center flex-1 text-xs" style={{ color: "var(--text-faint)", fontSize: "0.6rem" }}>{l}</div>
                   ))}
                 </div>
                 {/* Grid: 7 cols × 8 rows */}
@@ -977,7 +981,7 @@ export default function ClientPortalPage() {
                           aspectRatio: "1",
                           borderRadius: "3px",
                           background: count === 0
-                            ? "rgba(255,255,255,0.05)"
+                            ? "var(--surface)"
                             : count <= 2
                               ? "rgba(229,50,50,0.35)"
                               : "rgba(229,50,50,0.75)",
@@ -988,22 +992,22 @@ export default function ClientPortalPage() {
                   })}
                 </div>
                 <div className="flex items-center gap-2 mt-2 justify-end">
-                  <span className="text-xs" style={{ color: "rgba(245,240,232,0.25)" }}>meno</span>
-                  {["rgba(255,255,255,0.05)", "rgba(229,50,50,0.25)", "rgba(229,50,50,0.5)", "rgba(229,50,50,0.8)"].map((bg, i) => (
+                  <span className="text-xs" style={{ color: "var(--text-faint)" }}>meno</span>
+                  {["var(--surface)", "rgba(229,50,50,0.25)", "rgba(229,50,50,0.5)", "rgba(229,50,50,0.8)"].map((bg, i) => (
                     <div key={i} style={{ width: 12, height: 12, borderRadius: 3, background: bg }} />
                   ))}
-                  <span className="text-xs" style={{ color: "rgba(245,240,232,0.25)" }}>più</span>
+                  <span className="text-xs" style={{ color: "var(--text-faint)" }}>più</span>
                 </div>
               </div>
 
               {/* Personal Records */}
-              <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
-                <div className="px-4 py-3 flex items-center justify-between" style={{ background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                  <p className="text-sm font-bold" style={{ color: "var(--ivory)" }}>Personal Record</p>
-                  <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{prs.length} esercizi tracciati</span>
+              <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+                <div className="px-4 py-3 flex items-center justify-between" style={{ background: "var(--surface-xs)", borderBottom: "1px solid var(--border-subtle)" }}>
+                  <p className="text-sm font-bold" style={{ color: "var(--text)" }}>Personal Record</p>
+                  <span className="text-xs" style={{ color: "var(--text-dim)" }}>{prs.length} esercizi tracciati</span>
                 </div>
                 {prs.length === 0 ? (
-                  <div className="text-center py-12" style={{ color: "rgba(245,240,232,0.35)" }}>
+                  <div className="text-center py-12" style={{ color: "var(--text-dim)" }}>
                     <p className="text-sm">Ancora nessun record.</p>
                     <p className="text-xs mt-1">Inserisci i pesi durante l&apos;allenamento e i tuoi PR appariranno qui.</p>
                   </div>
@@ -1015,14 +1019,14 @@ export default function ClientPortalPage() {
                         style={{ borderBottom: idx < prs.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
                         <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-black"
                           style={{
-                            background: idx === 0 ? "rgba(255,210,63,0.18)" : idx === 1 ? "rgba(200,200,200,0.12)" : idx === 2 ? "rgba(205,127,50,0.12)" : "rgba(255,255,255,0.05)",
-                            color: idx === 0 ? "#fbbf24" : idx === 1 ? "#d1d5db" : idx === 2 ? "#cd7f32" : "rgba(245,240,232,0.35)",
+                            background: idx === 0 ? "rgba(255,210,63,0.18)" : idx === 1 ? "rgba(200,200,200,0.12)" : idx === 2 ? "rgba(205,127,50,0.12)" : "var(--surface)",
+                            color: idx === 0 ? "#fbbf24" : idx === 1 ? "#d1d5db" : idx === 2 ? "#cd7f32" : "var(--text-dim)",
                           }}>
                           {idx + 1}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold truncate" style={{ color: "var(--ivory)" }}>{name}</p>
-                          <p className="text-xs" style={{ color: "rgba(245,240,232,0.35)" }}>
+                          <p className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>{name}</p>
+                          <p className="text-xs" style={{ color: "var(--text-dim)" }}>
                             Sett. {pr.week} · {new Date(pr.date).toLocaleDateString("it-IT", { day: "2-digit", month: "short" })}
                           </p>
                         </div>
@@ -1057,17 +1061,17 @@ export default function ClientPortalPage() {
               </div>
             )}
             <div className="mb-4 p-3 rounded-xl text-sm flex items-start gap-2"
-              style={{ background: "rgba(229,50,50,0.06)", border: "1px solid rgba(229,50,50,0.14)", color: "rgba(245,240,232,0.6)" }}>
+              style={{ background: "rgba(229,50,50,0.06)", border: "1px solid rgba(229,50,50,0.14)", color: "var(--text-muted)" }}>
               <span className="text-base leading-none mt-0.5">💡</span>
               <span><strong style={{ color: "var(--accent-light)" }}>Come usare la scheda:</strong> clicca su una cella per inserire il peso e le ripetizioni. I dati vengono salvati automaticamente settimana per settimana.</span>
             </div>
             {plan.exercises.length === 0 ? (
-              <div className="text-center py-16 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
                 <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(229,50,50,0.08)" }}>
                   <Dumbbell size={22} style={{ color: "rgba(229,50,50,0.4)" }} />
                 </div>
-                <p className="font-semibold text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Scheda in preparazione</p>
-                <p className="text-xs max-w-xs mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>Il tuo trainer sta costruendo la tua scheda personalizzata su misura. Torni tra poco.</p>
+                <p className="font-semibold text-sm mb-1" style={{ color: "var(--text-muted)" }}>Scheda in preparazione</p>
+                <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Il tuo trainer sta costruendo la tua scheda personalizzata su misura. Torni tra poco.</p>
               </div>
             ) : (
               <WorkoutLogbook
@@ -1089,12 +1093,12 @@ export default function ClientPortalPage() {
         {tab === "dieta" && (
           <div>
             {diets.length === 0 ? (
-              <div className="text-center py-16 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
                 <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(229,50,50,0.08)" }}>
                   <UtensilsCrossed size={22} style={{ color: "rgba(229,50,50,0.4)" }} />
                 </div>
-                <p className="font-semibold text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Piano alimentare in preparazione</p>
-                <p className="text-xs max-w-xs mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>Il tuo piano alimentare personalizzato apparirà qui. Il trainer lo sta preparando su misura per i tuoi obiettivi.</p>
+                <p className="font-semibold text-sm mb-1" style={{ color: "var(--text-muted)" }}>Piano alimentare in preparazione</p>
+                <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Il tuo piano alimentare personalizzato apparirà qui. Il trainer lo sta preparando su misura per i tuoi obiettivi.</p>
               </div>
             ) : null}
 
@@ -1110,13 +1114,13 @@ export default function ClientPortalPage() {
                       <Calendar size={18} style={{ color: "var(--accent)" }} />
                     </div>
                     <div>
-                      <p className="text-sm font-black" style={{ color: "var(--ivory)" }}>Piano alimentare 7 giorni</p>
-                      <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
+                      <p className="text-sm font-black" style={{ color: "var(--text)" }}>Piano alimentare 7 giorni</p>
+                      <p className="text-xs" style={{ color: "var(--text-dim)" }}>
                         Pasti calcolati sui tuoi macro · {d.calories} kcal al giorno
                       </p>
                     </div>
                   </div>
-                  <div className="px-4 pb-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div className="px-4 pb-4" style={{ borderTop: "1px solid var(--border-subtle)" }}>
                     <WeeklyDietPlan
                       calories={d.calories}
                       protein={d.protein}
@@ -1151,14 +1155,14 @@ export default function ClientPortalPage() {
                       <div className="p-5" style={{ background: "rgba(229,50,50,0.04)" }}>
                         <div className="flex items-start justify-between mb-4">
                           <div>
-                            <h2 className="text-base font-bold" style={{ color: "var(--ivory)" }}>{diet.name}</h2>
-                            {diet.notes && <p className="text-xs mt-1 italic" style={{ color: "rgba(245,240,232,0.45)" }}>{diet.notes}</p>}
+                            <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>{diet.name}</h2>
+                            {diet.notes && <p className="text-xs mt-1 italic" style={{ color: "var(--text-muted)" }}>{diet.notes}</p>}
                           </div>
                           <div className="text-right">
                             <p className="text-2xl font-bold" style={{ color: "var(--accent)" }}>
                               {fmt(diet.calories, diet.calories_max, " kcal")}
                             </p>
-                            <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>al giorno</p>
+                            <p className="text-xs" style={{ color: "var(--text-dim)" }}>al giorno</p>
                           </div>
                         </div>
                         {/* Macro pills */}
@@ -1169,9 +1173,9 @@ export default function ClientPortalPage() {
                             { label: "Grassi", min: diet.fat, max: diet.fat_max, color: "#fbbf24" },
                           ].map(({ label, min, max, color }) => (
                             <div key={label} className="rounded-xl p-3 text-center"
-                              style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${color}25` }}>
+                              style={{ background: "var(--surface-sm)", border: `1px solid ${color}25` }}>
                               <p className="text-sm font-bold" style={{ color }}>{fmt(min, max)}</p>
-                              <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
+                              <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>{label}</p>
                             </div>
                           ))}
                         </div>
@@ -1186,23 +1190,23 @@ export default function ClientPortalPage() {
                                 <span className="w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center flex-shrink-0"
                                   style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent-light)" }}>{mi + 1}</span>
                                 <div className="flex items-baseline gap-2">
-                                  <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{meal.name}</p>
-                                  {meal.time && <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{meal.time}</span>}
+                                  <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{meal.name}</p>
+                                  {meal.time && <span className="text-xs" style={{ color: "var(--text-dim)" }}>{meal.time}</span>}
                                 </div>
                               </div>
-                              {meal.notes && <p className="text-xs mb-2 italic" style={{ color: "rgba(245,240,232,0.4)" }}>{meal.notes}</p>}
+                              {meal.notes && <p className="text-xs mb-2 italic" style={{ color: "var(--text-dim)" }}>{meal.notes}</p>}
                               {meal.items.length > 0 && (
-                                <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.05)" }}>
+                                <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border-subtle)" }}>
                                   {meal.items.map((item, ii) => (
                                     <div key={item.id}
                                       className="flex items-center gap-3 px-3 py-2.5"
-                                      style={{ background: ii % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
+                                      style={{ background: ii % 2 === 0 ? "var(--surface-xs)" : "transparent" }}>
                                       <span className="flex-1 text-sm" style={{ color: "rgba(245,240,232,0.85)" }}>{item.name || "—"}</span>
                                       <span className="text-sm font-bold flex-shrink-0" style={{ color: "var(--accent-light)" }}>
                                         {item.gramsMax && item.gramsMax > item.grams ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
                                       </span>
                                       {(item.protein || item.carbs || item.fat) && (
-                                        <div className="hidden sm:flex items-center gap-2 text-xs flex-shrink-0" style={{ color: "rgba(245,240,232,0.35)" }}>
+                                        <div className="hidden sm:flex items-center gap-2 text-xs flex-shrink-0" style={{ color: "var(--text-dim)" }}>
                                           {item.protein ? <span style={{ color: "#a78bfa" }}>P {item.protein}g</span> : null}
                                           {item.carbs ? <span style={{ color: "#38bdf8" }}>C {item.carbs}g</span> : null}
                                           {item.fat ? <span style={{ color: "#fbbf24" }}>G {item.fat}g</span> : null}
@@ -1228,16 +1232,16 @@ export default function ClientPortalPage() {
         {tab === "integratori" && (
           <div>
             {(!plan.supplements || plan.supplements.length === 0) ? (
-              <div className="text-center py-16 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
                 <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(229,50,50,0.08)" }}>
                   <ShoppingBag size={22} style={{ color: "rgba(229,50,50,0.4)" }} />
                 </div>
-                <p className="font-semibold text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Integratori in arrivo</p>
-                <p className="text-xs max-w-xs mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>Il tuo trainer aggiungerà presto i consigli sugli integratori più adatti al tuo programma.</p>
+                <p className="font-semibold text-sm mb-1" style={{ color: "var(--text-muted)" }}>Integratori in arrivo</p>
+                <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Il tuo trainer aggiungerà presto i consigli sugli integratori più adatti al tuo programma.</p>
               </div>
             ) : (
               <div className="space-y-3">
-                <p className="text-xs mb-4" style={{ color: "rgba(245,240,232,0.4)" }}>
+                <p className="text-xs mb-4" style={{ color: "var(--text-dim)" }}>
                   Integratori consigliati dal tuo trainer. Se presente un codice sconto, copialo prima di acquistare.
                 </p>
                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
@@ -1253,7 +1257,7 @@ export default function ClientPortalPage() {
 
       {/* ── Footer ───────────────────────────────────────────────────────────── */}
       <div className="text-center py-8">
-        <p className="text-xs" style={{ color: "rgba(245,240,232,0.18)" }}>
+        <p className="text-xs" style={{ color: "var(--text-faint)" }}>
           Powered by <span className="accent-text font-semibold">TrainerPro</span>
         </p>
       </div>

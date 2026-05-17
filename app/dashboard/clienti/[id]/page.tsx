@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
@@ -49,7 +49,7 @@ function PhotoCard({ photo, onDelete }: { photo: ProgressPhoto; onDelete: () => 
   }, [photo.storage_path]);
   return (
     <div className="relative rounded-2xl overflow-hidden group"
-      style={{ aspectRatio: "3/4", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+      style={{ aspectRatio: "3/4", background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
       {url ? (
         <img src={url} alt={photo.taken_at} className="w-full h-full object-cover" />
       ) : (
@@ -68,7 +68,7 @@ function PhotoCard({ photo, onDelete }: { photo: ProgressPhoto; onDelete: () => 
       </div>
       {showDelete && (
         <div className="absolute inset-0 flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.85)" }}>
+          style={{ background: "var(--surface-modal)" }}>
           <div className="text-center">
             <p className="text-sm font-bold text-white mb-1">Eliminare la foto?</p>
             <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.5)" }}>Azione irreversibile</p>
@@ -317,7 +317,7 @@ export default function ClientDetailPage() {
   if (!client) {
     return (
       <div className="p-8 text-center">
-        <p style={{ color: "rgba(245,240,232,0.5)" }}>Cliente non trovato.</p>
+        <p style={{ color: "var(--text-muted)" }}>Cliente non trovato.</p>
         <button onClick={() => router.push("/dashboard/clienti")} className="mt-4 text-sm hover:underline" style={{ color: "var(--accent-light)" }}>
           Torna alla lista
         </button>
@@ -500,7 +500,7 @@ export default function ClientDetailPage() {
   ];
 
   const inputClass = "w-full px-3 py-2.5 rounded-xl text-sm outline-none";
-  const inputStyle = { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" };
+  const inputStyle = { background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" };
   const selectStyle = { background: "rgba(26,26,26,1)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" };
 
   const activePhase = [...client.phases]
@@ -518,7 +518,7 @@ export default function ClientDetailPage() {
       {/* Back + header */}
       <button onClick={() => router.push("/dashboard/clienti")}
         className="flex items-center gap-2 text-sm mb-5 hover:opacity-80 transition-all"
-        style={{ color: "rgba(245,240,232,0.5)" }}>
+        style={{ color: "var(--text-muted)" }}>
         <ArrowLeft size={15} /> Tutti i clienti
       </button>
 
@@ -532,16 +532,16 @@ export default function ClientDetailPage() {
             <div className="flex items-center gap-3 mt-1">
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor[client.status] }} />
-                <span className="text-xs" style={{ color: "rgba(245,240,232,0.5)" }}>{statusLabel[client.status]}</span>
+                <span className="text-xs" style={{ color: "var(--text-muted)" }}>{statusLabel[client.status]}</span>
               </div>
               {client.goal && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(229,50,50,0.1)", color: "var(--accent-light)" }}>{goalLabel[client.goal]}</span>}
-              {client.level && <span className="text-xs" style={{ color: "rgba(245,240,232,0.35)" }}>{levelLabel[client.level]}</span>}
+              {client.level && <span className="text-xs" style={{ color: "var(--text-dim)" }}>{levelLabel[client.level]}</span>}
             </div>
           </div>
         </div>
         {client.monthlyFee && (
           <div className="text-right">
-            <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Quota mensile</p>
+            <p className="text-xs" style={{ color: "var(--text-dim)" }}>Quota mensile</p>
             <p className="text-xl font-bold" style={{ color: "var(--accent)" }}>€{client.monthlyFee}</p>
           </div>
         )}
@@ -563,7 +563,7 @@ export default function ClientDetailPage() {
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm whitespace-nowrap transition-all"
             style={{
               background: tab === key ? "rgba(229,50,50,0.12)" : "transparent",
-              color: tab === key ? "var(--accent-light)" : "rgba(245,240,232,0.5)",
+              color: tab === key ? "var(--accent-light)" : "var(--text-muted)",
               border: tab === key ? "1px solid rgba(229,50,50,0.22)" : "1px solid transparent",
               fontWeight: tab === key ? "600" : "400",
             }}>
@@ -585,11 +585,11 @@ export default function ClientDetailPage() {
           <div className="card-luxury rounded-2xl p-5">
             <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--ivory)" }}>Informazioni personali</h3>
             <div className="space-y-3">
-              {client.email && <div className="flex items-center gap-3 text-sm"><Mail size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "rgba(245,240,232,0.7)" }}>{client.email}</span></div>}
-              {client.phone && <div className="flex items-center gap-3 text-sm"><Phone size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "rgba(245,240,232,0.7)" }}>{client.phone}</span></div>}
-              {client.birthDate && <div className="flex items-center gap-3 text-sm"><Calendar size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "rgba(245,240,232,0.7)" }}>{formatDate(client.birthDate)}</span></div>}
-              {client.goal && <div className="flex items-center gap-3 text-sm"><Target size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "rgba(245,240,232,0.7)" }}>{goalLabel[client.goal]}</span></div>}
-              <div className="flex items-center gap-3 text-sm"><Calendar size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "rgba(245,240,232,0.7)" }}>Inizio: {formatDate(client.startDate)}</span></div>
+              {client.email && <div className="flex items-center gap-3 text-sm"><Mail size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "var(--text-muted)" }}>{client.email}</span></div>}
+              {client.phone && <div className="flex items-center gap-3 text-sm"><Phone size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "var(--text-muted)" }}>{client.phone}</span></div>}
+              {client.birthDate && <div className="flex items-center gap-3 text-sm"><Calendar size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "var(--text-muted)" }}>{formatDate(client.birthDate)}</span></div>}
+              {client.goal && <div className="flex items-center gap-3 text-sm"><Target size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "var(--text-muted)" }}>{goalLabel[client.goal]}</span></div>}
+              <div className="flex items-center gap-3 text-sm"><Calendar size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "var(--text-muted)" }}>Inizio: {formatDate(client.startDate)}</span></div>
             </div>
           </div>
 
@@ -602,9 +602,9 @@ export default function ClientDetailPage() {
                 { label: "Diete", value: client.dietPlans.length, color: "#34d399" },
                 { label: "Log recenti", value: recentLogCount, color: "#38bdf8" },
               ].map(({ label, value, color }) => (
-                <div key={label} className="rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.04)" }}>
+                <div key={label} className="rounded-xl p-3 text-center" style={{ background: "var(--surface-sm)" }}>
                   <p className="text-2xl font-bold" style={{ color }}>{value}</p>
-                  <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>{label}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{label}</p>
                 </div>
               ))}
             </div>
@@ -617,7 +617,7 @@ export default function ClientDetailPage() {
                 <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: phaseTypeColor[activePhase.type] }} />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm" style={{ color: "var(--ivory)" }}>{activePhase.name}</p>
-                  <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
                     {formatDate(activePhase.startDate)} → {activePhase.endDate ? formatDate(activePhase.endDate) : "In corso"}
                   </p>
                 </div>
@@ -625,7 +625,7 @@ export default function ClientDetailPage() {
                   {phaseTypeLabel[activePhase.type]}
                 </span>
                 {activePhase.targetCalories && (
-                  <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: "rgba(255,255,255,0.05)", color: "rgba(245,240,232,0.6)" }}>
+                  <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: "var(--surface)", color: "var(--text-muted)" }}>
                     {activePhase.targetCalories} kcal target
                   </span>
                 )}
@@ -645,8 +645,8 @@ export default function ClientDetailPage() {
                   return (
                     <div key={wp.id} className="flex items-center gap-3 text-sm">
                       <Dumbbell size={13} style={{ color: "var(--accent)", flexShrink: 0 }} />
-                      <span className="flex-1" style={{ color: "rgba(245,240,232,0.7)" }}>{wp.name}</span>
-                      <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{recentLogs.length} log · ultima {formatDate(lastLog.loggedAt)}</span>
+                      <span className="flex-1" style={{ color: "var(--text-muted)" }}>{wp.name}</span>
+                      <span className="text-xs" style={{ color: "var(--text-dim)" }}>{recentLogs.length} log · ultima {formatDate(lastLog.loggedAt)}</span>
                     </div>
                   );
                 })}
@@ -660,7 +660,7 @@ export default function ClientDetailPage() {
       {tab === "fasi" && (
         <div>
           <div className="flex justify-between items-center mb-4">
-            <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{client.phases.length} {client.phases.length === 1 ? "fase" : "fasi"}</p>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{client.phases.length} {client.phases.length === 1 ? "fase" : "fasi"}</p>
             <button onClick={() => setShowPhaseModal(true)} className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm">
               <Plus size={14} /> Nuova fase
             </button>
@@ -668,7 +668,7 @@ export default function ClientDetailPage() {
           {client.phases.length === 0 ? (
             <div className="text-center py-16 card-luxury rounded-2xl">
               <Activity size={40} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
-              <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>Nessuna fase pianificata</p>
+              <p className="text-sm" style={{ color: "var(--text-muted)" }}>Nessuna fase pianificata</p>
               <button onClick={() => setShowPhaseModal(true)} className="mt-3 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>Aggiungi la prima fase</button>
             </div>
           ) : (
@@ -680,7 +680,7 @@ export default function ClientDetailPage() {
                       <div className="w-3 h-3 rounded-full flex-shrink-0 mt-1" style={{ background: phaseTypeColor[phase.type] }} />
                       <div>
                         <p className="font-semibold" style={{ color: "var(--ivory)" }}>{phase.name}</p>
-                        <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
                           {formatDate(phase.startDate)} → {phase.endDate ? formatDate(phase.endDate) : "In corso"}
                         </p>
                       </div>
@@ -692,11 +692,11 @@ export default function ClientDetailPage() {
                       <button
                         onClick={() => setEditingPhase({ id: phase.id, name: phase.name, type: phase.type, startDate: phase.startDate, endDate: phase.endDate ?? "", targetCalories: phase.targetCalories ? String(phase.targetCalories) : "", targetWeight: phase.targetWeight ? String(phase.targetWeight) : "", notes: phase.notes ?? "" })}
                         className="p-1.5 rounded-lg hover:bg-white/5 transition-all" title="Modifica fase">
-                        <Pencil size={13} style={{ color: "rgba(245,240,232,0.45)" }} />
+                        <Pencil size={13} style={{ color: "var(--text-muted)" }} />
                       </button>
                       <button onClick={() => { updatePhase(client!.id, phase.id, { completed: !phase.completed }); dbPhases.update(phase.id, { completed: !phase.completed }).catch(() => {}); }}
                         className="p-1.5 rounded-lg hover:bg-white/5 transition-all">
-                        {phase.completed ? <CheckCircle2 size={15} style={{ color: "#22c55e" }} /> : <Circle size={15} style={{ color: "rgba(245,240,232,0.35)" }} />}
+                        {phase.completed ? <CheckCircle2 size={15} style={{ color: "#22c55e" }} /> : <Circle size={15} style={{ color: "var(--text-dim)" }} />}
                       </button>
                       <button onClick={async () => { removePhase(client!.id, phase.id); try { await dbPhases.remove(phase.id); } catch {} }}
                         className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all">
@@ -705,10 +705,10 @@ export default function ClientDetailPage() {
                     </div>
                   </div>
                   {(phase.targetCalories || phase.targetWeight || phase.notes) && (
-                    <div className="mt-3 pt-3 flex flex-wrap gap-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                      {phase.targetCalories && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Calorie target</p><p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{phase.targetCalories} kcal</p></div>}
-                      {phase.targetWeight && <div><p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Peso target</p><p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{phase.targetWeight} kg</p></div>}
-                      {phase.notes && <p className="text-xs w-full" style={{ color: "rgba(245,240,232,0.5)" }}>{phase.notes}</p>}
+                    <div className="mt-3 pt-3 flex flex-wrap gap-4" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+                      {phase.targetCalories && <div><p className="text-xs" style={{ color: "var(--text-dim)" }}>Calorie target</p><p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{phase.targetCalories} kcal</p></div>}
+                      {phase.targetWeight && <div><p className="text-xs" style={{ color: "var(--text-dim)" }}>Peso target</p><p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{phase.targetWeight} kg</p></div>}
+                      {phase.notes && <p className="text-xs w-full" style={{ color: "var(--text-muted)" }}>{phase.notes}</p>}
                     </div>
                   )}
                 </div>
@@ -722,7 +722,7 @@ export default function ClientDetailPage() {
       {tab === "schede" && (
         <div>
           <div className="flex justify-between items-center mb-4">
-            <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{client.workoutPlans.length} {client.workoutPlans.length === 1 ? "scheda" : "schede"}</p>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{client.workoutPlans.length} {client.workoutPlans.length === 1 ? "scheda" : "schede"}</p>
             <button onClick={() => setShowWorkoutModal(true)} className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm">
               <Plus size={14} /> Nuova scheda
             </button>
@@ -731,8 +731,8 @@ export default function ClientDetailPage() {
           {client.workoutPlans.length === 0 ? (
             <div className="text-center py-16 card-luxury rounded-2xl">
               <Dumbbell size={40} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
-              <p className="text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Nessuna scheda di allenamento</p>
-              <p className="text-xs mb-4" style={{ color: "rgba(245,240,232,0.35)" }}>Crea la prima scheda e condividi il link col cliente</p>
+              <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessuna scheda di allenamento</p>
+              <p className="text-xs mb-4" style={{ color: "var(--text-dim)" }}>Crea la prima scheda e condividi il link col cliente</p>
               <button onClick={() => setShowWorkoutModal(true)} className="accent-btn px-5 py-2.5 rounded-xl text-sm inline-flex items-center gap-2">
                 <Plus size={14} /> Crea la prima scheda
               </button>
@@ -758,7 +758,7 @@ export default function ClientDetailPage() {
                           )}
                         </div>
                         {wp.description && (
-                          <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.45)" }}>{wp.description}</p>
+                          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{wp.description}</p>
                         )}
                       </div>
                       {/* Action buttons */}
@@ -767,13 +767,13 @@ export default function ClientDetailPage() {
                           onClick={() => duplicatePlan(wp)}
                           className="p-1.5 rounded-lg hover:bg-white/5 transition-all"
                           title="Duplica scheda">
-                          <Copy size={13} style={{ color: "rgba(245,240,232,0.45)" }} />
+                          <Copy size={13} style={{ color: "var(--text-muted)" }} />
                         </button>
                         <button
                           onClick={() => setEditingPlan({ id: wp.id, name: wp.name, description: wp.description ?? "", daysPerWeek: String(wp.daysPerWeek), totalWeeks: String(wp.totalWeeks ?? 12), restSeconds: String(wp.restSeconds ?? 90), phaseId: wp.phaseId ?? "" })}
                           className="p-1.5 rounded-lg hover:bg-white/5 transition-all"
                           title="Modifica scheda">
-                          <Pencil size={13} style={{ color: "rgba(245,240,232,0.45)" }} />
+                          <Pencil size={13} style={{ color: "var(--text-muted)" }} />
                         </button>
                         <button
                           onClick={async () => {
@@ -797,7 +797,7 @@ export default function ClientDetailPage() {
                         ...(wp.restSeconds ? [{ label: formatRestTime(wp.restSeconds), icon: true }] : []),
                       ].map(({ label, icon }) => (
                         <span key={label} className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg"
-                          style={{ background: "rgba(255,255,255,0.05)", color: "rgba(245,240,232,0.5)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                          style={{ background: "var(--surface)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>
                           {icon && <Timer size={10} />}
                           {label}
                         </span>
@@ -805,14 +805,14 @@ export default function ClientDetailPage() {
                     </div>
 
                     {/* Share link + open */}
-                    <div className="flex items-center gap-2 pt-3 flex-wrap" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div className="flex items-center gap-2 pt-3 flex-wrap" style={{ borderTop: "1px solid var(--border-subtle)" }}>
                       {wp.shareToken && (
                         <button
                           onClick={() => copyPortalLink(wp.shareToken, wp.id)}
                           className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all"
                           style={copiedPlanId === wp.id
                             ? { background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", color: "#22c55e" }
-                            : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(245,240,232,0.5)" }}>
+                            : { background: "var(--surface-sm)", border: "1px solid var(--border)", color: "var(--text-muted)" }}>
                           {copiedPlanId === wp.id ? <><Check size={11} /> Link copiato!</> : <><Copy size={11} /> Portale cliente</>}
                         </button>
                       )}
@@ -835,7 +835,7 @@ export default function ClientDetailPage() {
       {tab === "dieta" && (
         <div>
           <div className="flex justify-between items-center mb-4">
-            <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{client.dietPlans.length} piani</p>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{client.dietPlans.length} piani</p>
             <button onClick={() => { setEditingDietPlan(null); setDietEditorOpen(true); }} className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm">
               <Plus size={14} /> Nuovo piano
             </button>
@@ -843,8 +843,8 @@ export default function ClientDetailPage() {
           {client.dietPlans.length === 0 ? (
             <div className="text-center py-16 card-luxury rounded-2xl">
               <UtensilsCrossed size={40} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
-              <p className="text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Nessun piano alimentare</p>
-              <p className="text-xs mb-4" style={{ color: "rgba(245,240,232,0.35)" }}>Crea un piano con macro, range di grammi e pasti dettagliati</p>
+              <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessun piano alimentare</p>
+              <p className="text-xs mb-4" style={{ color: "var(--text-dim)" }}>Crea un piano con macro, range di grammi e pasti dettagliati</p>
               <button onClick={() => { setEditingDietPlan(null); setDietEditorOpen(true); }}
                 className="accent-btn px-5 py-2.5 rounded-xl text-sm inline-flex items-center gap-2">
                 <Plus size={14} /> Crea il primo piano
@@ -878,7 +878,7 @@ export default function ClientDetailPage() {
                         <div className="flex items-center gap-1 flex-shrink-0">
                           <button onClick={() => { setEditingDietPlan(dp); setDietEditorOpen(true); }}
                             className="p-1.5 rounded-lg hover:bg-white/5 transition-all" title="Modifica piano">
-                            <Pencil size={13} style={{ color: "rgba(245,240,232,0.45)" }} />
+                            <Pencil size={13} style={{ color: "var(--text-muted)" }} />
                           </button>
                           <button onClick={async () => {
                             if (!confirm(`Eliminare "${dp.name}"?`)) return;
@@ -897,16 +897,16 @@ export default function ClientDetailPage() {
                           { label: "Carboidrati", value: dp.carbsMax ? `${dp.carbs}–${dp.carbsMax}g` : `${dp.carbs}g`, color: "#38bdf8", icon: <Wheat size={11} /> },
                           { label: "Grassi", value: dp.fatMax ? `${dp.fat}–${dp.fatMax}g` : `${dp.fat}g`, color: "#fbbf24", icon: <Droplets size={11} /> },
                         ].map(({ label, value, color, icon }) => (
-                          <div key={label} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.04)" }}>
+                          <div key={label} className="rounded-xl p-3" style={{ background: "var(--surface-sm)" }}>
                             <div className="flex items-center gap-1.5 mb-1" style={{ color }}>
                               {icon}
-                              <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
+                              <p className="text-xs" style={{ color: "var(--text-dim)" }}>{label}</p>
                             </div>
                             <p className="text-sm font-bold leading-tight" style={{ color }}>{value}</p>
                           </div>
                         ))}
                       </div>
-                      {dp.notes && <p className="text-xs mt-3 italic" style={{ color: "rgba(245,240,232,0.45)" }}>{dp.notes}</p>}
+                      {dp.notes && <p className="text-xs mt-3 italic" style={{ color: "var(--text-muted)" }}>{dp.notes}</p>}
                     </div>
 
                     {/* Meals section */}
@@ -914,7 +914,7 @@ export default function ClientDetailPage() {
                       <div style={{ borderTop: "1px solid rgba(229,50,50,0.1)" }}>
                         <button onClick={() => setExpandedDietId(isExpanded ? null : dp.id)}
                           className="w-full flex items-center justify-between px-5 py-3 hover:bg-white/[0.02] transition-all"
-                          style={{ color: "rgba(245,240,232,0.5)" }}>
+                          style={{ color: "var(--text-muted)" }}>
                           <span className="text-xs font-medium flex items-center gap-2">
                             <UtensilsCrossed size={12} style={{ color: "var(--accent)" }} />
                             {mealsData.length} {mealsData.length === 1 ? "pasto" : "pasti"} nel piano
@@ -924,23 +924,23 @@ export default function ClientDetailPage() {
                         {isExpanded && (
                           <div className="px-5 pb-4 space-y-3">
                             {mealsData.map((meal, mi) => (
-                              <div key={meal.id} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(229,50,50,0.1)" }}>
+                              <div key={meal.id} className="rounded-xl p-3" style={{ background: "var(--surface-xs)", border: "1px solid rgba(229,50,50,0.1)" }}>
                                 <div className="flex items-center gap-2 mb-2">
                                   <span className="w-5 h-5 rounded-md text-xs font-bold flex items-center justify-center flex-shrink-0"
                                     style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent-light)" }}>{mi + 1}</span>
                                   <span className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{meal.name}</span>
-                                  {meal.time && <span className="text-xs" style={{ color: "rgba(245,240,232,0.35)" }}>{meal.time}</span>}
+                                  {meal.time && <span className="text-xs" style={{ color: "var(--text-dim)" }}>{meal.time}</span>}
                                 </div>
                                 {meal.items.length > 0 && (
                                   <div className="space-y-1">
                                     {meal.items.map((item) => (
-                                      <div key={item.id} className="flex items-center gap-2 text-xs" style={{ color: "rgba(245,240,232,0.65)" }}>
+                                      <div key={item.id} className="flex items-center gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
                                         <span className="flex-1">{item.name || "—"}</span>
                                         <span className="font-medium" style={{ color: "rgba(245,240,232,0.85)" }}>
                                           {item.gramsMax ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
                                         </span>
                                         {(item.protein || item.carbs || item.fat) && (
-                                          <span className="text-xs" style={{ color: "rgba(245,240,232,0.35)" }}>
+                                          <span className="text-xs" style={{ color: "var(--text-dim)" }}>
                                             {item.protein ? `P:${item.protein}g` : ""}{item.carbs ? ` C:${item.carbs}g` : ""}{item.fat ? ` G:${item.fat}g` : ""}
                                           </span>
                                         )}
@@ -979,7 +979,7 @@ export default function ClientDetailPage() {
             </div>
           </div>
           {client.notes.length === 0 ? (
-            <div className="text-center py-10" style={{ color: "rgba(245,240,232,0.4)" }}>
+            <div className="text-center py-10" style={{ color: "var(--text-dim)" }}>
               <StickyNote size={32} className="mx-auto mb-2" style={{ color: "rgba(229,50,50,0.25)" }} />
               <p className="text-sm">Nessuna nota ancora</p>
             </div>
@@ -994,7 +994,7 @@ export default function ClientDetailPage() {
                       <Trash2 size={13} style={{ color: "rgba(239,68,68,0.5)" }} />
                     </button>
                   </div>
-                  <p className="text-xs mt-2" style={{ color: "rgba(245,240,232,0.3)" }}>{formatDate(note.createdAt)}</p>
+                  <p className="text-xs mt-2" style={{ color: "var(--text-dim)" }}>{formatDate(note.createdAt)}</p>
                 </div>
               ))}
             </div>
@@ -1014,7 +1014,7 @@ export default function ClientDetailPage() {
                   <Lock size={24} style={{ color: "var(--accent)" }} />
                 </div>
                 <h2 className="text-lg font-bold mb-1" style={{ color: "var(--ivory)" }}>Sezione protetta</h2>
-                <p className="text-sm" style={{ color: "rgba(245,240,232,0.45)" }}>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                   Le foto di progresso richiedono una password aggiuntiva per la privacy del cliente.
                 </p>
               </div>
@@ -1027,12 +1027,12 @@ export default function ClientDetailPage() {
                     onKeyDown={e => e.key === "Enter" && unlockPhotos()}
                     placeholder="Password"
                     className="w-full px-4 py-3 rounded-xl text-sm outline-none pr-12"
-                    style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${pwError ? "rgba(239,68,68,0.5)" : "rgba(229,50,50,0.22)"}`, color: "var(--ivory)" }}
+                    style={{ background: "var(--surface)", border: `1px solid ${pwError ? "rgba(239,68,68,0.5)" : "rgba(229,50,50,0.22)"}`, color: "var(--ivory)" }}
                     autoFocus
                   />
                   <button onClick={() => setShowPw(v => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2"
-                    style={{ color: "rgba(245,240,232,0.4)" }}>
+                    style={{ color: "var(--text-dim)" }}>
                     {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
@@ -1053,17 +1053,17 @@ export default function ClientDetailPage() {
                 </h3>
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div>
-                    <label className="block text-xs mb-1.5" style={{ color: "rgba(245,240,232,0.5)" }}>Data foto *</label>
+                    <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Data foto *</label>
                     <input type="date" value={uploadDate} onChange={e => setUploadDate(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
+                      style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
                   </div>
                   <div>
-                    <label className="block text-xs mb-1.5" style={{ color: "rgba(245,240,232,0.5)" }}>Note (opzionale)</label>
+                    <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Note (opzionale)</label>
                     <input type="text" value={uploadNotes} onChange={e => setUploadNotes(e.target.value)}
                       placeholder="es. Settimana 4 bulk"
                       className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                      style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
+                      style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
                   </div>
                 </div>
                 <label className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all ${uploading ? "opacity-60 pointer-events-none" : "hover:opacity-90"} accent-btn`}>
@@ -1071,7 +1071,7 @@ export default function ClientDetailPage() {
                   {uploading ? "Caricamento..." : "Seleziona foto"}
                   <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
                 </label>
-                <p className="text-xs mt-2 text-center" style={{ color: "rgba(245,240,232,0.25)" }}>
+                <p className="text-xs mt-2 text-center" style={{ color: "var(--text-faint)" }}>
                   Ridimensionata automaticamente · Mai visibile al cliente · URL firmato 1h
                 </p>
               </div>
@@ -1080,12 +1080,12 @@ export default function ClientDetailPage() {
               {photos.length === 0 ? (
                 <div className="text-center py-16 card-luxury rounded-2xl">
                   <Camera size={40} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
-                  <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>Nessuna foto ancora</p>
-                  <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.3)" }}>Le foto di progresso appariranno qui</p>
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>Nessuna foto ancora</p>
+                  <p className="text-xs mt-1" style={{ color: "var(--text-dim)" }}>Le foto di progresso appariranno qui</p>
                 </div>
               ) : (
                 <div>
-                  <p className="text-xs mb-3" style={{ color: "rgba(245,240,232,0.4)" }}>
+                  <p className="text-xs mb-3" style={{ color: "var(--text-dim)" }}>
                     {photos.length} {photos.length === 1 ? "foto" : "foto"} · hover per eliminare
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -1124,11 +1124,11 @@ export default function ClientDetailPage() {
                 <h3 className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>Andamento peso</h3>
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-bold" style={{ color: "var(--accent)" }}>{chartData[chartData.length - 1].weight}</span>
-                  <span className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>kg</span>
+                  <span className="text-sm" style={{ color: "var(--text-muted)" }}>kg</span>
                   {chartData.length > 1 && (() => {
                     const diff = chartData[chartData.length - 1].weight - chartData[0].weight;
                     return (
-                      <span className="text-xs ml-1 font-semibold" style={{ color: diff < 0 ? "#22c55e" : diff > 0 ? "#f87171" : "rgba(245,240,232,0.4)" }}>
+                      <span className="text-xs ml-1 font-semibold" style={{ color: diff < 0 ? "#22c55e" : diff > 0 ? "#f87171" : "var(--text-dim)" }}>
                         {diff > 0 ? "+" : ""}{diff.toFixed(1)} kg
                       </span>
                     );
@@ -1151,7 +1151,7 @@ export default function ClientDetailPage() {
                   return <circle key={i} cx={x.toFixed(2)} cy={y.toFixed(2)} r="1.8" fill="#E53232" vectorEffect="non-scaling-stroke" />;
                 })}
               </svg>
-              <div className="flex justify-between text-xs mt-1" style={{ color: "rgba(245,240,232,0.3)" }}>
+              <div className="flex justify-between text-xs mt-1" style={{ color: "var(--text-dim)" }}>
                 <span>{formatDate(chartData[0].date)}</span>
                 <span>{formatDate(chartData[chartData.length - 1].date)}</span>
               </div>
@@ -1168,17 +1168,17 @@ export default function ClientDetailPage() {
               <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--ivory)" }}>Nuova misurazione</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                 <div className="sm:col-span-2">
-                  <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Data *</label>
+                  <label className="block text-xs mb-1" style={{ color: "var(--text-muted)" }}>Data *</label>
                   <input type="date" value={measForm.date} onChange={(e) => setMeasForm({ ...measForm, date: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
                 </div>
                 <div>
-                  <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Peso (kg) *</label>
+                  <label className="block text-xs mb-1" style={{ color: "var(--text-muted)" }}>Peso (kg) *</label>
                   <input type="number" step="0.1" placeholder="82.5" value={measForm.weight} onChange={(e) => setMeasForm({ ...measForm, weight: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
                 </div>
                 <div>
-                  <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>% Grasso</label>
+                  <label className="block text-xs mb-1" style={{ color: "var(--text-muted)" }}>% Grasso</label>
                   <input type="number" step="0.1" placeholder="18.5" value={measForm.bodyFat} onChange={(e) => setMeasForm({ ...measForm, bodyFat: e.target.value })}
                     className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
                 </div>
@@ -1192,7 +1192,7 @@ export default function ClientDetailPage() {
                   { key: "legs",  label: "Gambe" },
                 ] as const).map(({ key, label }) => (
                   <div key={key}>
-                    <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>{label} (cm)</label>
+                    <label className="block text-xs mb-1" style={{ color: "var(--text-muted)" }}>{label} (cm)</label>
                     <input type="number" step="0.5" placeholder="—"
                       value={measForm[key]}
                       onChange={(e) => setMeasForm({ ...measForm, [key]: e.target.value })}
@@ -1211,7 +1211,7 @@ export default function ClientDetailPage() {
             {sortedM.length === 0 ? (
               <div className="text-center py-12 card-luxury rounded-2xl">
                 <TrendingUp size={32} className="mx-auto mb-2" style={{ color: "rgba(229,50,50,0.3)" }} />
-                <p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>Nessuna misurazione ancora</p>
+                <p className="text-sm" style={{ color: "var(--text-dim)" }}>Nessuna misurazione ancora</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -1219,17 +1219,17 @@ export default function ClientDetailPage() {
                   <div key={m.id} className="card-luxury rounded-2xl p-4 flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-baseline gap-3 mb-1.5 flex-wrap">
-                        <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{formatDate(m.date)}</span>
+                        <span className="text-xs" style={{ color: "var(--text-dim)" }}>{formatDate(m.date)}</span>
                         <span className="font-bold text-base" style={{ color: "var(--ivory)" }}>{m.weight} kg</span>
                         {m.bodyFat && <span className="text-sm" style={{ color: "#a78bfa" }}>{m.bodyFat}% grasso</span>}
                       </div>
                       {(m.chest || m.waist || m.hips || m.arms || m.legs) && (
                         <div className="flex flex-wrap gap-3">
-                          {m.chest && <span className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>Petto {m.chest}cm</span>}
-                          {m.waist && <span className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>Vita {m.waist}cm</span>}
-                          {m.hips  && <span className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>Fianchi {m.hips}cm</span>}
-                          {m.arms  && <span className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>Braccia {m.arms}cm</span>}
-                          {m.legs  && <span className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>Gambe {m.legs}cm</span>}
+                          {m.chest && <span className="text-xs" style={{ color: "var(--text-muted)" }}>Petto {m.chest}cm</span>}
+                          {m.waist && <span className="text-xs" style={{ color: "var(--text-muted)" }}>Vita {m.waist}cm</span>}
+                          {m.hips  && <span className="text-xs" style={{ color: "var(--text-muted)" }}>Fianchi {m.hips}cm</span>}
+                          {m.arms  && <span className="text-xs" style={{ color: "var(--text-muted)" }}>Braccia {m.arms}cm</span>}
+                          {m.legs  && <span className="text-xs" style={{ color: "var(--text-muted)" }}>Gambe {m.legs}cm</span>}
                         </div>
                       )}
                     </div>
@@ -1256,7 +1256,7 @@ export default function ClientDetailPage() {
               <p className="text-xs font-bold mb-1" style={{ color: "#fbbf24" }}>
                 Fitness Scan — BETA · Funzione sicura
               </p>
-              <p className="text-xs leading-relaxed" style={{ color: "rgba(245,240,232,0.55)" }}>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
                 Le foto sono cifrate a riposo in un bucket privato con accesso esclusivo al trainer.
                 I link di visualizzazione scadono dopo 5 minuti e non vengono mai esposti al cliente.
                 L&apos;analisi AI avviene interamente lato server: nessuna immagine transita nel browser.
@@ -1271,17 +1271,17 @@ export default function ClientDetailPage() {
             </h3>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>
-                <label className="block text-xs mb-1.5" style={{ color: "rgba(245,240,232,0.5)" }}>Data foto *</label>
+                <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Data foto *</label>
                 <input type="date" value={scanUploadDate} onChange={e => setScanUploadDate(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
+                  style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
               </div>
               <div>
-                <label className="block text-xs mb-1.5" style={{ color: "rgba(245,240,232,0.5)" }}>Note (opzionale)</label>
+                <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Note (opzionale)</label>
                 <input type="text" value={scanUploadNotes} onChange={e => setScanUploadNotes(e.target.value)}
                   placeholder="es. Fronte, Lato, Schiena…"
                   className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
+                  style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
               </div>
             </div>
             <label className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all ${scanUploading ? "opacity-60 pointer-events-none" : "hover:opacity-90"} accent-btn`}>
@@ -1289,7 +1289,7 @@ export default function ClientDetailPage() {
               {scanUploading ? "Caricamento..." : "Seleziona foto per scansione"}
               <input type="file" accept="image/*" className="hidden" onChange={handleScanUpload} disabled={scanUploading} />
             </label>
-            <p className="text-xs mt-2 text-center" style={{ color: "rgba(245,240,232,0.25)" }}>
+            <p className="text-xs mt-2 text-center" style={{ color: "var(--text-faint)" }}>
               Ridimensionata automaticamente · Cifrata a riposo · Accesso solo trainer · Link 5 min
             </p>
           </div>
@@ -1298,13 +1298,13 @@ export default function ClientDetailPage() {
           {!scansLoaded ? (
             <div className="text-center py-12">
               <Loader2 size={24} className="animate-spin mx-auto mb-2" style={{ color: "rgba(229,50,50,0.4)" }} />
-              <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Caricamento scansioni…</p>
+              <p className="text-xs" style={{ color: "var(--text-dim)" }}>Caricamento scansioni…</p>
             </div>
           ) : scans.length === 0 ? (
             <div className="text-center py-16 card-luxury rounded-2xl">
               <Brain size={40} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
-              <p className="text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Nessuna scansione ancora</p>
-              <p className="text-xs" style={{ color: "rgba(245,240,232,0.3)" }}>Carica la prima foto per abilitare l&apos;analisi AI della composizione corporea</p>
+              <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessuna scansione ancora</p>
+              <p className="text-xs" style={{ color: "var(--text-dim)" }}>Carica la prima foto per abilitare l&apos;analisi AI della composizione corporea</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -1318,7 +1318,7 @@ export default function ClientDetailPage() {
                       <div className="flex items-start gap-4">
                         {/* Thumbnail */}
                         <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 relative"
-                          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(229,50,50,0.12)" }}>
+                          style={{ background: "var(--surface-sm)", border: "1px solid rgba(229,50,50,0.12)" }}>
                           {imgUrl ? (
                             <img src={imgUrl} alt={scan.taken_at} className="w-full h-full object-cover" />
                           ) : (
@@ -1347,7 +1347,7 @@ export default function ClientDetailPage() {
                             )}
                           </div>
                           {scan.notes && (
-                            <p className="text-xs mb-2" style={{ color: "rgba(245,240,232,0.45)" }}>{scan.notes}</p>
+                            <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>{scan.notes}</p>
                           )}
                           <div className="flex items-center gap-2 flex-wrap">
                             {!analysis ? (
@@ -1364,7 +1364,7 @@ export default function ClientDetailPage() {
                                 onClick={() => handleScanAnalyze(scan)}
                                 disabled={isAnalyzing}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all disabled:opacity-60"
-                                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(245,240,232,0.4)" }}>
+                                style={{ background: "var(--surface-sm)", border: "1px solid var(--border)", color: "var(--text-dim)" }}>
                                 {isAnalyzing ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
                                 {isAnalyzing ? "Aggiornamento…" : "Rianalizza"}
                               </button>
@@ -1397,16 +1397,16 @@ export default function ClientDetailPage() {
                               { label: "Somatotipo", value: analysis.body_type ?? "—", color: "#38bdf8" },
                             ].map(({ label, value, color }) => (
                               <div key={label} className="rounded-xl p-2.5 text-center"
-                                style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${color}20` }}>
+                                style={{ background: "var(--surface-xs)", border: `1px solid ${color}20` }}>
                                 <p className="text-sm font-bold capitalize" style={{ color }}>{value}</p>
-                                <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.35)" }}>{label}</p>
+                                <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>{label}</p>
                               </div>
                             ))}
                           </div>
 
                           {/* Summary */}
                           <p className="text-xs leading-relaxed mb-3 italic"
-                            style={{ color: "rgba(245,240,232,0.7)", background: "rgba(255,255,255,0.025)", borderRadius: 10, padding: "10px 12px" }}>
+                            style={{ color: "var(--text-muted)", background: "var(--surface-xs)", borderRadius: 10, padding: "10px 12px" }}>
                             {analysis.summary}
                           </p>
 
@@ -1414,7 +1414,7 @@ export default function ClientDetailPage() {
                           {analysis.recommendations?.length > 0 && (
                             <div className="space-y-1.5">
                               {analysis.recommendations.map((rec, i) => (
-                                <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "rgba(245,240,232,0.65)" }}>
+                                <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
                                   <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold"
                                     style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent)" }}>
                                     {i + 1}
@@ -1425,7 +1425,7 @@ export default function ClientDetailPage() {
                             </div>
                           )}
 
-                          <p className="text-xs mt-3" style={{ color: "rgba(245,240,232,0.2)" }}>
+                          <p className="text-xs mt-3" style={{ color: "var(--text-faint)" }}>
                             Stima visiva AI · Non sostituisce una misurazione clinica · {new Date(analysis.analyzed_at).toLocaleDateString("it-IT")}
                           </p>
                         </div>
@@ -1444,44 +1444,44 @@ export default function ClientDetailPage() {
       {/* Phase modal */}
       {showPhaseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowPhaseModal(false)}>
-          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
+          <div className="absolute inset-0" style={{ background: "var(--surface-modal)" }} />
           <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Nuova fase</h3>
-              <button onClick={() => setShowPhaseModal(false)}><X size={16} style={{ color: "rgba(245,240,232,0.5)" }} /></button>
+              <button onClick={() => setShowPhaseModal(false)}><X size={16} style={{ color: "var(--text-muted)" }} /></button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Nome fase *</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Nome fase *</label>
                 <input value={phaseForm.name} onChange={(e) => setPhaseForm({ ...phaseForm, name: e.target.value })} placeholder="es. Bulk invernale" className={inputClass} style={inputStyle} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Tipo</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Tipo</label>
                   <select value={phaseForm.type} onChange={(e) => setPhaseForm({ ...phaseForm, type: e.target.value })} className={`${inputClass}`} style={selectStyle}>
                     <option value="bulk">Bulk</option><option value="cut">Cut</option><option value="maintenance">Mantenimento</option><option value="custom">Personalizzata</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Calorie target</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Calorie target</label>
                   <input type="number" value={phaseForm.targetCalories} onChange={(e) => setPhaseForm({ ...phaseForm, targetCalories: e.target.value })} placeholder="3200" className={inputClass} style={inputStyle} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Data inizio *</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Data inizio *</label>
                   <input type="date" value={phaseForm.startDate} onChange={(e) => setPhaseForm({ ...phaseForm, startDate: e.target.value })} className={inputClass} style={inputStyle} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Data fine</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Data fine</label>
                   <input type="date" value={phaseForm.endDate} onChange={(e) => setPhaseForm({ ...phaseForm, endDate: e.target.value })} className={inputClass} style={inputStyle} />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Note</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Note</label>
                 <textarea value={phaseForm.notes} onChange={(e) => setPhaseForm({ ...phaseForm, notes: e.target.value })} rows={2} placeholder="Obiettivi, indicazioni…" className={`${inputClass} resize-none`} style={inputStyle} />
               </div>
             </div>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setShowPhaseModal(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>Annulla</button>
+              <button onClick={() => setShowPhaseModal(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}>Annulla</button>
               <button onClick={savePhase} disabled={saving} className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Salva fase
               </button>
@@ -1493,48 +1493,48 @@ export default function ClientDetailPage() {
       {/* Edit phase modal */}
       {editingPhase && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setEditingPhase(null)}>
-          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
+          <div className="absolute inset-0" style={{ background: "var(--surface-modal)" }} />
           <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Modifica fase</h3>
-              <button onClick={() => setEditingPhase(null)}><X size={16} style={{ color: "rgba(245,240,232,0.5)" }} /></button>
+              <button onClick={() => setEditingPhase(null)}><X size={16} style={{ color: "var(--text-muted)" }} /></button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Nome fase *</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Nome fase *</label>
                 <input value={editingPhase.name} onChange={(e) => setEditingPhase({ ...editingPhase, name: e.target.value })} className={inputClass} style={inputStyle} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Tipo</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Tipo</label>
                   <select value={editingPhase.type} onChange={(e) => setEditingPhase({ ...editingPhase, type: e.target.value })} className={inputClass} style={selectStyle}>
                     <option value="bulk">Bulk</option><option value="cut">Cut</option><option value="maintenance">Mantenimento</option><option value="custom">Personalizzata</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Calorie target</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Calorie target</label>
                   <input type="number" value={editingPhase.targetCalories} onChange={(e) => setEditingPhase({ ...editingPhase, targetCalories: e.target.value })} placeholder="3200" className={inputClass} style={inputStyle} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Data inizio *</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Data inizio *</label>
                   <input type="date" value={editingPhase.startDate} onChange={(e) => setEditingPhase({ ...editingPhase, startDate: e.target.value })} className={inputClass} style={inputStyle} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Data fine</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Data fine</label>
                   <input type="date" value={editingPhase.endDate} onChange={(e) => setEditingPhase({ ...editingPhase, endDate: e.target.value })} className={inputClass} style={inputStyle} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Peso target (kg)</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Peso target (kg)</label>
                   <input type="number" step="0.5" value={editingPhase.targetWeight} onChange={(e) => setEditingPhase({ ...editingPhase, targetWeight: e.target.value })} placeholder="85" className={inputClass} style={inputStyle} />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Note</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Note</label>
                 <textarea value={editingPhase.notes} onChange={(e) => setEditingPhase({ ...editingPhase, notes: e.target.value })} rows={2} placeholder="Obiettivi, indicazioni…" className={`${inputClass} resize-none`} style={inputStyle} />
               </div>
             </div>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setEditingPhase(null)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>Annulla</button>
+              <button onClick={() => setEditingPhase(null)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}>Annulla</button>
               <button onClick={saveEditPhase} disabled={saving || !editingPhase.name || !editingPhase.startDate} className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Pencil size={14} />} Salva modifiche
               </button>
@@ -1546,30 +1546,30 @@ export default function ClientDetailPage() {
       {/* Workout modal */}
       {showWorkoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowWorkoutModal(false)}>
-          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
+          <div className="absolute inset-0" style={{ background: "var(--surface-modal)" }} />
           <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Nuova scheda</h3>
-              <button onClick={() => setShowWorkoutModal(false)}><X size={16} style={{ color: "rgba(245,240,232,0.5)" }} /></button>
+              <button onClick={() => setShowWorkoutModal(false)}><X size={16} style={{ color: "var(--text-muted)" }} /></button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Nome scheda *</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Nome scheda *</label>
                 <input value={workoutForm.name} onChange={(e) => setWorkoutForm({ ...workoutForm, name: e.target.value })} placeholder="es. Scheda A — Push/Pull/Legs" className={inputClass} style={inputStyle} />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Descrizione</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Descrizione</label>
                 <textarea value={workoutForm.description} onChange={(e) => setWorkoutForm({ ...workoutForm, description: e.target.value })} rows={2} placeholder="Obiettivi, note sulla scheda…" className={`${inputClass} resize-none`} style={inputStyle} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Giorni a settimana</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Giorni a settimana</label>
                   <select value={workoutForm.daysPerWeek} onChange={(e) => setWorkoutForm({ ...workoutForm, daysPerWeek: e.target.value })} className={inputClass} style={selectStyle}>
                     {[2,3,4,5,6].map((d) => <option key={d} value={d}>{d} giorni</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Durata (settimane)</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Durata (settimane)</label>
                   <select value={workoutForm.totalWeeks} onChange={(e) => setWorkoutForm({ ...workoutForm, totalWeeks: e.target.value })} className={inputClass} style={selectStyle}>
                     <option value="">— Senza limite —</option>
                     {[4,6,8,10,12,16,20,24].map((w) => <option key={w} value={w}>{w} settimane</option>)}
@@ -1577,7 +1577,7 @@ export default function ClientDetailPage() {
                 </div>
                 {client.phases.length > 0 && (
                   <div>
-                    <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Fase collegata</label>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Fase collegata</label>
                     <select value={workoutForm.phaseId} onChange={(e) => setWorkoutForm({ ...workoutForm, phaseId: e.target.value })} className={inputClass} style={selectStyle}>
                       <option value="">— nessuna —</option>
                       {client.phases.map((ph) => <option key={ph.id} value={ph.id}>{ph.name}</option>)}
@@ -1587,7 +1587,7 @@ export default function ClientDetailPage() {
               </div>
             </div>
             <div className="flex gap-3 mt-5">
-              <button onClick={() => setShowWorkoutModal(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>Annulla</button>
+              <button onClick={() => setShowWorkoutModal(false)} className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}>Annulla</button>
               <button onClick={saveWorkout} disabled={saving} className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />} Salva scheda
               </button>
@@ -1599,33 +1599,33 @@ export default function ClientDetailPage() {
       {/* Edit workout plan modal */}
       {editingPlan && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setEditingPlan(null)}>
-          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
+          <div className="absolute inset-0" style={{ background: "var(--surface-modal)" }} />
           <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Modifica scheda</h3>
-              <button onClick={() => setEditingPlan(null)}><X size={16} style={{ color: "rgba(245,240,232,0.5)" }} /></button>
+              <button onClick={() => setEditingPlan(null)}><X size={16} style={{ color: "var(--text-muted)" }} /></button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Nome scheda *</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Nome scheda *</label>
                 <input value={editingPlan.name} onChange={(e) => setEditingPlan({ ...editingPlan, name: e.target.value })}
                   className={inputClass} style={inputStyle} />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Descrizione</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Descrizione</label>
                 <textarea value={editingPlan.description} onChange={(e) => setEditingPlan({ ...editingPlan, description: e.target.value })}
                   rows={2} className={`${inputClass} resize-none`} style={inputStyle} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Giorni a settimana</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Giorni a settimana</label>
                   <select value={editingPlan.daysPerWeek} onChange={(e) => setEditingPlan({ ...editingPlan, daysPerWeek: e.target.value })}
                     className={inputClass} style={selectStyle}>
                     {[2,3,4,5,6].map((d) => <option key={d} value={d}>{d} giorni</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Durata (settimane)</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Durata (settimane)</label>
                   <select value={editingPlan.totalWeeks} onChange={(e) => setEditingPlan({ ...editingPlan, totalWeeks: e.target.value })}
                     className={inputClass} style={selectStyle}>
                     <option value="">— Senza limite —</option>
@@ -1634,7 +1634,7 @@ export default function ClientDetailPage() {
                 </div>
                 {client.phases.length > 0 && (
                   <div>
-                    <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Fase collegata</label>
+                    <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Fase collegata</label>
                     <select value={editingPlan.phaseId} onChange={(e) => setEditingPlan({ ...editingPlan, phaseId: e.target.value })}
                       className={inputClass} style={selectStyle}>
                       <option value="">— nessuna —</option>
@@ -1647,7 +1647,7 @@ export default function ClientDetailPage() {
             <div className="flex gap-3 mt-5">
               <button onClick={() => setEditingPlan(null)}
                 className="flex-1 py-2.5 rounded-xl text-sm"
-                style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>
+                style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}>
                 Annulla
               </button>
               <button onClick={saveEditPlan} disabled={saving || !editingPlan.name.trim()}
