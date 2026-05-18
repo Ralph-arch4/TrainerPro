@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
+import { createHash } from "crypto";
 import type { FitnessScanAnalysis } from "@/lib/db";
 
 // Server-side only — never exposes storage URLs or API keys to the client
 // Security model:
-//   1. Auth enforced via Supabase session cookie (SSR)
-//   2. Image fetched server-side with a 60s signed URL (never sent to client)
-//   3. Image converted to base64 in-memory, sent directly to Claude
-//   4. Only the structured analysis JSON is returned to the client
-//   5. ANTHROPIC_API_KEY and SUPABASE_SERVICE_ROLE_KEY are server-only env vars
+//   1. Auth enforced via Supabase Bearer token (trainer session)
+//   2. Ownership checked (scan.user_id === auth user)
+//   3. Image fetched server-side with a 45s signed URL (never sent to client)
+//   4. Image converted to base64 in-memory, sent directly to Claude
+//   5. Only the structured analysis JSON is returned to the client
+//   6. ANTHROPIC_API_KEY and SUPABASE_SERVICE_ROLE_KEY are server-only
+//   7. Every analysis logged to scan_access_logs with SHA-256(IP)
+// GDPR note: images are temporarily sent to Anthropic (EU/US processors).
+//   Trainers must inform clients of this in their privacy policy.
 
 const SCAN_BUCKET = "fitness-scans";
 
@@ -51,7 +56,7 @@ export async function POST(req: NextRequest) {
     // ── Verify the scan belongs to this trainer ───────────────────────────────
     const { data: scanRow, error: scanErr } = await supabase
       .from("fitness_scans")
-      .select("id, user_id, storage_path")
+      .select("id, user_id, client_id, storage_path")
       .eq("id", scanId)
       .eq("user_id", user.id)
       .single();
@@ -60,10 +65,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
 
-    // ── Get a short-lived signed URL (60s) — server-side only ─────────────────
+    // ── Get a short-lived signed URL (45s) — server-side only ─────────────────
+    // This URL is fetched within the same serverless invocation and never
+    // returned to the client. 45s is more than enough for the fetch + Claude.
     const { data: urlData, error: urlErr } = await supabase.storage
       .from(SCAN_BUCKET)
-      .createSignedUrl(storagePath, 60);
+      .createSignedUrl(storagePath, 45);
 
     if (urlErr || !urlData?.signedUrl) {
       return NextResponse.json({ error: "storage_error" }, { status: 500 });
@@ -147,6 +154,20 @@ Rispondi SOLO con il JSON. Nessun testo prima o dopo.`,
     if (updateErr) {
       console.error("Failed to save analysis:", updateErr);
     }
+
+    // Audit log — SHA-256(IP) pseudonymisation
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const ipSalt = process.env.AUDIT_IP_SALT ?? "tp-scan-audit-2026";
+    const ipHash = createHash("sha256").update(ipSalt + ip).digest("hex").slice(0, 32);
+    // Fire-and-forget audit log — wrap in void to suppress unhandled promise
+    void supabase.from("scan_access_logs").insert({
+      scan_id:   scanId,
+      client_id: (scanRow as { client_id?: string }).client_id ?? null,
+      action:    "analyze",
+      actor:     "trainer",
+      ip_hash:   ipHash,
+      user_agent: req.headers.get("user-agent")?.slice(0, 200) ?? null,
+    });
 
     return NextResponse.json({ analysis });
 

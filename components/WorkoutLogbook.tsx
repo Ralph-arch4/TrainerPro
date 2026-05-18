@@ -486,22 +486,31 @@ export default function WorkoutLogbook({
     releaseWakeLock();
   }
 
-  // Tick — uses remaining time from timestamp so backgrounded tabs snap back correctly
+  // ── Tick: setInterval keyed on endTime (only changes when timer (re)starts) ──
+  // Previous bug: dep was [restTimer?.secs] — Math.ceil returned the same value
+  // within a 1-second window, so the effect never re-triggered. Fixed by using
+  // setInterval that fires independently of secs changes.
   useEffect(() => {
-    if (!restTimer) return;
-    if (restTimer.secs <= 0) {
-      playBeep();
-      tickRef.current = setTimeout(() => { setRestTimer(null); setTimerExpanded(false); releaseWakeLock(); }, 3500);
-      return;
-    }
-    tickRef.current = setTimeout(() => {
-      const remaining = Math.max(0, Math.ceil((restTimer.endTime - Date.now()) / 1000));
-      setRestTimer(t => t ? { ...t, secs: remaining } : null);
-    }, 250); // Poll at 250ms — cheap and recovers instantly from background
-    return () => { if (tickRef.current) clearTimeout(tickRef.current); };
+    if (!restTimer || restTimer.secs <= 0) return;
+    const id = setInterval(() => {
+      setRestTimer(prev => {
+        if (!prev) return null;
+        const remaining = Math.max(0, Math.ceil((prev.endTime - Date.now()) / 1000));
+        return { ...prev, secs: remaining };
+      });
+    }, 500); // 500ms — always crosses a 1-second boundary within 2 polls
+    return () => clearInterval(id);
+  }, [restTimer?.endTime]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Done: beep + auto-dismiss when secs reaches 0 ────────────────────────
+  useEffect(() => {
+    if (!restTimer || restTimer.secs > 0) return;
+    playBeep();
+    const t = setTimeout(() => { setRestTimer(null); setTimerExpanded(false); releaseWakeLock(); }, 3500);
+    return () => clearTimeout(t);
   }, [restTimer?.secs]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Snap back when tab becomes visible again
+  // ── Snap back when tab becomes visible ────────────────────────────────────
   const handleVisibility = useCallback(() => {
     if (!document.hidden) {
       setRestTimer(t => {

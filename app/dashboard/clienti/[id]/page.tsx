@@ -1426,7 +1426,10 @@ export default function ClientDetailPage() {
                           )}
 
                           <p className="text-xs mt-3" style={{ color: "var(--text-faint)" }}>
-                            Stima visiva AI · Non sostituisce una misurazione clinica · {new Date(analysis.analyzed_at).toLocaleDateString("it-IT")}
+                            Stima visiva Claude Haiku · Non sostituisce una misurazione clinica · {new Date(analysis.analyzed_at).toLocaleDateString("it-IT")}
+                          </p>
+                          <p className="text-xs mt-1 px-2 py-1.5 rounded-lg" style={{ color: "rgba(251,191,36,0.8)", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)" }}>
+                            GDPR: l&apos;immagine viene inviata ad Anthropic per l&apos;elaborazione AI. Assicurati di aver informato il cliente nella privacy policy.
                           </p>
                         </div>
                       )}
