@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -78,20 +78,21 @@ export default function RegisterPage() {
 
         {/* Center content */}
         <div className="relative z-10">
-          <h2 className="text-4xl font-bold leading-tight mb-4" style={{ color: "var(--ivory)" }}>
+          {/* Left panel always dark — hardcode light text */}
+          <h2 className="text-4xl font-bold leading-tight mb-4" style={{ color: "#F5F0E8" }}>
             Tutto gratis.<br />
             <span className="accent-text">Clienti illimitati.</span>
           </h2>
-          <p className="text-base mb-10" style={{ color: "rgba(245,240,232,0.5)" }}>
+          <p className="text-base mb-10" style={{ color: "rgba(245,240,232,0.55)" }}>
             Crea il tuo account in 30 secondi. Nessuna carta di credito richiesta.
           </p>
 
           {/* Benefits */}
           <div className="space-y-4">
             {[
-              { icon: Star, label: "Accesso completo gratuito", desc: "Clienti illimitati, tutte le funzionalità", color: "#fbbf24" },
-              { icon: Shield, label: "Dati al sicuro", desc: "Crittografia end-to-end su Supabase", color: "#34d399" },
-              { icon: Zap, label: "Pronto in 2 minuti", desc: "Setup immediato, zero configurazione", color: "#818cf8" },
+              { icon: Star,   label: "Accesso completo gratuito", desc: "Clienti illimitati, tutte le funzionalità", color: "#fbbf24" },
+              { icon: Shield, label: "Dati al sicuro",            desc: "Crittografia end-to-end su Supabase",       color: "#34d399" },
+              { icon: Zap,    label: "Pronto in 2 minuti",        desc: "Setup immediato, zero configurazione",       color: "#818cf8" },
             ].map(({ icon: Icon, label, desc, color }) => (
               <div key={label} className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -99,8 +100,8 @@ export default function RegisterPage() {
                   <Icon size={16} style={{ color }} />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{label}</p>
-                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{desc}</p>
+                  <p className="text-sm font-semibold" style={{ color: "#F5F0E8" }}>{label}</p>
+                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>{desc}</p>
                 </div>
               </div>
             ))}
@@ -125,8 +126,8 @@ export default function RegisterPage() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-1" style={{ color: "var(--ivory)" }}>Crea il tuo account</h2>
-            <p className="text-sm" style={{ color: "rgba(245,240,232,0.45)" }}>Gratuito. Sempre. Nessuna carta richiesta.</p>
+            <h2 className="text-2xl font-bold mb-1" style={{ color: "var(--text)" }}>Crea il tuo account</h2>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>Gratuito. Sempre. Nessuna carta richiesta.</p>
           </div>
 
           <div className="glass-dark rounded-2xl p-8">
@@ -139,7 +140,7 @@ export default function RegisterPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--ivory)" }}>Nome completo</label>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>Nome completo</label>
                 <div className="relative">
                   <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--accent-light)" }} />
                   <input type="text" value={name} onChange={(e) => setName(e.target.value)}
@@ -150,7 +151,7 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--ivory)" }}>Email</label>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>Email</label>
                 <div className="relative">
                   <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--accent-light)" }} />
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
@@ -161,7 +162,7 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--ivory)" }}>Password</label>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>Password</label>
                 <div className="relative">
                   <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--accent-light)" }} />
                   <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
@@ -178,7 +179,7 @@ export default function RegisterPage() {
               </button>
             </form>
 
-            <p className="text-center text-sm mt-6" style={{ color: "rgba(245,240,232,0.5)" }}>
+            <p className="text-center text-sm mt-6" style={{ color: "var(--text-muted)" }}>
               Hai già un account?{" "}
               <Link href="/login" className="font-semibold hover:underline" style={{ color: "var(--accent-light)" }}>
                 Accedi

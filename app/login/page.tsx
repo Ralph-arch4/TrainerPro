@@ -49,37 +49,38 @@ export default function LoginPage() {
 
         {/* Center content */}
         <div className="relative z-10">
-          <h2 className="text-4xl font-bold leading-tight mb-6" style={{ color: "var(--ivory)" }}>
+          {/* Left panel is always dark — hardcode light text regardless of theme */}
+          <h2 className="text-4xl font-bold leading-tight mb-6" style={{ color: "#F5F0E8" }}>
             Il tuo studio.<br />
             <span className="accent-text">Sempre con te.</span>
           </h2>
-          <p className="text-base mb-10" style={{ color: "rgba(245,240,232,0.5)" }}>
+          <p className="text-base mb-10" style={{ color: "rgba(245,240,232,0.55)" }}>
             Gestisci clienti, schede di allenamento, diete e progressi in un'unica piattaforma professionale.
           </p>
 
           {/* Mini stat cards */}
           <div className="space-y-3">
             {[
-              { icon: Users, label: "Clienti gestiti", value: "Tutti in un posto", color: "var(--accent)" },
+              { icon: Users, label: "Clienti gestiti", value: "Tutti in un posto", color: "#E53232" },
               { icon: Activity, label: "Fasi & Allenamento", value: "Bulk · Cut · Maintenance", color: "#818cf8" },
               { icon: TrendingUp, label: "Progressi tracciati", value: "Misurazioni & Grafici", color: "#34d399" },
             ].map(({ icon: Icon, label, value, color }) => (
               <div key={label} className="flex items-center gap-3 p-3 rounded-xl"
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,107,43,0.08)" }}>
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: `${color}18` }}>
                   <Icon size={16} style={{ color }} />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold" style={{ color: "var(--ivory)" }}>{label}</p>
-                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{value}</p>
+                  <p className="text-xs font-semibold" style={{ color: "#F5F0E8" }}>{label}</p>
+                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>{value}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Bottom quote */}
+        {/* Bottom quote — always light text on dark panel */}
         <div className="relative z-10">
           <p className="text-sm italic" style={{ color: "rgba(245,240,232,0.35)" }}>
             "Pericolosamente personalizzato sul tuo modus operandi."
@@ -100,8 +101,8 @@ export default function LoginPage() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-1" style={{ color: "var(--ivory)" }}>Bentornato</h2>
-            <p className="text-sm" style={{ color: "rgba(245,240,232,0.45)" }}>Accedi al tuo account TrainerPro</p>
+            <h2 className="text-2xl font-bold mb-1" style={{ color: "var(--text)" }}>Bentornato</h2>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>Accedi al tuo account TrainerPro</p>
           </div>
 
           <div className="glass-dark rounded-2xl p-8">
@@ -114,7 +115,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--ivory)" }}>Email</label>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>Email</label>
                 <div className="relative">
                   <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--accent-light)" }} />
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
@@ -126,7 +127,7 @@ export default function LoginPage() {
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-sm font-medium" style={{ color: "var(--ivory)" }}>Password</label>
+                  <label className="text-sm font-medium" style={{ color: "var(--text)" }}>Password</label>
                   <Link href="/forgot-password" className="text-xs hover:underline" style={{ color: "var(--accent-light)" }}>
                     Password dimenticata?
                   </Link>
@@ -147,7 +148,7 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <p className="text-center text-sm mt-6" style={{ color: "rgba(245,240,232,0.5)" }}>
+            <p className="text-center text-sm mt-6" style={{ color: "var(--text-muted)" }}>
               Non hai un account?{" "}
               <Link href="/register" className="font-semibold hover:underline" style={{ color: "var(--accent-light)" }}>
                 Registrati gratis
