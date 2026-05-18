@@ -249,21 +249,44 @@ export default function DashboardPage() {
   if (!dataLoaded) {
     return (
       <div className="p-4 pt-20 lg:pt-8 lg:p-8 fade-in">
+        {/* Header skeleton */}
         <div className="mb-8">
-          <div className="h-8 w-56 rounded-xl mb-2 animate-pulse" style={{ background: "rgba(255,255,255,0.07)" }} />
-          <div className="h-4 w-36 rounded-lg animate-pulse" style={{ background: "rgba(255,255,255,0.04)" }} />
+          <div className="skeleton h-8 w-64 rounded-xl mb-2" />
+          <div className="skeleton h-4 w-40 rounded-lg" style={{ animationDelay: "0.15s" }} />
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="card-luxury rounded-2xl p-5 animate-pulse">
-              <div className="h-8 w-12 rounded-lg mb-2" style={{ background: "rgba(255,255,255,0.07)" }} />
-              <div className="h-3 w-20 rounded" style={{ background: "rgba(255,255,255,0.04)" }} />
+        {/* KPI cards skeleton */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="card-luxury rounded-2xl p-4 lg:p-5" style={{ animationDelay: `${i * 0.08}s` }}>
+              <div className="flex items-start justify-between mb-3">
+                <div className="skeleton h-3 rounded" style={{ width: "55%", animationDelay: `${i * 0.08}s` }} />
+                <div className="skeleton w-8 h-8 rounded-xl flex-shrink-0" style={{ animationDelay: `${i * 0.08 + 0.1}s` }} />
+              </div>
+              <div className="skeleton h-8 w-20 rounded-lg" style={{ animationDelay: `${i * 0.08 + 0.2}s` }} />
             </div>
           ))}
         </div>
+        {/* Secondary metrics skeleton */}
+        <div className="flex gap-3 mb-6">
+          {[80, 96, 72].map((w, i) => (
+            <div key={i} className="skeleton h-9 rounded-xl" style={{ width: `${w}px`, animationDelay: `${0.35 + i * 0.1}s` }} />
+          ))}
+        </div>
+        {/* Panels skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="card-luxury rounded-2xl p-5 animate-pulse" style={{ height: "180px" }} />
+          {[0, 1].map((i) => (
+            <div key={i} className="card-luxury rounded-2xl p-5" style={{ height: "200px" }}>
+              <div className="skeleton h-4 w-32 rounded-lg mb-4" style={{ animationDelay: `${0.5 + i * 0.12}s` }} />
+              {[0, 1, 2].map((j) => (
+                <div key={j} className="flex items-center gap-3 mb-3">
+                  <div className="skeleton w-8 h-8 rounded-full flex-shrink-0" style={{ animationDelay: `${0.55 + i * 0.12 + j * 0.07}s` }} />
+                  <div className="flex-1">
+                    <div className="skeleton h-3 rounded mb-1.5" style={{ width: `${60 + j * 10}%`, animationDelay: `${0.6 + i * 0.12 + j * 0.07}s` }} />
+                    <div className="skeleton h-2.5 w-16 rounded" style={{ animationDelay: `${0.65 + i * 0.12 + j * 0.07}s` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           ))}
         </div>
       </div>
