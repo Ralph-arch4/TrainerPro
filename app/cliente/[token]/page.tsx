@@ -1,5 +1,5 @@
 ﻿"use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { dbExerciseLogs } from "@/lib/db";
@@ -395,6 +395,17 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
   );
 }
 
+const TRAINER_REACTIONS = [
+  "Ottima sessione! Sento la tua dedizione da qui.",
+  "Bravissimo! Ogni rep registrata è un mattone sul tuo progresso.",
+  "Ecco la costanza che fa la differenza. Continua così.",
+  "Sei in forma! Stai costruendo qualcosa di cui essere orgoglioso.",
+  "Perfetto! I risultati arrivano a chi non molla mai.",
+  "Registro ricevuto — sto seguendo ogni tuo progresso.",
+  "Questo è l'atteggiamento giusto. Sono fiero di te.",
+  "Sessione completata! Il tuo futuro-io ti ringrazierà.",
+];
+
 const JOURNEY_MILESTONES = [
   { days: 7,   label: "1 settimana",   msg: "Il tuo percorso è ufficialmente iniziato. Ogni rep conta." },
   { days: 14,  label: "2 settimane",   msg: "Due settimane. Stai costruendo qualcosa di reale." },
@@ -520,6 +531,8 @@ export default function ClientPortalPage() {
   const [copied, setCopied] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [trainerName, setTrainerName] = useState("Il tuo Trainer");
+  const [trainerReaction, setTrainerReaction] = useState<string | null>(null);
+  const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fitness Scan state
   const [scans, setScans] = useState<ClientScan[]>([]);
@@ -646,6 +659,9 @@ export default function ClientPortalPage() {
         note: logData.note ?? null,
       });
       setLogs((prev) => prev.map((l) => l.exerciseId === logData.exerciseId && l.weekNumber === logData.weekNumber ? { ...l, id: saved.id } : l));
+      if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
+      setTrainerReaction(TRAINER_REACTIONS[Math.floor(Math.random() * TRAINER_REACTIONS.length)]);
+      reactionTimerRef.current = setTimeout(() => setTrainerReaction(null), 3800);
     } catch {
       setLogs(snapshot);
       setSaveError(true);
@@ -1534,6 +1550,39 @@ export default function ClientPortalPage() {
           Powered by <span className="accent-text font-semibold">TrainerPro</span>
         </p>
       </div>
+
+      {/* ── Reazione Trainer (toast post-log) ──────────────────────────────── */}
+      {trainerReaction && (() => {
+        const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
+        return (
+          <div className="fixed bottom-6 left-4 right-4 z-50 flex justify-center pointer-events-none fade-in">
+            <div className="max-w-sm w-full rounded-2xl p-4 flex items-start gap-3"
+              style={{
+                background: "rgba(8,8,8,0.97)",
+                border: "1px solid rgba(229,50,50,0.5)",
+                boxShadow: "0 8px 40px rgba(229,50,50,0.22), 0 0 0 1px rgba(255,255,255,0.03)",
+                backdropFilter: "blur(20px)",
+              }}>
+              <div className="w-11 h-11 rounded-full flex items-center justify-center font-black flex-shrink-0"
+                style={{ background: "radial-gradient(circle at 35% 30%, rgba(229,50,50,0.35), rgba(8,8,8,0.92))", border: "1.5px solid rgba(229,50,50,0.6)" }}>
+                <span style={{ color: "var(--accent)", fontSize: "0.85rem" }}>{initials}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-xs font-bold" style={{ color: "var(--accent)" }}>{trainerName}</p>
+                  <span className="text-xs font-black px-1.5 py-0.5 rounded-full"
+                    style={{ background: "rgba(34,197,94,0.18)", color: "#22c55e", fontSize: "0.55rem", letterSpacing: "0.08em" }}>
+                    LIVE
+                  </span>
+                </div>
+                <p className="text-sm leading-snug" style={{ color: "rgba(245,240,232,0.75)", fontStyle: "italic" }}>
+                  &ldquo;{trainerReaction}&rdquo;
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
