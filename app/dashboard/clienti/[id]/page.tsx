@@ -14,9 +14,9 @@ import {
   ChevronDown, ChevronUp, Flame, Beef, Wheat, Droplets, TrendingUp,
   Camera, Lock, Upload, Eye, EyeOff,
 } from "lucide-react";
-import { dbProgressPhotos, type ProgressPhoto, dbFitnessScans, type FitnessScan, type FitnessScanAnalysis } from "@/lib/db";
+import { dbProgressPhotos, type ProgressPhoto, dbFitnessScans, type FitnessScan, type FitnessScanAnalysis, dbFitnessScanComparisons, type FitnessScanComparison, type ComparisonAnalysis } from "@/lib/db";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
-import { Scan, Sparkles, ShieldCheck, Brain } from "lucide-react";
+import { Scan, Sparkles, ShieldCheck, Brain, GitCompare, TrendingDown, Minus } from "lucide-react";
 
 type Tab = "overview" | "fasi" | "schede" | "dieta" | "misurazioni" | "note" | "foto" | "scan";
 
@@ -191,6 +191,15 @@ export default function ClientDetailPage() {
   const [scanUploadNotes, setScanUploadNotes] = useState("");
   const [scanUrls, setScanUrls] = useState<Record<string, string>>({});
 
+  // Comparison state
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedMonthA, setSelectedMonthA] = useState<string | null>(null); // "YYYY-MM"
+  const [selectedMonthB, setSelectedMonthB] = useState<string | null>(null);
+  const [comparingScanIds, setComparingScanIds] = useState<{ before: string; after: string } | null>(null);
+  const [comparingResult, setComparingResult] = useState<FitnessScanComparison | null>(null);
+  const [comparing, setComparing] = useState(false);
+  const [activeTimelineMonth, setActiveTimelineMonth] = useState<string | null>(null); // for non-compare view
+
   async function loadScans() {
     if (scansLoaded) return;
     const list = await dbFitnessScans.list(client!.id);
@@ -249,6 +258,28 @@ export default function ClientDetailPage() {
       showToast(err instanceof Error ? err.message : "Errore nell'analisi", "error");
     } finally {
       setScanAnalyzing(null);
+    }
+  }
+
+  async function handleCompare(beforeId: string, afterId: string) {
+    setComparing(true);
+    setComparingResult(null);
+    try {
+      const { data: { session } } = await createSupabaseClient().auth.getSession();
+      if (!session) throw new Error("not authenticated");
+      const resp = await fetch("/api/fitness-scan/compare", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
+        body: JSON.stringify({ scanBeforeId: beforeId, scanAfterId: afterId, clientId: client!.id }),
+      });
+      const json = await resp.json();
+      if (!resp.ok) throw new Error(json.error || "Confronto fallito");
+      setComparingResult(json.comparison as FitnessScanComparison);
+      showToast("Confronto completato");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Errore nel confronto", "error");
+    } finally {
+      setComparing(false);
     }
   }
 
@@ -1246,201 +1277,407 @@ export default function ClientDetailPage() {
       })()}
 
       {/* ── FITNESS SCAN ── */}
-      {tab === "scan" && (
-        <div>
-          {/* Security + beta header */}
-          <div className="rounded-2xl p-4 mb-5 flex items-start gap-3"
-            style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.18)" }}>
-            <ShieldCheck size={18} style={{ color: "#fbbf24", flexShrink: 0, marginTop: 2 }} />
-            <div>
-              <p className="text-xs font-bold mb-1" style={{ color: "#fbbf24" }}>
-                Fitness Scan — BETA · Funzione sicura
-              </p>
-              <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
-                Le foto sono cifrate a riposo in un bucket privato con accesso esclusivo al trainer.
-                I link di visualizzazione scadono dopo 5 minuti e non vengono mai esposti al cliente.
-                L&apos;analisi AI avviene interamente lato server: nessuna immagine transita nel browser.
-              </p>
-            </div>
-          </div>
+      {tab === "scan" && (() => {
+        // Group scans by month "YYYY-MM"
+        const byMonth: Record<string, FitnessScan[]> = {};
+        [...scans].sort((a, b) => new Date(b.taken_at).getTime() - new Date(a.taken_at).getTime())
+          .forEach(s => {
+            const key = s.taken_at.slice(0, 7);
+            if (!byMonth[key]) byMonth[key] = [];
+            byMonth[key].push(s);
+          });
+        const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
+        const activeMonth = activeTimelineMonth ?? months[0] ?? null;
 
-          {/* Upload form */}
-          <div className="card-luxury rounded-2xl p-5 mb-5">
-            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--ivory)" }}>
-              <Upload size={15} style={{ color: "var(--accent)" }} /> Carica foto di trasformazione
-            </h3>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div>
-                <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Data foto *</label>
-                <input type="date" value={scanUploadDate} onChange={e => setScanUploadDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                  style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
-              </div>
-              <div>
-                <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Note (opzionale)</label>
-                <input type="text" value={scanUploadNotes} onChange={e => setScanUploadNotes(e.target.value)}
-                  placeholder="es. Fronte, Lato, Schiena…"
-                  className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                  style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
+        // For compare mode: pick the first scan of each selected month
+        const scanA = selectedMonthA ? byMonth[selectedMonthA]?.[0] : null;
+        const scanB = selectedMonthB ? byMonth[selectedMonthB]?.[0] : null;
+        const canCompare = !!(scanA && scanB && selectedMonthA !== selectedMonthB);
+
+        return (
+          <div>
+            {/* Security header */}
+            <div className="rounded-2xl p-4 mb-4 flex items-start gap-3"
+              style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.18)" }}>
+              <ShieldCheck size={16} style={{ color: "#fbbf24", flexShrink: 0, marginTop: 2 }} />
+              <div className="flex-1">
+                <p className="text-xs font-bold mb-0.5" style={{ color: "#fbbf24" }}>
+                  Fitness Scan — BETA · Sicurezza enterprise
+                </p>
+                <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                  Bucket privato · Link 5 min TTL · Magic byte validation · DB rate limiting · Audit log SHA-256 · Quota 120 scansioni/cliente · AI lato server (immagini mai nel browser)
+                </p>
               </div>
             </div>
-            <label className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all ${scanUploading ? "opacity-60 pointer-events-none" : "hover:opacity-90"} accent-btn`}>
-              {scanUploading ? <Loader2 size={15} className="animate-spin" /> : <Scan size={15} />}
-              {scanUploading ? "Caricamento..." : "Seleziona foto per scansione"}
-              <input type="file" accept="image/*" className="hidden" onChange={handleScanUpload} disabled={scanUploading} />
-            </label>
-            <p className="text-xs mt-2 text-center" style={{ color: "var(--text-faint)" }}>
-              Ridimensionata automaticamente · Cifrata a riposo · Accesso solo trainer · Link 5 min
-            </p>
-          </div>
 
-          {/* Scan gallery */}
-          {!scansLoaded ? (
-            <div className="text-center py-12">
-              <Loader2 size={24} className="animate-spin mx-auto mb-2" style={{ color: "rgba(229,50,50,0.4)" }} />
-              <p className="text-xs" style={{ color: "var(--text-dim)" }}>Caricamento scansioni…</p>
+            {/* Upload + Compare mode toggle row */}
+            <div className="flex items-center gap-3 mb-4">
+              <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all flex-1 justify-center ${scanUploading ? "opacity-60 pointer-events-none" : "hover:opacity-90"} accent-btn`}>
+                {scanUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                {scanUploading ? "Caricamento…" : "Carica nuova foto"}
+                <input type="file" accept="image/*" className="hidden" onChange={handleScanUpload} disabled={scanUploading} />
+              </label>
+              {months.length >= 2 && (
+                <button
+                  onClick={() => { setCompareMode(c => !c); setComparingResult(null); setSelectedMonthA(null); setSelectedMonthB(null); }}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                  style={{
+                    background: compareMode ? "rgba(99,102,241,0.18)" : "var(--surface-sm)",
+                    border: `1px solid ${compareMode ? "rgba(99,102,241,0.4)" : "var(--border)"}`,
+                    color: compareMode ? "#a78bfa" : "var(--text-muted)",
+                  }}>
+                  <GitCompare size={14} />
+                  {compareMode ? "Esci dal confronto" : "Confronta mesi"}
+                </button>
+              )}
             </div>
-          ) : scans.length === 0 ? (
-            <div className="text-center py-16 card-luxury rounded-2xl">
-              <Brain size={40} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
-              <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessuna scansione ancora</p>
-              <p className="text-xs" style={{ color: "var(--text-dim)" }}>Carica la prima foto per abilitare l&apos;analisi AI della composizione corporea</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {scans.map((scan) => {
-                const analysis = scan.ai_analysis;
-                const isAnalyzing = scanAnalyzing === scan.id;
-                const imgUrl = scanUrls[scan.id];
-                return (
-                  <div key={scan.id} className="card-luxury rounded-2xl overflow-hidden">
-                    <div className="p-4">
-                      <div className="flex items-start gap-4">
-                        {/* Thumbnail */}
-                        <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 relative"
-                          style={{ background: "var(--surface-sm)", border: "1px solid rgba(229,50,50,0.12)" }}>
-                          {imgUrl ? (
-                            <img src={imgUrl} alt={scan.taken_at} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Loader2 size={16} className="animate-spin" style={{ color: "rgba(229,50,50,0.4)" }} />
+
+            {/* Upload date + notes — shown when no compare mode */}
+            {!compareMode && (
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: "var(--text-muted)" }}>Data foto</label>
+                  <input type="date" value={scanUploadDate} onChange={e => setScanUploadDate(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl text-sm outline-none"
+                    style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1" style={{ color: "var(--text-muted)" }}>Note</label>
+                  <input type="text" value={scanUploadNotes} onChange={e => setScanUploadNotes(e.target.value)}
+                    placeholder="es. Fronte, Lato, Schiena…"
+                    className="w-full px-3 py-2 rounded-xl text-sm outline-none"
+                    style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
+                </div>
+              </div>
+            )}
+
+            {!scansLoaded ? (
+              <div className="text-center py-10">
+                <Loader2 size={22} className="animate-spin mx-auto mb-2" style={{ color: "rgba(229,50,50,0.5)" }} />
+                <p className="text-xs" style={{ color: "var(--text-dim)" }}>Caricamento scansioni…</p>
+              </div>
+            ) : scans.length === 0 ? (
+              <div className="text-center py-14 card-luxury rounded-2xl">
+                <Brain size={36} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
+                <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessuna scansione ancora</p>
+                <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Carica la prima foto per avviare il tracciamento mensile della composizione corporea</p>
+              </div>
+            ) : (
+              <>
+                {/* Month timeline pills */}
+                <div className="flex gap-2 overflow-x-auto pb-1 mb-4">
+                  {months.map(m => {
+                    const label = new Date(m + "-01").toLocaleDateString("it-IT", { month: "short", year: "2-digit" }).replace(" ", " '");
+                    const count = byMonth[m].length;
+                    const isSelA = compareMode && selectedMonthA === m;
+                    const isSelB = compareMode && selectedMonthB === m;
+                    const isActive = !compareMode && activeMonth === m;
+                    let bg = "var(--surface-sm)", border = "var(--border)", color = "var(--text-muted)";
+                    if (isActive) { bg = "rgba(229,50,50,0.12)"; border = "rgba(229,50,50,0.32)"; color = "var(--accent-light)"; }
+                    if (isSelA) { bg = "rgba(99,102,241,0.18)"; border = "rgba(99,102,241,0.4)"; color = "#a78bfa"; }
+                    if (isSelB) { bg = "rgba(20,184,166,0.18)"; border = "rgba(20,184,166,0.4)"; color = "#14b8a6"; }
+                    return (
+                      <button key={m}
+                        onClick={() => {
+                          if (!compareMode) {
+                            setActiveTimelineMonth(m);
+                          } else {
+                            if (!selectedMonthA || (selectedMonthA && selectedMonthB)) {
+                              setSelectedMonthA(m); setSelectedMonthB(null); setComparingResult(null);
+                            } else if (m !== selectedMonthA) {
+                              setSelectedMonthB(m); setComparingResult(null);
+                            }
+                          }
+                        }}
+                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+                        style={{ background: bg, border: `1px solid ${border}`, color }}>
+                        {label}
+                        <span className="opacity-60">{count}</span>
+                        {isSelA && <span style={{ fontSize: "0.55rem", fontWeight: 800 }}>A</span>}
+                        {isSelB && <span style={{ fontSize: "0.55rem", fontWeight: 800 }}>B</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* ── COMPARE MODE ── */}
+                {compareMode && (
+                  <div>
+                    <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
+                      Seleziona due mesi dalla timeline per confrontarli. <span style={{ color: "#a78bfa" }}>A</span> = Prima · <span style={{ color: "#14b8a6" }}>B</span> = Dopo
+                    </p>
+
+                    {/* Side-by-side preview */}
+                    {(scanA || scanB) && (
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        {[{ scan: scanA, label: "A — Prima", color: "#a78bfa", accentAlpha: "rgba(99,102,241,0.2)" },
+                          { scan: scanB, label: "B — Dopo",  color: "#14b8a6", accentAlpha: "rgba(20,184,166,0.2)" }
+                        ].map(({ scan: s, label, color, accentAlpha }) => (
+                          <div key={label} className="rounded-2xl overflow-hidden"
+                            style={{ border: `1px solid ${accentAlpha}`, background: "var(--surface-xs)" }}>
+                            <div className="px-3 py-2 text-xs font-bold" style={{ color, borderBottom: `1px solid ${accentAlpha}` }}>
+                              {label}
                             </div>
-                          )}
-                          {/* Encryption badge */}
-                          <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
-                            style={{ background: "rgba(0,0,0,0.7)" }}>
-                            <ShieldCheck size={10} style={{ color: "#22c55e" }} />
-                          </div>
-                        </div>
-
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>
-                              {new Date(scan.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })}
-                            </p>
-                            {analysis && (
-                              <span className="text-xs px-1.5 py-0.5 rounded-full font-bold"
-                                style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", fontSize: "0.6rem" }}>
-                                Analizzata
-                              </span>
-                            )}
-                          </div>
-                          {scan.notes && (
-                            <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>{scan.notes}</p>
-                          )}
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {!analysis ? (
-                              <button
-                                onClick={() => handleScanAnalyze(scan)}
-                                disabled={isAnalyzing}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
-                                style={{ background: "rgba(229,50,50,0.12)", border: "1px solid rgba(229,50,50,0.28)", color: "var(--accent-light)" }}>
-                                {isAnalyzing ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
-                                {isAnalyzing ? "Analisi in corso…" : "Analizza con AI"}
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleScanAnalyze(scan)}
-                                disabled={isAnalyzing}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all disabled:opacity-60"
-                                style={{ background: "var(--surface-sm)", border: "1px solid var(--border)", color: "var(--text-dim)" }}>
-                                {isAnalyzing ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
-                                {isAnalyzing ? "Aggiornamento…" : "Rianalizza"}
-                              </button>
-                            )}
-                            <button
-                              onClick={() => handleScanDelete(scan)}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs transition-all"
-                              style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.15)", color: "rgba(239,68,68,0.7)" }}>
-                              <Trash2 size={11} /> Elimina
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* AI Analysis results */}
-                      {analysis && (
-                        <div className="mt-4 pt-4" style={{ borderTop: "1px solid rgba(229,50,50,0.1)" }}>
-                          <div className="flex items-center gap-2 mb-3">
-                            <Brain size={13} style={{ color: "var(--accent)" }} />
-                            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(229,50,50,0.8)", letterSpacing: "0.1em" }}>
-                              Analisi AI — {analysis.confidence === "high" ? "Alta" : analysis.confidence === "medium" ? "Media" : "Bassa"} confidenza
-                            </p>
-                          </div>
-
-                          {/* Key metrics */}
-                          <div className="grid grid-cols-3 gap-2 mb-3">
-                            {[
-                              { label: "Grasso stimato", value: analysis.body_fat_est != null ? `${analysis.body_fat_est}%` : "—", color: "#fbbf24" },
-                              { label: "Massa muscolare", value: analysis.muscle_mass_est ?? "—", color: "#a78bfa" },
-                              { label: "Somatotipo", value: analysis.body_type ?? "—", color: "#38bdf8" },
-                            ].map(({ label, value, color }) => (
-                              <div key={label} className="rounded-xl p-2.5 text-center"
-                                style={{ background: "var(--surface-xs)", border: `1px solid ${color}20` }}>
-                                <p className="text-sm font-bold capitalize" style={{ color }}>{value}</p>
-                                <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>{label}</p>
+                            {s ? (
+                              <div>
+                                <div className="aspect-[3/4] relative overflow-hidden">
+                                  {scanUrls[s.id] ? (
+                                    <img src={scanUrls[s.id]} alt={s.taken_at} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--surface-sm)" }}>
+                                      <Loader2 size={18} className="animate-spin" style={{ color: "rgba(229,50,50,0.4)" }} />
+                                    </div>
+                                  )}
+                                  <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5"
+                                    style={{ background: "rgba(0,0,0,0.65)" }}>
+                                    <p className="text-xs font-semibold text-white">
+                                      {new Date(s.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })}
+                                    </p>
+                                    {s.notes && <p className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>{s.notes}</p>}
+                                  </div>
+                                </div>
+                                {s.ai_analysis && (
+                                  <div className="px-3 py-2 space-y-1">
+                                    {s.ai_analysis.body_fat_est != null && (
+                                      <p className="text-xs" style={{ color: "#fbbf24" }}>Grasso stimato: <strong>{s.ai_analysis.body_fat_est}%</strong></p>
+                                    )}
+                                    {s.ai_analysis.muscle_mass_est && (
+                                      <p className="text-xs" style={{ color: "#a78bfa" }}>Muscolarità: <strong>{s.ai_analysis.muscle_mass_est}</strong></p>
+                                    )}
+                                  </div>
+                                )}
                               </div>
-                            ))}
+                            ) : (
+                              <div className="aspect-[3/4] flex items-center justify-center" style={{ color: "var(--text-faint)" }}>
+                                <p className="text-xs">Seleziona mese</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Run comparison button */}
+                    {canCompare && (
+                      <button
+                        onClick={() => handleCompare(scanA!.id, scanB!.id)}
+                        disabled={comparing}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-60 mb-4"
+                        style={{ background: "rgba(99,102,241,0.16)", border: "1px solid rgba(99,102,241,0.35)", color: "#a78bfa" }}>
+                        {comparing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                        {comparing ? "Analisi AI in corso…" : "Analizza miglioramenti con AI"}
+                      </button>
+                    )}
+
+                    {/* Comparison result */}
+                    {comparingResult?.analysis && (() => {
+                      const ca = comparingResult.analysis as ComparisonAnalysis;
+                      const trendIcon = ca.overall_trend === "positive"
+                        ? <TrendingUp size={14} style={{ color: "#22c55e" }} />
+                        : ca.overall_trend === "negative"
+                          ? <TrendingDown size={14} style={{ color: "#ef4444" }} />
+                          : <Minus size={14} style={{ color: "#fbbf24" }} />;
+                      const trendColor = ca.overall_trend === "positive" ? "#22c55e" : ca.overall_trend === "negative" ? "#ef4444" : "#fbbf24";
+                      return (
+                        <div className="card-luxury rounded-2xl p-5">
+                          {/* Header */}
+                          <div className="flex items-center gap-2 mb-4">
+                            <GitCompare size={14} style={{ color: "#a78bfa" }} />
+                            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#a78bfa", letterSpacing: "0.1em" }}>
+                              Analisi Progressione AI — Beta
+                            </p>
+                            <span className="ml-auto flex items-center gap-1 text-xs font-semibold" style={{ color: trendColor }}>
+                              {trendIcon}
+                              {ca.overall_trend === "positive" ? "Trend positivo" : ca.overall_trend === "negative" ? "Trend negativo" : "Stabile"}
+                            </span>
                           </div>
 
-                          {/* Summary */}
-                          <p className="text-xs leading-relaxed mb-3 italic"
-                            style={{ color: "var(--text-muted)", background: "var(--surface-xs)", borderRadius: 10, padding: "10px 12px" }}>
-                            {analysis.summary}
+                          {/* Delta metrics */}
+                          <div className="grid grid-cols-3 gap-2 mb-4">
+                            <div className="rounded-xl p-2.5 text-center" style={{ background: "var(--surface-xs)", border: "1px solid rgba(251,191,36,0.2)" }}>
+                              <p className="text-sm font-black" style={{ color: ca.body_fat_change != null && ca.body_fat_change < 0 ? "#22c55e" : "#fbbf24" }}>
+                                {ca.body_fat_change != null ? `${ca.body_fat_change > 0 ? "+" : ""}${ca.body_fat_change}%` : "—"}
+                              </p>
+                              <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>Δ Grasso</p>
+                            </div>
+                            <div className="rounded-xl p-2.5 text-center" style={{ background: "var(--surface-xs)", border: "1px solid rgba(167,139,250,0.2)" }}>
+                              <p className="text-sm font-black capitalize" style={{ color: ca.muscle_change === "increased" ? "#22c55e" : ca.muscle_change === "decreased" ? "#ef4444" : "#fbbf24" }}>
+                                {ca.muscle_change === "increased" ? "↑" : ca.muscle_change === "decreased" ? "↓" : "="}
+                              </p>
+                              <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>Massa musc.</p>
+                            </div>
+                            <div className="rounded-xl p-2.5 text-center" style={{ background: "var(--surface-xs)", border: `1px solid ${trendColor}22` }}>
+                              <p className="text-sm font-black" style={{ color: trendColor }}>
+                                {ca.confidence === "high" ? "Alta" : ca.confidence === "medium" ? "Media" : "Bassa"}
+                              </p>
+                              <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>Confidenza</p>
+                            </div>
+                          </div>
+
+                          {/* Summary narrative */}
+                          <p className="text-xs leading-relaxed italic px-3 py-2.5 rounded-xl mb-4"
+                            style={{ color: "var(--text-muted)", background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
+                            {ca.summary}
                           </p>
 
-                          {/* Recommendations */}
-                          {analysis.recommendations?.length > 0 && (
-                            <div className="space-y-1.5">
-                              {analysis.recommendations.map((rec, i) => (
-                                <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
-                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold"
-                                    style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent)" }}>
-                                    {i + 1}
-                                  </span>
-                                  {rec}
+                          {/* Improvements + Areas to work */}
+                          <div className="grid grid-cols-2 gap-3 mb-3">
+                            <div>
+                              <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "#22c55e", letterSpacing: "0.1em" }}>
+                                Miglioramenti
+                              </p>
+                              {ca.key_improvements?.map((item, i) => (
+                                <div key={i} className="flex items-start gap-1.5 mb-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
+                                  <span style={{ color: "#22c55e", flexShrink: 0 }}>✓</span> {item}
+                                </div>
+                              ))}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "#ef4444", letterSpacing: "0.1em" }}>
+                                Da lavorare
+                              </p>
+                              {ca.areas_to_work?.map((item, i) => (
+                                <div key={i} className="flex items-start gap-1.5 mb-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
+                                  <span style={{ color: "#ef4444", flexShrink: 0 }}>→</span> {item}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Coach tips */}
+                          {ca.coach_tips?.length > 0 && (
+                            <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+                              <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "var(--accent)", letterSpacing: "0.1em" }}>
+                                Consigli per il trainer
+                              </p>
+                              {ca.coach_tips.map((tip, i) => (
+                                <div key={i} className="flex items-start gap-1.5 mb-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
+                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 font-bold"
+                                    style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent)", fontSize: "0.6rem" }}>{i + 1}</span>
+                                  {tip}
                                 </div>
                               ))}
                             </div>
                           )}
 
                           <p className="text-xs mt-3" style={{ color: "var(--text-faint)" }}>
-                            Stima visiva Claude Haiku · Non sostituisce una misurazione clinica · {new Date(analysis.analyzed_at).toLocaleDateString("it-IT")}
+                            Claude Haiku · Analisi effettuata il {new Date(ca.analyzed_at).toLocaleDateString("it-IT")}
                           </p>
-                          <p className="text-xs mt-1 px-2 py-1.5 rounded-lg" style={{ color: "rgba(251,191,36,0.8)", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)" }}>
-                            GDPR: l&apos;immagine viene inviata ad Anthropic per l&apos;elaborazione AI. Assicurati di aver informato il cliente nella privacy policy.
+                          <p className="text-xs mt-1 px-2 py-1 rounded-lg" style={{ color: "rgba(251,191,36,0.7)", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.14)" }}>
+                            GDPR: le immagini vengono elaborate da Anthropic AI. Informa il cliente nella privacy policy.
                           </p>
                         </div>
-                      )}
-                    </div>
+                      );
+                    })()}
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+                )}
+
+                {/* ── TIMELINE MODE (non-compare) ── */}
+                {!compareMode && activeMonth && byMonth[activeMonth] && (
+                  <div className="space-y-4">
+                    {byMonth[activeMonth].map(scan => {
+                      const analysis = scan.ai_analysis;
+                      const isAnalyzing = scanAnalyzing === scan.id;
+                      const imgUrl = scanUrls[scan.id];
+                      return (
+                        <div key={scan.id} className="card-luxury rounded-2xl overflow-hidden">
+                          <div className="p-4">
+                            <div className="flex items-start gap-4">
+                              {/* Thumbnail — larger for better visibility */}
+                              <div className="w-24 h-32 rounded-xl overflow-hidden flex-shrink-0 relative"
+                                style={{ background: "var(--surface-sm)", border: "1px solid rgba(229,50,50,0.12)" }}>
+                                {imgUrl ? (
+                                  <img src={imgUrl} alt={scan.taken_at} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <Loader2 size={16} className="animate-spin" style={{ color: "rgba(229,50,50,0.4)" }} />
+                                  </div>
+                                )}
+                                <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                                  style={{ background: "rgba(0,0,0,0.7)" }}>
+                                  <ShieldCheck size={9} style={{ color: "#22c55e" }} />
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                  <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>
+                                    {new Date(scan.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })}
+                                  </p>
+                                  {analysis && (
+                                    <span className="text-xs px-1.5 py-0.5 rounded-full font-bold"
+                                      style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", fontSize: "0.6rem" }}>
+                                      Analizzata
+                                    </span>
+                                  )}
+                                </div>
+                                {scan.notes && <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>{scan.notes}</p>}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <button onClick={() => handleScanAnalyze(scan)} disabled={isAnalyzing}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
+                                    style={{ background: analysis ? "var(--surface-sm)" : "rgba(229,50,50,0.12)", border: `1px solid ${analysis ? "var(--border)" : "rgba(229,50,50,0.28)"}`, color: analysis ? "var(--text-dim)" : "var(--accent-light)" }}>
+                                    {isAnalyzing ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+                                    {isAnalyzing ? "Analisi…" : analysis ? "Rianalizza" : "Analizza con AI"}
+                                  </button>
+                                  <button onClick={() => handleScanDelete(scan)}
+                                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs transition-all"
+                                    style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.15)", color: "rgba(239,68,68,0.7)" }}>
+                                    <Trash2 size={11} /> Elimina
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Single scan analysis */}
+                            {analysis && (
+                              <div className="mt-3 pt-3" style={{ borderTop: "1px solid rgba(229,50,50,0.1)" }}>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Brain size={12} style={{ color: "var(--accent)" }} />
+                                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(229,50,50,0.8)", letterSpacing: "0.08em" }}>
+                                    Analisi AI · {analysis.confidence === "high" ? "Alta" : analysis.confidence === "medium" ? "Media" : "Bassa"} confidenza
+                                  </p>
+                                </div>
+                                <div className="grid grid-cols-3 gap-2 mb-2">
+                                  {[
+                                    { l: "Grasso", v: analysis.body_fat_est != null ? `${analysis.body_fat_est}%` : "—", c: "#fbbf24" },
+                                    { l: "Muscolarità", v: analysis.muscle_mass_est ?? "—", c: "#a78bfa" },
+                                    { l: "Somatotipo", v: analysis.body_type ?? "—", c: "#38bdf8" },
+                                  ].map(({ l, v, c }) => (
+                                    <div key={l} className="rounded-xl p-2 text-center" style={{ background: "var(--surface-xs)", border: `1px solid ${c}20` }}>
+                                      <p className="text-sm font-bold capitalize" style={{ color: c }}>{v}</p>
+                                      <p className="text-xs mt-0.5" style={{ color: "var(--text-faint)", fontSize: "0.6rem" }}>{l}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                                <p className="text-xs leading-relaxed italic px-3 py-2 rounded-lg mb-2"
+                                  style={{ color: "var(--text-muted)", background: "var(--surface-xs)" }}>
+                                  {analysis.summary}
+                                </p>
+                                {analysis.recommendations?.map((r, i) => (
+                                  <div key={i} className="flex items-start gap-2 text-xs mb-1" style={{ color: "var(--text-muted)" }}>
+                                    <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 font-bold"
+                                      style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent)", fontSize: "0.6rem" }}>{i + 1}</span>
+                                    {r}
+                                  </div>
+                                ))}
+                                <p className="text-xs mt-2" style={{ color: "var(--text-faint)" }}>
+                                  Claude Haiku · {new Date(analysis.analyzed_at).toLocaleDateString("it-IT")}
+                                </p>
+                                <p className="text-xs mt-1 px-2 py-1 rounded-lg" style={{ color: "rgba(251,191,36,0.7)", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.12)" }}>
+                                  GDPR: immagine inviata ad Anthropic. Informa il cliente nella privacy policy.
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        );
+      })()}
 
       {/* ── MODALS ── */}
 

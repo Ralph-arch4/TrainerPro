@@ -713,3 +713,88 @@ export const dbFitnessScans = {
     return data?.signedUrl ?? null;
   },
 };
+
+// ─── Scan Comparisons ─────────────────────────────────────────────────────────
+// Beta-in-beta: AI improvement analysis between two scans from different months.
+
+export interface ComparisonAnalysis {
+  period_from:     string;               // ISO date of the "before" scan
+  period_to:       string;               // ISO date of the "after" scan
+  body_fat_change: number | null;        // delta in percentage points (negative = improved)
+  muscle_change:   "increased" | "decreased" | "stable" | null;
+  posture_change:  string | null;        // free-form observation
+  overall_trend:   "positive" | "neutral" | "negative";
+  summary:         string;               // Italian narrative paragraph
+  key_improvements: string[];            // up to 4 bullet points
+  areas_to_work:   string[];             // up to 3 bullet points
+  coach_tips:      string[];             // 2-3 actionable suggestions
+  confidence:      "low" | "medium" | "high";
+  analyzed_at:     string;               // ISO timestamp
+  model:           string;
+}
+
+export interface FitnessScanComparison {
+  id:             string;
+  user_id:        string;
+  client_id:      string;
+  scan_before_id: string;
+  scan_after_id:  string;
+  analysis:       ComparisonAnalysis | null;
+  created_at:     string;
+}
+
+export const dbFitnessScanComparisons = {
+  async listForClient(clientId: string): Promise<FitnessScanComparison[]> {
+    const { data, error } = await db()
+      .from("fitness_scan_comparisons")
+      .select("*")
+      .eq("client_id", clientId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as FitnessScanComparison[];
+  },
+
+  async getByScans(beforeId: string, afterId: string): Promise<FitnessScanComparison | null> {
+    const { data } = await db()
+      .from("fitness_scan_comparisons")
+      .select("*")
+      .eq("scan_before_id", beforeId)
+      .eq("scan_after_id", afterId)
+      .single();
+    return data as FitnessScanComparison | null;
+  },
+
+  async create(payload: {
+    clientId: string; userId: string;
+    scanBeforeId: string; scanAfterId: string;
+  }): Promise<FitnessScanComparison> {
+    const { data, error } = await db()
+      .from("fitness_scan_comparisons")
+      .insert({
+        client_id:      payload.clientId,
+        user_id:        payload.userId,
+        scan_before_id: payload.scanBeforeId,
+        scan_after_id:  payload.scanAfterId,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return data as FitnessScanComparison;
+  },
+
+  async saveAnalysis(id: string, analysis: ComparisonAnalysis): Promise<void> {
+    const { error } = await db()
+      .from("fitness_scan_comparisons")
+      .update({ analysis })
+      .eq("id", id);
+    if (error) throw error;
+  },
+
+  async remove(id: string): Promise<void> {
+    const { error } = await db()
+      .from("fitness_scan_comparisons")
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
+  },
+};

@@ -1361,18 +1361,17 @@ export default function ClientPortalPage() {
         {/* ── FITNESS SCAN tab ────────────────────────────────────────────────── */}
         {tab === "scan" && (
           <div className="pb-2">
-            {/* Privacy + beta header */}
-            <div className="rounded-2xl p-4 mb-5 flex items-start gap-3"
+            {/* Privacy header */}
+            <div className="rounded-2xl p-4 mb-4 flex items-start gap-3"
               style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.18)" }}>
-              <ShieldCheck size={18} style={{ color: "#fbbf24", flexShrink: 0, marginTop: 2 }} />
+              <ShieldCheck size={16} style={{ color: "#fbbf24", flexShrink: 0, marginTop: 2 }} />
               <div>
-                <p className="text-xs font-bold mb-1" style={{ color: "#fbbf24" }}>
+                <p className="text-xs font-bold mb-0.5" style={{ color: "#fbbf24" }}>
                   Fitness Scan — BETA · I tuoi progressi sono al sicuro
                 </p>
                 <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
-                  Le tue foto vengono caricate in modo sicuro e sono visibili solo al tuo trainer.
-                  Nessun link pubblico, nessuna condivisione automatica. Il trainer potrà analizzare
-                  la composizione corporea con l&apos;AI per supportarti al meglio.
+                  Le tue foto sono cifrate e visibili solo al tuo trainer. Nessuna condivisione automatica.
+                  Il trainer analizza la composizione corporea con AI per guidarti mese per mese.
                 </p>
               </div>
             </div>
@@ -1407,138 +1406,151 @@ export default function ClientPortalPage() {
               </p>
             </div>
 
-            {/* Scan list */}
+            {/* Scan timeline */}
             {!scansLoaded ? (
               <div className="text-center py-10">
-                <Loader2 size={24} className="animate-spin mx-auto mb-2" style={{ color: "rgba(229,50,50,0.5)" }} />
+                <Loader2 size={22} className="animate-spin mx-auto mb-2" style={{ color: "rgba(229,50,50,0.5)" }} />
                 <p className="text-xs" style={{ color: "var(--text-dim)" }}>Caricamento…</p>
               </div>
             ) : scans.length === 0 ? (
               <div className="text-center py-14 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
-                <Brain size={36} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
+                <Brain size={34} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
                 <p className="text-sm font-semibold mb-1" style={{ color: "var(--text-muted)" }}>Nessuna foto ancora</p>
-                <p className="text-xs" style={{ color: "var(--text-dim)" }}>
-                  Carica la tua prima foto di trasformazione — il trainer potrà analizzare la composizione corporea con l&apos;AI.
+                <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>
+                  Carica la prima foto — il tuo trainer potrà tracciare i tuoi progressi mese per mese.
                 </p>
               </div>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-xs" style={{ color: "var(--text-dim)" }}>
-                  {scans.length} {scans.length === 1 ? "foto caricata" : "foto caricate"} · visibili solo al tuo trainer
-                </p>
-                {scans.map(scan => {
-                  const analysis = scan.ai_analysis;
-                  return (
-                    <div key={scan.id} className="card-luxury rounded-2xl overflow-hidden">
-                      <div className="p-4">
-                        <div className="flex items-start gap-4">
-                          {/* Thumbnail */}
-                          <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 relative"
-                            style={{ background: "var(--surface-sm)", border: "1px solid rgba(229,50,50,0.12)" }}>
-                            {scan.signed_url ? (
-                              <img src={scan.signed_url} alt={scan.taken_at} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Scan size={18} style={{ color: "rgba(229,50,50,0.35)" }} />
-                              </div>
-                            )}
-                            <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
-                              style={{ background: "rgba(0,0,0,0.65)" }}>
-                              <ShieldCheck size={9} style={{ color: "#22c55e" }} />
-                            </div>
-                          </div>
+            ) : (() => {
+              // Group by month
+              const byMonth: Record<string, typeof scans> = {};
+              [...scans].sort((a, b) => new Date(b.taken_at).getTime() - new Date(a.taken_at).getTime())
+                .forEach(s => { const k = s.taken_at.slice(0, 7); if (!byMonth[k]) byMonth[k] = []; byMonth[k].push(s); });
+              const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
 
-                          {/* Meta */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
-                                {new Date(scan.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })}
-                              </p>
-                              {analysis ? (
-                                <span className="text-xs px-1.5 py-0.5 rounded-full font-bold"
-                                  style={{ background: "rgba(229,50,50,0.12)", color: "var(--accent-light)", fontSize: "0.6rem" }}>
-                                  Analizzata
-                                </span>
-                              ) : (
-                                <span className="text-xs px-1.5 py-0.5 rounded-full"
-                                  style={{ background: "var(--surface-sm)", color: "var(--text-dim)", fontSize: "0.6rem" }}>
-                                  In attesa di analisi
-                                </span>
-                              )}
-                            </div>
-                            {scan.notes && (
-                              <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>{scan.notes}</p>
-                            )}
-                            <button
-                              onClick={() => handleScanDelete(scan)}
-                              disabled={scanDeleting === scan.id}
-                              className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl transition-all"
-                              style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.15)", color: "rgba(239,68,68,0.7)" }}>
-                              {scanDeleting === scan.id ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
-                              Elimina
-                            </button>
-                          </div>
+              return (
+                <div>
+                  <p className="text-xs mb-3" style={{ color: "var(--text-dim)" }}>
+                    {scans.length} foto · {months.length} {months.length === 1 ? "mese" : "mesi"} di tracking · visibili solo al tuo trainer
+                  </p>
+
+                  {/* Month timeline */}
+                  {months.map((month, monthIdx) => {
+                    const monthScans = byMonth[month];
+                    const monthLabel = new Date(month + "-01").toLocaleDateString("it-IT", { month: "long", year: "numeric" });
+                    const hasAnalysis = monthScans.some(s => s.ai_analysis);
+                    return (
+                      <div key={month} className="mb-6">
+                        {/* Month header */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ background: monthIdx === 0 ? "var(--accent)" : "rgba(229,50,50,0.35)" }} />
+                          <p className="text-xs font-bold capitalize" style={{ color: monthIdx === 0 ? "var(--accent-light)" : "var(--text-muted)", letterSpacing: "0.06em" }}>
+                            {monthLabel}
+                            {monthIdx === 0 && <span className="ml-2 text-xs font-normal" style={{ color: "var(--text-faint)" }}>· mese corrente</span>}
+                          </p>
+                          {hasAnalysis && (
+                            <span className="ml-auto text-xs flex items-center gap-1" style={{ color: "#22c55e" }}>
+                              <Sparkles size={10} /> Analizzato
+                            </span>
+                          )}
                         </div>
 
-                        {/* AI Analysis (client-friendly view) */}
-                        {analysis && (
-                          <div className="mt-4 pt-4" style={{ borderTop: "1px solid rgba(229,50,50,0.1)" }}>
-                            <div className="flex items-center gap-2 mb-3">
-                              <Sparkles size={12} style={{ color: "var(--accent)" }} />
-                              <p className="text-xs font-bold" style={{ color: "var(--accent)", letterSpacing: "0.08em" }}>
-                                ANALISI DEL TUO TRAINER
-                              </p>
-                            </div>
-
-                            {/* Metrics */}
-                            <div className="grid grid-cols-3 gap-2 mb-3">
-                              {[
-                                { label: "Grasso stim.", value: analysis.body_fat_est != null ? `${analysis.body_fat_est}%` : "—", color: "#fbbf24" },
-                                { label: "Muscolarità",   value: analysis.muscle_mass_est ?? "—", color: "#a78bfa" },
-                                { label: "Somatotipo",    value: analysis.body_type ?? "—",        color: "#38bdf8" },
-                              ].map(({ label, value, color }) => (
-                                <div key={label} className="rounded-xl p-2 text-center"
-                                  style={{ background: "var(--surface-xs)", border: `1px solid ${color}22` }}>
-                                  <p className="text-sm font-bold capitalize" style={{ color }}>{value}</p>
-                                  <p className="text-xs mt-0.5" style={{ color: "var(--text-faint)", fontSize: "0.6rem" }}>{label}</p>
+                        {/* Photos grid for this month */}
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          {monthScans.map(scan => (
+                            <div key={scan.id} className="rounded-2xl overflow-hidden"
+                              style={{ background: "var(--surface-sm)", border: "1px solid rgba(229,50,50,0.1)" }}>
+                              <div className="aspect-[3/4] relative">
+                                {scan.signed_url ? (
+                                  <img src={scan.signed_url} alt={scan.taken_at} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--surface-xs)" }}>
+                                    <Scan size={20} style={{ color: "rgba(229,50,50,0.35)" }} />
+                                  </div>
+                                )}
+                                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+                                  style={{ background: "rgba(0,0,0,0.7)" }}>
+                                  <ShieldCheck size={9} style={{ color: "#22c55e" }} />
                                 </div>
-                              ))}
-                            </div>
-
-                            {/* Summary */}
-                            <p className="text-xs leading-relaxed italic px-3 py-2 rounded-xl mb-3"
-                              style={{ color: "var(--text-muted)", background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
-                              {analysis.summary}
-                            </p>
-
-                            {/* Recommendations */}
-                            {analysis.recommendations?.length > 0 && (
-                              <div className="space-y-1.5">
-                                <p className="text-xs font-semibold mb-2" style={{ color: "var(--text-dim)", letterSpacing: "0.06em" }}>
-                                  CONSIGLI PERSONALIZZATI
+                                {scan.ai_analysis && (
+                                  <div className="absolute top-1.5 left-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+                                    style={{ background: "rgba(229,50,50,0.85)" }}>
+                                    <Sparkles size={9} style={{ color: "#fff" }} />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="px-2 py-2">
+                                <p className="text-xs font-semibold" style={{ color: "var(--text)" }}>
+                                  {new Date(scan.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "short" })}
                                 </p>
-                                {analysis.recommendations.map((rec, i) => (
-                                  <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
-                                    <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold"
-                                      style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent)" }}>
-                                      {i + 1}
-                                    </span>
-                                    {rec}
+                                {scan.notes && <p className="text-xs truncate" style={{ color: "var(--text-faint)" }}>{scan.notes}</p>}
+                                <button onClick={() => handleScanDelete(scan)} disabled={scanDeleting === scan.id}
+                                  className="flex items-center gap-1 text-xs mt-1.5 transition-all"
+                                  style={{ color: "rgba(239,68,68,0.6)" }}>
+                                  {scanDeleting === scan.id ? <Loader2 size={9} className="animate-spin" /> : <Trash2 size={9} />}
+                                  Elimina
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* AI analysis for this month (client-friendly, motivational) */}
+                        {monthScans[0]?.ai_analysis && (() => {
+                          const a = monthScans[0].ai_analysis!;
+                          return (
+                            <div className="rounded-2xl p-4" style={{ background: "rgba(229,50,50,0.04)", border: "1px solid rgba(229,50,50,0.14)" }}>
+                              <div className="flex items-center gap-2 mb-3">
+                                <Sparkles size={12} style={{ color: "var(--accent)" }} />
+                                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--accent)", letterSpacing: "0.1em" }}>
+                                  Analisi del tuo trainer
+                                </p>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2 mb-3">
+                                {[
+                                  { l: "Grasso stim.", v: a.body_fat_est != null ? `${a.body_fat_est}%` : "—", c: "#fbbf24" },
+                                  { l: "Muscolarità",  v: a.muscle_mass_est ?? "—", c: "#a78bfa" },
+                                  { l: "Somatotipo",   v: a.body_type ?? "—", c: "#38bdf8" },
+                                ].map(({ l, v, c }) => (
+                                  <div key={l} className="rounded-xl p-2 text-center" style={{ background: "var(--surface-xs)", border: `1px solid ${c}22` }}>
+                                    <p className="text-sm font-bold capitalize" style={{ color: c }}>{v}</p>
+                                    <p style={{ color: "var(--text-faint)", fontSize: "0.58rem" }}>{l}</p>
                                   </div>
                                 ))}
                               </div>
-                            )}
-                            <p className="text-xs mt-3" style={{ color: "var(--text-faint)" }}>
-                              Stima visiva AI · {new Date(analysis.analyzed_at).toLocaleDateString("it-IT")}
-                            </p>
-                          </div>
+                              <p className="text-xs leading-relaxed italic px-3 py-2.5 rounded-xl mb-3"
+                                style={{ color: "var(--text-muted)", background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
+                                {a.summary}
+                              </p>
+                              {a.recommendations?.length > 0 && (
+                                <div className="space-y-1.5">
+                                  <p className="text-xs font-semibold mb-1.5" style={{ color: "var(--text-dim)", letterSpacing: "0.06em" }}>CONSIGLI PERSONALIZZATI</p>
+                                  {a.recommendations.map((r, i) => (
+                                    <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
+                                      <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 font-bold"
+                                        style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent)", fontSize: "0.58rem" }}>{i + 1}</span>
+                                      {r}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <p className="text-xs mt-2.5" style={{ color: "var(--text-faint)" }}>
+                                Stima visiva AI · {new Date(a.analyzed_at).toLocaleDateString("it-IT")}
+                              </p>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Divider between months */}
+                        {monthIdx < months.length - 1 && (
+                          <div className="mt-4" style={{ height: "1px", background: "var(--border-subtle)" }} />
                         )}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         )}
 

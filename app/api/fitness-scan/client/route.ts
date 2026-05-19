@@ -17,6 +17,8 @@ import { createHash } from "crypto";
 const SCAN_BUCKET    = "fitness-scans";
 const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB max (canvas-resized images are <500 KB)
 const SIGNED_URL_TTL = 90;              // seconds — short window reduces interception risk
+const MAX_SCANS_PER_CLIENT = 120;        // quota: prevent storage abuse
+const ALLOWED_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL ?? "https://trainer-pro-phi.vercel.app";
 
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -25,8 +27,22 @@ function serviceClient() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin":  ALLOWED_ORIGIN,
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "X-Content-Type-Options":       "nosniff",
+    "X-Frame-Options":              "DENY",
+  };
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders() });
+}
+
 function err(msg: string, status: number) {
-  return NextResponse.json({ error: msg }, { status });
+  return NextResponse.json({ error: msg }, { status, headers: corsHeaders() });
 }
 
 // ── IP pseudonymisation ───────────────────────────────────────────────────────
@@ -157,7 +173,7 @@ export async function GET(req: NextRequest) {
     await audit(supabase, "view", "client", ip, ua, null, plan.client_id);
   }
 
-  return NextResponse.json({ scans: withUrls });
+  return NextResponse.json({ scans: withUrls }, { headers: corsHeaders() });
 }
 
 // ── POST (multipart) ──────────────────────────────────────────────────────────
@@ -197,8 +213,16 @@ export async function POST(req: NextRequest) {
   // 2. Magic byte check (actual file content — cannot be spoofed)
   if (!validateImageBytes(buffer)) return err("invalid_image_content", 400);
 
+  // Token validation must come after file checks to avoid unnecessary DB round-trips
   const plan = await resolveToken(supabase, token);
   if (!plan) return err("invalid_token", 403);
+
+  // Quota check — prevent storage abuse (max scans per client)
+  const { data: quotaOk } = await supabase.rpc("check_scan_upload_quota", {
+    p_client_id: plan.client_id,
+    p_max: MAX_SCANS_PER_CLIENT,
+  });
+  if (!quotaOk) return err("quota_exceeded", 429);
 
   const ext  = file.type === "image/png" ? "png" : "jpg";
   // Path includes a UUID segment — not guessable even if storage is enumerated
@@ -227,7 +251,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(
     { scan: { ...scan, signed_url: urlData?.signedUrl ?? null } },
-    { status: 201 }
+    { status: 201, headers: corsHeaders() }
   );
 }
 
@@ -263,5 +287,5 @@ export async function DELETE(req: NextRequest) {
 
   await audit(supabase, "delete", "client", ip, ua, scanId, plan.client_id);
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true }, { headers: corsHeaders() });
 }
