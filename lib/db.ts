@@ -637,6 +637,7 @@ export interface FitnessScan {
   taken_at: string;
   notes: string | null;
   ai_analysis: FitnessScanAnalysis | null;
+  body_features: import("@/lib/cv-analysis").BodyFeatures | null;
   created_at: string;
 }
 
@@ -674,16 +675,17 @@ export const dbFitnessScans = {
     return path;
   },
 
-  async create(payload: { clientId: string; storagePath: string; takenAt: string; notes?: string }): Promise<FitnessScan> {
+  async create(payload: { clientId: string; storagePath: string; takenAt: string; notes?: string; bodyFeatures?: object }): Promise<FitnessScan> {
     const userId = await uid();
     const { data, error } = await db()
       .from("fitness_scans")
       .insert({
-        client_id:    payload.clientId,
-        user_id:      userId,
-        storage_path: payload.storagePath,
-        taken_at:     payload.takenAt,
-        notes:        payload.notes ?? null,
+        client_id:     payload.clientId,
+        user_id:       userId,
+        storage_path:  payload.storagePath,
+        taken_at:      payload.takenAt,
+        notes:         payload.notes ?? null,
+        body_features: payload.bodyFeatures ?? null,
       })
       .select()
       .single();

@@ -169,7 +169,12 @@ Rispondi SOLO con il JSON. Nessun testo prima o dopo.`,
       user_agent: req.headers.get("user-agent")?.slice(0, 200) ?? null,
     });
 
-    return NextResponse.json({ analysis });
+    return NextResponse.json({ analysis }, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, private",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
 
   } catch (err) {
     console.error("[fitness-scan] error:", err);

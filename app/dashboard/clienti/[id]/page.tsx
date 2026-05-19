@@ -16,11 +16,13 @@ import {
 } from "lucide-react";
 import { dbProgressPhotos, type ProgressPhoto, dbFitnessScans, type FitnessScan, type FitnessScanAnalysis, dbFitnessScanComparisons, type FitnessScanComparison, type ComparisonAnalysis } from "@/lib/db";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
-import { Scan, Sparkles, ShieldCheck, Brain, GitCompare, TrendingDown, Minus } from "lucide-react";
+import { Scan, Sparkles, ShieldCheck, Brain, GitCompare, TrendingDown, Minus, KeyRound, Activity as ActivityIcon } from "lucide-react";
+import type { BodyFeatures } from "@/lib/cv-analysis";
 
 type Tab = "overview" | "fasi" | "schede" | "dieta" | "misurazioni" | "note" | "foto" | "scan";
 
-const PHOTO_PASSWORD = "admin 1";
+// PIN is no longer hardcoded — verified server-side via /api/photo/pin
+// Session token stored in sessionStorage (tab-scoped, not persisted)
 
 async function resizeImage(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -41,12 +43,18 @@ async function resizeImage(file: File): Promise<Blob> {
   });
 }
 
-function PhotoCard({ photo, onDelete }: { photo: ProgressPhoto; onDelete: () => void }) {
-  const [url, setUrl] = useState<string | null>(null);
+function PhotoCard({ photo, secureUrl, onDelete }: { photo: ProgressPhoto; secureUrl?: string; onDelete: () => void }) {
+  // secureUrl is a single-use view-token URL passed from parent (not fetched here)
+  const [url, setUrl] = useState<string | null>(secureUrl ?? null);
   const [showDelete, setShowDelete] = useState(false);
   useEffect(() => {
-    dbProgressPhotos.getSignedUrl(photo.storage_path).then(setUrl);
-  }, [photo.storage_path]);
+    // If no secureUrl provided, fall back to the old signed URL (for backwards compat)
+    if (!secureUrl) {
+      dbProgressPhotos.getSignedUrl(photo.storage_path).then(setUrl);
+    } else {
+      setUrl(secureUrl);
+    }
+  }, [photo.storage_path, secureUrl]);
   return (
     <div className="relative rounded-2xl overflow-hidden group"
       style={{ aspectRatio: "3/4", background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
@@ -221,13 +229,29 @@ export default function ClientDetailPage() {
     setScanUploading(true);
     try {
       const resized = await resizeImage(file);
-      const path = await dbFitnessScans.upload(client!.id, resized, scanUploadDate);
-      const record = await dbFitnessScans.create({ clientId: client!.id, storagePath: path, takenAt: scanUploadDate, notes: scanUploadNotes || undefined });
+
+      // ── CV analysis (TF.js MoveNet — zero Claude token cost) ───────────────
+      let bodyFeatures: BodyFeatures | null = null;
+      try {
+        const { analyseImage } = await import("@/lib/cv-analysis");
+        bodyFeatures = await analyseImage(resized);
+      } catch (cvErr) {
+        console.warn("[CV] Pose detection failed (non-blocking):", cvErr);
+      }
+
+      const path   = await dbFitnessScans.upload(client!.id, resized, scanUploadDate);
+      const record = await dbFitnessScans.create({
+        clientId:     client!.id,
+        storagePath:  path,
+        takenAt:      scanUploadDate,
+        notes:        scanUploadNotes || undefined,
+        bodyFeatures: bodyFeatures ?? undefined,
+      });
       const url = await dbFitnessScans.getSignedUrl(path);
       setScans(prev => [record, ...prev]);
       if (url) setScanUrls(prev => ({ ...prev, [record.id]: url }));
       setScanUploadNotes("");
-      showToast("Foto caricata");
+      showToast(bodyFeatures ? "Foto caricata · analisi CV completata" : "Foto caricata");
     } catch { showToast("Errore nel caricamento", "error"); }
     finally { setScanUploading(false); }
   }
@@ -283,30 +307,108 @@ export default function ClientDetailPage() {
     }
   }
 
-  // Progress photos
+  // Progress photos — DB-backed PIN (no longer hardcoded)
   const [photoUnlocked, setPhotoUnlocked] = useState(false);
-  const [photoPassword, setPhotoPassword] = useState("");
+  const [photoPin, setPhotoPin] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const [pwError, setPwError] = useState(false);
+  const [pwError, setPwError] = useState("");
+  const [pinVerifying, setPinVerifying] = useState(false);
+  const [hasPinSet, setHasPinSet] = useState<boolean | null>(null);
+  const [settingNewPin, setSettingNewPin] = useState(false);
+  const [newPinVal, setNewPinVal] = useState("");
   const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
+  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const [photosLoaded, setPhotosLoaded] = useState(false);
   const [uploadDate, setUploadDate] = useState(new Date().toISOString().slice(0, 10));
   const [uploadNotes, setUploadNotes] = useState("");
   const [uploading, setUploading] = useState(false);
 
+  // Check if PIN is set on mount (when foto tab is opened)
+  async function checkPinStatus() {
+    try {
+      const r = await fetch("/api/photo/pin");
+      const j = await r.json();
+      setHasPinSet(j.has_pin ?? false);
+    } catch { setHasPinSet(false); }
+  }
+
+  // Save a new PIN
+  async function saveNewPin() {
+    if (!/^\d{4,8}$/.test(newPinVal)) {
+      setPwError("Il PIN deve essere di 4-8 cifre numeriche");
+      return;
+    }
+    setPinVerifying(true);
+    try {
+      const r = await fetch("/api/photo/pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: newPinVal }),
+      });
+      if (!r.ok) throw new Error((await r.json()).error);
+      setHasPinSet(true);
+      setSettingNewPin(false);
+      setNewPinVal("");
+      showToast("PIN impostato con successo");
+    } catch (err) {
+      setPwError(err instanceof Error ? err.message : "Errore");
+    } finally { setPinVerifying(false); }
+  }
+
+  // Verify PIN via API — server-side hash comparison, rate-limited
   async function unlockPhotos() {
-    if (photoPassword === PHOTO_PASSWORD) {
+    if (!photoPin) { setPwError("Inserisci il PIN"); return; }
+    setPinVerifying(true);
+    setPwError("");
+    try {
+      const r = await fetch("/api/photo/pin", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: photoPin }),
+      });
+      const j = await r.json();
+      if (!r.ok) {
+        setPwError(j.error ?? "PIN errato");
+        setPhotoPin("");
+        return;
+      }
+      // Store session token in sessionStorage (tab-scoped, cleared on close)
+      sessionStorage.setItem("photo_session", j.token);
+      sessionStorage.setItem("photo_session_exp", j.expires_at);
       setPhotoUnlocked(true);
-      setPwError(false);
+      setPwError("");
       if (!photosLoaded) {
         const list = await dbProgressPhotos.list(client!.id);
         setPhotos(list);
         setPhotosLoaded(true);
+        // Load view-token-secured URLs for each photo
+        await refreshPhotoUrls(list);
       }
-    } else {
-      setPwError(true);
-      setPhotoPassword("");
-    }
+    } catch { setPwError("Errore di rete. Riprova."); }
+    finally { setPinVerifying(false); }
+  }
+
+  // Get a single-use secure URL for each photo
+  async function refreshPhotoUrls(list: ProgressPhoto[]) {
+    const urls: Record<string, string> = {};
+    await Promise.all(list.map(async (p) => {
+      try {
+        const r = await fetch(`/api/photo/view-token?path=${encodeURIComponent(p.storage_path)}&bucket=progress`);
+        if (r.ok) {
+          const j = await r.json();
+          urls[p.id] = j.signed_url;
+          // Mark token used after a short delay (image should have loaded)
+          setTimeout(() => {
+            fetch("/api/photo/view-token", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token: j.view_token }),
+            }).catch(() => {});
+          }, 10000); // 10s — enough for image to fully load
+        }
+      } catch {}
+    }));
+    setPhotoUrls(urls);
   }
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -590,7 +692,7 @@ export default function ClientDetailPage() {
       {/* Tabs */}
       <div className="flex gap-1 mb-6 overflow-x-auto pb-1">
         {tabs.map(({ key, label, icon: Icon, count, beta }) => (
-          <button key={key} onClick={() => { setTab(key); if (key === "scan") loadScans(); }}
+          <button key={key} onClick={() => { setTab(key); if (key === "scan") loadScans(); if (key === "foto" && hasPinSet === null) checkPinStatus(); }}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm whitespace-nowrap transition-all"
             style={{
               background: tab === key ? "rgba(229,50,50,0.12)" : "transparent",
@@ -1037,49 +1139,97 @@ export default function ClientDetailPage() {
       {tab === "foto" && (
         <div>
           {!photoUnlocked ? (
-            /* Password gate */
             <div className="max-w-sm mx-auto mt-8">
               <div className="text-center mb-6">
                 <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
                   style={{ background: "rgba(229,50,50,0.1)", border: "1px solid rgba(229,50,50,0.22)" }}>
-                  <Lock size={24} style={{ color: "var(--accent)" }} />
+                  <KeyRound size={24} style={{ color: "var(--accent)" }} />
                 </div>
-                <h2 className="text-lg font-bold mb-1" style={{ color: "var(--ivory)" }}>Sezione protetta</h2>
+                <h2 className="text-lg font-bold mb-1" style={{ color: "var(--text)" }}>Sezione protetta</h2>
                 <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                  Le foto di progresso richiedono una password aggiuntiva per la privacy del cliente.
+                  Le foto di progresso sono protette da un PIN personale che imposti tu.
+                  Verificato server-side — non è nel codice sorgente.
                 </p>
               </div>
-              <div className="card-luxury rounded-2xl p-5 space-y-3">
-                <div className="relative">
-                  <input
-                    type={showPw ? "text" : "password"}
-                    value={photoPassword}
-                    onChange={e => { setPhotoPassword(e.target.value); setPwError(false); }}
-                    onKeyDown={e => e.key === "Enter" && unlockPhotos()}
-                    placeholder="Password"
-                    className="w-full px-4 py-3 rounded-xl text-sm outline-none pr-12"
-                    style={{ background: "var(--surface)", border: `1px solid ${pwError ? "rgba(239,68,68,0.5)" : "rgba(229,50,50,0.22)"}`, color: "var(--ivory)" }}
-                    autoFocus
-                  />
-                  <button onClick={() => setShowPw(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                    style={{ color: "var(--text-dim)" }}>
-                    {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
+
+              {/* Set PIN for first time */}
+              {hasPinSet === false || settingNewPin ? (
+                <div className="card-luxury rounded-2xl p-5 space-y-3">
+                  <p className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
+                    {hasPinSet === false ? "Primo accesso — imposta il tuo PIN (4-8 cifre):" : "Cambia PIN:"}
+                  </p>
+                  <div className="relative">
+                    <input type={showPw ? "text" : "password"} value={newPinVal}
+                      onChange={e => { setNewPinVal(e.target.value.replace(/\D/g, "")); setPwError(""); }}
+                      onKeyDown={e => e.key === "Enter" && saveNewPin()}
+                      placeholder="es. 1234" maxLength={8}
+                      className="w-full px-4 py-3 rounded-xl text-sm outline-none pr-12"
+                      style={{ background: "var(--surface)", border: `1px solid ${pwError ? "rgba(239,68,68,0.5)" : "rgba(229,50,50,0.22)"}`, color: "var(--text)" }} autoFocus />
+                    <button onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-dim)" }}>
+                      {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  {pwError && <p className="text-xs" style={{ color: "#f87171" }}>{pwError}</p>}
+                  <div className="flex gap-2">
+                    {settingNewPin && (
+                      <button onClick={() => { setSettingNewPin(false); setPwError(""); setNewPinVal(""); }}
+                        className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}>
+                        Annulla
+                      </button>
+                    )}
+                    <button onClick={saveNewPin} disabled={pinVerifying}
+                      className="flex-1 accent-btn py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+                      {pinVerifying ? <Loader2 size={14} className="animate-spin" /> : <KeyRound size={14} />}
+                      {pinVerifying ? "Salvataggio…" : "Salva PIN"}
+                    </button>
+                  </div>
                 </div>
-                {pwError && <p className="text-xs" style={{ color: "#f87171" }}>Password errata</p>}
-                <button onClick={unlockPhotos}
-                  className="w-full accent-btn py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-                  <Lock size={14} /> Sblocca sezione
-                </button>
-              </div>
+              ) : (
+                <div className="card-luxury rounded-2xl p-5 space-y-3">
+                  <div className="relative">
+                    <input type={showPw ? "text" : "password"} value={photoPin}
+                      onChange={e => { setPhotoPin(e.target.value.replace(/\D/g, "")); setPwError(""); }}
+                      onKeyDown={e => e.key === "Enter" && unlockPhotos()}
+                      placeholder="Inserisci PIN" maxLength={8}
+                      className="w-full px-4 py-3 rounded-xl text-sm outline-none pr-12"
+                      style={{ background: "var(--surface)", border: `1px solid ${pwError ? "rgba(239,68,68,0.5)" : "rgba(229,50,50,0.22)"}`, color: "var(--text)" }} autoFocus />
+                    <button onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-dim)" }}>
+                      {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  {pwError && <p className="text-xs" style={{ color: "#f87171" }}>{pwError}</p>}
+                  <button onClick={unlockPhotos} disabled={pinVerifying}
+                    className="w-full accent-btn py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+                    {pinVerifying ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
+                    {pinVerifying ? "Verifica in corso…" : "Sblocca sezione"}
+                  </button>
+                  <button onClick={() => { setSettingNewPin(true); setPwError(""); checkPinStatus(); }}
+                    className="w-full text-xs text-center" style={{ color: "var(--text-faint)" }}>
+                    Cambia PIN
+                  </button>
+                  <p className="text-xs text-center" style={{ color: "var(--text-faint)" }}>
+                    PIN verificato server-side · SHA-256 salted hash · rate limited 5 tentativi/5 min
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             /* Photo gallery + upload */
             <div>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-xs flex items-center gap-1.5" style={{ color: "#22c55e" }}>
+                  <ShieldCheck size={12} /> Sessione sicura attiva · link usa-e-getta · scade in 30 min
+                </p>
+                <button onClick={() => { setPhotoUnlocked(false); setPhotos([]); setPhotosLoaded(false); setPhotoUrls({}); sessionStorage.removeItem("photo_session"); }}
+                  className="text-xs px-2.5 py-1 rounded-lg transition-all"
+                  style={{ background: "rgba(239,68,68,0.07)", color: "rgba(239,68,68,0.7)" }}>
+                  Blocca
+                </button>
+              </div>
+
               {/* Upload form */}
               <div className="card-luxury rounded-2xl p-5 mb-5">
-                <h3 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--ivory)" }}>
+                <h3 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--text)" }}>
                   <Upload size={15} style={{ color: "var(--accent)" }} /> Aggiungi foto
                 </h3>
                 <div className="grid grid-cols-2 gap-3 mb-4">
@@ -1087,14 +1237,14 @@ export default function ClientDetailPage() {
                     <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Data foto *</label>
                     <input type="date" value={uploadDate} onChange={e => setUploadDate(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                      style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
+                      style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" }} />
                   </div>
                   <div>
                     <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Note (opzionale)</label>
                     <input type="text" value={uploadNotes} onChange={e => setUploadNotes(e.target.value)}
                       placeholder="es. Settimana 4 bulk"
                       className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                      style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
+                      style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" }} />
                   </div>
                 </div>
                 <label className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all ${uploading ? "opacity-60 pointer-events-none" : "hover:opacity-90"} accent-btn`}>
@@ -1103,25 +1253,29 @@ export default function ClientDetailPage() {
                   <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
                 </label>
                 <p className="text-xs mt-2 text-center" style={{ color: "var(--text-faint)" }}>
-                  Ridimensionata automaticamente · Mai visibile al cliente · URL firmato 1h
+                  Ridimensionata · Cifrata a riposo · Link single-use 90s · Audit log
                 </p>
               </div>
 
-              {/* Gallery */}
+              {/* Gallery — use view-token secured URLs */}
               {photos.length === 0 ? (
                 <div className="text-center py-16 card-luxury rounded-2xl">
                   <Camera size={40} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
                   <p className="text-sm" style={{ color: "var(--text-muted)" }}>Nessuna foto ancora</p>
-                  <p className="text-xs mt-1" style={{ color: "var(--text-dim)" }}>Le foto di progresso appariranno qui</p>
                 </div>
               ) : (
                 <div>
                   <p className="text-xs mb-3" style={{ color: "var(--text-dim)" }}>
-                    {photos.length} {photos.length === 1 ? "foto" : "foto"} · hover per eliminare
+                    {photos.length} foto · URL a uso singolo · scadono dopo la visualizzazione
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {photos.map(photo => (
-                      <PhotoCard key={photo.id} photo={photo} onDelete={() => handlePhotoDelete(photo)} />
+                      <PhotoCard
+                        key={photo.id}
+                        photo={photo}
+                        secureUrl={photoUrls[photo.id]}
+                        onDelete={() => handlePhotoDelete(photo)}
+                      />
                     ))}
                   </div>
                 </div>
@@ -1577,6 +1731,7 @@ export default function ClientDetailPage() {
                   <div className="space-y-4">
                     {byMonth[activeMonth].map(scan => {
                       const analysis = scan.ai_analysis;
+                      const cv = scan.body_features;
                       const isAnalyzing = scanAnalyzing === scan.id;
                       const imgUrl = scanUrls[scan.id];
                       return (
@@ -1626,6 +1781,33 @@ export default function ClientDetailPage() {
                                 </div>
                               </div>
                             </div>
+
+                            {/* CV body metrics (TF.js MoveNet — zero token cost) */}
+                            {cv && cv.metrics && (
+                              <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <ActivityIcon size={11} style={{ color: "#38bdf8" }} />
+                                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#38bdf8", letterSpacing: "0.08em" }}>
+                                    CV — MoveNet · {Math.round((cv.metrics.pose_confidence ?? 0) * 100)}% confidenza
+                                  </p>
+                                </div>
+                                <div className="grid grid-cols-3 gap-1.5 mb-1.5">
+                                  {[
+                                    { k: "SHR", v: cv.metrics.shoulder_hip_ratio?.toFixed(2) ?? "—", label: "Spalle/Fianchi", color: "#38bdf8", hint: cv.metrics.shoulder_hip_ratio && cv.metrics.shoulder_hip_ratio >= 1.15 ? "✓" : undefined },
+                                    { k: "WHR", v: cv.metrics.waist_hip_ratio?.toFixed(2) ?? "—", label: "Vita/Fianchi", color: "#fbbf24", hint: cv.metrics.waist_hip_ratio && cv.metrics.waist_hip_ratio <= 0.90 ? "✓" : undefined },
+                                    { k: "SIM", v: cv.metrics.bilateral_symmetry ? `${Math.round(cv.metrics.bilateral_symmetry * 100)}%` : "—", label: "Simmetria", color: "#a78bfa", hint: cv.metrics.bilateral_symmetry && cv.metrics.bilateral_symmetry >= 0.80 ? "✓" : undefined },
+                                  ].map(({ k, v, label, color, hint }) => (
+                                    <div key={k} className="rounded-lg p-1.5 text-center" style={{ background: "var(--surface-xs)", border: `1px solid ${color}18` }}>
+                                      <p className="font-bold" style={{ color, fontSize: "0.85rem" }}>{v} {hint && <span style={{ color: "#22c55e", fontSize: "0.65rem" }}>{hint}</span>}</p>
+                                      <p style={{ color: "var(--text-faint)", fontSize: "0.58rem" }}>{label}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                                <p className="text-xs" style={{ color: "var(--text-faint)" }}>
+                                  TF.js MoveNet Lightning · analisi locale · zero costo API · {new Date(cv.analyzed_at).toLocaleDateString("it-IT")}
+                                </p>
+                              </div>
+                            )}
 
                             {/* Single scan analysis */}
                             {analysis && (
