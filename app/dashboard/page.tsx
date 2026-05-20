@@ -6,6 +6,7 @@ import {
   Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight,
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
   Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle, Scale, TrendingDown,
+  BarChart2,
 } from "lucide-react";
 
 function timeGreeting() {
@@ -215,6 +216,32 @@ export default function DashboardPage() {
       results.push({ client: c, weight: last3[0].weight!, lastDate: last3[0].date });
     }
     return results.slice(0, 4);
+  }, [clients]);
+
+  // Aderenza piano: sessioni reali vs target (ultimi 4 settimane)
+  const weeklyAdherence = useMemo(() => {
+    const now = Date.now();
+    return clients
+      .filter(c => c.status === "attivo" && c.workoutPlans.some(p => p.active))
+      .map(c => {
+        const activePlan = c.workoutPlans.find(p => p.active)!;
+        const target = activePlan.daysPerWeek || 3;
+        const allLogs = c.workoutPlans.flatMap(p => p.logs ?? []);
+        const weeks = [3, 2, 1, 0].map(weeksAgo => {
+          const from = now - (weeksAgo + 1) * 7 * 86400000;
+          const to   = now - weeksAgo * 7 * 86400000;
+          const uniq = new Set(
+            allLogs
+              .filter(l => { const t = new Date(l.loggedAt).getTime(); return t > from && t <= to; })
+              .map(l => new Date(l.loggedAt).toDateString())
+          );
+          return uniq.size;
+        });
+        const thisWeek = weeks[3];
+        return { client: c, target, weeks, thisWeek };
+      })
+      .sort((a, b) => (a.thisWeek / a.target) - (b.thisWeek / b.target))
+      .slice(0, 6);
   }, [clients]);
 
   // Smart onboarding: check what's actually done
@@ -524,6 +551,62 @@ export default function DashboardPage() {
                     </a>
                   )}
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Aderenza al Piano ───────────────────────────────────────────── */}
+      {weeklyAdherence.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(20,184,166,0.05)", border: "1px solid rgba(20,184,166,0.18)" }}>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <BarChart2 size={14} style={{ color: "#2dd4bf" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+              Aderenza al Piano
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+              style={{ background: "rgba(20,184,166,0.15)", color: "#2dd4bf" }}>
+              {weeklyAdherence.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "rgba(245,240,232,0.35)" }}>
+              sessioni reali vs obiettivo · 4 settimane
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {weeklyAdherence.map(({ client, target, weeks, thisWeek }) => {
+              const ratio = target > 0 ? thisWeek / target : 0;
+              const barColor = ratio >= 1 ? "#22c55e" : ratio >= 0.5 ? "#fbbf24" : "#f87171";
+              return (
+                <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all group">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                    style={{ background: "rgba(20,184,166,0.1)", color: "#2dd4bf" }}>
+                    {client.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold truncate" style={{ color: "var(--ivory)" }}>{client.name}</p>
+                    <div className="flex items-end gap-0.5 mt-1.5" style={{ height: 14 }}>
+                      {weeks.map((v, i) => {
+                        const isLast = i === 3;
+                        const h = Math.max(3, Math.round(Math.min(v / Math.max(target, 1), 1.1) * 12));
+                        const clr = v >= target ? "#22c55e" : v > 0 ? "#fbbf24" : "#ef4444";
+                        return (
+                          <div key={i} className="w-4 rounded-sm"
+                            style={{
+                              height: h,
+                              background: isLast ? clr : `${clr}55`,
+                              transition: "height 0.3s ease",
+                            }} />
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs font-bold" style={{ color: barColor }}>{thisWeek}/{target}</p>
+                    <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>questa sett.</p>
+                  </div>
+                </Link>
               );
             })}
           </div>
