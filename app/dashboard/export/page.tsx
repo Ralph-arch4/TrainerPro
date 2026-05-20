@@ -90,7 +90,7 @@ export default function ExportPage() {
               <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--text)" }}>Seleziona cliente</h2>
               <select value={selectedClientId} onChange={(e) => setSelectedClientId(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
+                style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>

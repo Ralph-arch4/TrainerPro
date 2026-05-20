@@ -190,7 +190,7 @@ export default function PreventiviPage() {
                   <select
                     value={activeQuote.clientName}
                     onChange={(e) => updateQuote({ clientName: e.target.value })}
-                    className={inputClass} style={{ ...inputStyle, background: "rgba(26,26,26,1)" }}>
+                    className={inputClass} style={{ ...inputStyle }}>
                     <option value="">Seleziona cliente…</option>
                     {clients.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
                     <option value="__custom">Altro…</option>

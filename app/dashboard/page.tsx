@@ -562,14 +562,14 @@ export default function DashboardPage() {
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(20,184,166,0.05)", border: "1px solid rgba(20,184,166,0.18)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <BarChart2 size={14} style={{ color: "#2dd4bf" }} />
-            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Aderenza al Piano
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
               style={{ background: "rgba(20,184,166,0.15)", color: "#2dd4bf" }}>
               {weeklyAdherence.length}
             </span>
-            <span className="text-xs ml-auto" style={{ color: "rgba(245,240,232,0.35)" }}>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
               sessioni reali vs obiettivo · 4 settimane
             </span>
           </div>
@@ -604,7 +604,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs font-bold" style={{ color: barColor }}>{thisWeek}/{target}</p>
-                    <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>questa sett.</p>
+                    <p className="text-xs" style={{ color: "var(--text-dim)" }}>questa sett.</p>
                   </div>
                 </Link>
               );

@@ -342,7 +342,7 @@ function ClientiPageInner() {
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Obiettivo</label>
                   <select value={form.goal} onChange={(e) => setForm({ ...form, goal: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
+                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
                     <option value="massa">Massa muscolare</option>
                     <option value="dimagrimento">Dimagrimento</option>
                     <option value="tonificazione">Tonificazione</option>
@@ -353,7 +353,7 @@ function ClientiPageInner() {
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Livello</label>
                   <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
+                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
                     <option value="principiante">Principiante</option>
                     <option value="intermedio">Intermedio</option>
                     <option value="avanzato">Avanzato</option>
@@ -363,7 +363,7 @@ function ClientiPageInner() {
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Stato</label>
                   <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
+                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
                     <option value="attivo">Attivo</option>
                     <option value="in_pausa">In pausa</option>
                     <option value="inattivo">Inattivo</option>

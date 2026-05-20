@@ -634,7 +634,7 @@ export default function ClientDetailPage() {
 
   const inputClass = "w-full px-3 py-2.5 rounded-xl text-sm outline-none";
   const inputStyle = { background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" };
-  const selectStyle = { background: "rgba(26,26,26,1)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" };
+  const selectStyle = { background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" };
 
   const activePhase = [...client.phases]
     .filter((p) => !p.completed)

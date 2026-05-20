@@ -93,7 +93,7 @@ export default function FasiPage() {
           style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }} />
         <select value={filterType} onChange={(e) => setFilterType(e.target.value as FilterType)}
           className="px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
+          style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
           <option value="tutte">Tutti i tipi</option>
           <option value="bulk">Bulk</option>
           <option value="cut">Cut</option>
@@ -102,7 +102,7 @@ export default function FasiPage() {
         </select>
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
           className="px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
+          style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
           <option value="tutte">Tutti gli stati</option>
           <option value="attive">Attive</option>
           <option value="completate">Completate</option>

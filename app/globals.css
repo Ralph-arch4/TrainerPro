@@ -72,11 +72,11 @@
   --border-subtle: rgba(0,0,0,0.12);
   --border:        rgba(0,0,0,0.18);
 
-  /* Text — higher opacity than dark mode so descriptions stay readable on cream */
+  /* Text — solid colours for maximum contrast on cream/white backgrounds */
   --text:       #1A0808;
-  --text-muted: #4A2010;          /* ~82% perceived — clear on cream cards */
-  --text-dim:   rgba(26,8,8,0.58);
-  --text-faint: rgba(26,8,8,0.40);
+  --text-muted: #3D1A08;          /* dark warm brown — 14:1 on white */
+  --text-dim:   #6B3020;          /* medium warm brown — 7:1 on white */
+  --text-faint: #9B5030;          /* lighter warm brown — 4.5:1 on white */
 
   /* Glass */
   --glass-bg:      rgba(255,255,255,0.80);

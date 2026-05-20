@@ -440,7 +440,7 @@ function MilestoneBanner({ dayOnJourney, trainerName }: { dayOnJourney: number |
       <p className="text-xl font-black mb-1.5" style={{ color: "var(--text)" }}>
         {hit.label} insieme
       </p>
-      <p className="text-sm leading-relaxed" style={{ color: "rgba(245,240,232,0.68)", fontStyle: "italic" }}>
+      <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
         &ldquo;{hit.msg}&rdquo;
       </p>
       <p className="text-xs mt-3 font-semibold" style={{ color: "rgba(229,50,50,0.48)" }}>

@@ -70,7 +70,7 @@ export default function DietePage() {
         </div>
         <select value={goalFilter} onChange={(e) => setGoalFilter(e.target.value as GoalFilter)}
           className="px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
+          style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
           <option value="tutti">Tutti gli obiettivi</option>
           <option value="massa">Massa</option>
           <option value="dimagrimento">Dimagrimento</option>

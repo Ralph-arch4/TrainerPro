@@ -116,7 +116,7 @@ export default function MisurazioniPage() {
         </div>
         <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
           className="px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
+          style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
           <option value="recenti">Più recenti</option>
           <option value="peso_asc">Peso ↑</option>
           <option value="peso_desc">Peso ↓</option>
