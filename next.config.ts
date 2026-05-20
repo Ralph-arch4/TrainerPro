@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const securityHeaders = [
   // Prevent clickjacking — page cannot be embedded in an iframe
@@ -45,6 +46,15 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "*.supabase.co" },
     ],
+  },
+
+  webpack(config) {
+    // @mediapipe/pose has no proper ESM exports; TF.js pose-detection imports
+    // it statically but MoveNet (the only model we use) never calls it at runtime.
+    // Alias to an empty stub to prevent Turbopack/webpack build errors.
+    (config.resolve.alias as Record<string, string>)["@mediapipe/pose"] =
+      path.resolve("./lib/mediapipe-stub.js");
+    return config;
   },
 
   async headers() {
