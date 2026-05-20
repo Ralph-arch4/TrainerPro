@@ -2,7 +2,7 @@
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRef } from 'react'
-import { motion, useInView, useReducedMotion } from 'framer-motion'
+import { motion, useInView, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight, Zap, Shield, Clock } from 'lucide-react'
 
 // SSR-safe import — Three.js uses window/WebGL, unavailable in Node SSR
@@ -12,6 +12,12 @@ export default function HeroSection() {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
   const prefersReduced = useReducedMotion()
+
+  // Parallax: as user scrolls, text moves up at 25% of scroll speed
+  const { scrollY } = useScroll()
+  const textY = useTransform(scrollY, [0, 600], [0, prefersReduced ? 0 : -80])
+  const canvasY = useTransform(scrollY, [0, 600], [0, prefersReduced ? 0 : -40])
+  const bgY    = useTransform(scrollY, [0, 600], [0, prefersReduced ? 0 : -20])
 
   const fade = (delay: number) => ({
     initial: { opacity: 0, y: prefersReduced ? 0 : 22 },
@@ -25,8 +31,8 @@ export default function HeroSection() {
       className="relative min-h-screen flex items-center overflow-hidden pt-16 grid-texture"
       style={{ background: 'var(--black)' }}
     >
-      {/* ── Laser beams ─────────────────────────────────────────────── */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      {/* ── Laser beams (parallax slow layer) ──────────────────────── */}
+      <motion.div style={{ y: bgY }} className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         {[
           { top: '18%', height: '1.5px', op: 0.55, dur: '3.2s', delay: '0s'   },
           { top: '30%', height: '0.8px', op: 0.35, dur: '4.1s', delay: '0.7s' },
@@ -50,7 +56,7 @@ export default function HeroSection() {
             } as React.CSSProperties}
           />
         ))}
-      </div>
+      </motion.div>
 
       {/* ── Deep red ambient ────────────────────────────────────────── */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true"
@@ -69,8 +75,8 @@ export default function HeroSection() {
       />
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-12 grid lg:grid-cols-2 gap-12 lg:gap-6 items-center py-16 lg:py-0">
-        {/* ── Left: text content ────────────────────────────────────────── */}
-        <div className="flex flex-col items-start">
+        {/* ── Left: text content (parallax fast layer) ──────────────────── */}
+        <motion.div style={{ y: textY }} className="flex flex-col items-start">
           <motion.div {...fade(0)}>
             <div
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 tracking-wide"
@@ -161,15 +167,15 @@ export default function HeroSection() {
               </div>
             ))}
           </motion.div>
-        </div>
+        </motion.div>
 
-        {/* ── Right: HUD canvas ─────────────────────────────────────────── */}
+        {/* ── Right: HUD canvas (parallax mid layer) ────────────────────── */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={inView ? { opacity: 1 } : {}}
           transition={{ duration: 1.4, delay: 0.15 }}
           className="relative w-full flex items-center justify-center overflow-hidden"
-          style={{ height: 'clamp(320px, 45vw, 560px)' }}
+          style={{ height: 'clamp(320px, 45vw, 560px)', y: canvasY }}
         >
           <HeroCanvas />
         </motion.div>
