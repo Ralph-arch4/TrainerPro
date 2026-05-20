@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import HeroSection from "@/components/HeroSection";
 import { Users, Activity, UtensilsCrossed, TrendingUp, FileDown, Calculator, CheckCircle, ArrowRight, Dumbbell } from "lucide-react";
 
@@ -13,7 +13,7 @@ const features = [
 
 export default function LandingPage() {
   return (
-    <div style={{ background: "var(--black)", color: "var(--ivory)", minHeight: "100vh" }}>
+    <div style={{ background: "var(--black)", color: "var(--text)", minHeight: "100vh" }}>
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-12 h-16 glass-dark">
         {/* Subtle red line at bottom of nav */}
@@ -43,7 +43,7 @@ export default function LandingPage() {
           <h2 className="text-3xl lg:text-4xl font-bold text-center mb-3">
             Come <span className="accent-text">funziona</span>
           </h2>
-          <p className="text-center text-base mb-12" style={{ color: "rgba(245,240,232,0.5)" }}>
+          <p className="text-center text-base mb-12" style={{ color: "var(--text-muted)" }}>
             In 3 passi il tuo studio è operativo
           </p>
           <div className="grid md:grid-cols-3 gap-6">
@@ -57,8 +57,8 @@ export default function LandingPage() {
                   background: 'linear-gradient(135deg, rgba(229,50,50,0.18), rgba(229,50,50,0.04))',
                   WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                 }}>{step}</div>
-                <h3 className="font-bold mb-2 text-base" style={{ color: "var(--ivory)" }}>{title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: "rgba(245,240,232,0.5)" }}>{desc}</p>
+                <h3 className="font-bold mb-2 text-base" style={{ color: "var(--text)" }}>{title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>{desc}</p>
               </div>
             ))}
           </div>
@@ -71,7 +71,7 @@ export default function LandingPage() {
           <h2 className="text-3xl lg:text-4xl font-bold text-center mb-4">
             Tutto ciò che ti serve,<br /><span className="accent-text">niente di superfluo</span>
           </h2>
-          <p className="text-center text-base mb-12" style={{ color: "rgba(245,240,232,0.5)" }}>
+          <p className="text-center text-base mb-12" style={{ color: "var(--text-muted)" }}>
             Progettato specificamente per personal trainer nel mondo fitness e bodybuilding.
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -85,8 +85,8 @@ export default function LandingPage() {
                   }}>
                   <Icon size={20} style={{ color: "var(--accent)" }} />
                 </div>
-                <h3 className="font-bold mb-2 text-sm" style={{ color: "var(--ivory)" }}>{title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: "rgba(245,240,232,0.5)" }}>{desc}</p>
+                <h3 className="font-bold mb-2 text-sm" style={{ color: "var(--text)" }}>{title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>{desc}</p>
               </div>
             ))}
           </div>
@@ -99,13 +99,13 @@ export default function LandingPage() {
           <h2 className="text-3xl lg:text-4xl font-bold mb-4">
             Tutto incluso, <span className="accent-text">gratis</span>
           </h2>
-          <p className="text-base mb-10" style={{ color: "rgba(245,240,232,0.5)" }}>
+          <p className="text-base mb-10" style={{ color: "var(--text-muted)" }}>
             Nessuna carta di credito. Nessun piano a pagamento. Accesso completo a tutte le funzionalità dal primo giorno.
           </p>
           <div className="card-luxury rounded-2xl p-8 text-left max-w-md mx-auto">
             <div className="flex items-baseline gap-2 mb-6">
-              <span className="text-5xl font-bold" style={{ color: "var(--ivory)" }}>€0</span>
-              <span className="text-base" style={{ color: "rgba(245,240,232,0.4)" }}>per sempre</span>
+              <span className="text-5xl font-bold" style={{ color: "var(--text)" }}>€0</span>
+              <span className="text-base" style={{ color: "var(--text-dim)" }}>per sempre</span>
             </div>
             <ul className="space-y-3 mb-8">
               {[
@@ -119,7 +119,7 @@ export default function LandingPage() {
                 "Export PDF completo",
                 "Link condiviso per ogni cliente",
               ].map((f) => (
-                <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "rgba(245,240,232,0.75)" }}>
+                <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: "var(--text-muted)" }}>
                   <CheckCircle size={15} className="flex-shrink-0" style={{ color: "var(--accent)" }} />
                   {f}
                 </li>
@@ -145,8 +145,8 @@ export default function LandingPage() {
             { q: "Quanti clienti posso gestire?", a: "Clienti illimitati. Non c'è nessun tetto massimo: puoi aggiungere tutti i clienti che vuoi dal primo giorno." },
           ].map(({ q, a }) => (
             <div key={q} className="mb-6 pb-6" style={{ borderBottom: "1px solid rgba(229,50,50,0.08)" }}>
-              <h3 className="font-semibold mb-2" style={{ color: "var(--ivory)" }}>{q}</h3>
-              <p className="text-sm" style={{ color: "rgba(245,240,232,0.55)" }}>{a}</p>
+              <h3 className="font-semibold mb-2" style={{ color: "var(--text)" }}>{q}</h3>
+              <p className="text-sm" style={{ color: "var(--text-muted)" }}>{a}</p>
             </div>
           ))}
         </div>
@@ -175,7 +175,7 @@ export default function LandingPage() {
           <h2 className="text-3xl lg:text-5xl font-black mb-4 tracking-tight">
             Pronto a fare il <span className="accent-text">salto</span>?
           </h2>
-          <p className="text-base mb-10 leading-relaxed" style={{ color: "rgba(245,240,232,0.5)" }}>
+          <p className="text-base mb-10 leading-relaxed" style={{ color: "var(--text-muted)" }}>
             Unisciti ai personal trainer che usano TrainerPro per gestire il loro business in modo professionale.
           </p>
           <Link href="/register" className="accent-btn inline-flex items-center gap-2 px-10 py-4 rounded-xl text-base font-bold">
@@ -185,7 +185,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="px-6 lg:px-12 py-8 text-center text-sm" style={{ borderTop: "1px solid rgba(229,50,50,0.08)", color: "rgba(245,240,232,0.3)" }}>
+      <footer className="px-6 lg:px-12 py-8 text-center text-sm" style={{ borderTop: "1px solid rgba(229,50,50,0.08)", color: "var(--text-dim)" }}>
         © {new Date().getFullYear()} TrainerPro · Tutti i diritti riservati
       </footer>
     </div>

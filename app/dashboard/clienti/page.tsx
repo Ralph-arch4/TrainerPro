@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -155,8 +155,8 @@ function ClientiPageInner() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--ivory)" }}>Clienti</h1>
-          <p className="text-sm mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>
+          <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Clienti</h1>
+          <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
             {clients.length} {clients.length === 1 ? "cliente" : "clienti"} totali
           </p>
         </div>
@@ -168,15 +168,15 @@ function ClientiPageInner() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(245,240,232,0.35)" }} />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-dim)" }} />
           <input value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Cerca per nome o email…"
             className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--ivory)" }} />
+            style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }} />
         </div>
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as Status)}
           className="px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--ivory)" }}>
+          style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
           <option value="tutti">Tutti gli stati</option>
           <option value="attivo">Attivi</option>
           <option value="in_pausa">In pausa</option>
@@ -184,7 +184,7 @@ function ClientiPageInner() {
         </select>
         <select value={filterGoal} onChange={(e) => setFilterGoal(e.target.value as Goal)}
           className="px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--ivory)" }}>
+          style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
           <option value="tutti">Tutti gli obiettivi</option>
           <option value="massa">Massa</option>
           <option value="dimagrimento">Dimagrimento</option>
@@ -197,10 +197,10 @@ function ClientiPageInner() {
       {filtered.length === 0 && (
         <div className="text-center py-20 card-luxury rounded-2xl">
           <Users size={48} className="mx-auto mb-4" style={{ color: "rgba(255,107,43,0.25)" }} />
-          <p className="font-semibold mb-1" style={{ color: "var(--ivory)" }}>
+          <p className="font-semibold mb-1" style={{ color: "var(--text)" }}>
             {clients.length === 0 ? "Nessun cliente ancora" : "Nessun risultato"}
           </p>
-          <p className="text-sm mb-5" style={{ color: "rgba(245,240,232,0.4)" }}>
+          <p className="text-sm mb-5" style={{ color: "var(--text-dim)" }}>
             {clients.length === 0 ? "Aggiungi il tuo primo cliente per iniziare" : "Prova a modificare i filtri"}
           </p>
           {clients.length === 0 && (
@@ -239,10 +239,10 @@ function ClientiPageInner() {
                   {client.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-semibold" style={{ color: "var(--ivory)" }}>{client.name}</p>
+                  <p className="font-semibold" style={{ color: "var(--text)" }}>{client.name}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <div className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor[client.status] }} />
-                    <span className="text-xs" style={{ color: "rgba(245,240,232,0.5)" }}>{statusLabel[client.status]}</span>
+                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>{statusLabel[client.status]}</span>
                   </div>
                 </div>
               </div>
@@ -259,12 +259,12 @@ function ClientiPageInner() {
 
             <div className="space-y-2 mb-4">
               {client.email && (
-                <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(245,240,232,0.5)" }}>
+                <div className="flex items-center gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
                   <Mail size={12} /> <span className="truncate">{client.email}</span>
                 </div>
               )}
               {client.phone && (
-                <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(245,240,232,0.5)" }}>
+                <div className="flex items-center gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
                   <Phone size={12} /> {client.phone}
                 </div>
               )}
@@ -277,7 +277,7 @@ function ClientiPageInner() {
                   {goalLabel[client.goal]}
                 </span>
               ) : <span />}
-              <div className="flex items-center gap-3 text-xs" style={{ color: "rgba(245,240,232,0.35)" }}>
+              <div className="flex items-center gap-3 text-xs" style={{ color: "var(--text-dim)" }}>
                 <span className="flex items-center gap-1"><Activity size={11} /> {client.phases.length} fasi</span>
                 {client.monthlyFee && <span style={{ color: "var(--accent-light)" }}>€{client.monthlyFee}/m</span>}
               </div>
@@ -290,13 +290,13 @@ function ClientiPageInner() {
       {/* Add client modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
-          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)" }} />
+          <div className="absolute inset-0" style={{ background: "var(--surface-modal)" }} />
           <div className="relative w-full max-w-lg glass-dark rounded-2xl p-6 fade-in max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold" style={{ color: "var(--ivory)" }}>Nuovo cliente</h2>
+              <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>Nuovo cliente</h2>
               <button onClick={() => { setShowModal(false); setSaveError(""); }} className="p-1.5 rounded-lg hover:bg-white/5">
-                <X size={16} style={{ color: "rgba(245,240,232,0.5)" }} />
+                <X size={16} style={{ color: "var(--text-muted)" }} />
               </button>
             </div>
             {saveError && (
@@ -309,40 +309,40 @@ function ClientiPageInner() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Nome completo *</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Nome completo *</label>
                   <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="Mario Rossi" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Email</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Email</label>
                   <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
                     placeholder="email@esempio.com" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Telefono</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Telefono</label>
                   <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     placeholder="+39 333 123 4567" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Data di nascita</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Data di nascita</label>
                   <input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Quota mensile (€)</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Quota mensile (€)</label>
                   <input type="number" value={form.monthlyFee} onChange={(e) => setForm({ ...form, monthlyFee: e.target.value })}
                     placeholder="150" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Obiettivo</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Obiettivo</label>
                   <select value={form.goal} onChange={(e) => setForm({ ...form, goal: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }}>
+                    style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
                     <option value="massa">Massa muscolare</option>
                     <option value="dimagrimento">Dimagrimento</option>
                     <option value="tonificazione">Tonificazione</option>
@@ -350,20 +350,20 @@ function ClientiPageInner() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Livello</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Livello</label>
                   <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }}>
+                    style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
                     <option value="principiante">Principiante</option>
                     <option value="intermedio">Intermedio</option>
                     <option value="avanzato">Avanzato</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.6)" }}>Stato</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Stato</label>
                   <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }}>
+                    style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
                     <option value="attivo">Attivo</option>
                     <option value="in_pausa">In pausa</option>
                     <option value="inattivo">Inattivo</option>
@@ -375,7 +375,7 @@ function ClientiPageInner() {
             <div className="flex gap-3 mt-6">
               <button onClick={() => setShowModal(false)}
                 className="flex-1 py-2.5 rounded-xl text-sm transition-all hover:bg-white/5"
-                style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.6)" }}>
+                style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}>
                 Annulla
               </button>
               <button onClick={handleSave} disabled={saving || !form.name.trim()}

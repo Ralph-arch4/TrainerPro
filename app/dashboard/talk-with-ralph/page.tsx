@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, useRef } from "react";
 import { Bug, Lightbulb, Zap, Trash2, Loader2, Send, Check, CheckCheck } from "lucide-react";
 import { dbFeedback, type FeedbackNote } from "@/lib/db";
@@ -15,8 +15,8 @@ const CAT: Record<Category, { label: string; color: string; bg: string; border: 
 };
 
 const STATUS_ICON = {
-  nuovo:     <Check size={12} style={{ color: "rgba(245,240,232,0.3)" }} />,
-  in_review: <CheckCheck size={12} style={{ color: "rgba(245,240,232,0.45)" }} />,
+  nuovo:     <Check size={12} style={{ color: "var(--text-dim)" }} />,
+  in_review: <CheckCheck size={12} style={{ color: "var(--text-muted)" }} />,
   fatto:     <CheckCheck size={12} style={{ color: "#22c55e" }} />,
 };
 
@@ -88,7 +88,7 @@ export default function TalkWithRalphPage() {
       <div className="flex items-center gap-3 px-5 py-4 flex-shrink-0"
         style={{
           background: "rgba(10,8,20,0.95)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          borderBottom: "1px solid var(--border-subtle)",
           backdropFilter: "blur(20px)",
           paddingTop: "calc(env(safe-area-inset-top, 0px) + 1rem)",
         }}>
@@ -102,7 +102,7 @@ export default function TalkWithRalphPage() {
             style={{ background: "#22c55e", borderColor: "var(--black)" }} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-black text-sm" style={{ color: "var(--ivory)" }}>Ralph</p>
+          <p className="font-black text-sm" style={{ color: "var(--text)" }}>Ralph</p>
           <p className="text-xs" style={{ color: "#22c55e" }}>Platform developer · in ascolto</p>
         </div>
         {/* Count badges */}
@@ -131,13 +131,13 @@ export default function TalkWithRalphPage() {
           </div>
           <div className="max-w-xs rounded-2xl rounded-bl-sm px-4 py-3"
             style={{ background: "rgba(229,50,50,0.1)", border: "1px solid rgba(229,50,50,0.15)" }}>
-            <p className="text-sm" style={{ color: "var(--ivory)" }}>
+            <p className="text-sm" style={{ color: "var(--text)" }}>
               Ciao! Sono Ralph, il dev della piattaforma.
             </p>
-            <p className="text-sm mt-1" style={{ color: "rgba(245,240,232,0.6)" }}>
+            <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
               Segnalami bug 🐛, idee ✨ o miglioramenti 🚀 — li leggo ogni mattina e ti aggiorno sullo status.
             </p>
-            <p className="text-xs mt-2" style={{ color: "rgba(245,240,232,0.25)" }}>oggi</p>
+            <p className="text-xs mt-2" style={{ color: "var(--text-faint)" }}>oggi</p>
           </div>
         </div>
 
@@ -168,10 +168,10 @@ export default function TalkWithRalphPage() {
                     border: `1px solid ${meta.border}`,
                     boxShadow: `0 4px 20px rgba(0,0,0,0.3)`,
                   }}>
-                  <p className="text-sm leading-relaxed" style={{ color: "var(--ivory)" }}>{note.description}</p>
+                  <p className="text-sm leading-relaxed" style={{ color: "var(--text)" }}>{note.description}</p>
                   {/* Footer */}
                   <div className="flex items-center justify-between gap-3 mt-2">
-                    <span className="text-xs" style={{ color: "rgba(245,240,232,0.3)" }}>{fmtDate(note.created_at)}</span>
+                    <span className="text-xs" style={{ color: "var(--text-dim)" }}>{fmtDate(note.created_at)}</span>
                     <div className="flex items-center gap-2">
                       {STATUS_ICON[note.status as keyof typeof STATUS_ICON] ?? STATUS_ICON.nuovo}
                       <button
@@ -196,7 +196,7 @@ export default function TalkWithRalphPage() {
         style={{
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)",
           background: "rgba(10,8,20,0.95)",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
+          borderTop: "1px solid var(--border-subtle)",
           backdropFilter: "blur(20px)",
         }}>
 
@@ -209,9 +209,9 @@ export default function TalkWithRalphPage() {
               <button key={c} onClick={() => setCat(c)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
                 style={{
-                  background: active ? bg : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${active ? border : "rgba(255,255,255,0.08)"}`,
-                  color: active ? color : "rgba(245,240,232,0.35)",
+                  background: active ? bg : "var(--surface-sm)",
+                  border: `1px solid ${active ? border : "var(--surface-md)"}`,
+                  color: active ? color : "var(--text-dim)",
                   transform: active ? "scale(1.03)" : "scale(1)",
                 }}>
                 <Icon size={11} /> {label}
@@ -235,9 +235,9 @@ export default function TalkWithRalphPage() {
             }
             className="flex-1 px-4 py-3 rounded-2xl text-sm outline-none resize-none"
             style={{
-              background: "rgba(255,255,255,0.06)",
+              background: "var(--surface-md)",
               border: `1px solid ${CAT[cat].border}`,
-              color: "var(--ivory)",
+              color: "var(--text)",
               maxHeight: "120px",
               lineHeight: "1.5",
             }}
@@ -249,17 +249,17 @@ export default function TalkWithRalphPage() {
             style={{
               background: text.trim()
                 ? `linear-gradient(135deg, ${CAT[cat].color}, ${CAT[cat].color}aa)`
-                : "rgba(255,255,255,0.06)",
+                : "var(--surface-md)",
               boxShadow: text.trim() ? `0 4px 16px ${CAT[cat].color}40` : "none",
               transform: text.trim() ? "scale(1.05)" : "scale(1)",
             }}>
             {sending
               ? <Loader2 size={17} className="animate-spin" style={{ color: "#fff" }} />
-              : <Send size={17} style={{ color: text.trim() ? "#fff" : "rgba(245,240,232,0.3)" }} />
+              : <Send size={17} style={{ color: text.trim() ? "#fff" : "var(--text-dim)" }} />
             }
           </button>
         </div>
-        <p className="text-xs mt-1.5 text-center" style={{ color: "rgba(245,240,232,0.18)" }}>
+        <p className="text-xs mt-1.5 text-center" style={{ color: "var(--text-faint)" }}>
           ⌘ + Invio per inviare · ✓ = nuovo · ✓✓ = in review · ✓✓ verde = fatto
         </p>
       </div>

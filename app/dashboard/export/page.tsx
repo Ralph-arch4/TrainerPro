@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
 import { FileDown, Printer, CheckCircle2, Dumbbell, UtensilsCrossed, TrendingUp, Activity, User, Users } from "lucide-react";
@@ -49,19 +49,19 @@ export default function ExportPage() {
     return (
       <div className="p-6 lg:p-8 fade-in">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold" style={{ color: "var(--ivory)" }}>Esporta PDF</h1>
-          <p className="text-sm mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>Genera un documento completo da condividere con il cliente</p>
+          <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Esporta PDF</h1>
+          <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>Genera un documento completo da condividere con il cliente</p>
         </div>
         <div className="card-luxury rounded-2xl p-12 text-center">
           <div className="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center"
             style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.15)" }}>
             <FileDown size={28} style={{ color: "rgba(255,107,43,0.5)" }} />
           </div>
-          <h2 className="text-lg font-bold mb-2" style={{ color: "var(--ivory)" }}>Nessun cliente da esportare</h2>
-          <p className="text-sm mb-1 max-w-sm mx-auto" style={{ color: "rgba(245,240,232,0.5)" }}>
+          <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>Nessun cliente da esportare</h2>
+          <p className="text-sm mb-1 max-w-sm mx-auto" style={{ color: "var(--text-muted)" }}>
             Aggiungi almeno un cliente per poter generare schede, piani alimentari e report in PDF.
           </p>
-          <p className="text-xs mb-6 max-w-sm mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>
+          <p className="text-xs mb-6 max-w-sm mx-auto" style={{ color: "var(--text-dim)" }}>
             I PDF includono: anagrafica, fasi di allenamento, schede, diete e misurazioni.
           </p>
           <a href="/dashboard/clienti" className="accent-btn inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm">
@@ -77,8 +77,8 @@ export default function ExportPage() {
       {/* Screen UI */}
       <div className="p-6 lg:p-8 fade-in print:hidden">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold" style={{ color: "var(--ivory)" }}>Esporta PDF</h1>
-          <p className="text-sm mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>
+          <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Esporta PDF</h1>
+          <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
             Genera un documento completo da condividere con il cliente
           </p>
         </div>
@@ -87,27 +87,27 @@ export default function ExportPage() {
           {/* Config panel */}
           <div className="space-y-4">
             <div className="card-luxury rounded-2xl p-5">
-              <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--ivory)" }}>Seleziona cliente</h2>
+              <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--text)" }}>Seleziona cliente</h2>
               <select value={selectedClientId} onChange={(e) => setSelectedClientId(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }}>
+                style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
 
             <div className="card-luxury rounded-2xl p-5">
-              <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--ivory)" }}>Sezioni da includere</h2>
+              <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--text)" }}>Sezioni da includere</h2>
               <div className="space-y-2">
                 {sectionOptions.map(({ key, label, icon: Icon, count }) => (
                   <button key={key} onClick={() => toggleSection(key)}
                     className="w-full flex items-center justify-between p-3 rounded-xl transition-all"
                     style={{
-                      background: sections[key] ? "rgba(255,107,43,0.08)" : "rgba(255,255,255,0.03)",
-                      border: `1px solid ${sections[key] ? "rgba(255,107,43,0.25)" : "rgba(255,255,255,0.06)"}`,
+                      background: sections[key] ? "rgba(255,107,43,0.08)" : "var(--surface-xs)",
+                      border: `1px solid ${sections[key] ? "rgba(255,107,43,0.25)" : "var(--surface-md)"}`,
                     }}>
                     <div className="flex items-center gap-3">
-                      <Icon size={15} style={{ color: sections[key] ? "var(--accent)" : "rgba(245,240,232,0.35)" }} />
-                      <span className="text-sm" style={{ color: sections[key] ? "var(--ivory)" : "rgba(245,240,232,0.45)" }}>{label}</span>
+                      <Icon size={15} style={{ color: sections[key] ? "var(--accent)" : "var(--text-dim)" }} />
+                      <span className="text-sm" style={{ color: sections[key] ? "var(--ivory)" : "var(--text-muted)" }}>{label}</span>
                       {count !== undefined && count > 0 && (
                         <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "rgba(255,107,43,0.12)", color: "var(--accent-light)" }}>{count}</span>
                       )}
@@ -123,18 +123,18 @@ export default function ExportPage() {
               {printed ? <CheckCircle2 size={16} /> : <Printer size={16} />}
               {printed ? "Dialogo di stampa aperto!" : "Genera PDF / Stampa"}
             </button>
-            <p className="text-xs text-center" style={{ color: "rgba(245,240,232,0.3)" }}>
+            <p className="text-xs text-center" style={{ color: "var(--text-dim)" }}>
               Usa il browser per salvare come PDF dalla finestra di stampa
             </p>
           </div>
 
           {/* Preview */}
           <div className="card-luxury rounded-2xl p-5 overflow-auto" style={{ maxHeight: "70vh" }}>
-            <p className="text-xs font-semibold mb-4" style={{ color: "rgba(245,240,232,0.4)" }}>ANTEPRIMA</p>
+            <p className="text-xs font-semibold mb-4" style={{ color: "var(--text-dim)" }}>ANTEPRIMA</p>
             {hydrated && client
               ? <PrintPreview client={client} sections={sections} trainerName={user?.name ?? "TrainerPro"} />
               : (
-                <div className="flex flex-col items-center justify-center py-16" style={{ color: "rgba(245,240,232,0.25)" }}>
+                <div className="flex flex-col items-center justify-center py-16" style={{ color: "var(--text-faint)" }}>
                   <FileDown size={40} className="mb-3" style={{ color: "rgba(255,107,43,0.15)" }} />
                   <p className="text-sm">Seleziona un cliente per vedere l&apos;anteprima</p>
                 </div>
@@ -161,9 +161,9 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
   forPrint?: boolean;
 }) {
   const textColor = forPrint ? "#111" : "var(--ivory)";
-  const mutedColor = forPrint ? "#555" : "rgba(245,240,232,0.55)";
+  const mutedColor = forPrint ? "#555" : "var(--text-muted)";
   const borderColor = forPrint ? "#e5e7eb" : "rgba(255,107,43,0.12)";
-  const bgCard = forPrint ? "#f9fafb" : "rgba(255,255,255,0.04)";
+  const bgCard = forPrint ? "#f9fafb" : "var(--surface-sm)";
 
   return (
     <div style={{ color: textColor, fontSize: "13px" }}>
@@ -270,7 +270,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
                           </thead>
                           <tbody>
                             {dayExs.map((ex, idx) => (
-                              <tr key={ex.id} style={{ background: idx % 2 === 0 ? (forPrint ? "#f9fafb" : "rgba(255,255,255,0.02)") : "transparent" }}>
+                              <tr key={ex.id} style={{ background: idx % 2 === 0 ? (forPrint ? "#f9fafb" : "var(--surface-xs)") : "transparent" }}>
                                 <td style={{ padding: "4px 0" }}>
                                   <span style={{ fontWeight: 500 }}>{ex.name}</span>
                                   {ex.muscleGroup && <span style={{ color: mutedColor, marginLeft: "6px", fontSize: "11px" }}>({ex.muscleGroup})</span>}
@@ -332,7 +332,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
                           <tbody>
                             {meal.items.map((item, ii) => (
-                              <tr key={item.id} style={{ background: ii % 2 === 0 ? (forPrint ? "#f9fafb" : "rgba(255,255,255,0.02)") : "transparent" }}>
+                              <tr key={item.id} style={{ background: ii % 2 === 0 ? (forPrint ? "#f9fafb" : "var(--surface-xs)") : "transparent" }}>
                                 <td style={{ padding: "3px 0" }}>{item.name || "—"}</td>
                                 <td style={{ textAlign: "right", padding: "3px 0", color: mutedColor, paddingLeft: "12px", whiteSpace: "nowrap" }}>
                                   {item.gramsMax && item.gramsMax > item.grams ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}

@@ -44,10 +44,10 @@ export default function RegisterPage() {
           <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)" }}>
             <CheckCircle2 size={32} style={{ color: "#22c55e" }} />
           </div>
-          <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--ivory)" }}>Controlla la tua email</h2>
-          <p className="text-sm mb-6" style={{ color: "rgba(245,240,232,0.6)" }}>
+          <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--text)" }}>Controlla la tua email</h2>
+          <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
             Abbiamo inviato un link di conferma a{" "}
-            <strong style={{ color: "var(--ivory)" }}>{email}</strong>.<br />
+            <strong style={{ color: "var(--text)" }}>{email}</strong>.<br />
             Clicca il link per attivare il tuo account TrainerPro.
           </p>
           <Link href="/login" className="inline-flex items-center gap-2 accent-btn px-6 py-2.5 rounded-xl text-sm">
@@ -101,14 +101,14 @@ export default function RegisterPage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold" style={{ color: "#F5F0E8" }}>{label}</p>
-                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>{desc}</p>
+                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.55)" }}>{desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <p className="text-sm italic relative z-10" style={{ color: "rgba(245,240,232,0.35)" }}>
+        <p className="text-sm italic relative z-10" style={{ color: "rgba(245,240,232,0.38)" }}>
           "Pericolosamente personalizzato sul tuo modus operandi."
         </p>
       </div>
@@ -146,7 +146,7 @@ export default function RegisterPage() {
                   <input type="text" value={name} onChange={(e) => setName(e.target.value)}
                     placeholder="Mario Rossi" required
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
                 </div>
               </div>
 
@@ -157,7 +157,7 @@ export default function RegisterPage() {
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                     placeholder="il-tuo@email.com" required
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
                 </div>
               </div>
 
@@ -168,7 +168,7 @@ export default function RegisterPage() {
                   <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                     placeholder="Minimo 6 caratteri" required minLength={6}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
                 </div>
               </div>
 

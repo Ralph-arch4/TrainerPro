@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
@@ -91,12 +91,12 @@ export default function IntakePage() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-start justify-between gap-3 mb-1">
-          <h1 className="text-2xl lg:text-3xl font-bold" style={{ color: "var(--ivory)" }}>
+          <h1 className="text-2xl lg:text-3xl font-bold" style={{ color: "var(--text)" }}>
             Form <span className="accent-text">Intake</span>
           </h1>
           <div className="flex items-center gap-2 flex-shrink-0">
             <button onClick={load} className="p-2 rounded-xl transition-all hover:bg-white/5" title="Aggiorna">
-              <RefreshCw size={16} style={{ color: "rgba(245,240,232,0.4)" }} />
+              <RefreshCw size={16} style={{ color: "var(--text-dim)" }} />
             </button>
             <button onClick={() => setShowCreate(true)}
               className="accent-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm whitespace-nowrap">
@@ -104,7 +104,7 @@ export default function IntakePage() {
             </button>
           </div>
         </div>
-        <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
           Crea un link da inviare al cliente — compila il questionario senza registrarsi.
         </p>
       </div>
@@ -115,12 +115,12 @@ export default function IntakePage() {
           <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.7)" }} />
           <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold" style={{ color: "var(--ivory)" }}>Nuovo form intake</h2>
-              <button onClick={() => setShowCreate(false)}><X size={16} style={{ color: "rgba(245,240,232,0.4)" }} /></button>
+              <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>Nuovo form intake</h2>
+              <button onClick={() => setShowCreate(false)}><X size={16} style={{ color: "var(--text-dim)" }} /></button>
             </div>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--ivory)" }}>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>
                   Etichetta interna
                 </label>
                 <input
@@ -130,9 +130,9 @@ export default function IntakePage() {
                   placeholder="es. Mario Rossi – Marzo 2025"
                   required
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }}
+                  style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}
                 />
-                <p className="text-xs mt-1.5" style={{ color: "rgba(245,240,232,0.35)" }}>
+                <p className="text-xs mt-1.5" style={{ color: "var(--text-dim)" }}>
                   Solo tu la vedi — serve per riconoscere il form nella lista.
                 </p>
               </div>
@@ -156,8 +156,8 @@ export default function IntakePage() {
             style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.15)" }}>
             <ClipboardList size={28} style={{ color: "rgba(255,107,43,0.5)" }} />
           </div>
-          <h2 className="text-lg font-bold mb-2" style={{ color: "var(--ivory)" }}>Nessun form ancora</h2>
-          <p className="text-sm mb-6 max-w-sm mx-auto" style={{ color: "rgba(245,240,232,0.5)" }}>
+          <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>Nessun form ancora</h2>
+          <p className="text-sm mb-6 max-w-sm mx-auto" style={{ color: "var(--text-muted)" }}>
             Crea un form intake, copia il link e invialo al cliente. Quando lo compila, trovi tutti i dati qui.
           </p>
           <button onClick={() => setShowCreate(true)}
@@ -173,7 +173,7 @@ export default function IntakePage() {
             {submitted.length > 0 && (
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider mb-2 px-1"
-                  style={{ color: "rgba(245,240,232,0.35)" }}>
+                  style={{ color: "var(--text-dim)" }}>
                   Compilati ({submitted.length})
                 </p>
                 {submitted.map((f) => (
@@ -189,7 +189,7 @@ export default function IntakePage() {
             {pending.length > 0 && (
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider mb-2 px-1"
-                  style={{ color: "rgba(245,240,232,0.35)" }}>
+                  style={{ color: "var(--text-dim)" }}>
                   In attesa ({pending.length})
                 </p>
                 {pending.map((f) => (
@@ -210,8 +210,8 @@ export default function IntakePage() {
             ) : selected?.status === "pending" ? (
               <div className="card-luxury rounded-2xl p-8 text-center">
                 <Clock size={36} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.3)" }} />
-                <p className="text-sm font-medium mb-1" style={{ color: "var(--ivory)" }}>In attesa di risposta</p>
-                <p className="text-xs mb-5" style={{ color: "rgba(245,240,232,0.4)" }}>
+                <p className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>In attesa di risposta</p>
+                <p className="text-xs mb-5" style={{ color: "var(--text-dim)" }}>
                   Il cliente non ha ancora compilato il form.
                 </p>
                 <div className="flex flex-col gap-2 items-center">
@@ -221,7 +221,7 @@ export default function IntakePage() {
                     {downloadedId === selected.id ? <CheckCircle2 size={15} /> : <FileDown size={15} />}
                     {downloadedId === selected.id ? "Scaricato!" : "Scarica HTML da inviare"}
                   </button>
-                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.3)" }}>
+                  <p className="text-xs" style={{ color: "var(--text-dim)" }}>
                     oppure
                   </p>
                   <button
@@ -236,7 +236,7 @@ export default function IntakePage() {
             ) : (
               <div className="card-luxury rounded-2xl p-8 text-center">
                 <ChevronRight size={36} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.15)" }} />
-                <p className="text-sm" style={{ color: "rgba(245,240,232,0.35)" }}>
+                <p className="text-sm" style={{ color: "var(--text-dim)" }}>
                   Seleziona un form dalla lista per vedere i dettagli
                 </p>
               </div>
@@ -262,16 +262,16 @@ function FormRow({ form, selected, onSelect, onCopy, copied, onDownload, downloa
       onClick={onSelect}>
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: isSubmitted ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.05)" }}>
+          style={{ background: isSubmitted ? "rgba(34,197,94,0.1)" : "var(--surface)" }}>
           {isSubmitted
             ? <CheckCircle2 size={17} style={{ color: "#22c55e" }} />
-            : <Clock size={17} style={{ color: "rgba(245,240,232,0.35)" }} />}
+            : <Clock size={17} style={{ color: "var(--text-dim)" }} />}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>
+          <p className="text-sm font-semibold truncate" style={{ color: "var(--text)" }}>
             {form.label ?? "Form senza etichetta"}
           </p>
-          <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
+          <p className="text-xs" style={{ color: "var(--text-dim)" }}>
             {isSubmitted && form.submitted_at
               ? `Compilato ${fmtDate(form.submitted_at)}`
               : `Creato ${fmtDate(form.created_at)}`}
@@ -282,18 +282,18 @@ function FormRow({ form, selected, onSelect, onCopy, copied, onDownload, downloa
           <button onClick={onDownload}
             title="Scarica HTML da inviare al cliente"
             className="p-2 rounded-lg transition-all hover:bg-white/5"
-            style={{ color: downloaded ? "#22c55e" : "rgba(245,240,232,0.35)" }}>
+            style={{ color: downloaded ? "#22c55e" : "var(--text-dim)" }}>
             {downloaded ? <CheckCircle2 size={14} /> : <FileDown size={14} />}
           </button>
           <button onClick={onCopy}
             title="Copia link"
             className="p-2 rounded-lg transition-all hover:bg-white/5"
-            style={{ color: copied ? "#22c55e" : "rgba(245,240,232,0.35)" }}>
+            style={{ color: copied ? "#22c55e" : "var(--text-dim)" }}>
             {copied ? <CheckCircle2 size={14} /> : <Copy size={14} />}
           </button>
           <button onClick={onDelete} disabled={deleting}
             className="p-2 rounded-lg transition-all hover:bg-red-500/10"
-            style={{ color: "rgba(245,240,232,0.25)" }}>
+            style={{ color: "var(--text-faint)" }}>
             {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
           </button>
         </div>
@@ -366,8 +366,8 @@ function ResponseDetail({ form }: { form: IntakeForm }) {
       <div className="flex gap-2">
         <span className="text-xs font-bold flex-shrink-0 mt-0.5 w-5 text-right" style={{ color: "rgba(255,107,43,0.5)" }}>{n}.</span>
         <div className="flex-1 min-w-0">
-          <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{label} </span>
-          <span className="text-sm" style={{ color: "var(--ivory)" }}>{display}</span>
+          <span className="text-xs" style={{ color: "var(--text-dim)" }}>{label} </span>
+          <span className="text-sm" style={{ color: "var(--text)" }}>{display}</span>
         </div>
       </div>
     );
@@ -378,8 +378,8 @@ function ResponseDetail({ form }: { form: IntakeForm }) {
       {/* Header bar */}
       <div className="p-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,107,43,0.1)" }}>
         <div>
-          <h2 className="text-base font-bold" style={{ color: "var(--ivory)" }}>{r.fullName}</h2>
-          <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
+          <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>{r.fullName}</h2>
+          <p className="text-xs" style={{ color: "var(--text-dim)" }}>
             {form.submitted_at ? `Compilato ${fmtDate(form.submitted_at)}` : ""}
             {form.label ? ` · ${form.label}` : ""}
           </p>

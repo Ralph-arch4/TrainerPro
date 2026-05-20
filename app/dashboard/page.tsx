@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useMemo } from "react";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
@@ -325,11 +325,11 @@ export default function DashboardPage() {
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold" style={{ color: "var(--ivory)" }}>
+        <h1 className="text-2xl lg:text-3xl font-bold" style={{ color: "var(--text)" }}>
           {timeGreeting()},{" "}
           <span className="accent-text">{firstName}</span> 👋
         </h1>
-        <p className="text-sm mt-1" style={{ color: "rgba(245,240,232,0.5)" }}>
+        <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
           {clients.length === 0
             ? "Inizia configurando il tuo studio"
             : `${clients.length} ${clients.length === 1 ? "cliente" : "clienti"} · ${totalPhases} fasi · ${totalMeasurements} misurazioni`}
@@ -342,8 +342,8 @@ export default function DashboardPage() {
           <div key={label} className="card-luxury rounded-2xl p-4 lg:p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>{label}</p>
-                <p className="text-3xl lg:text-3xl font-bold" style={{ color: "var(--ivory)" }}>{value}</p>
+                <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>{label}</p>
+                <p className="text-3xl lg:text-3xl font-bold" style={{ color: "var(--text)" }}>{value}</p>
               </div>
               <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{ background: `${color}22` }}>
@@ -358,18 +358,18 @@ export default function DashboardPage() {
       {activeClients > 0 && (
         <div className="flex gap-3 mb-6 flex-wrap">
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            style={{ background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
             <Euro size={13} style={{ color: "#fbbf24" }} />
-            <span style={{ color: "rgba(245,240,232,0.5)" }}>Media/cliente:</span>
-            <span className="font-bold" style={{ color: "var(--ivory)" }}>
+            <span style={{ color: "var(--text-muted)" }}>Media/cliente:</span>
+            <span className="font-bold" style={{ color: "var(--text)" }}>
               {avgRevenue > 0 ? `€${avgRevenue}/mese` : "—"}
             </span>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            style={{ background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
             <Dumbbell size={13} style={{ color: "var(--accent)" }} />
-            <span style={{ color: "rgba(245,240,232,0.5)" }}>Schede totali:</span>
-            <span className="font-bold" style={{ color: "var(--ivory)" }}>{totalWorkoutPlans}</span>
+            <span style={{ color: "var(--text-muted)" }}>Schede totali:</span>
+            <span className="font-bold" style={{ color: "var(--text)" }}>{totalWorkoutPlans}</span>
           </div>
           {inactiveCount > 0 && (
             <Link href="/dashboard/clienti"
@@ -390,7 +390,7 @@ export default function DashboardPage() {
             <div className="rounded-2xl p-4" style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.15)" }}>
               <div className="flex items-center gap-2 mb-3">
                 <Trophy size={14} style={{ color: "#fbbf24" }} />
-                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
                   In forma questa settimana
                 </p>
               </div>
@@ -407,7 +407,7 @@ export default function DashboardPage() {
                       {client.name.charAt(0).toUpperCase()}
                     </div>
                     <p className="flex-1 text-sm font-semibold truncate group-hover:underline"
-                      style={{ color: "var(--ivory)" }}>{client.name}</p>
+                      style={{ color: "var(--text)" }}>{client.name}</p>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <Flame size={11} style={{ color: "#f97316" }} />
                       <span className="text-xs font-bold" style={{ color: "#f97316" }}>{weekLogs}</span>
@@ -422,7 +422,7 @@ export default function DashboardPage() {
             <div className="rounded-2xl p-4" style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.15)" }}>
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle size={14} style={{ color: "#f87171" }} />
-                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
                   Necessitano un messaggio
                 </p>
               </div>
@@ -436,7 +436,7 @@ export default function DashboardPage() {
                         {client.name.charAt(0).toUpperCase()}
                       </div>
                       <p className="flex-1 text-sm font-semibold truncate group-hover:underline"
-                        style={{ color: "var(--ivory)" }}>{client.name}</p>
+                        style={{ color: "var(--text)" }}>{client.name}</p>
                       <span className="text-xs flex-shrink-0 font-medium" style={{ color: "rgba(248,113,113,0.7)" }}>
                         {daysSinceLast}gg fa
                       </span>
@@ -463,7 +463,7 @@ export default function DashboardPage() {
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.18)" }}>
           <div className="flex items-center gap-2 mb-3">
             <Zap size={14} style={{ color: "#fbbf24" }} />
-            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Progressione consigliata
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full ml-1 font-bold"
@@ -480,8 +480,8 @@ export default function DashboardPage() {
                   {s.clientName.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold truncate" style={{ color: "var(--ivory)" }}>{s.clientName}</p>
-                  <p className="text-xs truncate" style={{ color: "rgba(245,240,232,0.5)" }}>{s.exerciseName}</p>
+                  <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{s.clientName}</p>
+                  <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{s.exerciseName}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="text-xs font-bold" style={{ color: "#fbbf24" }}>{s.weight}kg → {s.suggested}kg</p>
@@ -498,14 +498,14 @@ export default function DashboardPage() {
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(249,115,22,0.05)", border: "1px solid rgba(249,115,22,0.2)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <TrendingDown size={14} style={{ color: "#fb923c" }} />
-            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Frequenza in calo
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
               style={{ background: "rgba(249,115,22,0.18)", color: "#fb923c" }}>
               {churnRiskClients.length}
             </span>
-            <span className="text-xs ml-auto" style={{ color: "rgba(245,240,232,0.35)" }}>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
               sessioni: -2sett / -1sett / questa sett
             </span>
           </div>
@@ -524,7 +524,7 @@ export default function DashboardPage() {
                       {client.name.charAt(0).toUpperCase()}
                     </div>
                     <p className="text-sm font-semibold truncate group-hover:underline flex-1"
-                      style={{ color: "var(--ivory)" }}>{client.name}</p>
+                      style={{ color: "var(--text)" }}>{client.name}</p>
                     <div className="flex items-end gap-1 flex-shrink-0 mr-1" style={{ height: 20 }}>
                       {[w2, w1, w0].map((v, i) => (
                         <div key={i} className="w-3 rounded-sm"
@@ -535,7 +535,7 @@ export default function DashboardPage() {
                           }} />
                       ))}
                     </div>
-                    <span className="text-xs font-mono flex-shrink-0" style={{ color: "rgba(245,240,232,0.4)" }}>
+                    <span className="text-xs font-mono flex-shrink-0" style={{ color: "var(--text-dim)" }}>
                       {w2}→{w1}→{w0}
                     </span>
                     <span className="text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0"
@@ -618,7 +618,7 @@ export default function DashboardPage() {
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.15)" }}>
           <div className="flex items-center gap-2 mb-3">
             <Trophy size={14} style={{ color: "#fbbf24" }} />
-            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Highlights della settimana
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full ml-1 font-bold"
@@ -635,10 +635,10 @@ export default function DashboardPage() {
                   {h.type === "pr" ? <Flame size={14} /> : <Zap size={14} />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold truncate" style={{ color: "var(--ivory)" }}>{h.clientName}</p>
+                  <p className="text-xs font-bold truncate" style={{ color: "var(--text)" }}>{h.clientName}</p>
                   <p className="text-xs truncate">
                     <span className="font-semibold" style={{ color: h.type === "pr" ? "#fbbf24" : "#34d399" }}>{h.label}</span>
-                    <span style={{ color: "rgba(245,240,232,0.45)" }}>{" · "}{h.detail}</span>
+                    <span style={{ color: "var(--text-muted)" }}>{" · "}{h.detail}</span>
                   </p>
                 </div>
               </Link>
@@ -652,7 +652,7 @@ export default function DashboardPage() {
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(168,85,247,0.05)", border: "1px solid rgba(168,85,247,0.2)" }}>
           <div className="flex items-center gap-2 mb-3">
             <Gift size={14} style={{ color: "#c084fc" }} />
-            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Compleanni imminenti
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full ml-1 font-bold"
@@ -669,13 +669,13 @@ export default function DashboardPage() {
                   {client.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>
+                  <p className="text-sm font-semibold truncate" style={{ color: "var(--text)" }}>
                     {client.name}
                     <span className="ml-1.5 text-xs font-normal" style={{ color: "rgba(192,132,252,0.65)" }}>
                       {turnsAge} anni
                     </span>
                   </p>
-                  <p className="text-xs font-medium" style={{ color: daysUntil === 0 ? "#c084fc" : "rgba(245,240,232,0.45)" }}>
+                  <p className="text-xs font-medium" style={{ color: daysUntil === 0 ? "#c084fc" : "var(--text-muted)" }}>
                     {daysUntil === 0 ? "Oggi!" : daysUntil === 1 ? "Domani" : `Tra ${daysUntil} giorni`}
                   </p>
                 </div>
@@ -699,14 +699,14 @@ export default function DashboardPage() {
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(99,102,241,0.05)", border: "1px solid rgba(99,102,241,0.2)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <Scale size={14} style={{ color: "#818cf8" }} />
-            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(245,240,232,0.6)" }}>
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Stallo peso corporeo
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
               style={{ background: "rgba(99,102,241,0.18)", color: "#818cf8" }}>
               {measurementPlateauAlerts.length}
             </span>
-            <span className="text-xs ml-auto" style={{ color: "rgba(245,240,232,0.35)" }}>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
               3 misurazioni stabili — valuta aggiustamenti
             </span>
           </div>
@@ -719,8 +719,8 @@ export default function DashboardPage() {
                   {s.client.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold truncate" style={{ color: "var(--ivory)" }}>{s.client.name}</p>
-                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>
+                  <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{s.client.name}</p>
+                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                     Ultima mis.: {new Date(s.lastDate).toLocaleDateString("it-IT", { day: "2-digit", month: "short" })}
                   </p>
                 </div>
@@ -746,8 +746,8 @@ export default function DashboardPage() {
                 <Plus size={19} style={{ color: "var(--accent)" }} />
               </div>
               <div>
-                <h2 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Inizia in 4 passi</h2>
-                <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
+                <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>Inizia in 4 passi</h2>
+                <p className="text-xs" style={{ color: "var(--text-dim)" }}>
                   {[hasClients, hasScheda, hasPhase, hasSharedLink].filter(Boolean).length} / 4 completati
                 </p>
               </div>
@@ -772,10 +772,10 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium" style={{
-                      color: done ? "rgba(245,240,232,0.5)" : "var(--ivory)",
+                      color: done ? "var(--text-muted)" : "var(--ivory)",
                       textDecoration: done ? "line-through" : "none",
                     }}>{label}</p>
-                    <p className="text-xs" style={{ color: "rgba(245,240,232,0.35)" }}>{desc}</p>
+                    <p className="text-xs" style={{ color: "var(--text-dim)" }}>{desc}</p>
                   </div>
                   <ArrowRight size={13} className="opacity-0 group-hover:opacity-60 transition-all flex-shrink-0"
                     style={{ color: "var(--accent-light)" }} />
@@ -793,7 +793,7 @@ export default function DashboardPage() {
           /* ── Recent clients (shown when onboarding complete) ── */
           <div className="card-luxury rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold" style={{ color: "var(--ivory)" }}>Clienti recenti</h2>
+              <h2 className="text-base font-semibold" style={{ color: "var(--text)" }}>Clienti recenti</h2>
               <Link href="/dashboard/clienti"
                 className="flex items-center gap-1 text-xs hover:underline"
                 style={{ color: "var(--accent-light)" }}>
@@ -808,8 +808,8 @@ export default function DashboardPage() {
                     {client.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: "var(--ivory)" }}>{client.name}</p>
-                    <p className="text-xs truncate" style={{ color: "rgba(245,240,232,0.45)" }}>
+                    <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{client.name}</p>
+                    <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>
                       {client.goal ? goalLabels[client.goal] : "Obiettivo non impostato"}
                     </p>
                   </div>
@@ -823,7 +823,7 @@ export default function DashboardPage() {
 
         {/* Right: Quick actions (always visible) */}
         <div className="card-luxury rounded-2xl p-5">
-          <h2 className="text-base font-semibold mb-4" style={{ color: "var(--ivory)" }}>Azioni rapide</h2>
+          <h2 className="text-base font-semibold mb-4" style={{ color: "var(--text)" }}>Azioni rapide</h2>
           <div className="space-y-1.5">
             {([
               { href: "/dashboard/clienti?new=1", icon: Users,    label: "Nuovo cliente",          desc: "Registra un nuovo cliente" },
@@ -839,8 +839,8 @@ export default function DashboardPage() {
                   <Icon size={16} style={{ color: "var(--accent)" }} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium" style={{ color: "var(--ivory)" }}>{label}</p>
-                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{desc}</p>
+                  <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{label}</p>
+                  <p className="text-xs" style={{ color: "var(--text-dim)" }}>{desc}</p>
                 </div>
                 <ArrowRight size={13} className="opacity-0 group-hover:opacity-100 transition-all"
                   style={{ color: "var(--accent-light)" }} />

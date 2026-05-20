@@ -302,7 +302,7 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
   const cardNum  = shareToken.replace(/-/g, "").toUpperCase().slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
   return (
     <div className="mb-5 rounded-3xl overflow-hidden relative select-none holo-card"
-      style={{ background: "linear-gradient(135deg, rgba(12,4,4,0.98) 0%, rgba(45,8,8,0.92) 55%, rgba(18,6,6,0.98) 100%)", border: "1px solid rgba(229,50,50,0.22)", boxShadow: "0 8px 32px rgba(229,50,50,0.1), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
+      style={{ background: "linear-gradient(135deg, rgba(12,4,4,0.98) 0%, rgba(45,8,8,0.92) 55%, rgba(18,6,6,0.98) 100%)", border: "1px solid rgba(229,50,50,0.22)", boxShadow: "0 8px 32px rgba(229,50,50,0.1), inset 0 1px 0 var(--border-subtle)" }}>
       {/* Holographic shimmer overlay */}
       <div className="holo-shimmer" />
       <div className="absolute top-0 right-0 w-56 h-56 pointer-events-none rounded-full"
@@ -1120,7 +1120,7 @@ export default function ClientPortalPage() {
                     {prs.map(([name, pr], idx) => (
                       <div key={name}
                         className="flex items-center gap-3 px-4 py-3"
-                        style={{ borderBottom: idx < prs.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none" }}>
+                        style={{ borderBottom: idx < prs.length - 1 ? "1px solid var(--border-subtle)" : "none" }}>
                         <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-black"
                           style={{
                             background: idx === 0 ? "rgba(255,210,63,0.18)" : idx === 1 ? "rgba(200,200,200,0.12)" : idx === 2 ? "rgba(205,127,50,0.12)" : "var(--surface)",
@@ -1305,7 +1305,7 @@ export default function ClientPortalPage() {
                                     <div key={item.id}
                                       className="flex items-center gap-3 px-3 py-2.5"
                                       style={{ background: ii % 2 === 0 ? "var(--surface-xs)" : "transparent" }}>
-                                      <span className="flex-1 text-sm" style={{ color: "rgba(245,240,232,0.85)" }}>{item.name || "—"}</span>
+                                      <span className="flex-1 text-sm" style={{ color: "var(--text)" }}>{item.name || "—"}</span>
                                       <span className="text-sm font-bold flex-shrink-0" style={{ color: "var(--accent-light)" }}>
                                         {item.gramsMax && item.gramsMax > item.grams ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
                                       </span>
@@ -1587,7 +1587,7 @@ export default function ClientPortalPage() {
                     LIVE
                   </span>
                 </div>
-                <p className="text-sm leading-snug" style={{ color: "rgba(245,240,232,0.75)", fontStyle: "italic" }}>
+                <p className="text-sm leading-snug" style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
                   &ldquo;{trainerReaction}&rdquo;
                 </p>
               </div>

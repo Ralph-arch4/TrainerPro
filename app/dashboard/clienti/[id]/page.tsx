@@ -633,8 +633,8 @@ export default function ClientDetailPage() {
   ];
 
   const inputClass = "w-full px-3 py-2.5 rounded-xl text-sm outline-none";
-  const inputStyle = { background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" };
-  const selectStyle = { background: "rgba(26,26,26,1)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" };
+  const inputStyle = { background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" };
+  const selectStyle = { background: "rgba(26,26,26,1)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" };
 
   const activePhase = [...client.phases]
     .filter((p) => !p.completed)
@@ -661,7 +661,7 @@ export default function ClientDetailPage() {
             {client.name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: "var(--ivory)" }}>{client.name}</h1>
+            <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>{client.name}</h1>
             <div className="flex items-center gap-3 mt-1">
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor[client.status] }} />
@@ -716,7 +716,7 @@ export default function ClientDetailPage() {
       {tab === "overview" && (
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="card-luxury rounded-2xl p-5">
-            <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--ivory)" }}>Informazioni personali</h3>
+            <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>Informazioni personali</h3>
             <div className="space-y-3">
               {client.email && <div className="flex items-center gap-3 text-sm"><Mail size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "var(--text-muted)" }}>{client.email}</span></div>}
               {client.phone && <div className="flex items-center gap-3 text-sm"><Phone size={14} style={{ color: "var(--accent)" }} /><span style={{ color: "var(--text-muted)" }}>{client.phone}</span></div>}
@@ -727,7 +727,7 @@ export default function ClientDetailPage() {
           </div>
 
           <div className="card-luxury rounded-2xl p-5">
-            <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--ivory)" }}>Riepilogo attività</h3>
+            <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>Riepilogo attività</h3>
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: "Fasi", value: client.phases.length, color: "#a78bfa" },
@@ -745,11 +745,11 @@ export default function ClientDetailPage() {
 
           {activePhase && (
             <div className="card-luxury rounded-2xl p-5 sm:col-span-2">
-              <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--ivory)" }}>Fase attiva</h3>
+              <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text)" }}>Fase attiva</h3>
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: phaseTypeColor[activePhase.type] }} />
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm" style={{ color: "var(--ivory)" }}>{activePhase.name}</p>
+                  <p className="font-semibold text-sm" style={{ color: "var(--text)" }}>{activePhase.name}</p>
                   <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
                     {formatDate(activePhase.startDate)} → {activePhase.endDate ? formatDate(activePhase.endDate) : "In corso"}
                   </p>
@@ -768,7 +768,7 @@ export default function ClientDetailPage() {
 
           {recentLogCount > 0 && (
             <div className="card-luxury rounded-2xl p-5 sm:col-span-2">
-              <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--ivory)" }}>Attività recente (14 giorni)</h3>
+              <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text)" }}>Attività recente (14 giorni)</h3>
               <div className="space-y-2">
                 {client.workoutPlans.map((wp) => {
                   const twoWeeksAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
@@ -812,7 +812,7 @@ export default function ClientDetailPage() {
                     <div className="flex items-center gap-3">
                       <div className="w-3 h-3 rounded-full flex-shrink-0 mt-1" style={{ background: phaseTypeColor[phase.type] }} />
                       <div>
-                        <p className="font-semibold" style={{ color: "var(--ivory)" }}>{phase.name}</p>
+                        <p className="font-semibold" style={{ color: "var(--text)" }}>{phase.name}</p>
                         <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
                           {formatDate(phase.startDate)} → {phase.endDate ? formatDate(phase.endDate) : "In corso"}
                         </p>
@@ -839,8 +839,8 @@ export default function ClientDetailPage() {
                   </div>
                   {(phase.targetCalories || phase.targetWeight || phase.notes) && (
                     <div className="mt-3 pt-3 flex flex-wrap gap-4" style={{ borderTop: "1px solid var(--border-subtle)" }}>
-                      {phase.targetCalories && <div><p className="text-xs" style={{ color: "var(--text-dim)" }}>Calorie target</p><p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{phase.targetCalories} kcal</p></div>}
-                      {phase.targetWeight && <div><p className="text-xs" style={{ color: "var(--text-dim)" }}>Peso target</p><p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{phase.targetWeight} kg</p></div>}
+                      {phase.targetCalories && <div><p className="text-xs" style={{ color: "var(--text-dim)" }}>Calorie target</p><p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{phase.targetCalories} kcal</p></div>}
+                      {phase.targetWeight && <div><p className="text-xs" style={{ color: "var(--text-dim)" }}>Peso target</p><p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{phase.targetWeight} kg</p></div>}
                       {phase.notes && <p className="text-xs w-full" style={{ color: "var(--text-muted)" }}>{phase.notes}</p>}
                     </div>
                   )}
@@ -880,7 +880,7 @@ export default function ClientDetailPage() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1 min-w-0 pr-3">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-semibold" style={{ color: "var(--ivory)" }}>{wp.name}</p>
+                          <p className="font-semibold" style={{ color: "var(--text)" }}>{wp.name}</p>
                           {wp.active && (
                             <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Attiva</span>
                           )}
@@ -999,7 +999,7 @@ export default function ClientDetailPage() {
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1 min-w-0 pr-3">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-semibold" style={{ color: "var(--ivory)" }}>{dp.name}</p>
+                            <p className="font-semibold" style={{ color: "var(--text)" }}>{dp.name}</p>
                             {dp.active && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Attivo</span>}
                             {linkedPhase && (
                               <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `${phaseTypeColor[linkedPhase.type]}18`, color: phaseTypeColor[linkedPhase.type] }}>
@@ -1061,7 +1061,7 @@ export default function ClientDetailPage() {
                                 <div className="flex items-center gap-2 mb-2">
                                   <span className="w-5 h-5 rounded-md text-xs font-bold flex items-center justify-center flex-shrink-0"
                                     style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent-light)" }}>{mi + 1}</span>
-                                  <span className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{meal.name}</span>
+                                  <span className="text-sm font-semibold" style={{ color: "var(--text)" }}>{meal.name}</span>
                                   {meal.time && <span className="text-xs" style={{ color: "var(--text-dim)" }}>{meal.time}</span>}
                                 </div>
                                 {meal.items.length > 0 && (
@@ -1069,7 +1069,7 @@ export default function ClientDetailPage() {
                                     {meal.items.map((item) => (
                                       <div key={item.id} className="flex items-center gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
                                         <span className="flex-1">{item.name || "—"}</span>
-                                        <span className="font-medium" style={{ color: "rgba(245,240,232,0.85)" }}>
+                                        <span className="font-medium" style={{ color: "var(--text)" }}>
                                           {item.gramsMax ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
                                         </span>
                                         {(item.protein || item.carbs || item.fat) && (
@@ -1103,7 +1103,7 @@ export default function ClientDetailPage() {
               placeholder="Aggiungi una nota sul cliente…"
               rows={3}
               className="w-full bg-transparent outline-none text-sm resize-none"
-              style={{ color: "var(--ivory)" }} />
+              style={{ color: "var(--text)" }} />
             <div className="flex justify-end mt-2">
               <button onClick={saveNote} disabled={!noteText.trim()}
                 className="accent-btn px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 disabled:opacity-40">
@@ -1121,7 +1121,7 @@ export default function ClientDetailPage() {
               {[...client.notes].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((note) => (
                 <div key={note.id} className="card-luxury rounded-2xl p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm flex-1" style={{ color: "rgba(245,240,232,0.8)" }}>{note.content}</p>
+                    <p className="text-sm flex-1" style={{ color: "var(--text-muted)" }}>{note.content}</p>
                     <button onClick={async () => { removeNote(client!.id, note.id); try { await dbNotes.remove(note.id); } catch {} }}
                       className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all flex-shrink-0">
                       <Trash2 size={13} style={{ color: "rgba(239,68,68,0.5)" }} />
@@ -1306,7 +1306,7 @@ export default function ClientDetailPage() {
           return (
             <div className="card-luxury rounded-2xl p-5 mb-5">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>Andamento peso</h3>
+                <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Andamento peso</h3>
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-bold" style={{ color: "var(--accent)" }}>{chartData[chartData.length - 1].weight}</span>
                   <span className="text-sm" style={{ color: "var(--text-muted)" }}>kg</span>
@@ -1350,7 +1350,7 @@ export default function ClientDetailPage() {
 
             {/* Add form */}
             <div className="card-luxury rounded-2xl p-5 mb-5">
-              <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--ivory)" }}>Nuova misurazione</h3>
+              <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>Nuova misurazione</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                 <div className="sm:col-span-2">
                   <label className="block text-xs mb-1" style={{ color: "var(--text-muted)" }}>Data *</label>
@@ -1405,7 +1405,7 @@ export default function ClientDetailPage() {
                     <div className="flex-1">
                       <div className="flex items-baseline gap-3 mb-1.5 flex-wrap">
                         <span className="text-xs" style={{ color: "var(--text-dim)" }}>{formatDate(m.date)}</span>
-                        <span className="font-bold text-base" style={{ color: "var(--ivory)" }}>{m.weight} kg</span>
+                        <span className="font-bold text-base" style={{ color: "var(--text)" }}>{m.weight} kg</span>
                         {m.bodyFat && <span className="text-sm" style={{ color: "#a78bfa" }}>{m.bodyFat}% grasso</span>}
                       </div>
                       {(m.chest || m.waist || m.hips || m.arms || m.legs) && (
@@ -1493,14 +1493,14 @@ export default function ClientDetailPage() {
                   <label className="block text-xs mb-1" style={{ color: "var(--text-muted)" }}>Data foto</label>
                   <input type="date" value={scanUploadDate} onChange={e => setScanUploadDate(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" }} />
                 </div>
                 <div>
                   <label className="block text-xs mb-1" style={{ color: "var(--text-muted)" }}>Note</label>
                   <input type="text" value={scanUploadNotes} onChange={e => setScanUploadNotes(e.target.value)}
                     placeholder="es. Fronte, Lato, Schiena…"
                     className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--ivory)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" }} />
                 </div>
               </div>
             )}
@@ -1755,7 +1755,7 @@ export default function ClientDetailPage() {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                  <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>
+                                  <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
                                     {new Date(scan.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })}
                                   </p>
                                   {analysis && (
@@ -1869,7 +1869,7 @@ export default function ClientDetailPage() {
           <div className="absolute inset-0" style={{ background: "var(--surface-modal)" }} />
           <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Nuova fase</h3>
+              <h3 className="text-base font-bold" style={{ color: "var(--text)" }}>Nuova fase</h3>
               <button onClick={() => setShowPhaseModal(false)}><X size={16} style={{ color: "var(--text-muted)" }} /></button>
             </div>
             <div className="space-y-3">
@@ -1918,7 +1918,7 @@ export default function ClientDetailPage() {
           <div className="absolute inset-0" style={{ background: "var(--surface-modal)" }} />
           <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Modifica fase</h3>
+              <h3 className="text-base font-bold" style={{ color: "var(--text)" }}>Modifica fase</h3>
               <button onClick={() => setEditingPhase(null)}><X size={16} style={{ color: "var(--text-muted)" }} /></button>
             </div>
             <div className="space-y-3">
@@ -1971,7 +1971,7 @@ export default function ClientDetailPage() {
           <div className="absolute inset-0" style={{ background: "var(--surface-modal)" }} />
           <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Nuova scheda</h3>
+              <h3 className="text-base font-bold" style={{ color: "var(--text)" }}>Nuova scheda</h3>
               <button onClick={() => setShowWorkoutModal(false)}><X size={16} style={{ color: "var(--text-muted)" }} /></button>
             </div>
             <div className="space-y-3">
@@ -2024,7 +2024,7 @@ export default function ClientDetailPage() {
           <div className="absolute inset-0" style={{ background: "var(--surface-modal)" }} />
           <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Modifica scheda</h3>
+              <h3 className="text-base font-bold" style={{ color: "var(--text)" }}>Modifica scheda</h3>
               <button onClick={() => setEditingPlan(null)}><X size={16} style={{ color: "var(--text-muted)" }} /></button>
             </div>
             <div className="space-y-3">

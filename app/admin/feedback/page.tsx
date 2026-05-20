@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -88,7 +88,7 @@ export default function AdminFeedbackPage() {
           </div>
           <div>
             <h1 className="text-2xl font-black" style={{ color: "#f5f0ff" }}>Supervisor Panel</h1>
-            <p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>
+            <p className="text-sm" style={{ color: "var(--text-dim)" }}>
               Feedback da tutti i trainer · {notes.length} note totali
             </p>
           </div>
@@ -103,16 +103,16 @@ export default function AdminFeedbackPage() {
             { label: "Da leggere (nuovi)", value: counts.nuovo,       color: "#38bdf8" },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-2xl p-4 text-center"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+              style={{ background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
               <p className="text-2xl font-black" style={{ color }}>{value}</p>
-              <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
+              <p className="text-xs mt-1" style={{ color: "var(--text-dim)" }}>{label}</p>
             </div>
           ))}
         </div>
 
         {/* Filters */}
         <div className="flex gap-2 flex-wrap mb-5">
-          <div className="flex items-center gap-1.5 text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
+          <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-dim)" }}>
             <Filter size={12} /> Filtra:
           </div>
           {/* Category */}
@@ -120,9 +120,9 @@ export default function AdminFeedbackPage() {
             <button key={v} onClick={() => setCatFilter(v)}
               className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
               style={{
-                background: catFilter === v ? "rgba(229,50,50,0.18)" : "rgba(255,255,255,0.04)",
-                border: `1px solid ${catFilter === v ? "rgba(229,50,50,0.4)" : "rgba(255,255,255,0.07)"}`,
-                color: catFilter === v ? "#FF9A6C" : "rgba(245,240,232,0.5)",
+                background: catFilter === v ? "rgba(229,50,50,0.18)" : "var(--surface-sm)",
+                border: `1px solid ${catFilter === v ? "rgba(229,50,50,0.4)" : "var(--surface-md)"}`,
+                color: catFilter === v ? "#FF9A6C" : "var(--text-muted)",
               }}>
               {v === "all" ? "Tutte le categorie" : CATEGORY_META[v as keyof typeof CATEGORY_META].label}
             </button>
@@ -132,9 +132,9 @@ export default function AdminFeedbackPage() {
             <button key={v} onClick={() => setStatusFilter(v)}
               className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
               style={{
-                background: statusFilter === v ? "rgba(56,189,248,0.12)" : "rgba(255,255,255,0.04)",
-                border: `1px solid ${statusFilter === v ? "rgba(56,189,248,0.35)" : "rgba(255,255,255,0.07)"}`,
-                color: statusFilter === v ? "#38bdf8" : "rgba(245,240,232,0.5)",
+                background: statusFilter === v ? "rgba(56,189,248,0.12)" : "var(--surface-sm)",
+                border: `1px solid ${statusFilter === v ? "rgba(56,189,248,0.35)" : "var(--surface-md)"}`,
+                color: statusFilter === v ? "#38bdf8" : "var(--text-muted)",
               }}>
               {v === "all" ? "Tutti gli status" : STATUS_META[v as keyof typeof STATUS_META].label}
             </button>
@@ -144,13 +144,13 @@ export default function AdminFeedbackPage() {
         {/* Trainer filter */}
         {trainers.length > 1 && (
           <div className="flex gap-2 flex-wrap mb-5 items-center">
-            <Users size={13} style={{ color: "rgba(245,240,232,0.4)" }} />
+            <Users size={13} style={{ color: "var(--text-dim)" }} />
             <button onClick={() => setTrainerFilter("all")}
               className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
               style={{
-                background: trainerFilter === "all" ? "rgba(123,47,190,0.18)" : "rgba(255,255,255,0.04)",
-                border: `1px solid ${trainerFilter === "all" ? "rgba(123,47,190,0.4)" : "rgba(255,255,255,0.07)"}`,
-                color: trainerFilter === "all" ? "#a78bfa" : "rgba(245,240,232,0.5)",
+                background: trainerFilter === "all" ? "rgba(123,47,190,0.18)" : "var(--surface-sm)",
+                border: `1px solid ${trainerFilter === "all" ? "rgba(123,47,190,0.4)" : "var(--surface-md)"}`,
+                color: trainerFilter === "all" ? "#a78bfa" : "var(--text-muted)",
               }}>
               Tutti i trainer
             </button>
@@ -158,9 +158,9 @@ export default function AdminFeedbackPage() {
               <button key={email} onClick={() => setTrainerFilter(email)}
                 className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
                 style={{
-                  background: trainerFilter === email ? "rgba(123,47,190,0.18)" : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${trainerFilter === email ? "rgba(123,47,190,0.4)" : "rgba(255,255,255,0.07)"}`,
-                  color: trainerFilter === email ? "#a78bfa" : "rgba(245,240,232,0.5)",
+                  background: trainerFilter === email ? "rgba(123,47,190,0.18)" : "var(--surface-sm)",
+                  border: `1px solid ${trainerFilter === email ? "rgba(123,47,190,0.4)" : "var(--surface-md)"}`,
+                  color: trainerFilter === email ? "#a78bfa" : "var(--text-muted)",
                 }}>
                 {notes.find(n => n.trainer_email === email)?.trainer_name ?? email}
               </button>
@@ -172,8 +172,8 @@ export default function AdminFeedbackPage() {
         {loading ? (
           <div className="text-center py-20"><Loader2 size={28} className="animate-spin mx-auto" style={{ color: "#FF9A6C" }} /></div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16 rounded-2xl" style={{ border: "1px solid rgba(255,255,255,0.06)" }}>
-            <p style={{ color: "rgba(245,240,232,0.4)" }}>Nessuna nota corrisponde ai filtri.</p>
+          <div className="text-center py-16 rounded-2xl" style={{ border: "1px solid var(--border-subtle)" }}>
+            <p style={{ color: "var(--text-dim)" }}>Nessuna nota corrisponde ai filtri.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -184,7 +184,7 @@ export default function AdminFeedbackPage() {
               const StIcon  = st.Icon;
               return (
                 <div key={note.id} className="rounded-2xl p-5"
-                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  style={{ background: "var(--surface-xs)", border: "1px solid var(--border)" }}>
                   <div className="flex items-start gap-4">
                     {/* Category icon */}
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
@@ -209,22 +209,22 @@ export default function AdminFeedbackPage() {
                       </div>
 
                       {/* Description */}
-                      <p className="text-sm leading-relaxed mb-3" style={{ color: "rgba(245,240,232,0.6)" }}>
+                      <p className="text-sm leading-relaxed mb-3" style={{ color: "var(--text-muted)" }}>
                         {note.description}
                       </p>
 
                       {/* Trainer + date */}
                       <div className="flex items-center gap-3 flex-wrap">
-                        <div className="flex items-center gap-1.5 text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
+                        <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--text-dim)" }}>
                           <Users size={11} />
-                          <span className="font-semibold" style={{ color: "rgba(245,240,232,0.65)" }}>
+                          <span className="font-semibold" style={{ color: "var(--text-muted)" }}>
                             {note.trainer_name ?? "—"}
                           </span>
                           {note.trainer_email && (
                             <span>· {note.trainer_email}</span>
                           )}
                         </div>
-                        <span className="text-xs" style={{ color: "rgba(245,240,232,0.25)" }}>
+                        <span className="text-xs" style={{ color: "var(--text-faint)" }}>
                           {new Date(note.created_at).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </span>
                       </div>
@@ -236,9 +236,9 @@ export default function AdminFeedbackPage() {
                             disabled={note.status === s}
                             className="px-3 py-1 rounded-lg text-xs font-bold transition-all disabled:opacity-40"
                             style={{
-                              background: note.status === s ? STATUS_META[s].bg : "rgba(255,255,255,0.04)",
-                              border: `1px solid ${note.status === s ? STATUS_META[s].color + "50" : "rgba(255,255,255,0.08)"}`,
-                              color: note.status === s ? STATUS_META[s].color : "rgba(245,240,232,0.4)",
+                              background: note.status === s ? STATUS_META[s].bg : "var(--surface-sm)",
+                              border: `1px solid ${note.status === s ? STATUS_META[s].color + "50" : "var(--surface-md)"}`,
+                              color: note.status === s ? STATUS_META[s].color : "var(--text-dim)",
                             }}>
                             {STATUS_META[s].label}
                           </button>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAppStore } from "@/lib/store";
@@ -53,7 +53,7 @@ export default function WorkoutPlanPage() {
   if (!client || !plan) {
     return (
       <div className="p-8 text-center">
-        <p style={{ color: "rgba(245,240,232,0.4)" }}>Scheda non trovata.</p>
+        <p style={{ color: "var(--text-dim)" }}>Scheda non trovata.</p>
         <button onClick={() => router.back()} className="mt-4 text-sm hover:underline" style={{ color: "var(--accent-light)" }}>
           Torna indietro
         </button>
@@ -133,7 +133,7 @@ export default function WorkoutPlanPage() {
       <button
         onClick={() => router.push(`/dashboard/clienti/${id}?tab=schede`)}
         className="flex items-center gap-2 text-sm mb-5 hover:opacity-80 transition-all"
-        style={{ color: "rgba(245,240,232,0.5)" }}>
+        style={{ color: "var(--text-muted)" }}>
         <ArrowLeft size={15} /> {client.name}
       </button>
 
@@ -144,8 +144,8 @@ export default function WorkoutPlanPage() {
             <Dumbbell size={18} />
           </div>
           <div>
-            <h1 className="text-xl font-bold" style={{ color: "var(--ivory)" }}>{plan.name}</h1>
-            <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>
+            <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>{plan.name}</h1>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>
               {plan.daysPerWeek} giorni/sett · {plan.totalWeeks} settimane · {plan.exercises.length} esercizi
             </p>
           </div>
@@ -153,7 +153,7 @@ export default function WorkoutPlanPage() {
 
         {/* View mode toggle */}
         <div className="flex items-center gap-1 p-1 rounded-xl"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          style={{ background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
           {([
             { key: "logbook" as ViewMode,     icon: LayoutGrid, label: "Scheda" },
             { key: "spreadsheet" as ViewMode, icon: Table2,     label: "Avanzato" },
@@ -162,7 +162,7 @@ export default function WorkoutPlanPage() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
               style={{
                 background: viewMode === key ? "rgba(255,107,43,0.14)" : "transparent",
-                color: viewMode === key ? "var(--accent-light)" : "rgba(245,240,232,0.45)",
+                color: viewMode === key ? "var(--accent-light)" : "var(--text-muted)",
               }}>
               <Icon size={13} /> {label}
             </button>

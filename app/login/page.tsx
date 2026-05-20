@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -66,14 +66,14 @@ export default function LoginPage() {
               { icon: TrendingUp, label: "Progressi tracciati", value: "Misurazioni & Grafici", color: "#34d399" },
             ].map(({ icon: Icon, label, value, color }) => (
               <div key={label} className="flex items-center gap-3 p-3 rounded-xl"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                style={{ background: "var(--surface-md)", border: "1px solid var(--border)" }}>
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
                   style={{ background: `${color}18` }}>
                   <Icon size={16} style={{ color }} />
                 </div>
                 <div>
                   <p className="text-xs font-semibold" style={{ color: "#F5F0E8" }}>{label}</p>
-                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.45)" }}>{value}</p>
+                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.55)" }}>{value}</p>
                 </div>
               </div>
             ))}
@@ -82,7 +82,7 @@ export default function LoginPage() {
 
         {/* Bottom quote — always light text on dark panel */}
         <div className="relative z-10">
-          <p className="text-sm italic" style={{ color: "rgba(245,240,232,0.35)" }}>
+          <p className="text-sm italic" style={{ color: "rgba(245,240,232,0.38)" }}>
             "Pericolosamente personalizzato sul tuo modus operandi."
           </p>
         </div>
@@ -121,7 +121,7 @@ export default function LoginPage() {
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                     placeholder="il-tuo@email.com" required
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none transition-all"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
                 </div>
               </div>
 
@@ -137,7 +137,7 @@ export default function LoginPage() {
                   <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••" required
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none transition-all"
-                    style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
                 </div>
               </div>
 

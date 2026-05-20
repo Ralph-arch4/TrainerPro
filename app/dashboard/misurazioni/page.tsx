@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
@@ -30,9 +30,9 @@ function SparkLine({ data, positive }: { data: number[]; positive?: boolean }) {
 }
 
 function WeightTrend({ current, prev }: { current: number; prev?: number }) {
-  if (!prev) return <span style={{ color: "rgba(245,240,232,0.4)" }}><Minus size={13} /></span>;
+  if (!prev) return <span style={{ color: "var(--text-dim)" }}><Minus size={13} /></span>;
   const diff = current - prev;
-  if (Math.abs(diff) < 0.1) return <span style={{ color: "rgba(245,240,232,0.4)" }}><Minus size={13} /></span>;
+  if (Math.abs(diff) < 0.1) return <span style={{ color: "var(--text-dim)" }}><Minus size={13} /></span>;
   return diff < 0
     ? <span className="flex items-center gap-0.5 text-xs" style={{ color: "#22c55e" }}><TrendingDown size={13} />{Math.abs(diff).toFixed(1)}</span>
     : <span className="flex items-center gap-0.5 text-xs" style={{ color: "#f87171" }}><TrendingUp size={13} />+{diff.toFixed(1)}</span>;
@@ -84,8 +84,8 @@ export default function MisurazioniPage() {
   return (
     <div className="p-6 lg:p-8 fade-in">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold" style={{ color: "var(--ivory)" }}>Misurazioni Corporee</h1>
-        <p className="text-sm mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Misurazioni Corporee</h1>
+        <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
           {allMeasurements.length} rilevazioni su {clientsWithData} {clientsWithData === 1 ? "cliente" : "clienti"}
         </p>
       </div>
@@ -100,7 +100,7 @@ export default function MisurazioniPage() {
         ].map(({ label, value, color }) => (
           <div key={label} className="card-luxury rounded-2xl p-4 text-center">
             <p className="text-2xl font-bold" style={{ color }}>{value}</p>
-            <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.45)" }}>{label}</p>
+            <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{label}</p>
           </div>
         ))}
       </div>
@@ -108,15 +108,15 @@ export default function MisurazioniPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-5">
         <div className="relative flex-1">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(245,240,232,0.35)" }} />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-dim)" }} />
           <input value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Cerca cliente…"
             className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
-            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--ivory)" }} />
+            style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }} />
         </div>
         <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
           className="px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--ivory)" }}>
+          style={{ background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
           <option value="recenti">Più recenti</option>
           <option value="peso_asc">Peso ↑</option>
           <option value="peso_desc">Peso ↓</option>
@@ -127,10 +127,10 @@ export default function MisurazioniPage() {
       {sorted.length === 0 && (
         <div className="text-center py-20 card-luxury rounded-2xl">
           <TrendingUp size={48} className="mx-auto mb-4" style={{ color: "rgba(255,107,43,0.2)" }} />
-          <p className="font-semibold mb-1" style={{ color: "var(--ivory)" }}>
+          <p className="font-semibold mb-1" style={{ color: "var(--text)" }}>
             {allMeasurements.length === 0 ? "Nessuna misurazione" : "Nessun risultato"}
           </p>
-          <p className="text-sm mb-4" style={{ color: "rgba(245,240,232,0.4)" }}>
+          <p className="text-sm mb-4" style={{ color: "var(--text-dim)" }}>
             {allMeasurements.length === 0
               ? "Registra misurazioni dalla scheda di ogni cliente"
               : "Nessun cliente corrisponde alla ricerca"}
@@ -154,8 +154,8 @@ export default function MisurazioniPage() {
                   {client.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-semibold" style={{ color: "var(--ivory)" }}>{client.name}</p>
-                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{count} rilevazioni · Ultima: {formatDate(latest.date)}</p>
+                  <p className="font-semibold" style={{ color: "var(--text)" }}>{client.name}</p>
+                  <p className="text-xs" style={{ color: "var(--text-dim)" }}>{count} rilevazioni · Ultima: {formatDate(latest.date)}</p>
                 </div>
               </div>
               <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition-all mt-1" style={{ color: "var(--accent-light)" }} />
@@ -164,14 +164,14 @@ export default function MisurazioniPage() {
             {/* Weight + sparkline */}
             <div className="flex items-end justify-between mb-4">
               <div>
-                <p className="text-xs mb-1" style={{ color: "rgba(245,240,232,0.4)" }}>Peso attuale</p>
+                <p className="text-xs mb-1" style={{ color: "var(--text-dim)" }}>Peso attuale</p>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-bold" style={{ color: "var(--ivory)" }}>{latest.weight}</p>
-                  <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>kg</p>
+                  <p className="text-3xl font-bold" style={{ color: "var(--text)" }}>{latest.weight}</p>
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>kg</p>
                   <WeightTrend current={latest.weight} prev={prev?.weight} />
                 </div>
                 {count > 1 && (
-                  <p className="text-xs mt-1" style={{ color: totalChange < 0 ? "#22c55e" : totalChange > 0 ? "#f87171" : "rgba(245,240,232,0.5)" }}>
+                  <p className="text-xs mt-1" style={{ color: totalChange < 0 ? "#22c55e" : totalChange > 0 ? "#f87171" : "var(--text-muted)" }}>
                     {totalChange > 0 ? "+" : ""}{totalChange.toFixed(1)} kg totale
                   </p>
                 )}
@@ -183,29 +183,29 @@ export default function MisurazioniPage() {
 
             {/* Body fat + measurements */}
             {(latest.bodyFat || latest.waist || latest.arms) && (
-              <div className="flex flex-wrap gap-3 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="flex flex-wrap gap-3 pt-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
                 {latest.bodyFat && (
                   <div>
-                    <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>% grasso</p>
-                    <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{latest.bodyFat}%</p>
+                    <p className="text-xs" style={{ color: "var(--text-dim)" }}>% grasso</p>
+                    <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{latest.bodyFat}%</p>
                   </div>
                 )}
                 {latest.waist && (
                   <div>
-                    <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Vita</p>
-                    <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{latest.waist} cm</p>
+                    <p className="text-xs" style={{ color: "var(--text-dim)" }}>Vita</p>
+                    <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{latest.waist} cm</p>
                   </div>
                 )}
                 {latest.arms && (
                   <div>
-                    <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Braccia</p>
-                    <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{latest.arms} cm</p>
+                    <p className="text-xs" style={{ color: "var(--text-dim)" }}>Braccia</p>
+                    <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{latest.arms} cm</p>
                   </div>
                 )}
                 {latest.chest && (
                   <div>
-                    <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Petto</p>
-                    <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{latest.chest} cm</p>
+                    <p className="text-xs" style={{ color: "var(--text-dim)" }}>Petto</p>
+                    <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{latest.chest} cm</p>
                   </div>
                 )}
               </div>

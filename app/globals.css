@@ -199,10 +199,53 @@ html, body {
 [data-theme="light"] ::-webkit-scrollbar-track { background: #EDE8E2; }
 [data-theme="light"] ::-webkit-scrollbar-thumb { background: var(--accent-dark); }
 
-/* Nav sidebar — add a right border in light mode for separation */
+/* Nav sidebar — right border + shadow in light mode */
 [data-theme="light"] aside.glass-dark {
   border-right: 1px solid rgba(0,0,0,0.1);
   box-shadow: 2px 0 12px rgba(0,0,0,0.05);
+}
+
+/* ── LIGHT MODE: select / dropdown visibility ────────────────────────────── */
+[data-theme="light"] select {
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(0,0,0,0.18) !important;
+  color: var(--text) !important;
+}
+[data-theme="light"] select option {
+  background: #FFFFFF;
+  color: var(--text);
+}
+
+/* ── LIGHT MODE: stat cards need subtle shadow on cream bg ───────────────── */
+[data-theme="light"] [class*="rounded"] {
+  /* Let card-luxury handle its own shadow — no global override needed */
+}
+
+/* Ensure body bg uses --bg not --black (legacy alias) */
+[data-theme="light"] body { background-color: var(--bg) !important; }
+
+/* ── LIGHT MODE: search inputs ───────────────────────────────────────────── */
+[data-theme="light"] input[type="text"],
+[data-theme="light"] input[type="search"],
+[data-theme="light"] input[type="email"],
+[data-theme="light"] input[type="password"],
+[data-theme="light"] input[type="date"],
+[data-theme="light"] input[type="number"] {
+  background-color: #FFFFFF !important;
+  border-color: rgba(0,0,0,0.15) !important;
+  color: var(--text) !important;
+}
+
+/* ── LIGHT MODE: glass-dark cards become white-frosted ───────────────────── */
+[data-theme="light"] .glass-dark {
+  background: rgba(255,255,255,0.92) !important;
+  border-color: rgba(0,0,0,0.08) !important;
+}
+
+/* ── LIGHT MODE: landing page ghost "Accedi" button ─────────────────────── */
+[data-theme="light"] .btn-ghost,
+[data-theme="light"] a[style*="transparent"] {
+  /* handled by inline var(--border) and var(--text) already */
 }
 
 /* ── LASER BEAMS ──────────────────────────────────────────────────────────────── */

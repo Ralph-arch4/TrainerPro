@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, use } from "react";
 import type { IntakeResponse } from "@/lib/db";
 import { Dumbbell, ChevronRight, ChevronLeft, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
@@ -17,20 +17,20 @@ const STEPS = [
 // ── Shared form primitives ────────────────────────────────────────────────────
 function Lbl({ n, children, req }: { n: number; children: React.ReactNode; req?: boolean }) {
   return (
-    <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--ivory)" }}>
+    <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>
       <span className="mr-1 text-xs font-bold" style={{ color: "rgba(255,107,43,0.6)" }}>{n}.</span>
       {children}{req && <span className="ml-0.5" style={{ color: "var(--accent)" }}>*</span>}
     </label>
   );
 }
 function Inp(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />;
+  return <input {...props} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all" style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />;
 }
 function Sel({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={{ background: "#151515", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }}>{children}</select>;
+  return <select {...props} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={{ background: "#151515", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>{children}</select>;
 }
 function Txt(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea {...props} rows={3} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />;
+  return <textarea {...props} rows={3} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none" style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />;
 }
 function Radio({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
   return (
@@ -38,7 +38,7 @@ function Radio({ options, value, onChange }: { options: string[]; value: string;
       {options.map((o) => (
         <button key={o} type="button" onClick={() => onChange(o)}
           className="px-3 py-1.5 rounded-xl text-sm transition-all"
-          style={{ background: value === o ? "rgba(255,107,43,0.12)" : "rgba(255,255,255,0.04)", border: `1px solid ${value === o ? "rgba(255,107,43,0.4)" : "rgba(255,255,255,0.08)"}`, color: value === o ? "var(--accent-light)" : "rgba(245,240,232,0.6)", fontWeight: value === o ? 600 : 400 }}>
+          style={{ background: value === o ? "rgba(255,107,43,0.12)" : "var(--surface-sm)", border: `1px solid ${value === o ? "rgba(255,107,43,0.4)" : "var(--surface-md)"}`, color: value === o ? "var(--accent-light)" : "var(--text-muted)", fontWeight: value === o ? 600 : 400 }}>
           {o}
         </button>
       ))}
@@ -54,7 +54,7 @@ function Multi({ options, value, onChange }: { options: string[]; value: string[
         return (
           <button key={o} type="button" onClick={() => toggle(o)}
             className="px-3 py-1.5 rounded-xl text-sm transition-all"
-            style={{ background: on ? "rgba(255,107,43,0.12)" : "rgba(255,255,255,0.04)", border: `1px solid ${on ? "rgba(255,107,43,0.4)" : "rgba(255,255,255,0.08)"}`, color: on ? "var(--accent-light)" : "rgba(245,240,232,0.6)", fontWeight: on ? 600 : 400 }}>
+            style={{ background: on ? "rgba(255,107,43,0.12)" : "var(--surface-sm)", border: `1px solid ${on ? "rgba(255,107,43,0.4)" : "var(--surface-md)"}`, color: on ? "var(--accent-light)" : "var(--text-muted)", fontWeight: on ? 600 : 400 }}>
             {o}
           </button>
         );
@@ -97,9 +97,9 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
   }
 
   if (status === "loading") return <Screen><div className="flex justify-center py-24"><Loader2 size={32} className="animate-spin" style={{ color: "var(--accent)" }} /></div></Screen>;
-  if (status === "not_found") return <Screen><div className="text-center py-20"><AlertCircle size={48} className="mx-auto mb-4" style={{ color: "rgba(239,68,68,0.5)" }} /><h2 className="text-xl font-bold mb-2" style={{ color: "var(--ivory)" }}>Link non valido</h2><p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>Contatta il tuo personal trainer.</p></div></Screen>;
-  if (status === "already_submitted") return <Screen><div className="text-center py-20"><div className="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)" }}><CheckCircle2 size={40} style={{ color: "#22c55e" }} /></div><h2 className="text-2xl font-bold mb-2" style={{ color: "var(--ivory)" }}>Già compilato!</h2><p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>Il tuo trainer ha già ricevuto le tue risposte.</p></div></Screen>;
-  if (status === "success") return <Screen><div className="text-center py-16"><div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.1)", border: "2px solid rgba(34,197,94,0.3)" }}><CheckCircle2 size={44} style={{ color: "#22c55e" }} /></div><h2 className="text-2xl font-bold mb-3" style={{ color: "var(--ivory)" }}>Questionario inviato!</h2><p className="text-base mb-2" style={{ color: "rgba(245,240,232,0.65)" }}>Grazie, <strong style={{ color: "var(--ivory)" }}>{v.fullName}</strong>!</p><p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>Il tuo personal trainer ha ricevuto tutte le risposte.</p></div></Screen>;
+  if (status === "not_found") return <Screen><div className="text-center py-20"><AlertCircle size={48} className="mx-auto mb-4" style={{ color: "rgba(239,68,68,0.5)" }} /><h2 className="text-xl font-bold mb-2" style={{ color: "var(--text)" }}>Link non valido</h2><p className="text-sm" style={{ color: "var(--text-muted)" }}>Contatta il tuo personal trainer.</p></div></Screen>;
+  if (status === "already_submitted") return <Screen><div className="text-center py-20"><div className="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)" }}><CheckCircle2 size={40} style={{ color: "#22c55e" }} /></div><h2 className="text-2xl font-bold mb-2" style={{ color: "var(--text)" }}>Già compilato!</h2><p className="text-sm" style={{ color: "var(--text-muted)" }}>Il tuo trainer ha già ricevuto le tue risposte.</p></div></Screen>;
+  if (status === "success") return <Screen><div className="text-center py-16"><div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.1)", border: "2px solid rgba(34,197,94,0.3)" }}><CheckCircle2 size={44} style={{ color: "#22c55e" }} /></div><h2 className="text-2xl font-bold mb-3" style={{ color: "var(--text)" }}>Questionario inviato!</h2><p className="text-base mb-2" style={{ color: "var(--text-muted)" }}>Grazie, <strong style={{ color: "var(--text)" }}>{v.fullName}</strong>!</p><p className="text-sm" style={{ color: "var(--text-dim)" }}>Il tuo personal trainer ha ricevuto tutte le risposte.</p></div></Screen>;
 
   return (
     <Screen label={label}>
@@ -109,9 +109,9 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
           <span className="text-xs font-semibold" style={{ color: "var(--accent)" }}>
             Passo {step + 1} di {STEPS.length}
           </span>
-          <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{STEPS[step]}</span>
+          <span className="text-xs" style={{ color: "var(--text-dim)" }}>{STEPS[step]}</span>
         </div>
-        <div className="h-1.5 rounded-full mb-3" style={{ background: "rgba(255,255,255,0.08)" }}>
+        <div className="h-1.5 rounded-full mb-3" style={{ background: "var(--surface-md)" }}>
           <div className="h-1.5 rounded-full transition-all duration-500"
             style={{ background: "linear-gradient(90deg,var(--accent),var(--accent-light))", width: `${((step + 1) / STEPS.length) * 100}%` }} />
         </div>
@@ -119,11 +119,11 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
         <div className="flex gap-1.5">
           {STEPS.map((_, i) => (
             <div key={i} className="flex-1 h-0.5 rounded-full transition-all duration-300"
-              style={{ background: i <= step ? "var(--accent)" : "rgba(255,255,255,0.1)" }} />
+              style={{ background: i <= step ? "var(--accent)" : "var(--surface-md)" }} />
           ))}
         </div>
       </div>
-      <h2 className="text-xl font-bold mb-5" style={{ color: "var(--ivory)" }}>
+      <h2 className="text-xl font-bold mb-5" style={{ color: "var(--text)" }}>
         {["Chi sei?", "Obiettivi & Motivazione", "Esperienza in palestra", "Disponibilità & Logistica", "Salute & Infortuni", "Stile di vita & Alimentazione"][step]}
       </h2>
 
@@ -159,7 +159,7 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
         <div><Lbl n={17}>Sport praticati in passato (anche agonistici)?</Lbl><Txt value={v.pastSports ?? ""} onChange={(e) => s("pastSports", e.target.value)} placeholder="es. calcio per 10 anni, nuoto agonistico, nessuno..." /></div>
         <div><Lbl n={18}>Pratichi attualmente altri sport?</Lbl><Txt value={v.currentSports ?? ""} onChange={(e) => s("currentSports", e.target.value)} placeholder="es. calcetto il venerdì, nessuno..." /></div>
         <div><Lbl n={19}>Valuta la tua resistenza/forza attuale</Lbl><Txt value={v.fitnessAssessment ?? ""} onChange={(e) => s("fitnessAssessment", e.target.value)} placeholder="es. riesco a fare 20 push-up, squat 60 kg x 10..." /></div>
-        <div><Lbl n={20}>Tipo di allenamento preferito <span className="text-xs font-normal" style={{ color: "rgba(245,240,232,0.4)" }}>(anche più di uno)</span></Lbl>
+        <div><Lbl n={20}>Tipo di allenamento preferito <span className="text-xs font-normal" style={{ color: "var(--text-dim)" }}>(anche più di uno)</span></Lbl>
           <Multi options={["Bodybuilding", "Funzionale", "HIIT", "Circuiti", "Aerobico", "Powerlifting", "Nessuna preferenza"]} value={v.trainingTypePreference ?? []} onChange={(x) => s("trainingTypePreference", x)} />
         </div>
       </div>}
@@ -221,7 +221,7 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
         {step > 0 ? (
           <button onClick={() => { setStepError(""); setStep((s) => s - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm transition-all hover:bg-white/5"
-            style={{ color: "rgba(245,240,232,0.6)", border: "1px solid rgba(255,255,255,0.1)" }}>
+            style={{ color: "var(--text-muted)", border: "1px solid var(--border)" }}>
             <ChevronLeft size={16} /> Indietro
           </button>
         ) : <div />}

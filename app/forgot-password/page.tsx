@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -34,8 +34,8 @@ export default function ForgotPasswordPage() {
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "var(--black)" }}>
         <div className="w-full max-w-md text-center fade-in glass-dark rounded-2xl p-10">
           <CheckCircle2 size={56} className="mx-auto mb-4" style={{ color: "var(--accent)" }} />
-          <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--ivory)" }}>Email inviata!</h2>
-          <p className="text-sm" style={{ color: "rgba(245,240,232,0.6)" }}>
+          <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--text)" }}>Email inviata!</h2>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
             Controlla la tua casella di posta per il link di recupero password.
           </p>
           <Link href="/login" className="inline-block mt-6 text-sm font-medium hover:underline" style={{ color: "var(--accent-light)" }}>
@@ -57,8 +57,8 @@ export default function ForgotPasswordPage() {
         </div>
 
         <div className="glass-dark rounded-2xl p-8">
-          <h2 className="text-xl font-semibold mb-2" style={{ color: "var(--ivory)" }}>Recupera password</h2>
-          <p className="text-sm mb-6" style={{ color: "rgba(245,240,232,0.5)" }}>
+          <h2 className="text-xl font-semibold mb-2" style={{ color: "var(--text)" }}>Recupera password</h2>
+          <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
             Inserisci la tua email e ti invieremo un link per reimpostare la password.
           </p>
 
@@ -70,12 +70,12 @@ export default function ForgotPasswordPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--ivory)" }}>Email</label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>Email</label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--accent-light)" }} />
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="il-tuo@email.com" required
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }} />
+                  style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
               </div>
             </div>
 
@@ -85,7 +85,7 @@ export default function ForgotPasswordPage() {
             </button>
           </form>
 
-          <p className="text-center text-sm mt-6" style={{ color: "rgba(245,240,232,0.5)" }}>
+          <p className="text-center text-sm mt-6" style={{ color: "var(--text-muted)" }}>
             <Link href="/login" className="hover:underline" style={{ color: "var(--accent-light)" }}>Torna al login</Link>
           </p>
         </div>

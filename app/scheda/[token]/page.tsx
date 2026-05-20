@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -50,12 +50,12 @@ function SupplementCard({ item }: { item: SupplementItem }) {
       style={{ background: "rgba(255,107,43,0.04)", border: "1px solid rgba(255,107,43,0.14)" }}>
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="font-bold text-sm" style={{ color: "var(--ivory)" }}>{item.name}</p>
-          {item.brand && <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{item.brand}</p>}
+          <p className="font-bold text-sm" style={{ color: "var(--text)" }}>{item.name}</p>
+          {item.brand && <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>{item.brand}</p>}
         </div>
         <ShoppingBag size={18} style={{ color: "var(--accent)", flexShrink: 0, marginTop: 2 }} />
       </div>
-      {item.notes && <p className="text-xs" style={{ color: "rgba(245,240,232,0.55)" }}>{item.notes}</p>}
+      {item.notes && <p className="text-xs" style={{ color: "var(--text-muted)" }}>{item.notes}</p>}
       <div className="flex gap-2 flex-wrap">
         {item.productUrl && (
           <a href={item.productUrl} target="_blank" rel="noopener noreferrer"
@@ -67,9 +67,9 @@ function SupplementCard({ item }: { item: SupplementItem }) {
           <button onClick={copyCode}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
             style={{
-              background: copied ? "rgba(52,211,153,0.12)" : "rgba(255,255,255,0.06)",
-              border: `1px solid ${copied ? "rgba(52,211,153,0.3)" : "rgba(255,255,255,0.1)"}`,
-              color: copied ? "#34d399" : "rgba(245,240,232,0.6)",
+              background: copied ? "rgba(52,211,153,0.12)" : "var(--surface-md)",
+              border: `1px solid ${copied ? "rgba(52,211,153,0.3)" : "var(--surface-md)"}`,
+              color: copied ? "#34d399" : "var(--text-muted)",
             }}>
             {copied ? <Check size={11} /> : <Copy size={11} />}
             {copied ? "Copiato!" : `Codice: ${item.discountCode}`}
@@ -232,7 +232,7 @@ export default function PublicSchedaPage() {
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--black)" }}>
         <div className="text-center">
           <Loader2 size={32} className="animate-spin mx-auto mb-3" style={{ color: "var(--accent)" }} />
-          <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>Caricamento scheda…</p>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>Caricamento scheda…</p>
         </div>
       </div>
     );
@@ -243,7 +243,7 @@ export default function PublicSchedaPage() {
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "var(--black)" }}>
         <div className="text-center max-w-sm">
           <AlertCircle size={40} className="mx-auto mb-4" style={{ color: "rgba(239,68,68,0.6)" }} />
-          <p className="text-sm" style={{ color: "rgba(245,240,232,0.6)" }}>{error || "Scheda non trovata."}</p>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>{error || "Scheda non trovata."}</p>
         </div>
       </div>
     );
@@ -263,8 +263,8 @@ export default function PublicSchedaPage() {
               <Dumbbell size={14} />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-bold truncate" style={{ color: "var(--ivory)" }}>{plan.name}</p>
-              <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
+              <p className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>{plan.name}</p>
+              <p className="text-xs" style={{ color: "var(--text-dim)" }}>
                 {plan.days_per_week} giorni/sett · {plan.total_weeks} sett · <span style={{ color: "rgba(229,50,50,0.7)" }}>{trainerName}</span>
               </p>
             </div>
@@ -297,13 +297,13 @@ export default function PublicSchedaPage() {
               </defs>
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-sm font-bold" style={{ color: "var(--ivory)" }}>{pct}%</span>
+              <span className="text-sm font-bold" style={{ color: "var(--text)" }}>{pct}%</span>
             </div>
           </div>
           <div>
-            <p className="text-base font-bold mb-0.5" style={{ color: "var(--ivory)" }}>Avanzamento piano</p>
-            <p className="text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>{weeksLogged} di {plan.total_weeks} settimane completate</p>
-            <p className="text-xs mt-1" style={{ color: "rgba(245,240,232,0.3)" }}>{logs.length} registrazioni totali</p>
+            <p className="text-base font-bold mb-0.5" style={{ color: "var(--text)" }}>Avanzamento piano</p>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{weeksLogged} di {plan.total_weeks} settimane completate</p>
+            <p className="text-xs mt-1" style={{ color: "var(--text-dim)" }}>{logs.length} registrazioni totali</p>
           </div>
         </div>
 
@@ -317,9 +317,9 @@ export default function PublicSchedaPage() {
             <button key={key} onClick={() => setTab(key)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0"
               style={{
-                background: tab === key ? "rgba(255,107,43,0.12)" : "rgba(255,255,255,0.04)",
-                border: `1px solid ${tab === key ? "rgba(255,107,43,0.3)" : "rgba(255,255,255,0.07)"}`,
-                color: tab === key ? "var(--accent-light)" : "rgba(245,240,232,0.5)",
+                background: tab === key ? "rgba(255,107,43,0.12)" : "var(--surface-sm)",
+                border: `1px solid ${tab === key ? "rgba(255,107,43,0.3)" : "var(--surface-md)"}`,
+                color: tab === key ? "var(--accent-light)" : "var(--text-muted)",
               }}>
               <Icon size={14} />
               {label}
@@ -338,7 +338,7 @@ export default function PublicSchedaPage() {
               </div>
             )}
             <div className="mb-5 p-3 rounded-xl text-sm flex items-start gap-2"
-              style={{ background: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.12)", color: "rgba(245,240,232,0.6)" }}>
+              style={{ background: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.12)", color: "var(--text-muted)" }}>
               <span className="text-base leading-none mt-0.5">💡</span>
               <span>
                 <strong style={{ color: "var(--accent-light)" }}>Come usare la scheda:</strong>{" "}
@@ -346,12 +346,12 @@ export default function PublicSchedaPage() {
               </span>
             </div>
             {plan.exercises.length === 0 ? (
-              <div className="text-center py-16 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
                 <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(255,107,43,0.08)" }}>
                   <Dumbbell size={22} style={{ color: "rgba(255,107,43,0.4)" }} />
                 </div>
-                <p className="font-semibold text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Scheda in preparazione</p>
-                <p className="text-xs max-w-xs mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>Il tuo trainer sta costruendo la tua scheda personalizzata. Torni tra poco.</p>
+                <p className="font-semibold text-sm mb-1" style={{ color: "var(--text-muted)" }}>Scheda in preparazione</p>
+                <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Il tuo trainer sta costruendo la tua scheda personalizzata. Torni tra poco.</p>
               </div>
             ) : (
               <WorkoutLogbook
@@ -372,12 +372,12 @@ export default function PublicSchedaPage() {
         {tab === "dieta" && (
           <div>
             {diets.length === 0 ? (
-              <div className="text-center py-16 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
                 <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(255,107,43,0.08)" }}>
                   <UtensilsCrossed size={22} style={{ color: "rgba(255,107,43,0.4)" }} />
                 </div>
-                <p className="font-semibold text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Piano alimentare in preparazione</p>
-                <p className="text-xs max-w-xs mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>Il tuo piano alimentare personalizzato apparirà qui. Il trainer lo sta preparando su misura per i tuoi obiettivi.</p>
+                <p className="font-semibold text-sm mb-1" style={{ color: "var(--text-muted)" }}>Piano alimentare in preparazione</p>
+                <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Il tuo piano alimentare personalizzato apparirà qui. Il trainer lo sta preparando su misura per i tuoi obiettivi.</p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -401,14 +401,14 @@ export default function PublicSchedaPage() {
                       <div className="p-5" style={{ background: "rgba(255,107,43,0.04)" }}>
                         <div className="flex items-start justify-between mb-4">
                           <div>
-                            <h2 className="text-base font-bold" style={{ color: "var(--ivory)" }}>{diet.name}</h2>
-                            {diet.notes && <p className="text-xs mt-1 italic" style={{ color: "rgba(245,240,232,0.45)" }}>{diet.notes}</p>}
+                            <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>{diet.name}</h2>
+                            {diet.notes && <p className="text-xs mt-1 italic" style={{ color: "var(--text-muted)" }}>{diet.notes}</p>}
                           </div>
                           <div className="text-right">
                             <p className="text-2xl font-bold" style={{ color: "var(--accent)" }}>
                               {fmt(diet.calories, diet.calories_max, " kcal")}
                             </p>
-                            <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>al giorno</p>
+                            <p className="text-xs" style={{ color: "var(--text-dim)" }}>al giorno</p>
                           </div>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
@@ -418,9 +418,9 @@ export default function PublicSchedaPage() {
                             { label: "Grassi",      min: diet.fat,     max: diet.fat_max,     color: "#fbbf24" },
                           ].map(({ label, min, max, color }) => (
                             <div key={label} className="rounded-xl p-3 text-center"
-                              style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${color}25` }}>
+                              style={{ background: "var(--surface-sm)", border: `1px solid ${color}25` }}>
                               <p className="text-sm font-bold" style={{ color }}>{fmt(min, max)}</p>
-                              <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{label}</p>
+                              <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>{label}</p>
                             </div>
                           ))}
                         </div>
@@ -433,18 +433,18 @@ export default function PublicSchedaPage() {
                                 <span className="w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center flex-shrink-0"
                                   style={{ background: "rgba(255,107,43,0.15)", color: "var(--accent-light)" }}>{mi + 1}</span>
                                 <div className="flex items-baseline gap-2">
-                                  <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{meal.name}</p>
-                                  {meal.time && <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{meal.time}</span>}
+                                  <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{meal.name}</p>
+                                  {meal.time && <span className="text-xs" style={{ color: "var(--text-dim)" }}>{meal.time}</span>}
                                 </div>
                               </div>
-                              {meal.notes && <p className="text-xs mb-2 italic" style={{ color: "rgba(245,240,232,0.4)" }}>{meal.notes}</p>}
+                              {meal.notes && <p className="text-xs mb-2 italic" style={{ color: "var(--text-dim)" }}>{meal.notes}</p>}
                               {meal.items.length > 0 && (
-                                <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.05)" }}>
+                                <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border-subtle)" }}>
                                   {meal.items.map((item, ii) => (
                                     <div key={item.id}
                                       className="flex items-center gap-3 px-3 py-2.5"
-                                      style={{ background: ii % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
-                                      <span className="flex-1 text-sm" style={{ color: "rgba(245,240,232,0.85)" }}>{item.name || "—"}</span>
+                                      style={{ background: ii % 2 === 0 ? "var(--surface-xs)" : "transparent" }}>
+                                      <span className="flex-1 text-sm" style={{ color: "var(--text)" }}>{item.name || "—"}</span>
                                       <span className="text-sm font-bold flex-shrink-0" style={{ color: "var(--accent-light)" }}>
                                         {item.gramsMax && item.gramsMax > item.grams ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
                                       </span>
@@ -468,16 +468,16 @@ export default function PublicSchedaPage() {
         {tab === "integratori" && (
           <div>
             {(!plan.supplements || plan.supplements.length === 0) ? (
-              <div className="text-center py-16 rounded-2xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
                 <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(255,107,43,0.08)" }}>
                   <ShoppingBag size={22} style={{ color: "rgba(255,107,43,0.4)" }} />
                 </div>
-                <p className="font-semibold text-sm mb-1" style={{ color: "rgba(245,240,232,0.6)" }}>Integratori in arrivo</p>
-                <p className="text-xs max-w-xs mx-auto" style={{ color: "rgba(245,240,232,0.3)" }}>Il tuo trainer aggiungerà presto i consigli sugli integratori più adatti al tuo programma.</p>
+                <p className="font-semibold text-sm mb-1" style={{ color: "var(--text-muted)" }}>Integratori in arrivo</p>
+                <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Il tuo trainer aggiungerà presto i consigli sugli integratori più adatti al tuo programma.</p>
               </div>
             ) : (
               <div>
-                <p className="text-xs mb-4" style={{ color: "rgba(245,240,232,0.4)" }}>
+                <p className="text-xs mb-4" style={{ color: "var(--text-dim)" }}>
                   Integratori consigliati dal tuo trainer. Se presente un codice sconto, copialo prima di acquistare.
                 </p>
                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
@@ -494,7 +494,7 @@ export default function PublicSchedaPage() {
       <TrainerSeal trainerName={trainerName} />
 
       <div className="text-center pb-8 pt-2">
-        <p className="text-xs" style={{ color: "rgba(245,240,232,0.2)" }}>
+        <p className="text-xs" style={{ color: "var(--text-faint)" }}>
           Powered by <span className="accent-text font-semibold">TrainerPro</span>
         </p>
       </div>

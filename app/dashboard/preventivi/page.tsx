@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { Calculator, Plus, Trash2, Copy, CheckCircle2, Printer } from "lucide-react";
@@ -118,14 +118,14 @@ export default function PreventiviPage() {
   }
 
   const inputClass = "w-full px-3 py-2 rounded-xl text-sm outline-none";
-  const inputStyle = { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--ivory)" };
+  const inputStyle = { background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" };
 
   return (
     <div className="p-6 lg:p-8 fade-in">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--ivory)" }}>Preventivi</h1>
-          <p className="text-sm mt-0.5" style={{ color: "rgba(245,240,232,0.45)" }}>{quotes.length} preventivi creati</p>
+          <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Preventivi</h1>
+          <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>{quotes.length} preventivi creati</p>
         </div>
         <button onClick={newQuote} className="accent-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm">
           <Plus size={16} /> Nuovo preventivo
@@ -135,11 +135,11 @@ export default function PreventiviPage() {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Quote list */}
         <div className="lg:col-span-1">
-          <h2 className="text-sm font-semibold mb-3" style={{ color: "rgba(245,240,232,0.6)" }}>I tuoi preventivi</h2>
+          <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--text-muted)" }}>I tuoi preventivi</h2>
           {quotes.length === 0 ? (
             <div className="card-luxury rounded-2xl p-8 text-center">
               <Calculator size={36} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.2)" }} />
-              <p className="text-sm" style={{ color: "rgba(245,240,232,0.4)" }}>Nessun preventivo ancora</p>
+              <p className="text-sm" style={{ color: "var(--text-dim)" }}>Nessun preventivo ancora</p>
               <button onClick={newQuote} className="mt-3 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>Crea il primo</button>
             </div>
           ) : (
@@ -151,10 +151,10 @@ export default function PreventiviPage() {
                   style={{ borderColor: activeQuote?.id === q.id ? "rgba(255,107,43,0.4)" : undefined, background: activeQuote?.id === q.id ? "rgba(255,107,43,0.06)" : undefined }}>
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>
+                      <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
                         {q.clientName || "Cliente non specificato"}
                       </p>
-                      <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.4)" }}>{q.date} · {q.items.length} servizi</p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>{q.date} · {q.items.length} servizi</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold" style={{ color: "var(--accent)" }}>€{getTotal(q).toFixed(2)}</p>
@@ -175,8 +175,8 @@ export default function PreventiviPage() {
           {!activeQuote ? (
             <div className="card-luxury rounded-2xl p-12 text-center h-full flex flex-col items-center justify-center">
               <Calculator size={48} className="mb-4" style={{ color: "rgba(255,107,43,0.15)" }} />
-              <p className="text-base font-semibold mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Seleziona o crea un preventivo</p>
-              <p className="text-sm mb-5" style={{ color: "rgba(245,240,232,0.3)" }}>Aggiungi servizi, calcola il totale e copialo con un click</p>
+              <p className="text-base font-semibold mb-1" style={{ color: "var(--text-muted)" }}>Seleziona o crea un preventivo</p>
+              <p className="text-sm mb-5" style={{ color: "var(--text-dim)" }}>Aggiungi servizi, calcola il totale e copialo con un click</p>
               <button onClick={newQuote} className="accent-btn px-5 py-2.5 rounded-xl text-sm inline-flex items-center gap-2">
                 <Plus size={14} /> Nuovo preventivo
               </button>
@@ -186,7 +186,7 @@ export default function PreventiviPage() {
               {/* Header */}
               <div className="grid sm:grid-cols-2 gap-3 mb-5">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.5)" }}>Cliente</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Cliente</label>
                   <select
                     value={activeQuote.clientName}
                     onChange={(e) => updateQuote({ clientName: e.target.value })}
@@ -197,7 +197,7 @@ export default function PreventiviPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.5)" }}>Data</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Data</label>
                   <input type="date" value={activeQuote.date} onChange={(e) => updateQuote({ date: e.target.value })}
                     className={inputClass} style={inputStyle} />
                 </div>
@@ -205,7 +205,7 @@ export default function PreventiviPage() {
 
               {/* Preset services */}
               <div className="mb-4">
-                <p className="text-xs font-medium mb-2" style={{ color: "rgba(245,240,232,0.5)" }}>Aggiungi servizio rapido:</p>
+                <p className="text-xs font-medium mb-2" style={{ color: "var(--text-muted)" }}>Aggiungi servizio rapido:</p>
                 <div className="flex flex-wrap gap-2">
                   {PRESET_SERVICES.map((p) => (
                     <button key={p.description} onClick={() => addPreset(p)}
@@ -219,7 +219,7 @@ export default function PreventiviPage() {
 
               {/* Items */}
               <div className="mb-4">
-                <div className="grid grid-cols-12 gap-2 mb-2 text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
+                <div className="grid grid-cols-12 gap-2 mb-2 text-xs" style={{ color: "var(--text-dim)" }}>
                   <span className="col-span-6">Descrizione</span>
                   <span className="col-span-2 text-center">Qtà</span>
                   <span className="col-span-2 text-right">Prezzo €</span>
@@ -239,7 +239,7 @@ export default function PreventiviPage() {
                         className="col-span-2 px-2 py-2 rounded-xl text-sm outline-none text-right"
                         style={inputStyle} />
                       <div className="col-span-2 flex items-center justify-end gap-1">
-                        <span className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>€{(item.qty * item.price).toFixed(2)}</span>
+                        <span className="text-sm font-semibold" style={{ color: "var(--text)" }}>€{(item.qty * item.price).toFixed(2)}</span>
                         <button onClick={() => removeItem(item.id)} className="p-1 rounded-lg hover:bg-red-500/10 transition-all">
                           <Trash2 size={12} style={{ color: "rgba(239,68,68,0.5)" }} />
                         </button>
@@ -256,7 +256,7 @@ export default function PreventiviPage() {
               {/* Discount + totals */}
               <div className="pt-4 mb-4" style={{ borderTop: "1px solid rgba(255,107,43,0.1)" }}>
                 <div className="flex items-center gap-3 mb-3">
-                  <label className="text-sm" style={{ color: "rgba(245,240,232,0.6)" }}>Sconto (%)</label>
+                  <label className="text-sm" style={{ color: "var(--text-muted)" }}>Sconto (%)</label>
                   <input type="number" min="0" max="100" value={activeQuote.discount}
                     onChange={(e) => updateQuote({ discount: parseFloat(e.target.value) || 0 })}
                     className="w-20 px-3 py-1.5 rounded-xl text-sm outline-none text-center"
@@ -265,7 +265,7 @@ export default function PreventiviPage() {
                 <div className="space-y-1.5">
                   {activeQuote.discount > 0 && (
                     <>
-                      <div className="flex justify-between text-sm" style={{ color: "rgba(245,240,232,0.5)" }}>
+                      <div className="flex justify-between text-sm" style={{ color: "var(--text-muted)" }}>
                         <span>Subtotale</span>
                         <span>€{getSubtotal(activeQuote).toFixed(2)}</span>
                       </div>
@@ -275,8 +275,8 @@ export default function PreventiviPage() {
                       </div>
                     </>
                   )}
-                  <div className="flex justify-between text-lg font-bold pt-1" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                    <span style={{ color: "var(--ivory)" }}>Totale</span>
+                  <div className="flex justify-between text-lg font-bold pt-1" style={{ borderTop: "1px solid var(--border)" }}>
+                    <span style={{ color: "var(--text)" }}>Totale</span>
                     <span style={{ color: "var(--accent)" }}>€{getTotal(activeQuote).toFixed(2)}</span>
                   </div>
                 </div>
@@ -284,7 +284,7 @@ export default function PreventiviPage() {
 
               {/* Notes */}
               <div className="mb-5">
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "rgba(245,240,232,0.5)" }}>Note aggiuntive</label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Note aggiuntive</label>
                 <textarea value={activeQuote.notes} onChange={(e) => updateQuote({ notes: e.target.value })}
                   rows={2} placeholder="Condizioni, validità, modalità di pagamento…"
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
