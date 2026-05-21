@@ -16,8 +16,9 @@ import {
 } from "lucide-react";
 import { dbProgressPhotos, type ProgressPhoto, dbFitnessScans, type FitnessScan, type FitnessScanAnalysis, dbFitnessScanComparisons, type FitnessScanComparison, type ComparisonAnalysis } from "@/lib/db";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
-import { Scan, Sparkles, ShieldCheck, Brain, GitCompare, TrendingDown, Minus, KeyRound, Activity as ActivityIcon } from "lucide-react";
+import { Scan, Sparkles, ShieldCheck, Brain, GitCompare, TrendingDown, Minus, KeyRound, Activity as ActivityIcon, Utensils, Zap, Award, ChevronRight } from "lucide-react";
 import type { BodyFeatures } from "@/lib/cv-analysis";
+import { computeTier, TIERS, TIER_ORDER, tierDelta, type Tier } from "@/lib/tier-system";
 
 type Tab = "overview" | "fasi" | "schede" | "dieta" | "misurazioni" | "note" | "foto" | "scan";
 
@@ -1443,6 +1444,19 @@ export default function ClientDetailPage() {
         const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
         const activeMonth = activeTimelineMonth ?? months[0] ?? null;
 
+        // Build tier history: for each analysed scan (sorted oldest→newest), compute tier
+        const tierHistory: { date: string; tier: Tier }[] = [...scans]
+          .filter(s => s.ai_analysis)
+          .sort((a, b) => new Date(a.taken_at).getTime() - new Date(b.taken_at).getTime())
+          .map(s => ({
+            date: s.taken_at,
+            tier: computeTier(s.ai_analysis!.body_fat_est, s.ai_analysis!.muscle_mass_est),
+          }));
+        const currentTier = tierHistory.length > 0 ? tierHistory[tierHistory.length - 1].tier : null;
+        const prevTier    = tierHistory.length > 1 ? tierHistory[tierHistory.length - 2].tier : null;
+        const delta       = currentTier && prevTier ? tierDelta(prevTier, currentTier) : 0;
+        const cfg         = currentTier ? TIERS[currentTier] : null;
+
         // For compare mode: pick the first scan of each selected month
         const scanA = selectedMonthA ? byMonth[selectedMonthA]?.[0] : null;
         const scanB = selectedMonthB ? byMonth[selectedMonthB]?.[0] : null;
@@ -1450,18 +1464,86 @@ export default function ClientDetailPage() {
 
         return (
           <div>
-            {/* Security header */}
-            <div className="rounded-2xl p-4 mb-4 flex items-start gap-3"
-              style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.18)" }}>
-              <ShieldCheck size={16} style={{ color: "#fbbf24", flexShrink: 0, marginTop: 2 }} />
-              <div className="flex-1">
-                <p className="text-xs font-bold mb-0.5" style={{ color: "#fbbf24" }}>
-                  Fitness Scan — BETA · Sicurezza enterprise
-                </p>
-                <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
-                  Bucket privato · Link 5 min TTL · Magic byte validation · DB rate limiting · Audit log SHA-256 · Quota 120 scansioni/cliente · AI lato server (immagini mai nel browser)
-                </p>
+            {/* ── SOLO LEVELING RANK HEADER ── */}
+            {cfg && (
+              <div className="rounded-2xl p-5 mb-5 relative overflow-hidden"
+                style={{ background: cfg.bg, border: `1px solid ${cfg.color}30`, boxShadow: `0 0 30px ${cfg.glow}` }}>
+                {/* Ambient glow */}
+                <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full pointer-events-none"
+                  style={{ background: `radial-gradient(circle, ${cfg.glow} 0%, transparent 70%)`, opacity: 0.5 }} />
+                <div className="flex items-center gap-4 relative z-10">
+                  {/* Big rank badge */}
+                  <div className="w-20 h-20 rounded-2xl flex flex-col items-center justify-center flex-shrink-0 relative"
+                    style={{ background: cfg.badge_bg, border: `2px solid ${cfg.color}`, boxShadow: `0 0 20px ${cfg.glow}, inset 0 0 12px ${cfg.glow}` }}>
+                    <span className="text-2xl font-black leading-none" style={{ color: cfg.color }}>
+                      {currentTier}
+                    </span>
+                    <span className="text-xs font-bold uppercase tracking-widest mt-0.5" style={{ color: cfg.color, opacity: 0.7, fontSize: "0.5rem" }}>RANK</span>
+                    {delta > 0 && (
+                      <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-white font-black animate-bounce"
+                        style={{ background: "#22c55e", fontSize: "0.55rem", boxShadow: "0 0 8px rgba(34,197,94,0.6)" }}>↑{delta}</div>
+                    )}
+                  </div>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: cfg.color, letterSpacing: "0.15em" }}>
+                        RANK {currentTier}
+                      </p>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: cfg.badge_bg, color: cfg.color }}>
+                        {cfg.label}
+                      </span>
+                    </div>
+                    {delta > 0 && prevTier && (
+                      <p className="text-xs font-bold mb-1" style={{ color: "#22c55e" }}>
+                        ↑ RANK UP: {prevTier} → {currentTier} · {cfg.rank_up_msg}
+                      </p>
+                    )}
+                    <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{cfg.description}</p>
+                  </div>
+                </div>
+
+                {/* Tier progression track */}
+                <div className="flex items-center gap-1.5 mt-4 relative z-10">
+                  {TIER_ORDER.map((t, i) => {
+                    const tc = TIERS[t];
+                    const isReached = tierHistory.some(h => h.tier === t);
+                    const isCurrent = t === currentTier;
+                    return (
+                      <div key={t} className="flex items-center gap-1">
+                        <div className={`flex items-center justify-center rounded-lg font-black transition-all ${isCurrent ? "w-10 h-8 text-sm" : "w-7 h-7 text-xs"}`}
+                          style={{
+                            background: isReached ? tc.badge_bg : "var(--surface-xs)",
+                            border: `1px solid ${isReached ? tc.color : "var(--border)"}`,
+                            color: isReached ? tc.color : "var(--text-faint)",
+                            boxShadow: isCurrent ? `0 0 10px ${tc.glow}` : undefined,
+                            opacity: isReached ? 1 : 0.4,
+                          }}>
+                          {t}
+                        </div>
+                        {i < TIER_ORDER.length - 1 && (
+                          <ChevronRight size={10} style={{ color: isReached ? "var(--text-dim)" : "var(--text-faint)", opacity: 0.5 }} />
+                        )}
+                      </div>
+                    );
+                  })}
+                  {tierHistory.length > 0 && (
+                    <span className="ml-auto text-xs" style={{ color: "var(--text-faint)" }}>
+                      {tierHistory.length} scan{tierHistory.length !== 1 ? " analizzate" : " analizzata"}
+                    </span>
+                  )}
+                </div>
               </div>
+            )}
+
+            {/* Security notice (compact) */}
+            <div className="rounded-xl px-3 py-2 mb-4 flex items-center gap-2"
+              style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.14)" }}>
+              <ShieldCheck size={12} style={{ color: "#fbbf24", flexShrink: 0 }} />
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                <span className="font-bold" style={{ color: "#fbbf24" }}>BETA · Enterprise security</span>
+                {" "}· Bucket privato · Link 5 min TTL · Rate limiting · Audit SHA-256 · AI server-side
+              </p>
             </div>
 
             {/* Upload + Compare mode toggle row */}
@@ -1734,38 +1816,66 @@ export default function ClientDetailPage() {
                       const cv = scan.body_features;
                       const isAnalyzing = scanAnalyzing === scan.id;
                       const imgUrl = scanUrls[scan.id];
+                      const scanTier = analysis ? computeTier(analysis.body_fat_est, analysis.muscle_mass_est) : null;
+                      const tierCfg  = scanTier ? TIERS[scanTier] : null;
                       return (
-                        <div key={scan.id} className="card-luxury rounded-2xl overflow-hidden">
+                        <div key={scan.id} className="card-luxury rounded-2xl overflow-hidden"
+                          style={tierCfg ? { borderColor: `${tierCfg.color}28`, boxShadow: `0 0 20px ${tierCfg.glow}` } : undefined}>
+
+                          {/* ── Scan header ── */}
                           <div className="p-4">
                             <div className="flex items-start gap-4">
-                              {/* Thumbnail — larger for better visibility */}
-                              <div className="w-24 h-32 rounded-xl overflow-hidden flex-shrink-0 relative"
-                                style={{ background: "var(--surface-sm)", border: "1px solid rgba(229,50,50,0.12)" }}>
-                                {imgUrl ? (
-                                  <img src={imgUrl} alt={scan.taken_at} className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center">
-                                    <Loader2 size={16} className="animate-spin" style={{ color: "rgba(229,50,50,0.4)" }} />
-                                  </div>
-                                )}
-                                <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
-                                  style={{ background: "rgba(0,0,0,0.7)" }}>
-                                  <ShieldCheck size={9} style={{ color: "#22c55e" }} />
-                                </div>
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                  <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
-                                    {new Date(scan.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })}
-                                  </p>
-                                  {analysis && (
-                                    <span className="text-xs px-1.5 py-0.5 rounded-full font-bold"
-                                      style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", fontSize: "0.6rem" }}>
-                                      Analizzata
-                                    </span>
+                              {/* Thumbnail + tier badge */}
+                              <div className="relative flex-shrink-0">
+                                <div className="w-24 h-32 rounded-xl overflow-hidden"
+                                  style={{ background: "var(--surface-sm)", border: `1px solid ${tierCfg ? tierCfg.color + "30" : "rgba(229,50,50,0.12)"}` }}>
+                                  {imgUrl ? (
+                                    <img src={imgUrl} alt={scan.taken_at} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <Loader2 size={16} className="animate-spin" style={{ color: "rgba(229,50,50,0.4)" }} />
+                                    </div>
                                   )}
                                 </div>
+                                {/* Tier badge overlaid on photo */}
+                                {tierCfg && (
+                                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full font-black text-xs flex items-center gap-1"
+                                    style={{ background: tierCfg.badge_bg, border: `1px solid ${tierCfg.color}`, color: tierCfg.color, boxShadow: `0 0 8px ${tierCfg.glow}`, whiteSpace: "nowrap" }}>
+                                    <Award size={9} /> RANK {scanTier}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex-1 min-w-0 pt-0.5">
+                                <p className="text-sm font-semibold mb-1" style={{ color: "var(--text)" }}>
+                                  {new Date(scan.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })}
+                                </p>
                                 {scan.notes && <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>{scan.notes}</p>}
+
+                                {/* Key metrics row (if analysed) */}
+                                {analysis && (
+                                  <div className="flex gap-2 mb-2 flex-wrap">
+                                    {analysis.body_fat_est != null && (
+                                      <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                                        style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24" }}>
+                                        {analysis.body_fat_est}% BF
+                                      </span>
+                                    )}
+                                    {analysis.muscle_mass_est && (
+                                      <span className="text-xs px-2 py-0.5 rounded-full font-bold capitalize"
+                                        style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa" }}>
+                                        {analysis.muscle_mass_est}
+                                      </span>
+                                    )}
+                                    {analysis.body_type && (
+                                      <span className="text-xs px-2 py-0.5 rounded-full font-bold capitalize"
+                                        style={{ background: "rgba(56,189,248,0.10)", color: "#38bdf8" }}>
+                                        {analysis.body_type}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <button onClick={() => handleScanAnalyze(scan)} disabled={isAnalyzing}
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
@@ -1782,70 +1892,133 @@ export default function ClientDetailPage() {
                               </div>
                             </div>
 
-                            {/* CV body metrics (TF.js MoveNet — zero token cost) */}
+                            {/* CV MoveNet metrics */}
                             {cv && cv.metrics && (
                               <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
                                 <div className="flex items-center gap-2 mb-2">
                                   <ActivityIcon size={11} style={{ color: "#38bdf8" }} />
                                   <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#38bdf8", letterSpacing: "0.08em" }}>
-                                    CV — MoveNet · {Math.round((cv.metrics.pose_confidence ?? 0) * 100)}% confidenza
+                                    CV · MoveNet · {Math.round((cv.metrics.pose_confidence ?? 0) * 100)}% conf.
                                   </p>
                                 </div>
-                                <div className="grid grid-cols-3 gap-1.5 mb-1.5">
+                                <div className="grid grid-cols-3 gap-1.5">
                                   {[
-                                    { k: "SHR", v: cv.metrics.shoulder_hip_ratio?.toFixed(2) ?? "—", label: "Spalle/Fianchi", color: "#38bdf8", hint: cv.metrics.shoulder_hip_ratio && cv.metrics.shoulder_hip_ratio >= 1.15 ? "✓" : undefined },
-                                    { k: "WHR", v: cv.metrics.waist_hip_ratio?.toFixed(2) ?? "—", label: "Vita/Fianchi", color: "#fbbf24", hint: cv.metrics.waist_hip_ratio && cv.metrics.waist_hip_ratio <= 0.90 ? "✓" : undefined },
-                                    { k: "SIM", v: cv.metrics.bilateral_symmetry ? `${Math.round(cv.metrics.bilateral_symmetry * 100)}%` : "—", label: "Simmetria", color: "#a78bfa", hint: cv.metrics.bilateral_symmetry && cv.metrics.bilateral_symmetry >= 0.80 ? "✓" : undefined },
-                                  ].map(({ k, v, label, color, hint }) => (
+                                    { k: "SHR", v: cv.metrics.shoulder_hip_ratio?.toFixed(2) ?? "—", label: "Spalle/Fianchi", color: "#38bdf8" },
+                                    { k: "WHR", v: cv.metrics.waist_hip_ratio?.toFixed(2) ?? "—", label: "Vita/Fianchi", color: "#fbbf24" },
+                                    { k: "SIM", v: cv.metrics.bilateral_symmetry ? `${Math.round(cv.metrics.bilateral_symmetry * 100)}%` : "—", label: "Simmetria", color: "#a78bfa" },
+                                  ].map(({ k, v, label, color }) => (
                                     <div key={k} className="rounded-lg p-1.5 text-center" style={{ background: "var(--surface-xs)", border: `1px solid ${color}18` }}>
-                                      <p className="font-bold" style={{ color, fontSize: "0.85rem" }}>{v} {hint && <span style={{ color: "#22c55e", fontSize: "0.65rem" }}>{hint}</span>}</p>
+                                      <p className="font-bold" style={{ color, fontSize: "0.85rem" }}>{v}</p>
                                       <p style={{ color: "var(--text-faint)", fontSize: "0.58rem" }}>{label}</p>
                                     </div>
                                   ))}
                                 </div>
-                                <p className="text-xs" style={{ color: "var(--text-faint)" }}>
-                                  TF.js MoveNet Lightning · analisi locale · zero costo API · {new Date(cv.analyzed_at).toLocaleDateString("it-IT")}
-                                </p>
                               </div>
                             )}
 
-                            {/* Single scan analysis */}
+                            {/* ── AI Full Analysis ── */}
                             {analysis && (
-                              <div className="mt-3 pt-3" style={{ borderTop: "1px solid rgba(229,50,50,0.1)" }}>
-                                <div className="flex items-center gap-2 mb-2">
+                              <div className="mt-3 pt-3 space-y-3" style={{ borderTop: `1px solid ${tierCfg ? tierCfg.color + "20" : "rgba(229,50,50,0.1)"}` }}>
+
+                                {/* Summary */}
+                                <div className="flex items-center gap-2 mb-1">
                                   <Brain size={12} style={{ color: "var(--accent)" }} />
                                   <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(229,50,50,0.8)", letterSpacing: "0.08em" }}>
                                     Analisi AI · {analysis.confidence === "high" ? "Alta" : analysis.confidence === "medium" ? "Media" : "Bassa"} confidenza
                                   </p>
                                 </div>
-                                <div className="grid grid-cols-3 gap-2 mb-2">
-                                  {[
-                                    { l: "Grasso", v: analysis.body_fat_est != null ? `${analysis.body_fat_est}%` : "—", c: "#fbbf24" },
-                                    { l: "Muscolarità", v: analysis.muscle_mass_est ?? "—", c: "#a78bfa" },
-                                    { l: "Somatotipo", v: analysis.body_type ?? "—", c: "#38bdf8" },
-                                  ].map(({ l, v, c }) => (
-                                    <div key={l} className="rounded-xl p-2 text-center" style={{ background: "var(--surface-xs)", border: `1px solid ${c}20` }}>
-                                      <p className="text-sm font-bold capitalize" style={{ color: c }}>{v}</p>
-                                      <p className="text-xs mt-0.5" style={{ color: "var(--text-faint)", fontSize: "0.6rem" }}>{l}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                                <p className="text-xs leading-relaxed italic px-3 py-2 rounded-lg mb-2"
-                                  style={{ color: "var(--text-muted)", background: "var(--surface-xs)" }}>
+                                <p className="text-xs leading-relaxed italic px-3 py-2.5 rounded-xl"
+                                  style={{ color: "var(--text-muted)", background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
                                   {analysis.summary}
                                 </p>
-                                {analysis.recommendations?.map((r, i) => (
-                                  <div key={i} className="flex items-start gap-2 text-xs mb-1" style={{ color: "var(--text-muted)" }}>
-                                    <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 font-bold"
-                                      style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent)", fontSize: "0.6rem" }}>{i + 1}</span>
-                                    {r}
+
+                                {/* Biomechanics */}
+                                {analysis.biomechanics && (
+                                  <div className="rounded-xl p-3" style={{ background: "rgba(56,189,248,0.05)", border: "1px solid rgba(56,189,248,0.18)" }}>
+                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                      <ActivityIcon size={11} style={{ color: "#38bdf8" }} />
+                                      <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#38bdf8" }}>Biomeccanica</p>
+                                    </div>
+                                    <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{analysis.biomechanics}</p>
                                   </div>
-                                ))}
-                                <p className="text-xs mt-2" style={{ color: "var(--text-faint)" }}>
-                                  Claude Haiku · {new Date(analysis.analyzed_at).toLocaleDateString("it-IT")}
+                                )}
+
+                                {/* Strengths & Improvements side by side */}
+                                {(analysis.strengths?.length || analysis.improvements?.length) && (
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {analysis.strengths?.length ? (
+                                      <div className="rounded-xl p-3" style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.15)" }}>
+                                        <p className="text-xs font-bold mb-1.5 uppercase tracking-wide" style={{ color: "#22c55e" }}>Punti di Forza</p>
+                                        {analysis.strengths.map((s, i) => (
+                                          <p key={i} className="text-xs mb-1 flex items-start gap-1" style={{ color: "var(--text-muted)" }}>
+                                            <span style={{ color: "#22c55e", flexShrink: 0 }}>✓</span> {s}
+                                          </p>
+                                        ))}
+                                      </div>
+                                    ) : null}
+                                    {analysis.improvements?.length ? (
+                                      <div className="rounded-xl p-3" style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.15)" }}>
+                                        <p className="text-xs font-bold mb-1.5 uppercase tracking-wide" style={{ color: "#fbbf24" }}>Da Migliorare</p>
+                                        {analysis.improvements.map((s, i) => (
+                                          <p key={i} className="text-xs mb-1 flex items-start gap-1" style={{ color: "var(--text-muted)" }}>
+                                            <span style={{ color: "#fbbf24", flexShrink: 0 }}>→</span> {s}
+                                          </p>
+                                        ))}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                )}
+
+                                {/* Nutrition plan */}
+                                {(analysis.nutrition_tips?.length || analysis.nutrition_calories) && (
+                                  <div className="rounded-xl p-3" style={{ background: "rgba(229,50,50,0.04)", border: "1px solid rgba(229,50,50,0.18)" }}>
+                                    <div className="flex items-center gap-1.5 mb-2">
+                                      <Utensils size={11} style={{ color: "var(--accent)" }} />
+                                      <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--accent)" }}>Piano Nutrizionale</p>
+                                    </div>
+                                    {(analysis.nutrition_calories || analysis.nutrition_protein_g) && (
+                                      <div className="flex gap-3 mb-2">
+                                        {analysis.nutrition_calories && (
+                                          <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                                            style={{ background: "rgba(229,50,50,0.1)", color: "var(--accent-light)" }}>
+                                            ~{analysis.nutrition_calories} kcal/die
+                                          </span>
+                                        )}
+                                        {analysis.nutrition_protein_g && (
+                                          <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                                            style={{ background: "rgba(139,92,246,0.1)", color: "#a78bfa" }}>
+                                            {analysis.nutrition_protein_g}g proteine
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                    {analysis.nutrition_tips?.map((tip, i) => (
+                                      <p key={i} className="text-xs mb-1 flex items-start gap-1" style={{ color: "var(--text-muted)" }}>
+                                        <Zap size={9} style={{ color: "var(--accent)", flexShrink: 0, marginTop: 2 }} /> {tip}
+                                      </p>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Training recommendations */}
+                                {analysis.recommendations?.length ? (
+                                  <div>
+                                    <p className="text-xs font-bold mb-1.5 uppercase tracking-wide" style={{ color: "var(--text-dim)" }}>Raccomandazioni Allenamento</p>
+                                    {analysis.recommendations.map((r, i) => (
+                                      <div key={i} className="flex items-start gap-2 text-xs mb-1" style={{ color: "var(--text-muted)" }}>
+                                        <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 font-bold"
+                                          style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent)", fontSize: "0.6rem" }}>{i + 1}</span>
+                                        {r}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : null}
+
+                                <p className="text-xs" style={{ color: "var(--text-faint)" }}>
+                                  Claude Sonnet · {new Date(analysis.analyzed_at).toLocaleDateString("it-IT")}
                                 </p>
-                                <p className="text-xs mt-1 px-2 py-1 rounded-lg" style={{ color: "rgba(251,191,36,0.7)", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.12)" }}>
-                                  GDPR: immagine inviata ad Anthropic. Informa il cliente nella privacy policy.
+                                <p className="text-xs px-2 py-1 rounded-lg" style={{ color: "rgba(251,191,36,0.7)", background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.12)" }}>
+                                  GDPR: immagine elaborata da Anthropic AI. Informa il cliente nella privacy policy.
                                 </p>
                               </div>
                             )}

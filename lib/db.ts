@@ -642,14 +642,23 @@ export interface FitnessScan {
 }
 
 export interface FitnessScanAnalysis {
-  body_fat_est: number | null;
-  muscle_mass_est: string | null;
-  body_type: string | null;
-  summary: string;
-  recommendations: string[];
-  confidence: "low" | "medium" | "high";
-  analyzed_at: string;
-  model: string;
+  body_fat_est:      number | null;
+  muscle_mass_est:   string | null;
+  body_type:         string | null;
+  summary:           string;
+  recommendations:   string[];
+  confidence:        "low" | "medium" | "high";
+  analyzed_at:       string;
+  model:             string;
+  // Solo Leveling tier (computed client-side from body_fat_est + muscle_mass_est)
+  tier?:             import("@/lib/tier-system").Tier;
+  // Extended fields returned by the upgraded prompt
+  biomechanics?:     string;
+  strengths?:        string[];
+  improvements?:     string[];
+  nutrition_tips?:   string[];
+  nutrition_calories?: number | null;
+  nutrition_protein_g?: number | null;
 }
 
 const SCAN_BUCKET = "fitness-scans";

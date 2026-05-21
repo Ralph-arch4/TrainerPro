@@ -90,12 +90,12 @@ export async function POST(req: NextRequest) {
     const anthropic = anthropicClient();
 
     const message = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1024,
-      system: `Sei un assistente di analisi della composizione corporea per personal trainer professionisti.
-Analizza le foto di trasformazione corporea fornite e restituisci SOLO un oggetto JSON valido, senza testo aggiuntivo.
-La tua analisi è un ausilio professionale e deve essere sempre accompagnata da una misurazione clinica.
-Non identificare mai l'identità della persona. Concentrati esclusivamente sulla composizione corporea visiva.`,
+      model: "claude-sonnet-4-6",
+      max_tokens: 1400,
+      system: `Sei un esperto di composizione corporea e biomeccanica al servizio di personal trainer professionisti.
+Analizza le foto fornite con precisione scientifica e restituisci SOLO un oggetto JSON valido, senza testo aggiuntivo.
+Non identificare mai il volto o l'identità della persona. Concentrati esclusivamente su composizione corporea visiva, postura e biomeccanica.
+Ogni valutazione è un ausilio professionale — non una diagnosi medica.`,
 
       messages: [
         {
@@ -107,17 +107,42 @@ Non identificare mai l'identità della persona. Concentrati esclusivamente sulla
             },
             {
               type: "text",
-              text: `Analizza questa foto di trasformazione corporea e restituisci ESCLUSIVAMENTE un oggetto JSON con questa struttura esatta:
+              text: `Analizza questa foto corporea e restituisci ESCLUSIVAMENTE il seguente JSON (nessun testo prima o dopo):
 {
-  "body_fat_est": <numero percentuale stimata oppure null se non determinabile>,
+  "body_fat_est": <percentuale grasso corporeo stimata visivamente, oppure null>,
   "muscle_mass_est": <"bassa" | "media" | "alta" | null>,
   "body_type": <"ectomorfo" | "mesomorfo" | "endomorfo" | "misto" | null>,
-  "summary": "<descrizione professionale in italiano, max 3 frasi>",
-  "recommendations": ["<consiglio 1>", "<consiglio 2>", "<consiglio 3>"],
-  "confidence": <"low" | "medium" | "high">
-}
+  "confidence": <"low" | "medium" | "high">,
 
-Rispondi SOLO con il JSON. Nessun testo prima o dopo.`,
+  "summary": "<valutazione professionale in italiano, 2-3 frasi, tono da coach esperto>",
+
+  "biomechanics": "<osservazione visiva su postura, simmetria muscolare, catene cinetiche, compensazioni evidenti — 2-3 frasi in italiano>",
+
+  "strengths": [
+    "<punto di forza fisico osservabile 1>",
+    "<punto di forza fisico osservabile 2>",
+    "<punto di forza fisico osservabile 3>"
+  ],
+
+  "improvements": [
+    "<area di miglioramento prioritaria 1 con azione concreta>",
+    "<area di miglioramento prioritaria 2 con azione concreta>"
+  ],
+
+  "nutrition_calories": <stima calorica mantenimento (TDEE) basata sul fisico visibile, oppure null>,
+  "nutrition_protein_g": <fabbisogno proteico giornaliero consigliato in grammi, oppure null>,
+  "nutrition_tips": [
+    "<consiglio nutrizionale specifico 1 basato sul fisico e sull'obiettivo visibile>",
+    "<consiglio nutrizionale specifico 2>",
+    "<consiglio nutrizionale specifico 3>"
+  ],
+
+  "recommendations": [
+    "<raccomandazione allenamento 1 specifica e concreta>",
+    "<raccomandazione allenamento 2>",
+    "<raccomandazione allenamento 3>"
+  ]
+}`,
             },
           ],
         },
