@@ -520,6 +520,42 @@ function TrainerVoiceCard({ trainerName, daysSinceLastLog, streak, totalLogs }: 
   );
 }
 
+// ── Athlete Status Band ──────────────────────────────────────────────────────
+function AthleteStatusBand({ dayOnJourney, streak }: {
+  dayOnJourney: number | null; streak: number;
+}) {
+  return (
+    <div className="mb-4 rounded-2xl overflow-hidden"
+      style={{ background: "rgba(10,10,10,0.6)", border: "1px solid rgba(229,50,50,0.15)" }}>
+      <div className="h-px" style={{ background: "linear-gradient(90deg,transparent,rgba(229,50,50,0.55),transparent)" }} />
+      <div className="flex items-stretch">
+        {/* LIVE dot */}
+        <div className="flex items-center gap-2 px-4 py-3 flex-shrink-0"
+          style={{ borderRight: "1px solid rgba(229,50,50,0.12)" }}>
+          <span className="pulse-glow" style={{ display: "block", width: 7, height: 7, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 8px #22c55e" }} />
+          <span className="text-xs font-black tracking-[0.18em] uppercase" style={{ color: "rgba(34,197,94,0.85)" }}>Live</span>
+        </div>
+        {/* Day counter */}
+        <div className="flex-1 flex items-center justify-center gap-1.5 px-3 py-3"
+          style={{ borderRight: "1px solid rgba(229,50,50,0.12)" }}>
+          <Calendar size={11} style={{ color: "var(--text-dim)", flexShrink: 0 }} />
+          <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+            {dayOnJourney !== null ? `Giorno ${dayOnJourney} del percorso` : "Percorso non ancora iniziato"}
+          </span>
+        </div>
+        {/* Streak */}
+        <div className="flex items-center gap-1.5 px-4 py-3 flex-shrink-0">
+          <Flame size={11} style={{ color: streak > 0 ? "var(--accent)" : "var(--text-faint)", flexShrink: 0 }} />
+          <span className="text-xs font-bold" style={{ color: streak > 0 ? "var(--accent)" : "var(--text-faint)" }}>
+            {streak > 0 ? `${streak}gg streak` : "0 streak"}
+          </span>
+        </div>
+      </div>
+      <div className="h-px" style={{ background: "linear-gradient(90deg,transparent,rgba(229,50,50,0.25),transparent)" }} />
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -809,6 +845,9 @@ export default function ClientPortalPage() {
           levelName={levelName}
           xpPct={xpPct}
         />
+
+        {/* ── Stato Atleta ─────────────────────────────────────────────────── */}
+        <AthleteStatusBand dayOnJourney={dayOnJourney} streak={streak} />
 
         {/* ── Voce del Trainer ─────────────────────────────────────────────── */}
         <TrainerVoiceCard
