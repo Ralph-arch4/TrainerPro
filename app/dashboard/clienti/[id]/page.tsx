@@ -229,32 +229,50 @@ export default function ClientDetailPage() {
     e.target.value = "";
     setScanUploading(true);
     try {
+      // Resize + strip EXIF client-side
       const resized = await resizeImage(file);
 
-      // ── CV analysis (TF.js MoveNet — zero Claude token cost) ───────────────
+      // CV analysis via TF.js MoveNet (zero token cost, non-blocking)
       let bodyFeatures: BodyFeatures | null = null;
       try {
         const { analyseImage } = await import("@/lib/cv-analysis");
         bodyFeatures = await analyseImage(resized);
       } catch (cvErr) {
-        console.warn("[CV] Pose detection failed (non-blocking):", cvErr);
+        console.warn("[CV] Pose detection skipped:", cvErr);
       }
 
-      const path   = await dbFitnessScans.upload(client!.id, resized, scanUploadDate);
-      const record = await dbFitnessScans.create({
-        clientId:     client!.id,
-        storagePath:  path,
-        takenAt:      scanUploadDate,
-        notes:        scanUploadNotes || undefined,
-        bodyFeatures: bodyFeatures ?? undefined,
+      // Get auth token for server-side upload (bypasses storage RLS via service_role)
+      const { data: { session } } = await createSupabaseClient().auth.getSession();
+      if (!session) throw new Error("Sessione scaduta — effettua di nuovo il login");
+
+      const form = new FormData();
+      form.append("file",      resized, "scan.jpg");
+      form.append("client_id", client!.id);
+      form.append("taken_at",  scanUploadDate);
+      if (scanUploadNotes) form.append("notes", scanUploadNotes);
+      if (bodyFeatures)    form.append("body_features", JSON.stringify(bodyFeatures));
+
+      const resp = await fetch("/api/fitness-scan/upload", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${session.access_token}` },
+        body: form,
       });
-      const url = await dbFitnessScans.getSignedUrl(path);
+
+      const json = await resp.json();
+      if (!resp.ok) throw new Error(json.error ?? `Upload fallito (${resp.status})`);
+
+      const record = json.scan as import("@/lib/db").FitnessScan;
       setScans(prev => [record, ...prev]);
-      if (url) setScanUrls(prev => ({ ...prev, [record.id]: url }));
+      if (json.signedUrl) setScanUrls(prev => ({ ...prev, [record.id]: json.signedUrl }));
       setScanUploadNotes("");
-      showToast(bodyFeatures ? "Foto caricata · analisi CV completata" : "Foto caricata");
-    } catch { showToast("Errore nel caricamento", "error"); }
-    finally { setScanUploading(false); }
+      showToast(bodyFeatures ? "Foto caricata · analisi CV completata ✓" : "Foto caricata con successo");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Errore sconosciuto";
+      showToast(`Errore: ${msg}`, "error");
+      console.error("[scan-upload]", err);
+    } finally {
+      setScanUploading(false);
+    }
   }
 
   async function handleScanDelete(scan: FitnessScan) {
