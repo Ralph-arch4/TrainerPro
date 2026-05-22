@@ -556,6 +556,62 @@ function AthleteStatusBand({ dayOnJourney, streak }: {
   );
 }
 
+// ── Pre-Session Mood Check-In ────────────────────────────────────────────────
+const MOODS = [
+  { id: "energy", emoji: "⚡", label: "Carico",  color: "#22c55e",      msg: "Ottimo! Canalizziamo questa energia — oggi spingi sui carichi e non aver paura di osare." },
+  { id: "normal", emoji: "💪", label: "Pronto",  color: "var(--accent)", msg: "Perfetto. Sei qui, e questo è già metà della vittoria. Lavoriamo insieme." },
+  { id: "tired",  emoji: "😴", label: "Stanco",  color: "#fbbf24",      msg: "Ti sento. Anche una sessione leggera oggi vale più di zero — ascolta il corpo e dai quello che puoi." },
+] as const;
+type MoodId = typeof MOODS[number]["id"];
+
+function MoodCheckIn({ trainerName }: { trainerName: string }) {
+  const todayKey = `mood_${new Date().toISOString().slice(0, 10)}`;
+  const [mood, setMood] = useState<MoodId | null>(() => {
+    if (typeof window === "undefined") return null;
+    return (localStorage.getItem(todayKey) as MoodId) ?? null;
+  });
+
+  function pick(id: MoodId) {
+    localStorage.setItem(todayKey, id);
+    setMood(id);
+  }
+
+  const selected = mood ? MOODS.find(m => m.id === mood)! : null;
+
+  if (selected) {
+    return (
+      <div className="mb-4 rounded-2xl p-4 flex items-start gap-3"
+        style={{ background: "var(--surface-xs)", border: `1px solid ${selected.color}28` }}>
+        <span style={{ fontSize: "1.3rem", lineHeight: 1, marginTop: 1 }}>{selected.emoji}</span>
+        <p className="text-sm leading-relaxed flex-1" style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+          &ldquo;{selected.msg}&rdquo;{" "}
+          <span className="not-italic font-bold" style={{ color: selected.color }}>— {trainerName}</span>
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-4 rounded-2xl p-4"
+      style={{ background: "var(--surface-xs)", border: "1px solid var(--border)" }}>
+      <p className="text-xs font-bold uppercase tracking-[0.14em] mb-3"
+        style={{ color: "var(--text-dim)" }}>
+        Come ti senti oggi?
+      </p>
+      <div className="flex gap-2">
+        {MOODS.map(m => (
+          <button key={m.id} onClick={() => pick(m.id)}
+            className="flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all active:scale-95"
+            style={{ background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
+            <span style={{ fontSize: "1.5rem" }}>{m.emoji}</span>
+            <span className="text-xs font-bold" style={{ color: m.color }}>{m.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -1203,6 +1259,7 @@ export default function ClientPortalPage() {
                 <button onClick={() => setSaveError(false)} className="text-xs underline opacity-70 flex-shrink-0">Chiudi</button>
               </div>
             )}
+            <MoodCheckIn trainerName={trainerName} />
             <div className="mb-4 p-3 rounded-xl text-sm flex items-start gap-2"
               style={{ background: "rgba(229,50,50,0.06)", border: "1px solid rgba(229,50,50,0.14)", color: "var(--text-muted)" }}>
               <span className="text-base leading-none mt-0.5">💡</span>
