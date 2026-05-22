@@ -72,6 +72,8 @@ USING (
 -- security definer = runs as the function owner (bypasses RLS) so it can
 -- count rows the caller cannot directly see.
 
+DROP FUNCTION IF EXISTS check_scan_upload_quota(uuid, integer);
+
 CREATE OR REPLACE FUNCTION check_scan_upload_quota(
   p_client_id uuid,
   p_max       int
