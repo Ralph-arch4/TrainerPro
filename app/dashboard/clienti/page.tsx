@@ -42,6 +42,41 @@ const levelLabel: Record<string, string> = {
   avanzato: "Avanzato",
 };
 
+function getFormaScore(client: Client): { score: number; label: string; color: string } | null {
+  if (client.status !== "attivo") return null;
+  const now = Date.now();
+  const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
+
+  const activePlan = client.workoutPlans.find(p => p.active);
+  const target = Math.max(1, activePlan?.daysPerWeek ?? 3);
+  const weekDays = new Set(
+    allLogs.filter(l => new Date(l.loggedAt).getTime() > now - 7 * 86400000)
+      .map(l => new Date(l.loggedAt).toDateString())
+  );
+  const freqScore = Math.min(40, Math.round((weekDays.size / target) * 40));
+
+  const weeksWithSessions = [3, 2, 1, 0].filter(wAgo => {
+    const from = now - (wAgo + 1) * 7 * 86400000;
+    const to   = now - wAgo * 7 * 86400000;
+    return allLogs.some(l => { const t = new Date(l.loggedAt).getTime(); return t > from && t <= to; });
+  }).length;
+  const consScore = Math.round((weeksWithSessions / 4) * 30);
+
+  let progScore = 15;
+  const weighted = allLogs.filter(l => l.weight != null)
+    .sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
+  if (weighted.length >= 4) {
+    const rAvg = weighted.slice(0, 2).reduce((s, l) => s + l.weight!, 0) / 2;
+    const oAvg = weighted.slice(2, 4).reduce((s, l) => s + l.weight!, 0) / 2;
+    progScore = rAvg > oAvg + 0.5 ? 30 : rAvg < oAvg - 0.5 ? 5 : 15;
+  }
+
+  const score = freqScore + consScore + progScore;
+  const label = score >= 80 ? "In forma" : score >= 55 ? "Costante" : score >= 30 ? "Intermittente" : "Inattivo";
+  const color = score >= 80 ? "#22c55e" : score >= 55 ? "#fbbf24" : score >= 30 ? "#f97316" : "#ef4444";
+  return { score, label, color };
+}
+
 function getLastLogDate(client: Client): Date | null {
   const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
   if (!allLogs.length) return null;
@@ -215,6 +250,7 @@ function ClientiPageInner() {
       <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {filtered.map((client) => {
           const riskDays = getRiskDays(client);
+          const forma = getFormaScore(client);
           return (
           <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
             className="card-luxury rounded-2xl p-5 transition-all group block"
@@ -282,6 +318,25 @@ function ClientiPageInner() {
                 {client.monthlyFee && <span style={{ color: "var(--accent-light)" }}>€{client.monthlyFee}/m</span>}
               </div>
             </div>
+            {forma && (
+              <div className="mt-3 pt-3 flex items-center justify-between"
+                style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                <span className="text-xs" style={{ color: "var(--text-dim)" }}>Indice forma</span>
+                <div className="flex items-center gap-2">
+                  <div className="relative w-7 h-7 flex-shrink-0">
+                    <svg className="w-7 h-7" style={{ transform: "rotate(-90deg)" }} viewBox="0 0 28 28">
+                      <circle cx="14" cy="14" r="11" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3" />
+                      <circle cx="14" cy="14" r="11" fill="none" stroke={forma.color} strokeWidth="3"
+                        strokeDasharray={`${((forma.score / 100) * 69.11).toFixed(1)} 69.11`}
+                        strokeLinecap="round" />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center font-bold"
+                      style={{ fontSize: "7px", color: forma.color }}>{forma.score}</span>
+                  </div>
+                  <span className="text-xs font-semibold" style={{ color: forma.color }}>{forma.label}</span>
+                </div>
+              </div>
+            )}
           </Link>
           );
         })}
