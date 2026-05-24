@@ -6,7 +6,7 @@ import {
   Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight,
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
   Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle, Scale, TrendingDown,
-  BarChart2,
+  BarChart2, CreditCard,
 } from "lucide-react";
 
 function timeGreeting() {
@@ -199,6 +199,23 @@ export default function DashboardPage() {
     return results
       .sort((a, b) => ({ critico: 0, alto: 1, medio: 2 }[a.risk] - { critico: 0, alto: 1, medio: 2 }[b.risk]))
       .slice(0, 5);
+  }, [clients]);
+
+  // Rinnovi imminenti: clients whose monthly billing day falls within next 7 days
+  const renewalAlerts = useMemo(() => {
+    const today = new Date();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const results: { client: typeof clients[0]; daysUntil: number; fee: number }[] = [];
+    for (const c of clients.filter(cl => cl.status === "attivo" && cl.monthlyFee && cl.startDate)) {
+      const startDay = new Date(c.startDate!).getDate();
+      let nextRenewal = new Date(today.getFullYear(), today.getMonth(), startDay);
+      if (nextRenewal.getTime() < todayMidnight) {
+        nextRenewal = new Date(today.getFullYear(), today.getMonth() + 1, startDay);
+      }
+      const daysUntil = Math.floor((nextRenewal.getTime() - todayMidnight) / 86400000);
+      if (daysUntil <= 7) results.push({ client: c, daysUntil, fee: c.monthlyFee! });
+    }
+    return results.sort((a, b) => a.daysUntil - b.daysUntil);
   }, [clients]);
 
   // Stallo peso: clients with 3+ consecutive measurements within ±0.5kg
@@ -730,6 +747,57 @@ export default function DashboardPage() {
                 </div>
               </Link>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Rinnovi Imminenti ───────────────────────────────────────────── */}
+      {renewalAlerts.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.18)" }}>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <CreditCard size={14} style={{ color: "#4ade80" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Rinnovi Imminenti
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+              style={{ background: "rgba(34,197,94,0.18)", color: "#4ade80" }}>
+              {renewalAlerts.length}
+            </span>
+            <span className="text-xs ml-auto font-medium" style={{ color: "rgba(74,222,128,0.6)" }}>
+              +€{renewalAlerts.reduce((s, r) => s + r.fee, 0).toLocaleString("it-IT")} in arrivo
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {renewalAlerts.map(({ client, daysUntil, fee }) => {
+              const urgency = daysUntil === 0 ? "#f87171" : daysUntil <= 2 ? "#fbbf24" : "#4ade80";
+              const label = daysUntil === 0 ? "Oggi" : daysUntil === 1 ? "Domani" : `Tra ${daysUntil}gg`;
+              return (
+                <div key={client.id} className="flex items-center gap-3 p-3 rounded-xl"
+                  style={{ background: "rgba(34,197,94,0.05)" }}>
+                  <Link href={`/dashboard/clienti/${client.id}`}
+                    className="flex items-center gap-3 flex-1 min-w-0 group">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                      style={{ background: "rgba(34,197,94,0.12)", color: "#4ade80" }}>
+                      {client.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate group-hover:underline" style={{ color: "var(--text)" }}>{client.name}</p>
+                      <p className="text-xs font-medium" style={{ color: urgency }}>{label}</p>
+                    </div>
+                    <span className="text-xs font-bold flex-shrink-0" style={{ color: "#4ade80" }}>€{fee}/m</span>
+                  </Link>
+                  {client.phone && (
+                    <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}! Ti ricordo che il tuo abbonamento mensile (€${fee}) si rinnova ${daysUntil === 0 ? "oggi" : daysUntil === 1 ? "domani" : `tra ${daysUntil} giorni`}. Fammi sapere!`)}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
+                      style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                      <MessageCircle size={11} />
+                      WA
+                    </a>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
