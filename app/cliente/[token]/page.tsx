@@ -294,6 +294,46 @@ function SupplementClientCard({ item }: { item: SupplementItem }) {
   );
 }
 
+function SignatureStroke({ name }: { name: string }) {
+  // Path length is fixed at ~148; varies slightly by name length but animation still works
+  const pathLen = 148;
+  return (
+    <svg width="118" height="20" viewBox="0 0 118 20" fill="none"
+      aria-hidden="true"
+      style={{ display: "block", marginTop: 3, overflow: "visible" }}>
+      {/* Main signature flourish — flowing bezier */}
+      <path
+        d="M2 14 C12 7, 24 17, 38 11 C52 5, 60 16, 74 10 C88 4, 100 15, 116 9"
+        stroke="rgba(229,50,50,0.52)"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        fill="none"
+        style={{
+          strokeDasharray: pathLen,
+          strokeDashoffset: pathLen,
+          animation: "signatureDraw 1.5s cubic-bezier(.4,0,.2,1) 0.55s forwards",
+        }}
+      />
+      {/* Terminal dot — appears after the line finishes */}
+      <circle cx="116" cy="9" r="1.8" fill="rgba(229,50,50,0.52)"
+        style={{ animation: "signatureFlare 0.45s ease-out 2.05s both" }}
+      />
+      {/* Subtle name-length underline echo */}
+      <line
+        x1="2" y1="18" x2={Math.min(8 + name.length * 6.2, 116)} y2="18"
+        stroke="rgba(229,50,50,0.14)"
+        strokeWidth="0.8"
+        strokeLinecap="round"
+        style={{
+          strokeDasharray: 120,
+          strokeDashoffset: 120,
+          animation: "signatureDraw 0.9s ease-out 2.3s forwards",
+        }}
+      />
+    </svg>
+  );
+}
+
 function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToken, level, levelName, xpPct }: {
   planName: string; trainerName: string; daysPerWeek: number; totalWeeks: number; shareToken: string;
   level: number; levelName: string; xpPct: number;
@@ -355,9 +395,10 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
         <div className="h-px mb-4" style={{ background: "linear-gradient(90deg, rgba(229,50,50,0.28), transparent)" }} />
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.16em] mb-1" style={{ color: "var(--text-faint)" }}>Creato da</p>
+            <p className="text-xs uppercase tracking-[0.16em] mb-1" style={{ color: "var(--text-faint)" }}>Firmato da</p>
             {/* Trainer signature — serif italic for handwritten feel */}
             <p className="text-base font-black" style={{ color: "var(--text)", fontStyle: "italic", fontFamily: "Georgia,'Times New Roman',serif", letterSpacing: "0.02em" }}>{trainerName}</p>
+            <SignatureStroke name={trainerName} />
           </div>
           <div className="relative" style={{ width: 68, height: 68, flexShrink: 0 }}>
             {/* XP progress ring */}
