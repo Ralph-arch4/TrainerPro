@@ -447,6 +447,57 @@ const TRAINER_REACTIONS = [
   "Sessione completata! Il tuo futuro-io ti ringrazierà.",
 ];
 
+const WEEKLY_PRINCIPLES: { cat: string; text: string; accent: string }[] = [
+  { cat: "Allenamento",  text: "La progressione non è una linea retta — ogni plateau nasconde il tuo prossimo salto.", accent: "var(--accent)" },
+  { cat: "Recupero",     text: "Il muscolo non cresce durante l'allenamento, ma nel riposo. Il sonno è parte del programma.", accent: "#a78bfa" },
+  { cat: "Nutrizione",   text: "Non esiste il pasto perfetto — esiste la settimana perfetta. Ogni scelta è solo un'occasione.", accent: "#38bdf8" },
+  { cat: "Mentalità",    text: "La coerenza batte la perfezione ogni giorno della settimana, senza eccezioni.", accent: "#fbbf24" },
+  { cat: "Allenamento",  text: "Forma prima del carico — sempre. Un kg in più non vale una settimana di stop.", accent: "var(--accent)" },
+  { cat: "Recupero",     text: "L'idratazione non è un dettaglio. Ogni cellula muscolare funziona meglio con l'acqua.", accent: "#a78bfa" },
+  { cat: "Nutrizione",   text: "Le proteine non costruiscono solo muscolo — riparano, proteggono, tengono sazi.", accent: "#38bdf8" },
+  { cat: "Mentalità",    text: "Misura i progressi in mesi, non in giorni. Il corpo ha i suoi tempi — rispettali.", accent: "#fbbf24" },
+  { cat: "Allenamento",  text: "Il riscaldamento non è facoltativo. Prepara il sistema nervoso prima del sistema muscolare.", accent: "var(--accent)" },
+  { cat: "Recupero",     text: "Dopo uno sforzo intenso, il corpo chiede 48 ore. Dargliele non è debolezza — è strategia.", accent: "#a78bfa" },
+  { cat: "Nutrizione",   text: "Mangia per alimentare l'allenamento di domani, non solo per recuperare quello di oggi.", accent: "#38bdf8" },
+  { cat: "Mentalità",    text: "La motivazione parte il motore. La disciplina lo tiene acceso.", accent: "#fbbf24" },
+  { cat: "Allenamento",  text: "Ogni ripetizione conta doppio: una per il muscolo, una per la tua testa.", accent: "var(--accent)" },
+  { cat: "Recupero",     text: "Lo stress mentale è stress fisico. Gestisci l'uno e migliori anche l'altro.", accent: "#a78bfa" },
+  { cat: "Nutrizione",   text: "I carboidrati sono benzina, non nemici. Scegli la qualità, non l'assenza.", accent: "#38bdf8" },
+  { cat: "Mentalità",    text: "Il confronto con gli altri frena. Il confronto con te stesso di 3 mesi fa accelera.", accent: "#fbbf24" },
+  { cat: "Allenamento",  text: "Più forza significa meno infortuni. L'allenamento non ti logora — ti corazza.", accent: "var(--accent)" },
+  { cat: "Recupero",     text: "Lo stretching post-allenamento non è un optional — è l'ultima serie del giorno.", accent: "#a78bfa" },
+  { cat: "Nutrizione",   text: "I grassi sani supportano gli ormoni che supportano il tuo allenamento. Non eliminarli.", accent: "#38bdf8" },
+  { cat: "Mentalità",    text: "Ogni sessione saltata non è una colpa — è un dato. Prendi nota e riprogramma.", accent: "#fbbf24" },
+];
+
+function WeeklyPrincipleCard({ trainerName }: { trainerName: string }) {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const weekNum = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
+  const p = WEEKLY_PRINCIPLES[(weekNum - 1) % WEEKLY_PRINCIPLES.length];
+  return (
+    <div className="mb-4 rounded-2xl p-5 relative overflow-hidden"
+      style={{ background: `linear-gradient(135deg, ${p.accent}0d, rgba(8,8,8,0.6))`, border: `1px solid ${p.accent}28` }}>
+      <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${p.accent}12, transparent)` }} />
+      <p className="text-xs font-black uppercase tracking-[0.16em] mb-2.5" style={{ color: p.accent, opacity: 0.75 }}>
+        Principio della settimana · Sett. {weekNum}
+      </p>
+      <p className="text-base font-black leading-relaxed mb-3"
+        style={{ color: "var(--text)", fontStyle: "italic", fontFamily: "Georgia,'Times New Roman',serif" }}>
+        &ldquo;{p.text}&rdquo;
+      </p>
+      <div className="flex items-center justify-between">
+        <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
+          style={{ background: `${p.accent}14`, color: p.accent, border: `1px solid ${p.accent}22` }}>
+          {p.cat}
+        </span>
+        <p className="text-xs font-semibold" style={{ color: "var(--text-faint)" }}>— {trainerName}</p>
+      </div>
+    </div>
+  );
+}
+
 const JOURNEY_MILESTONES = [
   { days: 7,   label: "1 settimana",   msg: "Il tuo percorso è ufficialmente iniziato. Ogni rep conta." },
   { days: 14,  label: "2 settimane",   msg: "Due settimane. Stai costruendo qualcosa di reale." },
@@ -953,6 +1004,9 @@ export default function ClientPortalPage() {
           streak={streak}
           totalLogs={totalLogs}
         />
+
+        {/* ── Principio della settimana ────────────────────────────────────── */}
+        <WeeklyPrincipleCard trainerName={trainerName} />
 
         {/* ── Banner milestone percorso ─────────────────────────────────────── */}
         <MilestoneBanner dayOnJourney={dayOnJourney} trainerName={trainerName} />
