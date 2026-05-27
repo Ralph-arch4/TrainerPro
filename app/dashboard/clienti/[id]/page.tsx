@@ -1,5 +1,5 @@
 ﻿"use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import type { DietPlan, BodyMeasurement } from "@/lib/store";
@@ -12,7 +12,7 @@ import {
   Dumbbell, Plus, X, Loader2, Pencil, Trash2, CheckCircle2, Circle,
   Mail, Phone, Calendar, Target, BarChart2, ExternalLink, Copy, Check, Timer,
   ChevronDown, ChevronUp, Flame, Beef, Wheat, Droplets, TrendingUp,
-  Camera, Lock, Upload, Eye, EyeOff,
+  Camera, Lock, Upload, Eye, EyeOff, MessageCircle,
 } from "lucide-react";
 import { dbProgressPhotos, type ProgressPhoto, dbFitnessScans, type FitnessScan, type FitnessScanAnalysis, dbFitnessScanComparisons, type FitnessScanComparison, type ComparisonAnalysis } from "@/lib/db";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
@@ -665,6 +665,62 @@ export default function ClientDetailPage() {
     return acc + wp.logs.filter((l) => new Date(l.loggedAt).getTime() > twoWeeksAgo).length;
   }, 0);
 
+  // ── Smart priority brief: single highest-priority action for this client ──
+  const priorityBrief = useMemo(() => {
+    if (client.status !== "attivo") return null;
+    const now = Date.now();
+    const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
+
+    // 1. Inactivity (>= 7 days no log)
+    const lastLogTime = allLogs.length > 0 ? Math.max(...allLogs.map(l => new Date(l.loggedAt).getTime())) : 0;
+    const daysSinceLast = lastLogTime > 0 ? Math.floor((now - lastLogTime) / 86400000) : null;
+    if (daysSinceLast !== null && daysSinceLast >= 7) {
+      return { type: "inattivo" as const, label: `Nessuna sessione da ${daysSinceLast} giorni`, detail: "Considera di contattare il cliente per motivarlo", color: "#ef4444", bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.25)", waMsg: `Ciao ${client.name.split(" ")[0]}, come stai? Sono ${daysSinceLast} giorni che non ti vedo — tutto ok?` };
+    }
+
+    // 2. Deload recommended (4+ consecutive weeks at/above target frequency)
+    const activePlan = client.workoutPlans.find(p => p.active);
+    const target = Math.max(1, activePlan?.daysPerWeek ?? 3);
+    const weeksAboveTarget = [4, 3, 2, 1].filter(wAgo => {
+      const from = now - (wAgo + 1) * 7 * 86400000;
+      const to   = now - wAgo * 7 * 86400000;
+      const uniq = new Set(allLogs.filter(l => { const t = new Date(l.loggedAt).getTime(); return t > from && t <= to; }).map(l => new Date(l.loggedAt).toDateString()));
+      return uniq.size >= target;
+    }).length;
+    if (weeksAboveTarget >= 4) {
+      return { type: "deload" as const, label: `${weeksAboveTarget} settimane consecutive al target`, detail: "Valuta una settimana di scarico per massimizzare il recupero", color: "#fb923c", bg: "rgba(249,115,22,0.08)", border: "rgba(249,115,22,0.3)", waMsg: "" };
+    }
+
+    // 3. Progression pending (3+ weeks same weight on an exercise)
+    for (const plan of client.workoutPlans) {
+      const byEx: Record<string, typeof plan.logs> = {};
+      for (const log of plan.logs) { if (!byEx[log.exerciseId]) byEx[log.exerciseId] = []; byEx[log.exerciseId].push(log); }
+      for (const [exId, logs] of Object.entries(byEx)) {
+        const sorted = [...logs].filter(l => l.weight != null).sort((a, b) => b.weekNumber - a.weekNumber);
+        if (sorted.length < 3) continue;
+        const last3 = sorted.slice(0, 3);
+        if (!last3.every(l => l.weight === last3[0].weight)) continue;
+        const ex = plan.exercises.find(e => e.id === exId);
+        if (ex) return { type: "progressione" as const, label: `${ex.name}: fermo a ${last3[0].weight}kg per 3 settimane`, detail: `Suggerisci ${Math.round((last3[0].weight! + 2.5) * 2) / 2}kg nella prossima sessione`, color: "#fbbf24", bg: "rgba(251,191,36,0.07)", border: "rgba(251,191,36,0.25)", waMsg: "" };
+      }
+    }
+
+    // 4. Measurement stale (> 30 days)
+    const sortedMeas = [...client.measurements].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    if (sortedMeas.length > 0) {
+      const daysSinceMeas = Math.floor((now - new Date(sortedMeas[0].date).getTime()) / 86400000);
+      if (daysSinceMeas > 30) return { type: "misurazioni" as const, label: `Ultima misurazione: ${daysSinceMeas} giorni fa`, detail: "Registra le misurazioni aggiornate per monitorare i progressi", color: "#818cf8", bg: "rgba(99,102,241,0.07)", border: "rgba(99,102,241,0.25)", waMsg: "" };
+    }
+
+    // 5. All good — target met this week
+    const thisWeekDays = new Set(allLogs.filter(l => new Date(l.loggedAt).getTime() > now - 7 * 86400000).map(l => new Date(l.loggedAt).toDateString()));
+    if (thisWeekDays.size >= target) {
+      return { type: "forma" as const, label: `Settimana perfetta: ${thisWeekDays.size}/${target} sessioni completate`, detail: "Ottima aderenza al piano questa settimana", color: "#22c55e", bg: "rgba(34,197,94,0.07)", border: "rgba(34,197,94,0.2)", waMsg: "" };
+    }
+
+    return null;
+  }, [client]);
+
   return (
     <div className="p-4 pt-20 lg:pt-8 lg:p-8 fade-in">
       {/* Back + header */}
@@ -705,6 +761,40 @@ export default function ClientDetailPage() {
           style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}>
           <span>⚠ {saveError}</span>
           <button onClick={() => setSaveError("")} className="opacity-60 hover:opacity-100">✕</button>
+        </div>
+      )}
+
+      {/* ── Smart Priority Brief ─────────────────────────────────────────── */}
+      {priorityBrief && (
+        <div className="mb-4 p-3 rounded-xl flex items-center gap-3"
+          style={{ background: priorityBrief.bg, border: `1px solid ${priorityBrief.border}` }}>
+          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: priorityBrief.color }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold" style={{ color: priorityBrief.color }}>{priorityBrief.label}</p>
+            <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>{priorityBrief.detail}</p>
+          </div>
+          {priorityBrief.type === "inattivo" && client.phone && (
+            <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(priorityBrief.waMsg)}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold flex-shrink-0 transition-all hover:opacity-80"
+              style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+              <MessageCircle size={11} /> Contatta
+            </a>
+          )}
+          {priorityBrief.type === "misurazioni" && (
+            <button onClick={() => setTab("misurazioni")}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold flex-shrink-0 transition-all hover:opacity-80"
+              style={{ background: "rgba(99,102,241,0.14)", color: "#818cf8" }}>
+              Registra
+            </button>
+          )}
+          {priorityBrief.type === "schede" && (
+            <button onClick={() => setTab("schede")}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold flex-shrink-0 transition-all hover:opacity-80"
+              style={{ background: "rgba(251,191,36,0.14)", color: "#fbbf24" }}>
+              Schede
+            </button>
+          )}
         </div>
       )}
 
