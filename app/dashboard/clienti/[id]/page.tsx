@@ -788,11 +788,11 @@ export default function ClientDetailPage() {
               Registra
             </button>
           )}
-          {priorityBrief.type === "schede" && (
+          {priorityBrief.type === "progressione" && (
             <button onClick={() => setTab("schede")}
               className="px-3 py-1.5 rounded-lg text-xs font-bold flex-shrink-0 transition-all hover:opacity-80"
               style={{ background: "rgba(251,191,36,0.14)", color: "#fbbf24" }}>
-              Schede
+              Vedi schede
             </button>
           )}
         </div>
