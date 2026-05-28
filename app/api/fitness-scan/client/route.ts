@@ -8,7 +8,7 @@ import { createHash } from "crypto";
 // File val : MIME header + magic byte check on raw buffer bytes
 // EXIF     : stripped implicitly by client-side canvas resize before upload
 // Storage  : private bucket, service_role only, RLS on fitness_scans table
-// URLs     : signed server-side, 90s TTL (was 300s)
+// URLs     : signed server-side, 1h TTL
 // Audit    : every operation logged to scan_access_logs with SHA-256(IP)
 // Paths    : never exposed to the client browser
 // AI data  : processed in trainer route only, never here
@@ -16,9 +16,9 @@ import { createHash } from "crypto";
 
 const SCAN_BUCKET    = "fitness-scans";
 const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB max (canvas-resized images are <500 KB)
-const SIGNED_URL_TTL = 90;              // seconds — short window reduces interception risk
+const SIGNED_URL_TTL = 3600;            // 1 hour — enough for a full session view
 const MAX_SCANS_PER_CLIENT = 120;        // quota: prevent storage abuse
-const ALLOWED_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL ?? "https://trainer-pro-phi.vercel.app";
+const ALLOWED_ORIGIN = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? "https://trainer-pro-phi.vercel.app";
 
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;

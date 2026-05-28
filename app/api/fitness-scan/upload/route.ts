@@ -102,10 +102,9 @@ export async function POST(req: NextRequest) {
     return err(`db_error: ${dbErr.message}`, 500);
   }
 
-  // ── Signed URL (5 min for immediate display) ────────────────────────────────
   const { data: urlData } = await supabase.storage
     .from(SCAN_BUCKET)
-    .createSignedUrl(path, 300);
+    .createSignedUrl(path, 3600);
 
   return NextResponse.json(
     { scan, signedUrl: urlData?.signedUrl ?? null },

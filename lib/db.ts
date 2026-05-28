@@ -716,11 +716,10 @@ export const dbFitnessScans = {
     if (error) throw error;
   },
 
-  // Short TTL (5 min) — images must be fetched fresh, not cached
   async getSignedUrl(storagePath: string): Promise<string | null> {
     const { data } = await db().storage
       .from(SCAN_BUCKET)
-      .createSignedUrl(storagePath, 300);
+      .createSignedUrl(storagePath, 3600);
     return data?.signedUrl ?? null;
   },
 };

@@ -721,20 +721,28 @@ export default function ClientPortalPage() {
   // Fitness Scan state
   const [scans, setScans] = useState<ClientScan[]>([]);
   const [scansLoaded, setScansLoaded] = useState(false);
+  const [scansLoading, setScansLoading] = useState(false);
   const [scanUploading, setScanUploading] = useState(false);
   const [scanDeleting, setScanDeleting] = useState<string | null>(null);
   const [scanUploadDate, setScanUploadDate] = useState(new Date().toISOString().slice(0, 10));
   const [scanUploadNotes, setScanUploadNotes] = useState("");
+  const [scanUploadError, setScanUploadError] = useState<string | null>(null);
+  const [scanUploadSuccess, setScanUploadSuccess] = useState(false);
 
-  async function loadScans() {
-    if (scansLoaded || !token) return;
+  async function loadScans(force = false) {
+    if ((scansLoaded && !force) || !token || scansLoading) return;
+    setScansLoading(true);
     try {
       const resp = await fetch(`/api/fitness-scan/client?token=${encodeURIComponent(token)}`);
-      if (!resp.ok) return;
+      if (!resp.ok) throw new Error(`${resp.status}`);
       const { scans: list } = await resp.json();
       setScans(list ?? []);
-    } catch {}
-    setScansLoaded(true);
+      setScansLoaded(true);
+    } catch {
+      // Leave scansLoaded false so retry is possible on next tab open
+    } finally {
+      setScansLoading(false);
+    }
   }
 
   async function handleScanUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -742,6 +750,8 @@ export default function ClientPortalPage() {
     if (!file || !file.type.startsWith("image/") || !token) return;
     e.target.value = "";
     setScanUploading(true);
+    setScanUploadError(null);
+    setScanUploadSuccess(false);
     try {
       const resized = await resizeImage(file);
       const fd = new FormData();
@@ -750,12 +760,22 @@ export default function ClientPortalPage() {
       if (scanUploadNotes) fd.append("notes", scanUploadNotes);
       fd.append("file", resized, "scan.jpg");
       const resp = await fetch("/api/fitness-scan/client", { method: "POST", body: fd });
-      if (!resp.ok) throw new Error("upload failed");
+      if (!resp.ok) {
+        const json = await resp.json().catch(() => ({}));
+        const code = (json as { error?: string }).error ?? `errore ${resp.status}`;
+        throw new Error(code);
+      }
       const { scan } = await resp.json();
       setScans(prev => [scan, ...prev]);
       setScanUploadNotes("");
-    } catch { /* silent — user will retry */ }
-    setScanUploading(false);
+      setScanUploadSuccess(true);
+      setTimeout(() => setScanUploadSuccess(false), 4000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "errore sconosciuto";
+      setScanUploadError(msg);
+    } finally {
+      setScanUploading(false);
+    }
   }
 
   async function handleScanDelete(scan: ClientScan) {
@@ -1589,19 +1609,57 @@ export default function ClientPortalPage() {
               </div>
               <label className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all ${scanUploading ? "opacity-60 pointer-events-none" : "hover:opacity-90"} accent-btn`}>
                 {scanUploading ? <Loader2 size={15} className="animate-spin" /> : <Scan size={15} />}
-                {scanUploading ? "Caricamento…" : "Seleziona foto"}
+                {scanUploading ? "Caricamento in corso…" : "Seleziona foto"}
                 <input type="file" accept="image/*" className="hidden" onChange={handleScanUpload} disabled={scanUploading} />
               </label>
+
+              {/* Success feedback */}
+              {scanUploadSuccess && (
+                <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-xl fade-in"
+                  style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)" }}>
+                  <span style={{ color: "#22c55e", fontSize: "0.85rem" }}>✓</span>
+                  <p className="text-xs font-semibold" style={{ color: "#22c55e" }}>
+                    Foto caricata — il tuo trainer la vedrà a breve
+                  </p>
+                </div>
+              )}
+
+              {/* Error feedback */}
+              {scanUploadError && (
+                <div className="flex items-start gap-2 mt-3 px-3 py-2 rounded-xl"
+                  style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.22)" }}>
+                  <AlertCircle size={13} style={{ color: "#ef4444", flexShrink: 0, marginTop: 1 }} />
+                  <div>
+                    <p className="text-xs font-semibold" style={{ color: "#ef4444" }}>Caricamento fallito</p>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                      {scanUploadError === "rate_limited" ? "Troppi caricamenti — attendi un minuto e riprova." :
+                       scanUploadError === "quota_exceeded" ? "Quota massima foto raggiunta." :
+                       scanUploadError === "file_too_large" ? "File troppo grande (max 5 MB)." :
+                       scanUploadError === "invalid_token" ? "Link non valido — contatta il tuo trainer." :
+                       "Errore di rete. Verifica la connessione e riprova."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <p className="text-xs mt-2 text-center" style={{ color: "var(--text-faint)" }}>
                 La foto viene compressa automaticamente · visibile solo al tuo trainer
               </p>
             </div>
 
             {/* Scan timeline */}
-            {!scansLoaded ? (
+            {scansLoading ? (
               <div className="text-center py-10">
                 <Loader2 size={22} className="animate-spin mx-auto mb-2" style={{ color: "rgba(229,50,50,0.5)" }} />
                 <p className="text-xs" style={{ color: "var(--text-dim)" }}>Caricamento…</p>
+              </div>
+            ) : !scansLoaded ? (
+              <div className="text-center py-10">
+                <button onClick={() => loadScans(true)}
+                  className="px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-90"
+                  style={{ background: "var(--surface-sm)", border: "1px solid var(--border)", color: "var(--text-muted)" }}>
+                  Carica foto
+                </button>
               </div>
             ) : scans.length === 0 ? (
               <div className="text-center py-14 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
@@ -1620,9 +1678,17 @@ export default function ClientPortalPage() {
 
               return (
                 <div>
-                  <p className="text-xs mb-3" style={{ color: "var(--text-dim)" }}>
-                    {scans.length} foto · {months.length} {months.length === 1 ? "mese" : "mesi"} di tracking · visibili solo al tuo trainer
-                  </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs" style={{ color: "var(--text-dim)" }}>
+                      {scans.length} foto · {months.length} {months.length === 1 ? "mese" : "mesi"} di tracking
+                    </p>
+                    <button onClick={() => loadScans(true)} disabled={scansLoading}
+                      className="flex items-center gap-1 text-xs transition-all hover:opacity-80"
+                      style={{ color: "var(--text-faint)" }}>
+                      <Loader2 size={10} className={scansLoading ? "animate-spin" : ""} />
+                      Aggiorna
+                    </button>
+                  </div>
 
                   {/* Month timeline */}
                   {months.map((month, monthIdx) => {
@@ -1649,37 +1715,60 @@ export default function ClientPortalPage() {
                         {/* Photos grid for this month */}
                         <div className="grid grid-cols-2 gap-3 mb-3">
                           {monthScans.map(scan => (
-                            <div key={scan.id} className="rounded-2xl overflow-hidden"
-                              style={{ background: "var(--surface-sm)", border: "1px solid rgba(229,50,50,0.1)" }}>
-                              <div className="aspect-[3/4] relative">
+                            <div key={scan.id} className="rounded-2xl overflow-hidden transition-all"
+                              style={{ background: "var(--surface-sm)", border: "1px solid rgba(229,50,50,0.12)", boxShadow: "0 2px 12px rgba(0,0,0,0.18)" }}>
+                              <div className="aspect-[3/4] relative bg-black">
                                 {scan.signed_url ? (
-                                  <img src={scan.signed_url} alt={scan.taken_at} className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--surface-xs)" }}>
-                                    <Scan size={20} style={{ color: "rgba(229,50,50,0.35)" }} />
-                                  </div>
-                                )}
-                                <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
-                                  style={{ background: "rgba(0,0,0,0.7)" }}>
-                                  <ShieldCheck size={9} style={{ color: "#22c55e" }} />
+                                  <img
+                                    src={scan.signed_url}
+                                    alt={scan.taken_at}
+                                    className="w-full h-full object-cover"
+                                    loading="lazy"
+                                    onError={e => {
+                                      (e.target as HTMLImageElement).style.display = "none";
+                                      (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
+                                    }}
+                                  />
+                                ) : null}
+                                {/* Fallback shown when no URL or image fails to load */}
+                                <div className={`w-full h-full flex flex-col items-center justify-center absolute inset-0 ${scan.signed_url ? "hidden" : ""}`}
+                                  style={{ background: "var(--surface-xs)" }}>
+                                  <Scan size={22} style={{ color: "rgba(229,50,50,0.3)" }} />
+                                  <p className="text-xs mt-1.5" style={{ color: "var(--text-faint)", fontSize: "0.6rem" }}>
+                                    {scan.signed_url ? "URL scaduta" : "—"}
+                                  </p>
                                 </div>
+                                {/* Security badge */}
+                                <div className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full"
+                                  style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)" }}>
+                                  <ShieldCheck size={8} style={{ color: "#22c55e" }} />
+                                  <span style={{ color: "#22c55e", fontSize: "0.5rem", fontWeight: 700, letterSpacing: "0.05em" }}>PRIVATO</span>
+                                </div>
+                                {/* AI badge */}
                                 {scan.ai_analysis && (
-                                  <div className="absolute top-1.5 left-1.5 w-5 h-5 rounded-full flex items-center justify-center"
-                                    style={{ background: "rgba(229,50,50,0.85)" }}>
-                                    <Sparkles size={9} style={{ color: "#fff" }} />
+                                  <div className="absolute top-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full"
+                                    style={{ background: "rgba(229,50,50,0.9)", backdropFilter: "blur(6px)" }}>
+                                    <Sparkles size={8} style={{ color: "#fff" }} />
+                                    <span style={{ color: "#fff", fontSize: "0.5rem", fontWeight: 700, letterSpacing: "0.05em" }}>AI</span>
                                   </div>
                                 )}
+                                {/* Date overlay at bottom */}
+                                <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5"
+                                  style={{ background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%)" }}>
+                                  <p className="text-xs font-semibold" style={{ color: "#fff" }}>
+                                    {new Date(scan.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "short" })}
+                                  </p>
+                                  {scan.notes && (
+                                    <p className="truncate" style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.6rem" }}>{scan.notes}</p>
+                                  )}
+                                </div>
                               </div>
-                              <div className="px-2 py-2">
-                                <p className="text-xs font-semibold" style={{ color: "var(--text)" }}>
-                                  {new Date(scan.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "short" })}
-                                </p>
-                                {scan.notes && <p className="text-xs truncate" style={{ color: "var(--text-faint)" }}>{scan.notes}</p>}
+                              <div className="px-2 py-1.5 flex items-center justify-end">
                                 <button onClick={() => handleScanDelete(scan)} disabled={scanDeleting === scan.id}
-                                  className="flex items-center gap-1 text-xs mt-1.5 transition-all"
-                                  style={{ color: "rgba(239,68,68,0.6)" }}>
+                                  className="flex items-center gap-1 text-xs transition-all hover:opacity-80"
+                                  style={{ color: "rgba(239,68,68,0.55)" }}>
                                   {scanDeleting === scan.id ? <Loader2 size={9} className="animate-spin" /> : <Trash2 size={9} />}
-                                  Elimina
+                                  {scanDeleting === scan.id ? "" : "Elimina"}
                                 </button>
                               </div>
                             </div>

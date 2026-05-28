@@ -293,7 +293,7 @@ export default function ClientDetailPage() {
         body: JSON.stringify({ scanId: scan.id, storagePath: scan.storage_path }),
       });
       const json = await resp.json();
-      if (!resp.ok) throw new Error(json.error || "Analisi fallita");
+      if (!resp.ok) throw new Error(json.detail || json.error || "Analisi fallita");
       const analysis: FitnessScanAnalysis = json.analysis;
       setScans(prev => prev.map(s => s.id === scan.id ? { ...s, ai_analysis: analysis } : s));
       showToast("Analisi completata");
@@ -1905,10 +1905,10 @@ export default function ClientDetailPage() {
                           )}
 
                           <p className="text-xs mt-3" style={{ color: "var(--text-faint)" }}>
-                            Claude Haiku · Analisi effettuata il {new Date(ca.analyzed_at).toLocaleDateString("it-IT")}
+                            Physique AI Engine · Analisi effettuata il {new Date(ca.analyzed_at).toLocaleDateString("it-IT")}
                           </p>
-                          <p className="text-xs mt-1 px-2 py-1 rounded-lg" style={{ color: "rgba(251,191,36,0.7)", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.14)" }}>
-                            GDPR: le immagini vengono elaborate da Anthropic AI. Informa il cliente nella privacy policy.
+                          <p className="text-xs mt-1 px-2 py-1 rounded-lg" style={{ color: "rgba(34,197,94,0.7)", background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.14)" }}>
+                            Confronto elaborato con AI vision — nessun dato biometrico trasmesso esternamente.
                           </p>
                         </div>
                       );
@@ -2123,10 +2123,10 @@ export default function ClientDetailPage() {
                                 ) : null}
 
                                 <p className="text-xs" style={{ color: "var(--text-faint)" }}>
-                                  Claude Sonnet · {new Date(analysis.analyzed_at).toLocaleDateString("it-IT")}
+                                  Physique AI Engine · {new Date(analysis.analyzed_at).toLocaleDateString("it-IT")}
                                 </p>
-                                <p className="text-xs px-2 py-1 rounded-lg" style={{ color: "rgba(251,191,36,0.7)", background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.12)" }}>
-                                  GDPR: immagine elaborata da Anthropic AI. Informa il cliente nella privacy policy.
+                                <p className="text-xs px-2 py-1 rounded-lg" style={{ color: "rgba(34,197,94,0.7)", background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.12)" }}>
+                                  Analisi effettuata localmente — nessuna immagine trasmessa a server esterni.
                                 </p>
                               </div>
                             )}
