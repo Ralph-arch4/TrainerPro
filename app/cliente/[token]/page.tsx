@@ -704,6 +704,105 @@ function MoodCheckIn({ trainerName }: { trainerName: string }) {
   );
 }
 
+// ── Radar Atletico ───────────────────────────────────────────────────────────
+const RADAR_AXES = [
+  { label: "Costanza",  color: "var(--accent)" },
+  { label: "Volume",    color: "#a78bfa" },
+  { label: "Livello",   color: "#38bdf8" },
+  { label: "Programma", color: "#fbbf24" },
+  { label: "Attività",  color: "#22c55e" },
+] as const;
+
+function RadarAtletico({ streak, totalLogs, level, pct, recentDays }: {
+  streak: number; totalLogs: number; level: number; pct: number | null; recentDays: number;
+}) {
+  const values = [
+    Math.min(streak / 7, 1),
+    Math.min(totalLogs / 25, 1),
+    Math.min((level - 1) / 4, 1),
+    pct !== null ? pct / 100 : 0.5,
+    Math.min(recentDays / 12, 1),
+  ];
+  const C = 110; const R = 78; const SIZE = 220;
+  const angles = Array.from({ length: 5 }, (_, i) => ((-90 + 72 * i) * Math.PI) / 180);
+  const pt = (v: number, i: number) => ({ x: C + v * R * Math.cos(angles[i]), y: C + v * R * Math.sin(angles[i]) });
+  const gridPaths = [0.25, 0.5, 0.75, 1].map(r =>
+    angles.map((_, i) => pt(r, i)).map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") + " Z"
+  );
+  const dataPts = values.map((v, i) => pt(Math.max(v, 0.06), i));
+  const dataPath = dataPts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ") + " Z";
+  const score = Math.round(values.reduce((a, b) => a + b, 0) / 5 * 100);
+
+  return (
+    <div className="mb-4 rounded-2xl p-4" style={{ border: "1px solid rgba(229,50,50,0.18)", background: "var(--surface-xs)" }}>
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.14em]" style={{ color: "var(--text-dim)" }}>Radar Atletico</p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--text-faint)" }}>DNA della tua performance</p>
+        </div>
+        <div className="text-right">
+          <p className="text-2xl font-black" style={{ color: "var(--accent)" }}>
+            {score}<span className="text-sm font-bold">/100</span>
+          </p>
+          <p className="text-xs" style={{ color: "var(--text-faint)" }}>score globale</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} className="flex-shrink-0" style={{ maxWidth: 160, height: "auto" }}>
+          <defs>
+            <radialGradient id="radarFill" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="rgba(229,50,50,0.38)" />
+              <stop offset="100%" stopColor="rgba(229,50,50,0.06)" />
+            </radialGradient>
+            <filter id="radarGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+          {gridPaths.map((d, i) => <path key={i} d={d} fill="none" stroke="rgba(229,50,50,0.1)" strokeWidth="0.8" />)}
+          {angles.map((a, i) => (
+            <line key={i} x1={C} y1={C}
+              x2={(C + R * Math.cos(a)).toFixed(1)} y2={(C + R * Math.sin(a)).toFixed(1)}
+              stroke="rgba(229,50,50,0.12)" strokeWidth="0.8" />
+          ))}
+          <path d={dataPath} fill="url(#radarFill)" stroke="rgba(229,50,50,0.75)" strokeWidth="1.6"
+            filter="url(#radarGlow)" style={{ animation: "fadeIn 0.9s ease-out forwards" }} />
+          {dataPts.map((p, i) => (
+            <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="3.5"
+              fill="var(--accent)" stroke="var(--bg)" strokeWidth="1.5"
+              style={{ filter: "drop-shadow(0 0 5px rgba(229,50,50,0.85))" }} />
+          ))}
+          {RADAR_AXES.map((ax, i) => {
+            const lx = C + (R + 19) * Math.cos(angles[i]);
+            const ly = C + (R + 19) * Math.sin(angles[i]);
+            return (
+              <text key={i} x={lx.toFixed(1)} y={ly.toFixed(1)}
+                textAnchor="middle" dominantBaseline="middle"
+                style={{ fill: "var(--text-dim)", fontSize: "9px", fontWeight: 700, fontFamily: "inherit" }}>
+                {ax.label}
+              </text>
+            );
+          })}
+        </svg>
+        <div className="flex-1 space-y-2.5">
+          {RADAR_AXES.map((ax, i) => (
+            <div key={i}>
+              <div className="flex items-center justify-between mb-0.5">
+                <p className="text-xs font-bold" style={{ color: ax.color }}>{ax.label}</p>
+                <p className="text-xs font-black" style={{ color: "var(--text)" }}>{Math.round(values[i] * 100)}</p>
+              </div>
+              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--surface)" }}>
+                <div className="h-full rounded-full transition-all duration-700"
+                  style={{ width: `${Math.round(values[i] * 100)}%`, background: ax.color, opacity: 0.8 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -1192,6 +1291,17 @@ export default function ClientPortalPage() {
             ))}
           </div>
         </div>
+
+        {/* ── Radar Atletico ────────────────────────────────────────────────── */}
+        <RadarAtletico
+          streak={streak}
+          totalLogs={totalLogs}
+          level={level}
+          pct={pct}
+          recentDays={Array.from(logsByDayGlobal.keys()).filter(d =>
+            Math.floor((Date.now() - new Date(d).getTime()) / 86400000) <= 30
+          ).length}
+        />
 
         {/* ── Tabs ───────────────────────────────────────────────────────────── */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
