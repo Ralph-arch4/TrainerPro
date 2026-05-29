@@ -6,7 +6,8 @@ import { useAppStore } from "@/lib/store";
 import { dbClients } from "@/lib/db";
 import {
   Users, Plus, Search, ChevronRight,
-  Mail, Phone, Activity, Loader2, X, AlertCircle, Trash2, TrendingDown
+  Mail, Phone, Activity, Loader2, X, AlertCircle, Trash2, TrendingDown,
+  Gift, Heart
 } from "lucide-react";
 import type { Client } from "@/lib/store";
 
@@ -81,6 +82,32 @@ function getLastLogDate(client: Client): Date | null {
   const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
   if (!allLogs.length) return null;
   return new Date(Math.max(...allLogs.map(l => new Date(l.loggedAt).getTime())));
+}
+
+function getBirthdayStatus(client: Client): { daysUntil: number; isToday: boolean } | null {
+  const bd = (client as Client & { birthDate?: string }).birthDate;
+  if (!bd) return null;
+  const now = new Date();
+  const birth = new Date(bd);
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const thisYearBd = new Date(now.getFullYear(), birth.getMonth(), birth.getDate());
+  let diff = Math.round((thisYearBd.getTime() - todayStart.getTime()) / 86400000);
+  if (diff < 0) {
+    const nextYearBd = new Date(now.getFullYear() + 1, birth.getMonth(), birth.getDate());
+    diff = Math.round((nextYearBd.getTime() - todayStart.getTime()) / 86400000);
+  }
+  if (diff > 7) return null;
+  return { daysUntil: diff, isToday: diff === 0 };
+}
+
+function getTogetherLabel(client: Client): string | null {
+  if (!client.startDate) return null;
+  const days = Math.floor((Date.now() - new Date(client.startDate).getTime()) / 86400000);
+  if (days < 14) return null;
+  if (days < 60) return `${days} giorni insieme`;
+  if (days < 365) return `${Math.floor(days / 30)} mesi insieme`;
+  const y = Math.floor(days / 365);
+  return `${y} ${y === 1 ? "anno" : "anni"} insieme`;
 }
 
 function getRiskDays(client: Client): number | null {
@@ -251,12 +278,14 @@ function ClientiPageInner() {
         {filtered.map((client) => {
           const riskDays = getRiskDays(client);
           const forma = getFormaScore(client);
+          const birthdayInfo = getBirthdayStatus(client);
+          const togetherLabel = getTogetherLabel(client);
           return (
           <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
             className="card-luxury rounded-2xl p-5 transition-all group block"
-            style={{ borderColor: riskDays ? "rgba(239,68,68,0.25)" : undefined }}>
-            {/* A rischio banner */}
-            {riskDays && (
+            style={{ borderColor: riskDays ? "rgba(239,68,68,0.25)" : birthdayInfo ? "rgba(251,191,36,0.2)" : undefined }}>
+            {/* Top banner: rischio o compleanno */}
+            {riskDays ? (
               <div className="flex items-center gap-2 -mx-5 -mt-5 mb-4 px-4 py-2 rounded-t-2xl"
                 style={{ background: "rgba(239,68,68,0.1)", borderBottom: "1px solid rgba(239,68,68,0.2)" }}>
                 <span className="relative flex h-2 w-2 flex-shrink-0">
@@ -267,8 +296,24 @@ function ClientiPageInner() {
                 <span className="text-xs font-bold" style={{ color: "#f87171" }}>
                   Nessun log da {riskDays} giorni — a rischio
                 </span>
+                {birthdayInfo && (
+                  <span className="ml-auto flex items-center gap-1 text-xs font-semibold" style={{ color: "#fbbf24" }}>
+                    <Gift size={10} />
+                    {birthdayInfo.isToday ? "Compl. oggi!" : `Compl. tra ${birthdayInfo.daysUntil}gg`}
+                  </span>
+                )}
               </div>
-            )}
+            ) : birthdayInfo ? (
+              <div className="flex items-center gap-2 -mx-5 -mt-5 mb-4 px-4 py-2 rounded-t-2xl"
+                style={{ background: "rgba(251,191,36,0.1)", borderBottom: "1px solid rgba(251,191,36,0.2)" }}>
+                <Gift size={11} style={{ color: "#fbbf24" }} />
+                <span className="text-xs font-bold" style={{ color: "#fbbf24" }}>
+                  {birthdayInfo.isToday
+                    ? `Buon compleanno, ${client.name.split(" ")[0]}!`
+                    : `Compleanno tra ${birthdayInfo.daysUntil} ${birthdayInfo.daysUntil === 1 ? "giorno" : "giorni"}`}
+                </span>
+              </div>
+            ) : null}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl accent-btn flex items-center justify-center text-base font-bold flex-shrink-0">
@@ -314,6 +359,12 @@ function ClientiPageInner() {
                 </span>
               ) : <span />}
               <div className="flex items-center gap-3 text-xs" style={{ color: "var(--text-dim)" }}>
+                {togetherLabel && (
+                  <span className="flex items-center gap-1">
+                    <Heart size={10} style={{ color: "rgba(229,50,50,0.55)" }} />
+                    {togetherLabel}
+                  </span>
+                )}
                 <span className="flex items-center gap-1"><Activity size={11} /> {client.phases.length} fasi</span>
                 {client.monthlyFee && <span style={{ color: "var(--accent-light)" }}>€{client.monthlyFee}/m</span>}
               </div>
