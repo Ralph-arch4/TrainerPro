@@ -150,13 +150,13 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
 
       {/* Date header */}
       <div className="flex items-center justify-center px-2 py-1.5 text-xs font-bold"
-        style={{ background: "rgba(229,50,50,0.75)", color: "#fff", letterSpacing: "0.04em", borderBottom: rowBorder }}>
+        style={{ background: "rgba(201,168,76,0.75)", color: "#fff", letterSpacing: "0.04em", borderBottom: rowBorder }}>
         {sessionDate}
       </div>
 
       {/* Exercise name */}
       <div className="flex items-center justify-between px-3 py-2.5 gap-2"
-        style={{ background: "rgba(229,50,50,0.06)", borderBottom: rowBorder }}>
+        style={{ background: "rgba(201,168,76,0.06)", borderBottom: rowBorder }}>
         <div className="flex items-center gap-2 min-w-0">
           {color && (
             <span className="text-xs font-bold px-1.5 py-0.5 rounded-md shrink-0"
@@ -191,7 +191,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
       {/* Progressive overload suggestion */}
       {suggestion && (
         <div className="flex items-center gap-2 px-3 py-2 text-xs"
-          style={{ background: "rgba(229,50,50,0.07)", borderBottom: rowBorder, color: "var(--accent-light)" }}>
+          style={{ background: "rgba(201,168,76,0.07)", borderBottom: rowBorder, color: "var(--accent-light)" }}>
           <TrendingUp size={11} style={{ flexShrink: 0 }} />
           <span>
             Suggerimento settimana: <strong>{suggestion.weight} kg</strong>
@@ -231,7 +231,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
                 </div>
                 {/* Weight — most prominent */}
                 <div className="flex-1 rounded-xl overflow-hidden"
-                  style={{ background: "rgba(229,50,50,0.1)", border: "1px solid rgba(229,50,50,0.3)" }}>
+                  style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.3)" }}>
                   <p className="text-center pt-1.5 text-xs font-bold" style={{ color: "var(--accent-light)", fontSize: "0.62rem" }}>CARICO (KG)</p>
                   <input
                     type="text" inputMode="decimal"
@@ -245,7 +245,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
                 </div>
                 {/* RPE */}
                 <div className="flex-1 rounded-xl overflow-hidden"
-                  style={{ background: "rgba(229,50,50,0.06)", border: "1px solid rgba(229,50,50,0.2)" }}>
+                  style={{ background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.2)" }}>
                   <p className="text-center pt-1.5 text-xs font-bold" style={{ color: "var(--accent)", fontSize: "0.62rem" }}>RPE</p>
                   <div className="flex justify-center flex-wrap gap-0.5 px-1 pb-1.5 pt-0.5">
                     {[6,7,8,9,10].map(v => {
@@ -262,9 +262,9 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
                           className="rounded-lg text-xs font-black transition-all"
                           style={{
                             width: "1.7rem", height: "1.7rem",
-                            background: active ? "rgba(229,50,50,0.3)" : "rgba(229,50,50,0.06)",
-                            border: `1px solid ${active ? "rgba(229,50,50,0.8)" : "rgba(229,50,50,0.18)"}`,
-                            color: active ? "var(--accent-light)" : "rgba(229,50,50,0.45)",
+                            background: active ? "rgba(201,168,76,0.3)" : "rgba(201,168,76,0.06)",
+                            border: `1px solid ${active ? "rgba(201,168,76,0.8)" : "rgba(201,168,76,0.18)"}`,
+                            color: active ? "var(--accent-light)" : "rgba(201,168,76,0.45)",
                           }}>
                           {v}
                         </button>
@@ -318,8 +318,8 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
             className="flex-1 flex items-center justify-center gap-2 rounded-xl text-sm font-bold transition-all active:scale-95"
             style={{
               minHeight: "2.75rem",
-              background: dirty ? "rgba(229,50,50,0.16)" : "var(--surface-xs)",
-              border: `1px solid ${dirty ? "rgba(229,50,50,0.45)" : "var(--surface-md)"}`,
+              background: dirty ? "rgba(201,168,76,0.16)" : "var(--surface-xs)",
+              border: `1px solid ${dirty ? "rgba(201,168,76,0.45)" : "var(--surface-md)"}`,
               color: dirty ? "var(--accent-light)" : "var(--text-faint)",
             }}>
             <Save size={13} /> {dirty ? "Salva sessione" : "Salvato ✓"}
@@ -330,8 +330,8 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
               className="flex items-center justify-center rounded-xl transition-all active:scale-95"
               style={{
                 minWidth: "2.75rem", minHeight: "2.75rem",
-                background: "rgba(229,50,50,0.1)",
-                border: "1px solid rgba(229,50,50,0.28)",
+                background: "rgba(201,168,76,0.1)",
+                border: "1px solid rgba(201,168,76,0.28)",
                 color: "var(--accent)",
                 fontSize: "1rem",
               }}
@@ -368,7 +368,7 @@ function SupplementCard({ item }: { item: SupplementItem }) {
   }
   return (
     <div className="rounded-2xl p-4 flex flex-col gap-3"
-      style={{ background: "rgba(229,50,50,0.04)", border: "1px solid rgba(229,50,50,0.14)" }}>
+      style={{ background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.14)" }}>
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-bold text-sm" style={{ color: "var(--ivory)" }}>{item.name}</p>
@@ -388,8 +388,8 @@ function SupplementCard({ item }: { item: SupplementItem }) {
           <button onClick={copyCode}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
             style={{
-              background: copied ? "rgba(229,50,50,0.12)" : "var(--surface-md)",
-              border: `1px solid ${copied ? "rgba(229,50,50,0.3)" : "var(--surface-md)"}`,
+              background: copied ? "rgba(201,168,76,0.12)" : "var(--surface-md)",
+              border: `1px solid ${copied ? "rgba(201,168,76,0.3)" : "var(--surface-md)"}`,
               color: copied ? "var(--accent-light)" : "var(--text-muted)",
             }}>
             {copied ? <Check size={11} /> : <Copy size={11} />}
@@ -608,7 +608,7 @@ export default function WorkoutLogbook({
                   width: activeWeek === weekNum ? 20 : 8, height: 8, borderRadius: 4,
                   background: activeWeek === weekNum
                     ? "var(--accent)"
-                    : done ? "rgba(229,50,50,0.55)" : "var(--surface-md)",
+                    : done ? "rgba(201,168,76,0.55)" : "var(--surface-md)",
                   transition: "width 0.3s ease, background 0.2s",
                 }} />
             );
@@ -632,8 +632,8 @@ export default function WorkoutLogbook({
           <button key={d} onClick={() => setActiveDay(d)}
             className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap"
             style={{
-              background: activeDay === d ? "rgba(229,50,50,0.14)" : "var(--surface-sm)",
-              border: `1px solid ${activeDay === d ? "rgba(229,50,50,0.35)" : "var(--surface-md)"}`,
+              background: activeDay === d ? "rgba(201,168,76,0.14)" : "var(--surface-sm)",
+              border: `1px solid ${activeDay === d ? "rgba(201,168,76,0.35)" : "var(--surface-md)"}`,
               color: activeDay === d ? "var(--accent-light)" : "var(--text-muted)",
             }}>
             {getDayLabel(d)}
@@ -652,7 +652,7 @@ export default function WorkoutLogbook({
       {dayExercises.length === 0 ? (
         <div className="text-center py-16 rounded-2xl"
           style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
-          <Dumbbell size={36} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.25)" }} />
+          <Dumbbell size={36} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.25)" }} />
           <p className="text-sm" style={{ color: "var(--text-dim)" }}>
             {mode === "trainer"
               ? "Nessun esercizio per questo giorno. Usa la vista Avanzato per aggiungere esercizi."
@@ -715,8 +715,8 @@ export default function WorkoutLogbook({
             <button onClick={() => setSuppEditing(e => !e)}
               className="px-3 py-1.5 rounded-xl text-xs font-medium transition-all"
               style={{
-                background: suppEditing ? "rgba(229,50,50,0.12)" : "var(--surface)",
-                border: `1px solid ${suppEditing ? "rgba(229,50,50,0.3)" : "var(--surface-md)"}`,
+                background: suppEditing ? "rgba(201,168,76,0.12)" : "var(--surface)",
+                border: `1px solid ${suppEditing ? "rgba(201,168,76,0.3)" : "var(--surface-md)"}`,
                 color: suppEditing ? "var(--accent-light)" : "var(--text-muted)",
               }}>
               {suppEditing ? "Chiudi" : "Gestisci"}
@@ -727,7 +727,7 @@ export default function WorkoutLogbook({
             <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
               {suppDraft.map(item => (
                 <div key={item.id} className="rounded-2xl p-3 flex items-start gap-3"
-                  style={{ background: "rgba(229,50,50,0.03)", border: "1px solid rgba(229,50,50,0.1)" }}>
+                  style={{ background: "rgba(201,168,76,0.03)", border: "1px solid rgba(201,168,76,0.1)" }}>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{item.name}</p>
                     {item.brand && <p className="text-xs" style={{ color: "var(--text-dim)" }}>{item.brand}</p>}
@@ -760,14 +760,14 @@ export default function WorkoutLogbook({
                     onChange={e => setNewSupp(p => ({ ...p, [key]: e.target.value }))}
                     placeholder={placeholder}
                     className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface-sm)", border: "1px solid rgba(229,50,50,0.15)", color: "var(--ivory)" }}
+                    style={{ background: "var(--surface-sm)", border: "1px solid rgba(201,168,76,0.15)", color: "var(--ivory)" }}
                   />
                 ))}
               </div>
               <input value={newSupp.notes ?? ""} onChange={e => setNewSupp(p => ({ ...p, notes: e.target.value }))}
                 placeholder="Note dosaggio (es. 3-5g post-workout)"
                 className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                style={{ background: "var(--surface-sm)", border: "1px solid rgba(229,50,50,0.15)", color: "var(--ivory)" }}
+                style={{ background: "var(--surface-sm)", border: "1px solid rgba(201,168,76,0.15)", color: "var(--ivory)" }}
               />
               <button onClick={addSupp} disabled={!newSupp.name.trim()}
                 className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm disabled:opacity-40">
@@ -792,7 +792,7 @@ export default function WorkoutLogbook({
             <div
               className="fixed inset-0 z-[60] flex flex-col items-center justify-center"
               style={{
-                background: "radial-gradient(ellipse at 50% 40%, rgba(229,50,50,0.12) 0%, rgba(8,3,3,0.98) 60%)",
+                background: "radial-gradient(ellipse at 50% 40%, rgba(201,168,76,0.12) 0%, rgba(8,3,3,0.98) 60%)",
                 backdropFilter: "blur(4px)",
               }}
               onClick={() => setTimerExpanded(false)}
@@ -805,10 +805,10 @@ export default function WorkoutLogbook({
                 <svg width={RING_C * 2} height={RING_C * 2} viewBox={`0 0 ${RING_C * 2} ${RING_C * 2}`}>
                   {/* Track */}
                   <circle cx={RING_C} cy={RING_C} r={RING_R} fill="none"
-                    stroke="rgba(229,50,50,0.1)" strokeWidth="5" />
+                    stroke="rgba(201,168,76,0.1)" strokeWidth="5" />
                   {/* Glow under ring */}
                   <circle cx={RING_C} cy={RING_C} r={RING_R} fill="none"
-                    stroke="rgba(229,50,50,0.08)" strokeWidth="14" />
+                    stroke="rgba(201,168,76,0.08)" strokeWidth="14" />
                   {/* Progress arc */}
                   <circle cx={RING_C} cy={RING_C} r={RING_R} fill="none"
                     stroke={restTimer.secs === 0 ? "var(--accent-light)" : "var(--accent)"}
@@ -832,12 +832,12 @@ export default function WorkoutLogbook({
                     style={{
                       fontSize: "3.5rem",
                       color: restTimer.secs === 0 ? "var(--accent-light)" : "var(--ivory)",
-                      textShadow: restTimer.secs === 0 ? "0 0 40px rgba(229,50,50,0.8)" : "none",
+                      textShadow: restTimer.secs === 0 ? "0 0 40px rgba(201,168,76,0.8)" : "none",
                     }}>
                     {restTimer.secs === 0 ? "VAI!" : fmtTimer(restTimer.secs)}
                   </span>
                   {restTimer.secs > 0 && (
-                    <span className="text-xs mt-1" style={{ color: "rgba(229,50,50,0.6)", letterSpacing: "0.12em" }}>
+                    <span className="text-xs mt-1" style={{ color: "rgba(201,168,76,0.6)", letterSpacing: "0.12em" }}>
                       RECUPERO
                     </span>
                   )}
@@ -859,7 +859,7 @@ export default function WorkoutLogbook({
                 </button>
                 <button onClick={dismissTimer}
                   className="flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold"
-                  style={{ background: "rgba(229,50,50,0.14)", border: "1px solid rgba(229,50,50,0.32)", color: "var(--accent-light)" }}>
+                  style={{ background: "rgba(201,168,76,0.14)", border: "1px solid rgba(201,168,76,0.32)", color: "var(--accent-light)" }}>
                   <X size={14} /> Salta recupero
                 </button>
               </div>
@@ -880,18 +880,18 @@ export default function WorkoutLogbook({
                 className="flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer"
                 style={{
                   background: restTimer.secs === 0
-                    ? "linear-gradient(135deg,rgba(229,50,50,0.22),rgba(170,21,21,0.14))"
+                    ? "linear-gradient(135deg,rgba(201,168,76,0.22),rgba(170,21,21,0.14))"
                     : "rgba(10,4,4,0.97)",
-                  border: `1px solid ${restTimer.secs === 0 ? "rgba(229,50,50,0.6)" : "rgba(229,50,50,0.35)"}`,
+                  border: `1px solid ${restTimer.secs === 0 ? "rgba(201,168,76,0.6)" : "rgba(201,168,76,0.35)"}`,
                   backdropFilter: "blur(24px)",
-                  boxShadow: "0 12px 40px rgba(0,0,0,0.7), 0 0 30px rgba(229,50,50,0.1)",
+                  boxShadow: "0 12px 40px rgba(0,0,0,0.7), 0 0 30px rgba(201,168,76,0.1)",
                 }}
                 onClick={() => setTimerExpanded(true)}
               >
                 {/* Small ring */}
                 <div className="relative flex-shrink-0">
                   <svg width="50" height="50" viewBox="0 0 50 50">
-                    <circle cx="25" cy="25" r="21" fill="none" stroke="rgba(229,50,50,0.1)" strokeWidth="3" />
+                    <circle cx="25" cy="25" r="21" fill="none" stroke="rgba(201,168,76,0.1)" strokeWidth="3" />
                     <circle cx="25" cy="25" r="21" fill="none"
                       stroke={restTimer.secs === 0 ? "var(--accent-light)" : "var(--accent)"}
                       strokeWidth="3" strokeLinecap="round"
@@ -911,7 +911,7 @@ export default function WorkoutLogbook({
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs mb-0.5" style={{ color: "rgba(229,50,50,0.6)" }}>
+                  <p className="text-xs mb-0.5" style={{ color: "rgba(201,168,76,0.6)" }}>
                     {restTimer.secs === 0 ? "Recupero terminato" : "Recupero in corso"}
                   </p>
                   <p className="text-sm font-bold truncate" style={{ color: "var(--ivory)" }}>
@@ -921,7 +921,7 @@ export default function WorkoutLogbook({
 
                 {/* Expand hint + close */}
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <span className="p-1.5 rounded-xl" style={{ background: "rgba(229,50,50,0.1)", color: "var(--accent)" }}>
+                  <span className="p-1.5 rounded-xl" style={{ background: "rgba(201,168,76,0.1)", color: "var(--accent)" }}>
                     <Maximize2 size={13} />
                   </span>
                   <button

@@ -101,7 +101,7 @@ export default function PreventiviPage() {
     const text = [
       `PREVENTIVO — ${activeQuote.date}`,
       activeQuote.clientName ? `Cliente: ${activeQuote.clientName}` : "",
-      `Trainer: ${user?.name ?? "TrainerPro"}`,
+      `Trainer: ${user?.name ?? "REC Studio"}`,
       "",
       "SERVIZI:",
       ...activeQuote.items.map((i) => `• ${i.description} (x${i.qty}) — €${(i.qty * i.price).toFixed(2)}`),

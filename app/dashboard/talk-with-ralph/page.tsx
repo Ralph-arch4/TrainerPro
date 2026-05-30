@@ -95,7 +95,7 @@ export default function TalkWithRalphPage() {
         {/* Ralph avatar */}
         <div className="relative flex-shrink-0">
           <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm"
-            style={{ background: "linear-gradient(135deg, #E53232, #7B2FBE)", boxShadow: "0 0 16px rgba(229,50,50,0.35)" }}>
+            style={{ background: "linear-gradient(135deg, #C9A84C, #7B2FBE)", boxShadow: "0 0 16px rgba(201,168,76,0.35)" }}>
             R
           </div>
           <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2"
@@ -126,11 +126,11 @@ export default function TalkWithRalphPage() {
         {/* Welcome bubble from Ralph */}
         <div className="flex items-end gap-2 justify-start">
           <div className="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs flex-shrink-0 mb-1"
-            style={{ background: "linear-gradient(135deg, #E53232, #7B2FBE)" }}>
+            style={{ background: "linear-gradient(135deg, #C9A84C, #7B2FBE)" }}>
             R
           </div>
           <div className="max-w-xs rounded-2xl rounded-bl-sm px-4 py-3"
-            style={{ background: "rgba(229,50,50,0.1)", border: "1px solid rgba(229,50,50,0.15)" }}>
+            style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.15)" }}>
             <p className="text-sm" style={{ color: "var(--text)" }}>
               Ciao! Sono Ralph, il dev della piattaforma.
             </p>

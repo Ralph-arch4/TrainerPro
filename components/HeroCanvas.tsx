@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useRef, MouseEvent } from 'react'
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import dynamic from 'next/dynamic'
@@ -6,8 +6,8 @@ import dynamic from 'next/dynamic'
 // Three.js scene — SSR-unsafe, loaded client-side only
 const HeroScene3D = dynamic(() => import('./HeroScene3D'), { ssr: false })
 
-const R = '#E53232'
-const O = '#FF6B2B'
+const R = '#C9A84C'
+const O = '#C9A84C'
 const L = '#FF9A6C'
 const D = 'rgba(245,240,232,0.38)'
 
@@ -138,7 +138,7 @@ export default function HeroCanvas() {
 
           {/* TOP BAR */}
           <rect x="5" y="5" width="510" height="20" rx="2"
-            fill="rgba(229,50,50,0.07)" stroke={R} strokeOpacity="0.25" strokeWidth="0.6" />
+            fill="rgba(201,168,76,0.07)" stroke={R} strokeOpacity="0.25" strokeWidth="0.6" />
           <text x="12" y="18" fill={D} fontSize="6.5" fontFamily="monospace" letterSpacing="1">ID#M7-TR4-992</text>
           <circle cx="122" cy="14" r="3" fill="#22c55e">
             <animate attributeName="opacity" values="1;0.2;1" dur="1.8s" repeatCount="indefinite" />
@@ -256,7 +256,7 @@ export default function HeroCanvas() {
 
           {/* Bottom bar */}
           <rect x="5" y="560" width="510" height="18" rx="2"
-            fill="rgba(229,50,50,0.06)" stroke={R} strokeOpacity="0.2" strokeWidth="0.6" />
+            fill="rgba(201,168,76,0.06)" stroke={R} strokeOpacity="0.2" strokeWidth="0.6" />
           <text x="12" y="572" fill={D} fontSize="6" fontFamily="monospace">SETT. 4 · GIORNO 2</text>
           <text x="260" y="572" fill={O} fontSize="6" fontWeight="700"
             textAnchor="middle" fontFamily="monospace">M7-R4-99 ● ONLINE</text>

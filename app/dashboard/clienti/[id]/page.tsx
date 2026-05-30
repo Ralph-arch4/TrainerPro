@@ -63,7 +63,7 @@ function PhotoCard({ photo, secureUrl, onDelete }: { photo: ProgressPhoto; secur
         <img src={url} alt={photo.taken_at} className="w-full h-full object-cover" />
       ) : (
         <div className="w-full h-full flex items-center justify-center">
-          <Loader2 size={20} className="animate-spin" style={{ color: "rgba(229,50,50,0.5)" }} />
+          <Loader2 size={20} className="animate-spin" style={{ color: "rgba(201,168,76,0.5)" }} />
         </div>
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
@@ -652,8 +652,8 @@ export default function ClientDetailPage() {
   ];
 
   const inputClass = "w-full px-3 py-2.5 rounded-xl text-sm outline-none";
-  const inputStyle = { background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" };
-  const selectStyle = { background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" };
+  const inputStyle = { background: "var(--surface)", border: "1px solid rgba(201,168,76,0.2)", color: "var(--text)" };
+  const selectStyle = { background: "var(--surface)", border: "1px solid rgba(201,168,76,0.2)", color: "var(--text)" };
 
   const activePhase = [...client.phases]
     .filter((p) => !p.completed)
@@ -742,7 +742,7 @@ export default function ClientDetailPage() {
                 <div className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor[client.status] }} />
                 <span className="text-xs" style={{ color: "var(--text-muted)" }}>{statusLabel[client.status]}</span>
               </div>
-              {client.goal && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(229,50,50,0.1)", color: "var(--accent-light)" }}>{goalLabel[client.goal]}</span>}
+              {client.goal && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.1)", color: "var(--accent-light)" }}>{goalLabel[client.goal]}</span>}
               {client.level && <span className="text-xs" style={{ color: "var(--text-dim)" }}>{levelLabel[client.level]}</span>}
             </div>
           </div>
@@ -804,9 +804,9 @@ export default function ClientDetailPage() {
           <button key={key} onClick={() => { setTab(key); if (key === "scan") loadScans(); if (key === "foto" && hasPinSet === null) checkPinStatus(); }}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm whitespace-nowrap transition-all"
             style={{
-              background: tab === key ? "rgba(229,50,50,0.12)" : "transparent",
+              background: tab === key ? "rgba(201,168,76,0.12)" : "transparent",
               color: tab === key ? "var(--accent-light)" : "var(--text-muted)",
-              border: tab === key ? "1px solid rgba(229,50,50,0.22)" : "1px solid transparent",
+              border: tab === key ? "1px solid rgba(201,168,76,0.22)" : "1px solid transparent",
               fontWeight: tab === key ? "600" : "400",
             }}>
             <Icon size={14} />
@@ -815,7 +815,7 @@ export default function ClientDetailPage() {
               <span className="text-xs px-1.5 py-0.5 rounded-full font-bold" style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24", fontSize: "0.55rem", letterSpacing: "0.05em" }}>BETA</span>
             )}
             {count !== undefined && count > 0 && (
-              <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "rgba(229,50,50,0.16)", color: "var(--accent-light)" }}>{count}</span>
+              <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.16)", color: "var(--accent-light)" }}>{count}</span>
             )}
           </button>
         ))}
@@ -909,7 +909,7 @@ export default function ClientDetailPage() {
           </div>
           {client.phases.length === 0 ? (
             <div className="text-center py-16 card-luxury rounded-2xl">
-              <Activity size={40} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
+              <Activity size={40} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>Nessuna fase pianificata</p>
               <button onClick={() => setShowPhaseModal(true)} className="mt-3 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>Aggiungi la prima fase</button>
             </div>
@@ -972,7 +972,7 @@ export default function ClientDetailPage() {
 
           {client.workoutPlans.length === 0 ? (
             <div className="text-center py-16 card-luxury rounded-2xl">
-              <Dumbbell size={40} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
+              <Dumbbell size={40} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
               <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessuna scheda di allenamento</p>
               <p className="text-xs mb-4" style={{ color: "var(--text-dim)" }}>Crea la prima scheda e condividi il link col cliente</p>
               <button onClick={() => setShowWorkoutModal(true)} className="accent-btn px-5 py-2.5 rounded-xl text-sm inline-flex items-center gap-2">
@@ -1061,7 +1061,7 @@ export default function ClientDetailPage() {
                       <Link
                         href={`/dashboard/clienti/${id}/schede/${wp.id}`}
                         className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all ml-auto"
-                        style={{ background: "rgba(229,50,50,0.1)", border: "1px solid rgba(229,50,50,0.22)", color: "var(--accent-light)" }}>
+                        style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.22)", color: "var(--accent-light)" }}>
                         <ExternalLink size={11} /> Apri &amp; Modifica
                       </Link>
                     </div>
@@ -1084,7 +1084,7 @@ export default function ClientDetailPage() {
           </div>
           {client.dietPlans.length === 0 ? (
             <div className="text-center py-16 card-luxury rounded-2xl">
-              <UtensilsCrossed size={40} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
+              <UtensilsCrossed size={40} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
               <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessun piano alimentare</p>
               <p className="text-xs mb-4" style={{ color: "var(--text-dim)" }}>Crea un piano con macro, range di grammi e pasti dettagliati</p>
               <button onClick={() => { setEditingDietPlan(null); setDietEditorOpen(true); }}
@@ -1153,7 +1153,7 @@ export default function ClientDetailPage() {
 
                     {/* Meals section */}
                     {mealsData.length > 0 && (
-                      <div style={{ borderTop: "1px solid rgba(229,50,50,0.1)" }}>
+                      <div style={{ borderTop: "1px solid rgba(201,168,76,0.1)" }}>
                         <button onClick={() => setExpandedDietId(isExpanded ? null : dp.id)}
                           className="w-full flex items-center justify-between px-5 py-3 hover:bg-white/[0.02] transition-all"
                           style={{ color: "var(--text-muted)" }}>
@@ -1166,10 +1166,10 @@ export default function ClientDetailPage() {
                         {isExpanded && (
                           <div className="px-5 pb-4 space-y-3">
                             {mealsData.map((meal, mi) => (
-                              <div key={meal.id} className="rounded-xl p-3" style={{ background: "var(--surface-xs)", border: "1px solid rgba(229,50,50,0.1)" }}>
+                              <div key={meal.id} className="rounded-xl p-3" style={{ background: "var(--surface-xs)", border: "1px solid rgba(201,168,76,0.1)" }}>
                                 <div className="flex items-center gap-2 mb-2">
                                   <span className="w-5 h-5 rounded-md text-xs font-bold flex items-center justify-center flex-shrink-0"
-                                    style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent-light)" }}>{mi + 1}</span>
+                                    style={{ background: "rgba(201,168,76,0.14)", color: "var(--accent-light)" }}>{mi + 1}</span>
                                   <span className="text-sm font-semibold" style={{ color: "var(--text)" }}>{meal.name}</span>
                                   {meal.time && <span className="text-xs" style={{ color: "var(--text-dim)" }}>{meal.time}</span>}
                                 </div>
@@ -1222,7 +1222,7 @@ export default function ClientDetailPage() {
           </div>
           {client.notes.length === 0 ? (
             <div className="text-center py-10" style={{ color: "var(--text-dim)" }}>
-              <StickyNote size={32} className="mx-auto mb-2" style={{ color: "rgba(229,50,50,0.25)" }} />
+              <StickyNote size={32} className="mx-auto mb-2" style={{ color: "rgba(201,168,76,0.25)" }} />
               <p className="text-sm">Nessuna nota ancora</p>
             </div>
           ) : (
@@ -1251,7 +1251,7 @@ export default function ClientDetailPage() {
             <div className="max-w-sm mx-auto mt-8">
               <div className="text-center mb-6">
                 <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-                  style={{ background: "rgba(229,50,50,0.1)", border: "1px solid rgba(229,50,50,0.22)" }}>
+                  style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.22)" }}>
                   <KeyRound size={24} style={{ color: "var(--accent)" }} />
                 </div>
                 <h2 className="text-lg font-bold mb-1" style={{ color: "var(--text)" }}>Sezione protetta</h2>
@@ -1273,7 +1273,7 @@ export default function ClientDetailPage() {
                       onKeyDown={e => e.key === "Enter" && saveNewPin()}
                       placeholder="es. 1234" maxLength={8}
                       className="w-full px-4 py-3 rounded-xl text-sm outline-none pr-12"
-                      style={{ background: "var(--surface)", border: `1px solid ${pwError ? "rgba(239,68,68,0.5)" : "rgba(229,50,50,0.22)"}`, color: "var(--text)" }} autoFocus />
+                      style={{ background: "var(--surface)", border: `1px solid ${pwError ? "rgba(239,68,68,0.5)" : "rgba(201,168,76,0.22)"}`, color: "var(--text)" }} autoFocus />
                     <button onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-dim)" }}>
                       {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
@@ -1301,7 +1301,7 @@ export default function ClientDetailPage() {
                       onKeyDown={e => e.key === "Enter" && unlockPhotos()}
                       placeholder="Inserisci PIN" maxLength={8}
                       className="w-full px-4 py-3 rounded-xl text-sm outline-none pr-12"
-                      style={{ background: "var(--surface)", border: `1px solid ${pwError ? "rgba(239,68,68,0.5)" : "rgba(229,50,50,0.22)"}`, color: "var(--text)" }} autoFocus />
+                      style={{ background: "var(--surface)", border: `1px solid ${pwError ? "rgba(239,68,68,0.5)" : "rgba(201,168,76,0.22)"}`, color: "var(--text)" }} autoFocus />
                     <button onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-dim)" }}>
                       {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
@@ -1346,14 +1346,14 @@ export default function ClientDetailPage() {
                     <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Data foto *</label>
                     <input type="date" value={uploadDate} onChange={e => setUploadDate(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                      style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" }} />
+                      style={{ background: "var(--surface)", border: "1px solid rgba(201,168,76,0.2)", color: "var(--text)" }} />
                   </div>
                   <div>
                     <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Note (opzionale)</label>
                     <input type="text" value={uploadNotes} onChange={e => setUploadNotes(e.target.value)}
                       placeholder="es. Settimana 4 bulk"
                       className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                      style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" }} />
+                      style={{ background: "var(--surface)", border: "1px solid rgba(201,168,76,0.2)", color: "var(--text)" }} />
                   </div>
                 </div>
                 <label className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all ${uploading ? "opacity-60 pointer-events-none" : "hover:opacity-90"} accent-btn`}>
@@ -1369,7 +1369,7 @@ export default function ClientDetailPage() {
               {/* Gallery — use view-token secured URLs */}
               {photos.length === 0 ? (
                 <div className="text-center py-16 card-luxury rounded-2xl">
-                  <Camera size={40} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
+                  <Camera size={40} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
                   <p className="text-sm" style={{ color: "var(--text-muted)" }}>Nessuna foto ancora</p>
                 </div>
               ) : (
@@ -1432,17 +1432,17 @@ export default function ClientDetailPage() {
               <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height: "90px", display: "block" }}>
                 <defs>
                   <linearGradient id="wgc" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#E53232" stopOpacity="0.28" />
-                    <stop offset="100%" stopColor="#E53232" stopOpacity="0" />
+                    <stop offset="0%" stopColor="#C9A84C" stopOpacity="0.28" />
+                    <stop offset="100%" stopColor="#C9A84C" stopOpacity="0" />
                   </linearGradient>
                 </defs>
                 <path d={areaPath} fill="url(#wgc)" />
-                <polyline points={pts} fill="none" stroke="#E53232" strokeWidth="1.5"
+                <polyline points={pts} fill="none" stroke="#C9A84C" strokeWidth="1.5"
                   strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
                 {chartData.map((m, i) => {
                   const x = (i / (chartData.length - 1)) * W;
                   const y = H - ((m.weight - minW) / rangeW) * (H - 10) - 5;
-                  return <circle key={i} cx={x.toFixed(2)} cy={y.toFixed(2)} r="1.8" fill="#E53232" vectorEffect="non-scaling-stroke" />;
+                  return <circle key={i} cx={x.toFixed(2)} cy={y.toFixed(2)} r="1.8" fill="#C9A84C" vectorEffect="non-scaling-stroke" />;
                 })}
               </svg>
               <div className="flex justify-between text-xs mt-1" style={{ color: "var(--text-dim)" }}>
@@ -1504,7 +1504,7 @@ export default function ClientDetailPage() {
             {/* History */}
             {sortedM.length === 0 ? (
               <div className="text-center py-12 card-luxury rounded-2xl">
-                <TrendingUp size={32} className="mx-auto mb-2" style={{ color: "rgba(229,50,50,0.3)" }} />
+                <TrendingUp size={32} className="mx-auto mb-2" style={{ color: "rgba(201,168,76,0.3)" }} />
                 <p className="text-sm" style={{ color: "var(--text-dim)" }}>Nessuna misurazione ancora</p>
               </div>
             ) : (
@@ -1683,26 +1683,26 @@ export default function ClientDetailPage() {
                   <label className="block text-xs mb-1" style={{ color: "var(--text-muted)" }}>Data foto</label>
                   <input type="date" value={scanUploadDate} onChange={e => setScanUploadDate(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(201,168,76,0.2)", color: "var(--text)" }} />
                 </div>
                 <div>
                   <label className="block text-xs mb-1" style={{ color: "var(--text-muted)" }}>Note</label>
                   <input type="text" value={scanUploadNotes} onChange={e => setScanUploadNotes(e.target.value)}
                     placeholder="es. Fronte, Lato, Schiena…"
                     className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(201,168,76,0.2)", color: "var(--text)" }} />
                 </div>
               </div>
             )}
 
             {!scansLoaded ? (
               <div className="text-center py-10">
-                <Loader2 size={22} className="animate-spin mx-auto mb-2" style={{ color: "rgba(229,50,50,0.5)" }} />
+                <Loader2 size={22} className="animate-spin mx-auto mb-2" style={{ color: "rgba(201,168,76,0.5)" }} />
                 <p className="text-xs" style={{ color: "var(--text-dim)" }}>Caricamento scansioni…</p>
               </div>
             ) : scans.length === 0 ? (
               <div className="text-center py-14 card-luxury rounded-2xl">
-                <Brain size={36} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
+                <Brain size={36} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
                 <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessuna scansione ancora</p>
                 <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Carica la prima foto per avviare il tracciamento mensile della composizione corporea</p>
               </div>
@@ -1717,7 +1717,7 @@ export default function ClientDetailPage() {
                     const isSelB = compareMode && selectedMonthB === m;
                     const isActive = !compareMode && activeMonth === m;
                     let bg = "var(--surface-sm)", border = "var(--border)", color = "var(--text-muted)";
-                    if (isActive) { bg = "rgba(229,50,50,0.12)"; border = "rgba(229,50,50,0.32)"; color = "var(--accent-light)"; }
+                    if (isActive) { bg = "rgba(201,168,76,0.12)"; border = "rgba(201,168,76,0.32)"; color = "var(--accent-light)"; }
                     if (isSelA) { bg = "rgba(99,102,241,0.18)"; border = "rgba(99,102,241,0.4)"; color = "#a78bfa"; }
                     if (isSelB) { bg = "rgba(20,184,166,0.18)"; border = "rgba(20,184,166,0.4)"; color = "#14b8a6"; }
                     return (
@@ -1769,7 +1769,7 @@ export default function ClientDetailPage() {
                                     <img src={scanUrls[s.id]} alt={s.taken_at} className="w-full h-full object-cover" />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--surface-sm)" }}>
-                                      <Loader2 size={18} className="animate-spin" style={{ color: "rgba(229,50,50,0.4)" }} />
+                                      <Loader2 size={18} className="animate-spin" style={{ color: "rgba(201,168,76,0.4)" }} />
                                     </div>
                                   )}
                                   <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5"
@@ -1897,7 +1897,7 @@ export default function ClientDetailPage() {
                               {ca.coach_tips.map((tip, i) => (
                                 <div key={i} className="flex items-start gap-1.5 mb-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
                                   <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 font-bold"
-                                    style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent)", fontSize: "0.6rem" }}>{i + 1}</span>
+                                    style={{ background: "rgba(201,168,76,0.14)", color: "var(--accent)", fontSize: "0.6rem" }}>{i + 1}</span>
                                   {tip}
                                 </div>
                               ))}
@@ -1936,12 +1936,12 @@ export default function ClientDetailPage() {
                               {/* Thumbnail + tier badge */}
                               <div className="relative flex-shrink-0">
                                 <div className="w-24 h-32 rounded-xl overflow-hidden"
-                                  style={{ background: "var(--surface-sm)", border: `1px solid ${tierCfg ? tierCfg.color + "30" : "rgba(229,50,50,0.12)"}` }}>
+                                  style={{ background: "var(--surface-sm)", border: `1px solid ${tierCfg ? tierCfg.color + "30" : "rgba(201,168,76,0.12)"}` }}>
                                   {imgUrl ? (
                                     <img src={imgUrl} alt={scan.taken_at} className="w-full h-full object-cover" />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center">
-                                      <Loader2 size={16} className="animate-spin" style={{ color: "rgba(229,50,50,0.4)" }} />
+                                      <Loader2 size={16} className="animate-spin" style={{ color: "rgba(201,168,76,0.4)" }} />
                                     </div>
                                   )}
                                 </div>
@@ -1987,7 +1987,7 @@ export default function ClientDetailPage() {
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <button onClick={() => handleScanAnalyze(scan)} disabled={isAnalyzing}
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
-                                    style={{ background: analysis ? "var(--surface-sm)" : "rgba(229,50,50,0.12)", border: `1px solid ${analysis ? "var(--border)" : "rgba(229,50,50,0.28)"}`, color: analysis ? "var(--text-dim)" : "var(--accent-light)" }}>
+                                    style={{ background: analysis ? "var(--surface-sm)" : "rgba(201,168,76,0.12)", border: `1px solid ${analysis ? "var(--border)" : "rgba(201,168,76,0.28)"}`, color: analysis ? "var(--text-dim)" : "var(--accent-light)" }}>
                                     {isAnalyzing ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
                                     {isAnalyzing ? "Analisi…" : analysis ? "Rianalizza" : "Analizza con AI"}
                                   </button>
@@ -2026,12 +2026,12 @@ export default function ClientDetailPage() {
 
                             {/* ── AI Full Analysis ── */}
                             {analysis && (
-                              <div className="mt-3 pt-3 space-y-3" style={{ borderTop: `1px solid ${tierCfg ? tierCfg.color + "20" : "rgba(229,50,50,0.1)"}` }}>
+                              <div className="mt-3 pt-3 space-y-3" style={{ borderTop: `1px solid ${tierCfg ? tierCfg.color + "20" : "rgba(201,168,76,0.1)"}` }}>
 
                                 {/* Summary */}
                                 <div className="flex items-center gap-2 mb-1">
                                   <Brain size={12} style={{ color: "var(--accent)" }} />
-                                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(229,50,50,0.8)", letterSpacing: "0.08em" }}>
+                                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(201,168,76,0.8)", letterSpacing: "0.08em" }}>
                                     Analisi AI · {analysis.confidence === "high" ? "Alta" : analysis.confidence === "medium" ? "Media" : "Bassa"} confidenza
                                   </p>
                                 </div>
@@ -2079,7 +2079,7 @@ export default function ClientDetailPage() {
 
                                 {/* Nutrition plan */}
                                 {(analysis.nutrition_tips?.length || analysis.nutrition_calories) && (
-                                  <div className="rounded-xl p-3" style={{ background: "rgba(229,50,50,0.04)", border: "1px solid rgba(229,50,50,0.18)" }}>
+                                  <div className="rounded-xl p-3" style={{ background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.18)" }}>
                                     <div className="flex items-center gap-1.5 mb-2">
                                       <Utensils size={11} style={{ color: "var(--accent)" }} />
                                       <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--accent)" }}>Piano Nutrizionale</p>
@@ -2088,7 +2088,7 @@ export default function ClientDetailPage() {
                                       <div className="flex gap-3 mb-2">
                                         {analysis.nutrition_calories && (
                                           <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-                                            style={{ background: "rgba(229,50,50,0.1)", color: "var(--accent-light)" }}>
+                                            style={{ background: "rgba(201,168,76,0.1)", color: "var(--accent-light)" }}>
                                             ~{analysis.nutrition_calories} kcal/die
                                           </span>
                                         )}
@@ -2115,7 +2115,7 @@ export default function ClientDetailPage() {
                                     {analysis.recommendations.map((r, i) => (
                                       <div key={i} className="flex items-start gap-2 text-xs mb-1" style={{ color: "var(--text-muted)" }}>
                                         <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 font-bold"
-                                          style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent)", fontSize: "0.6rem" }}>{i + 1}</span>
+                                          style={{ background: "rgba(201,168,76,0.14)", color: "var(--accent)", fontSize: "0.6rem" }}>{i + 1}</span>
                                         {r}
                                       </div>
                                     ))}

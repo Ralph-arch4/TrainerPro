@@ -1,32 +1,32 @@
 @import "tailwindcss";
 
-/* ── DARK THEME (default) ──────────────────────────────────────────────────── */
+/* ── DARK THEME (default) — REC GROUP laser gold identity ─────────────────── */
 :root {
-  /* Brand accent */
-  --accent:       #E53232;
-  --accent-light: #FF5C3A;
-  --accent-dark:  #AA1515;
-  --accent-glow:  rgba(229,50,50,0.18);
+  /* Brand accent — laser gold */
+  --accent:       #C9A84C;
+  --accent-light: #E8C96B;
+  --accent-dark:  #8B6820;
+  --accent-glow:  rgba(201,168,76,0.20);
 
-  /* Legacy palette aliases (used by inline styles & glass classes) */
-  --black:    #080608;
-  --charcoal: #130E0E;
-  --graphite: #1F1717;
+  /* Legacy palette aliases */
+  --black:    #080808;
+  --charcoal: #111111;
+  --graphite: #1A1A1A;
   --ivory:    #F5F0E8;
 
-  /* Semantic backgrounds */
-  --bg:           #080608;
-  --bg-card:      #130E0E;
+  /* Semantic backgrounds — pure OLED black */
+  --bg:           #080808;
+  --bg-card:      #111111;
   --surface-xs:   rgba(255,255,255,0.025);
   --surface-sm:   rgba(255,255,255,0.04);
   --surface:      rgba(255,255,255,0.05);
   --surface-md:   rgba(255,255,255,0.07);
-  --surface-card: rgba(10,4,4,0.95);
+  --surface-card: rgba(8,6,4,0.95);
   --surface-modal:rgba(0,0,0,0.75);
 
-  /* Semantic borders */
-  --border-subtle: rgba(255,255,255,0.05);
-  --border:        rgba(255,255,255,0.08);
+  /* Semantic borders — gold-tinted */
+  --border-subtle: rgba(201,168,76,0.06);
+  --border:        rgba(201,168,76,0.12);
 
   /* Semantic text */
   --text:       #F5F0E8;
@@ -34,10 +34,10 @@
   --text-dim:   rgba(245,240,232,0.38);
   --text-faint: rgba(245,240,232,0.22);
 
-  /* Glass backgrounds */
-  --glass-bg:      rgba(30,15,15,0.80);
-  --glass-dark-bg: rgba(12,6,6,0.92);
-  --card-luxury-bg:rgba(25,12,12,0.70);
+  /* Glass backgrounds — warm gold-tinted dark */
+  --glass-bg:      rgba(15,12,8,0.80);
+  --glass-dark-bg: rgba(8,6,4,0.92);
+  --card-luxury-bg:rgba(18,14,8,0.70);
 
   /* Scrollbar */
   --scroll-track: var(--charcoal);
@@ -46,37 +46,37 @@
 
 /* ── LIGHT THEME ─────────────────────────────────────────────────────────────── */
 [data-theme="light"] {
-  /* Brand accent — slightly deeper for white bg contrast */
-  --accent:       #C81010;
-  --accent-light: #E53232;
-  --accent-dark:  #8B0808;
-  --accent-glow:  rgba(200,16,16,0.12);
+  /* Brand accent — deeper gold for white bg contrast */
+  --accent:       #9A7620;
+  --accent-light: #C9A84C;
+  --accent-dark:  #6B5010;
+  --accent-glow:  rgba(154,118,32,0.12);
 
   /* Legacy aliases */
   --black:    #F8F3EE;
   --charcoal: #FFFFFF;
   --graphite: #F0EBE4;
-  --ivory:    #1A0808;
+  --ivory:    #1A1200;
 
   /* Backgrounds */
   --bg:           #F8F3EE;
   --bg-card:      #FFFFFF;
   --surface-xs:   rgba(0,0,0,0.04);
-  --surface-sm:   rgba(0,0,0,0.07);   /* ghost button bg — needs contrast on cream */
+  --surface-sm:   rgba(0,0,0,0.07);
   --surface:      rgba(0,0,0,0.08);
-  --surface-md:   rgba(0,0,0,0.12);   /* pressed/active bg */
+  --surface-md:   rgba(0,0,0,0.12);
   --surface-card: #FFFFFF;
   --surface-modal:rgba(0,0,0,0.60);
 
-  /* Borders — must be visible against white/cream */
+  /* Borders */
   --border-subtle: rgba(0,0,0,0.12);
   --border:        rgba(0,0,0,0.18);
 
-  /* Text — solid colours for maximum contrast on cream/white backgrounds */
-  --text:       #1A0808;
-  --text-muted: #3D1A08;          /* dark warm brown — 14:1 on white */
-  --text-dim:   #6B3020;          /* medium warm brown — 7:1 on white */
-  --text-faint: #9B5030;          /* lighter warm brown — 4.5:1 on white */
+  /* Text */
+  --text:       #1A1200;
+  --text-muted: #3D2E08;
+  --text-dim:   #6B5020;
+  --text-faint: #9B7830;
 
   /* Glass */
   --glass-bg:      rgba(255,255,255,0.80);
@@ -92,7 +92,7 @@
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--text);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-dm-sans);
 }
 
 * { box-sizing: border-box; }
@@ -110,7 +110,7 @@ html, body {
 
 /* ── TYPOGRAPHY ───────────────────────────────────────────────────────────────── */
 .accent-text {
-  background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 40%, #FF2020 100%);
+  background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 45%, #A07828 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -120,50 +120,50 @@ html, body {
 .glass {
   background: var(--glass-bg);
   backdrop-filter: blur(24px) saturate(1.2);
-  border: 1px solid rgba(229,50,50,0.14);
+  border: 1px solid rgba(201,168,76,0.14);
   transition: background 0.25s ease, border-color 0.25s ease;
 }
 
 .glass-dark {
   background: var(--glass-dark-bg);
   backdrop-filter: blur(28px) saturate(1.3);
-  border: 1px solid rgba(229,50,50,0.1);
+  border: 1px solid rgba(201,168,76,0.10);
   transition: background 0.25s ease;
 }
 
 [data-theme="light"] .glass,
 [data-theme="light"] .glass-dark {
-  border-color: rgba(200,16,16,0.12);
+  border-color: rgba(154,118,32,0.12);
   box-shadow: 0 2px 16px rgba(0,0,0,0.06);
 }
 
 /* ── BUTTONS ──────────────────────────────────────────────────────────────────── */
 .accent-btn {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 50%, var(--accent-dark) 100%);
+  color: #0A0A0A;
   font-weight: 700;
   transition: all 0.22s ease;
   cursor: pointer;
   border: none;
-  box-shadow: 0 0 20px rgba(229,50,50,0.25), inset 0 1px 0 rgba(255,255,255,0.08);
+  box-shadow: 0 0 20px rgba(201,168,76,0.30), inset 0 1px 0 rgba(255,255,255,0.15);
   letter-spacing: 0.01em;
 }
 .accent-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 35px rgba(229,50,50,0.45), 0 8px 25px rgba(229,50,50,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+  box-shadow: 0 0 40px rgba(201,168,76,0.55), 0 8px 25px rgba(201,168,76,0.25), inset 0 1px 0 rgba(255,255,255,0.2);
 }
-.accent-btn:active { transform: translateY(0); box-shadow: 0 0 15px rgba(229,50,50,0.3); }
+.accent-btn:active { transform: translateY(0); box-shadow: 0 0 15px rgba(201,168,76,0.35); }
 
 /* ── CARDS ────────────────────────────────────────────────────────────────────── */
 .card-luxury {
   background: var(--card-luxury-bg);
-  border: 1px solid rgba(229,50,50,0.1);
+  border: 1px solid rgba(201,168,76,0.10);
   backdrop-filter: blur(16px);
   transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, background 0.25s ease;
 }
 .card-luxury:hover {
-  border-color: rgba(229,50,50,0.28);
-  box-shadow: 0 0 40px rgba(229,50,50,0.08), 0 20px 40px rgba(0,0,0,0.4);
+  border-color: rgba(201,168,76,0.30);
+  box-shadow: 0 0 40px rgba(201,168,76,0.10), 0 20px 40px rgba(0,0,0,0.4);
   transform: translateY(-2px);
 }
 
@@ -171,15 +171,10 @@ html, body {
   box-shadow: 0 1px 8px rgba(0,0,0,0.07);
 }
 [data-theme="light"] .card-luxury:hover {
-  box-shadow: 0 0 20px rgba(200,16,16,0.08), 0 8px 24px rgba(0,0,0,0.1);
+  box-shadow: 0 0 20px rgba(154,118,32,0.10), 0 8px 24px rgba(0,0,0,0.1);
 }
 
-/* ── LIGHT MODE: input + form visibility fixes ────────────────────────────────
-   Inline styles using var(--surface) / var(--border) already pick up the
-   stronger light-mode values defined in the :root override above.
-   These rules handle elements that set background/border via class or
-   that use direct rgba() values bypassing CSS vars.                           */
-
+/* ── LIGHT MODE: input + form visibility fixes ───────────────────────────────── */
 [data-theme="light"] input,
 [data-theme="light"] textarea,
 [data-theme="light"] select {
@@ -189,23 +184,20 @@ html, body {
 }
 [data-theme="light"] input::placeholder,
 [data-theme="light"] textarea::placeholder {
-  color: rgba(26,8,8,0.38) !important;
+  color: rgba(26,18,0,0.38) !important;
 }
 
-/* Timer overlay stays dark in both themes (intentional cyberpunk lock-screen) */
-[data-theme="light"] .timer-overlay-dark { /* no override */ }
+[data-theme="light"] .timer-overlay-dark { /* intentional dark override */ }
 
-/* Scrollbar in light */
 [data-theme="light"] ::-webkit-scrollbar-track { background: #EDE8E2; }
 [data-theme="light"] ::-webkit-scrollbar-thumb { background: var(--accent-dark); }
 
-/* Nav sidebar — right border + shadow in light mode */
 [data-theme="light"] aside.glass-dark {
   border-right: 1px solid rgba(0,0,0,0.1);
   box-shadow: 2px 0 12px rgba(0,0,0,0.05);
 }
 
-/* ── LIGHT MODE: select / dropdown visibility ────────────────────────────── */
+/* ── LIGHT MODE: select / dropdown ──────────────────────────────────────────── */
 [data-theme="light"] select {
   background-color: #FFFFFF !important;
   border: 1px solid rgba(0,0,0,0.18) !important;
@@ -216,15 +208,9 @@ html, body {
   color: var(--text);
 }
 
-/* ── LIGHT MODE: stat cards need subtle shadow on cream bg ───────────────── */
-[data-theme="light"] [class*="rounded"] {
-  /* Let card-luxury handle its own shadow — no global override needed */
-}
-
-/* Ensure body bg uses --bg not --black (legacy alias) */
 [data-theme="light"] body { background-color: var(--bg) !important; }
 
-/* ── LIGHT MODE: search inputs ───────────────────────────────────────────── */
+/* ── LIGHT MODE: search inputs ───────────────────────────────────────────────── */
 [data-theme="light"] input[type="text"],
 [data-theme="light"] input[type="search"],
 [data-theme="light"] input[type="email"],
@@ -236,19 +222,12 @@ html, body {
   color: var(--text) !important;
 }
 
-/* ── LIGHT MODE: glass-dark cards become white-frosted ───────────────────── */
 [data-theme="light"] .glass-dark {
   background: rgba(255,255,255,0.92) !important;
   border-color: rgba(0,0,0,0.08) !important;
 }
 
-/* ── LIGHT MODE: landing page ghost "Accedi" button ─────────────────────── */
-[data-theme="light"] .btn-ghost,
-[data-theme="light"] a[style*="transparent"] {
-  /* handled by inline var(--border) and var(--text) already */
-}
-
-/* ── LASER BEAMS ──────────────────────────────────────────────────────────────── */
+/* ── LASER BEAMS — gold ──────────────────────────────────────────────────────── */
 @keyframes laserPulse {
   0%, 100% { opacity: var(--beam-op, 0.5); filter: blur(0.5px); }
   50%       { opacity: calc(var(--beam-op, 0.5) * 1.5); filter: blur(0px); }
@@ -262,8 +241,8 @@ html, body {
   left: -30%;
   width: 160%;
   background: linear-gradient(90deg,
-    transparent 0%, rgba(229,50,50,0.15) 15%, rgba(229,50,50,0.7)  40%,
-    rgba(255,120,60,0.95) 50%, rgba(229,50,50,0.7) 60%, rgba(229,50,50,0.15) 85%, transparent 100%
+    transparent 0%, rgba(201,168,76,0.15) 15%, rgba(201,168,76,0.70) 40%,
+    rgba(232,201,107,0.95) 50%, rgba(201,168,76,0.70) 60%, rgba(201,168,76,0.15) 85%, transparent 100%
   );
   border-radius: 9999px;
   animation: laserPulse var(--beam-dur, 3s) ease-in-out infinite;
@@ -271,9 +250,11 @@ html, body {
   transform: rotate(var(--beam-angle, -28deg));
 }
 
-/* ── GLOW ─────────────────────────────────────────────────────────────────────── */
-.glow-red { box-shadow: 0 0 30px rgba(229,50,50,0.3), 0 0 60px rgba(229,50,50,0.12); }
-.glow-text-red { text-shadow: 0 0 20px rgba(229,50,50,0.6), 0 0 40px rgba(229,50,50,0.3); }
+/* ── GLOW — gold ──────────────────────────────────────────────────────────────── */
+.glow-red  { box-shadow: 0 0 30px rgba(201,168,76,0.30), 0 0 60px rgba(201,168,76,0.12); }
+.glow-gold { box-shadow: 0 0 30px rgba(201,168,76,0.30), 0 0 60px rgba(201,168,76,0.12); }
+.glow-text-red  { text-shadow: 0 0 20px rgba(201,168,76,0.60), 0 0 40px rgba(201,168,76,0.30); }
+.glow-text-gold { text-shadow: 0 0 20px rgba(201,168,76,0.60), 0 0 40px rgba(201,168,76,0.30); }
 
 /* ── SCAN LINES ───────────────────────────────────────────────────────────────── */
 .scanlines::before {
@@ -285,11 +266,11 @@ html, body {
   z-index: 1;
 }
 
-/* ── GRID TEXTURE ─────────────────────────────────────────────────────────────── */
+/* ── GRID TEXTURE — gold ──────────────────────────────────────────────────────── */
 .grid-texture {
   background-image:
-    linear-gradient(rgba(229,50,50,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(229,50,50,0.04) 1px, transparent 1px);
+    linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
   background-size: 60px 60px;
 }
 
@@ -297,12 +278,12 @@ html, body {
 @keyframes shimmer { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 10px rgba(229,50,50,0.2); }
-  50%       { box-shadow: 0 0 25px rgba(229,50,50,0.5), 0 0 50px rgba(229,50,50,0.15); }
+  0%, 100% { box-shadow: 0 0 10px rgba(201,168,76,0.20); }
+  50%       { box-shadow: 0 0 25px rgba(201,168,76,0.50), 0 0 50px rgba(201,168,76,0.15); }
 }
 @keyframes borderGlow {
-  0%, 100% { border-color: rgba(229,50,50,0.1); }
-  50%       { border-color: rgba(229,50,50,0.35); }
+  0%, 100% { border-color: rgba(201,168,76,0.10); }
+  50%       { border-color: rgba(201,168,76,0.38); }
 }
 @keyframes athlete-scan  { 0% { transform: translateY(-20px); opacity: 0; } 5% { opacity: 1; } 90% { opacity: 0.7; } 100% { transform: translateY(560px); opacity: 0; } }
 @keyframes athlete-node  { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
@@ -313,7 +294,7 @@ html, body {
 .pulse-glow { animation: pulseGlow 2.5s ease-in-out infinite; }
 .border-glow{ animation: borderGlow 3s ease-in-out infinite; }
 
-/* ── SKELETON LOADERS ─────────────────────────────────────────────────────────── */
+/* ── SKELETON LOADERS — gold tint ─────────────────────────────────────────────── */
 @keyframes skeleton-wave {
   0%   { background-position: -200% center; }
   100% { background-position: 200% center; }
@@ -322,7 +303,7 @@ html, body {
   background: linear-gradient(90deg,
     rgba(255,255,255,0.04) 0%,
     rgba(255,255,255,0.04) 30%,
-    rgba(229,50,50,0.10) 50%,
+    rgba(201,168,76,0.10) 50%,
     rgba(255,255,255,0.04) 70%,
     rgba(255,255,255,0.04) 100%
   );
@@ -334,7 +315,7 @@ html, body {
   background: linear-gradient(90deg,
     rgba(0,0,0,0.06) 0%,
     rgba(0,0,0,0.06) 30%,
-    rgba(200,16,16,0.10) 50%,
+    rgba(154,118,32,0.10) 50%,
     rgba(0,0,0,0.06) 70%,
     rgba(0,0,0,0.06) 100%
   );
@@ -350,9 +331,9 @@ html, body {
 .holo-shimmer {
   position: absolute; inset: 0; z-index: 10; pointer-events: none; opacity: 0;
   background: linear-gradient(115deg,
-    transparent 18%, rgba(255,255,255,0.03) 28%, rgba(229,50,50,0.15) 36%,
-    rgba(255,130,50,0.2) 43%, rgba(255,220,100,0.13) 50%, rgba(100,200,255,0.1) 57%,
-    rgba(180,100,255,0.07) 63%, rgba(255,255,255,0.03) 70%, transparent 80%);
+    transparent 18%, rgba(255,255,255,0.03) 28%, rgba(201,168,76,0.15) 36%,
+    rgba(232,201,107,0.20) 43%, rgba(255,220,100,0.13) 50%, rgba(200,220,255,0.08) 57%,
+    rgba(180,160,255,0.06) 63%, rgba(255,255,255,0.03) 70%, transparent 80%);
   background-size: 200% 200%;
   transition: opacity 0.35s ease;
 }

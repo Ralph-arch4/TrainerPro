@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Float } from '@react-three/drei'
@@ -15,7 +15,7 @@ function Dumbbell() {
   // All cylinder parts share rotation [0,0,π/2] so they lie along the X axis
   const H = [0, 0, Math.PI / 2] as [number, number, number]
   const wf  = (opacity: number, bright = false) => ({
-    color: bright ? '#FF9A6C' : '#FF6B2B',
+    color: bright ? '#FF9A6C' : '#C9A84C',
     wireframe: true,
     transparent: true,
     opacity,
@@ -102,7 +102,7 @@ function OrbitRing({ radius, rotation, speed, opacity = 0.65 }: {
   return (
     <mesh ref={ref} rotation={rotation}>
       <torusGeometry args={[radius, 0.035, 4, 64]} />
-      <meshBasicMaterial color="#FF6B2B" transparent opacity={opacity} />
+      <meshBasicMaterial color="#C9A84C" transparent opacity={opacity} />
     </mesh>
   )
 }
@@ -146,7 +146,7 @@ function CyberGrid() {
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3.38, 0]}>
         <planeGeometry args={[50, 50, 12, 12]} />
-        <meshBasicMaterial color="#FF6B2B" wireframe transparent opacity={0.055} />
+        <meshBasicMaterial color="#C9A84C" wireframe transparent opacity={0.055} />
       </mesh>
     </>
   )

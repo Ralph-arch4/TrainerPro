@@ -132,7 +132,7 @@ export default function ExportPage() {
           <div className="card-luxury rounded-2xl p-5 overflow-auto" style={{ maxHeight: "70vh" }}>
             <p className="text-xs font-semibold mb-4" style={{ color: "var(--text-dim)" }}>ANTEPRIMA</p>
             {hydrated && client
-              ? <PrintPreview client={client} sections={sections} trainerName={user?.name ?? "TrainerPro"} />
+              ? <PrintPreview client={client} sections={sections} trainerName={user?.name ?? "REC Studio"} />
               : (
                 <div className="flex flex-col items-center justify-center py-16" style={{ color: "var(--text-faint)" }}>
                   <FileDown size={40} className="mb-3" style={{ color: "rgba(255,107,43,0.15)" }} />
@@ -147,7 +147,7 @@ export default function ExportPage() {
       {/* Print layout */}
       {client && (
         <div className="hidden print:block p-8" style={{ background: "white", color: "#111" }}>
-          <PrintPreview client={client} sections={sections} trainerName={user?.name ?? "TrainerPro"} forPrint />
+          <PrintPreview client={client} sections={sections} trainerName={user?.name ?? "REC Studio"} forPrint />
         </div>
       )}
     </>
@@ -168,9 +168,9 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
   return (
     <div style={{ color: textColor, fontSize: "13px" }}>
       {/* Header */}
-      <div className="flex items-start justify-between mb-6 pb-4" style={{ borderBottom: `2px solid ${forPrint ? "#FF6B2B" : "var(--accent)"}` }}>
+      <div className="flex items-start justify-between mb-6 pb-4" style={{ borderBottom: `2px solid ${forPrint ? "#C9A84C" : "var(--accent)"}` }}>
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: forPrint ? "#FF6B2B" : "var(--accent)" }}>TrainerPro</h1>
+          <h1 className="text-2xl font-bold" style={{ color: forPrint ? "#C9A84C" : "var(--accent)" }}>REC Studio</h1>
           <p style={{ color: mutedColor }}>Trainer: {trainerName}</p>
         </div>
         <div className="text-right">
@@ -183,7 +183,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
       {/* Anagrafica */}
       {sections.anagrafica && (
         <section className="mb-6">
-          <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#FF6B2B" : "var(--accent)" }}>Dati Anagrafici</h2>
+          <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#C9A84C" : "var(--accent)" }}>Dati Anagrafici</h2>
           <div className="rounded-xl p-4" style={{ background: bgCard, border: `1px solid ${borderColor}` }}>
             <div className="grid grid-cols-2 gap-2">
               {[
@@ -209,7 +209,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
       {/* Fasi */}
       {sections.fasi && client.phases.length > 0 && (
         <section className="mb-6">
-          <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#FF6B2B" : "var(--accent)" }}>Fasi di Allenamento</h2>
+          <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#C9A84C" : "var(--accent)" }}>Fasi di Allenamento</h2>
           <div className="space-y-2">
             {client.phases.map((p) => (
               <div key={p.id} className="rounded-xl p-3" style={{ background: bgCard, border: `1px solid ${borderColor}` }}>
@@ -233,7 +233,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
       {/* Schede */}
       {sections.schede && client.workoutPlans.length > 0 && (
         <section className="mb-6">
-          <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#FF6B2B" : "var(--accent)" }}>Schede di Allenamento</h2>
+          <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#C9A84C" : "var(--accent)" }}>Schede di Allenamento</h2>
           <div className="space-y-4">
             {client.workoutPlans.map((w) => {
               const days = Array.from({ length: w.daysPerWeek }, (_, i) => i + 1);
@@ -256,7 +256,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
                     if (dayExs.length === 0) return null;
                     return (
                       <div key={d} className="px-4 py-3" style={{ borderTop: `1px solid ${borderColor}` }}>
-                        <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: forPrint ? "#FF6B2B" : "var(--accent-light)" }}>
+                        <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: forPrint ? "#C9A84C" : "var(--accent-light)" }}>
                           {dayLabel(d)}
                         </p>
                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
@@ -302,7 +302,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
       {/* Dieta */}
       {sections.dieta && client.dietPlans.length > 0 && (
         <section className="mb-6">
-          <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#FF6B2B" : "var(--accent)" }}>Piani Alimentari</h2>
+          <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#C9A84C" : "var(--accent)" }}>Piani Alimentari</h2>
           <div className="space-y-4">
             {client.dietPlans.map((d) => {
               const meals: Array<{ id: string; name: string; time?: string; notes?: string; items: Array<{ id: string; name: string; grams: number; gramsMax?: number; }> }> = (() => {
@@ -314,7 +314,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
                   <div className="px-4 py-3" style={{ background: forPrint ? "#fff7f5" : "rgba(255,107,43,0.08)" }}>
                     <div className="flex items-start justify-between">
                       <p className="font-bold">{d.name}</p>
-                      <p className="font-bold" style={{ color: forPrint ? "#FF6B2B" : "var(--accent)" }}>{fmt(d.calories, d.caloriesMax, " kcal")}</p>
+                      <p className="font-bold" style={{ color: forPrint ? "#C9A84C" : "var(--accent)" }}>{fmt(d.calories, d.caloriesMax, " kcal")}</p>
                     </div>
                     <div className="flex gap-4 mt-1 text-xs" style={{ color: mutedColor }}>
                       <span>Prot. {fmt(d.protein, d.proteinMax)}</span>
@@ -354,7 +354,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
       {/* Misurazioni */}
       {sections.misurazioni && client.measurements.length > 0 && (
         <section className="mb-6">
-          <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#FF6B2B" : "var(--accent)" }}>Misurazioni Corporee</h2>
+          <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#C9A84C" : "var(--accent)" }}>Misurazioni Corporee</h2>
           <div className="space-y-2">
             {[...client.measurements]
               .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -380,7 +380,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
 
       {/* Footer */}
       <div className="pt-4 text-center text-xs" style={{ borderTop: `1px solid ${borderColor}`, color: mutedColor }}>
-        Generato da TrainerPro · {new Date().toLocaleDateString("it-IT")}
+        Generato da REC Studio · {new Date().toLocaleDateString("it-IT")}
       </div>
     </div>
   );

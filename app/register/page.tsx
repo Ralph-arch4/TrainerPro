@@ -48,7 +48,7 @@ export default function RegisterPage() {
           <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
             Abbiamo inviato un link di conferma a{" "}
             <strong style={{ color: "var(--text)" }}>{email}</strong>.<br />
-            Clicca il link per attivare il tuo account TrainerPro.
+            Clicca il link per attivare il tuo account REC Studio.
           </p>
           <Link href="/login" className="inline-flex items-center gap-2 accent-btn px-6 py-2.5 rounded-xl text-sm">
             Vai al login
@@ -73,7 +73,7 @@ export default function RegisterPage() {
           <div className="w-10 h-10 rounded-xl accent-btn flex items-center justify-center">
             <Dumbbell size={20} />
           </div>
-          <span className="font-bold text-xl accent-text">TrainerPro</span>
+          <span className="font-bold text-xl accent-text">REC Studio</span>
         </div>
 
         {/* Center content */}
@@ -122,7 +122,7 @@ export default function RegisterPage() {
             <div className="w-14 h-14 rounded-2xl accent-btn flex items-center justify-center mb-3">
               <Dumbbell size={28} />
             </div>
-            <h1 className="text-2xl font-bold accent-text">TrainerPro</h1>
+            <h1 className="text-2xl font-bold accent-text">REC Studio</h1>
           </div>
 
           <div className="mb-8">

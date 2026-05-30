@@ -84,43 +84,43 @@ function TrainerSeal({ trainerName }: { trainerName: string }) {
   const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
   const cx = 64, cy = 64, textR = 44;
   const arcPath = `M ${cx - textR},${cy} a ${textR},${textR} 0 1,1 ${textR * 2},0 a ${textR},${textR} 0 1,1 -${textR * 2},0`;
-  const sealText = "· PIANO CERTIFICATO · TRAINERPRO ·";
+  const sealText = "· PIANO CERTIFICATO · REC Studio ·";
   return (
     <div className="flex flex-col items-center py-6">
       <div className="relative" style={{ width: 128, height: 128 }}>
-        <div style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: "0 0 28px rgba(229,50,50,0.18), 0 0 10px rgba(229,50,50,0.08)" }} />
+        <div style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: "0 0 28px rgba(201,168,76,0.18), 0 0 10px rgba(201,168,76,0.08)" }} />
         <svg width="128" height="128" viewBox="0 0 128 128">
           <defs>
             <radialGradient id="sealGrad" cx="38%" cy="32%" r="68%">
-              <stop offset="0%" stopColor="rgba(229,50,50,0.18)" />
+              <stop offset="0%" stopColor="rgba(201,168,76,0.18)" />
               <stop offset="100%" stopColor="rgba(6,3,3,0.92)" />
             </radialGradient>
             <path id="sealArc" d={arcPath} />
           </defs>
           {/* dashed outer ring */}
-          <circle cx={cx} cy={cy} r={61} fill="none" stroke="rgba(229,50,50,0.18)" strokeWidth="1" strokeDasharray="2.5 3.5" />
+          <circle cx={cx} cy={cy} r={61} fill="none" stroke="rgba(201,168,76,0.18)" strokeWidth="1" strokeDasharray="2.5 3.5" />
           {/* seal body */}
           <circle cx={cx} cy={cy} r={54} fill="url(#sealGrad)" />
-          <circle cx={cx} cy={cy} r={54} fill="none" stroke="rgba(229,50,50,0.38)" strokeWidth="1.2" />
+          <circle cx={cx} cy={cy} r={54} fill="none" stroke="rgba(201,168,76,0.38)" strokeWidth="1.2" />
           {/* inner ring */}
-          <circle cx={cx} cy={cy} r={30} fill="none" stroke="rgba(229,50,50,0.2)" strokeWidth="0.8" />
+          <circle cx={cx} cy={cy} r={30} fill="none" stroke="rgba(201,168,76,0.2)" strokeWidth="0.8" />
           {/* decorative dots at 60° */}
           {[0,60,120,180,240,300].map(a => {
             const r = (a * Math.PI) / 180;
-            return <circle key={a} cx={cx + Math.cos(r) * 41} cy={cy + Math.sin(r) * 41} r="1.4" fill="rgba(229,50,50,0.35)" />;
+            return <circle key={a} cx={cx + Math.cos(r) * 41} cy={cy + Math.sin(r) * 41} r="1.4" fill="rgba(201,168,76,0.35)" />;
           })}
           {/* circular label text */}
-          <text fontSize="6.2" letterSpacing="2" fill="rgba(229,50,50,0.6)" fontWeight="700" fontFamily="system-ui,sans-serif">
+          <text fontSize="6.2" letterSpacing="2" fill="rgba(201,168,76,0.6)" fontWeight="700" fontFamily="system-ui,sans-serif">
             <textPath href="#sealArc" startOffset="2%">{sealText}</textPath>
           </text>
           {/* trainer initials */}
           <text x={cx} y={cy + 8} textAnchor="middle" fontSize="22" fontWeight="900"
-            fill="rgba(229,50,50,0.82)" fontFamily="Georgia,'Times New Roman',serif" fontStyle="italic">
+            fill="rgba(201,168,76,0.82)" fontFamily="Georgia,'Times New Roman',serif" fontStyle="italic">
             {initials}
           </text>
         </svg>
       </div>
-      <p className="text-xs mt-1.5 font-semibold uppercase tracking-widest" style={{ color: "rgba(229,50,50,0.42)", letterSpacing: "0.18em" }}>
+      <p className="text-xs mt-1.5 font-semibold uppercase tracking-widest" style={{ color: "rgba(201,168,76,0.42)", letterSpacing: "0.18em" }}>
         {trainerName}
       </p>
     </div>
@@ -265,11 +265,11 @@ export default function PublicSchedaPage() {
             <div className="min-w-0">
               <p className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>{plan.name}</p>
               <p className="text-xs" style={{ color: "var(--text-dim)" }}>
-                {plan.days_per_week} giorni/sett · {plan.total_weeks} sett · <span style={{ color: "rgba(229,50,50,0.7)" }}>{trainerName}</span>
+                {plan.days_per_week} giorni/sett · {plan.total_weeks} sett · <span style={{ color: "rgba(201,168,76,0.7)" }}>{trainerName}</span>
               </p>
             </div>
           </div>
-          <span className="text-xs font-semibold accent-text">TrainerPro</span>
+          <span className="text-xs font-semibold accent-text">REC Studio</span>
         </div>
       </div>
 
@@ -291,7 +291,7 @@ export default function PublicSchedaPage() {
               />
               <defs>
                 <linearGradient id="prog-grad-s" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#FF6B2B" />
+                  <stop offset="0%" stopColor="#C9A84C" />
                   <stop offset="100%" stopColor="#FF9A6C" />
                 </linearGradient>
               </defs>
@@ -495,7 +495,7 @@ export default function PublicSchedaPage() {
 
       <div className="text-center pb-8 pt-2">
         <p className="text-xs" style={{ color: "var(--text-faint)" }}>
-          Powered by <span className="accent-text font-semibold">TrainerPro</span>
+          Powered by <span className="accent-text font-semibold">REC Studio</span>
         </p>
       </div>
     </div>

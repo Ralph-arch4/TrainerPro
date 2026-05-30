@@ -24,7 +24,7 @@ const goalColor: Record<string, string> = {
   dimagrimento: "#38bdf8",
   massa: "#a78bfa",
   tonificazione: "#34d399",
-  performance: "#E53232",
+  performance: "#C9A84C",
 };
 const statusLabel: Record<string, string> = {
   attivo: "Attivo",

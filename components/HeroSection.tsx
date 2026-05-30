@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRef } from 'react'
@@ -52,7 +52,7 @@ export default function HeroSection() {
               '--beam-delay': beam.delay,
               '--beam-angle': '-27deg',
               filter: `blur(${parseFloat(beam.height) < 1 ? '0.8px' : '0.3px'})`,
-              boxShadow: `0 0 ${parseFloat(beam.height) * 12}px rgba(229,50,50,0.5), 0 0 ${parseFloat(beam.height) * 30}px rgba(229,50,50,0.2)`,
+              boxShadow: `0 0 ${parseFloat(beam.height) * 12}px rgba(201,168,76,0.5), 0 0 ${parseFloat(beam.height) * 30}px rgba(201,168,76,0.2)`,
             } as React.CSSProperties}
           />
         ))}
@@ -61,7 +61,7 @@ export default function HeroSection() {
       {/* ── Deep red ambient ────────────────────────────────────────── */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true"
         style={{
-          background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(229,50,50,0.05) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(201,168,76,0.05) 0%, transparent 70%)',
         }}
       />
 
@@ -70,7 +70,7 @@ export default function HeroSection() {
         className="absolute right-0 top-1/2 -translate-y-1/2 w-[700px] h-[700px] pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse at 60% 50%, rgba(229,50,50,0.16) 0%, rgba(200,20,20,0.06) 45%, transparent 70%), radial-gradient(ellipse at 35% 65%, rgba(255,80,30,0.07) 0%, transparent 55%)',
+            'radial-gradient(ellipse at 60% 50%, rgba(201,168,76,0.16) 0%, rgba(200,20,20,0.06) 45%, transparent 70%), radial-gradient(ellipse at 35% 65%, rgba(255,80,30,0.07) 0%, transparent 55%)',
         }}
       />
 
@@ -81,12 +81,12 @@ export default function HeroSection() {
             <div
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 tracking-wide"
               style={{
-                background: 'linear-gradient(135deg, rgba(229,50,50,0.06) 0%, rgba(255,80,30,0.14) 50%, rgba(229,50,50,0.06) 100%)',
+                background: 'linear-gradient(135deg, rgba(201,168,76,0.06) 0%, rgba(255,80,30,0.14) 50%, rgba(201,168,76,0.06) 100%)',
                 backgroundSize: '200% auto',
                 animation: 'shimmer 3s linear infinite',
-                border: '1px solid rgba(229,50,50,0.3)',
+                border: '1px solid rgba(201,168,76,0.3)',
                 color: 'var(--accent-light)',
-                boxShadow: '0 0 20px rgba(229,50,50,0.1)',
+                boxShadow: '0 0 20px rgba(201,168,76,0.1)',
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -131,12 +131,12 @@ export default function HeroSection() {
               href="/login"
               className="flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-base font-medium transition-all"
               style={{
-                border: '1px solid rgba(229,50,50,0.2)',
+                border: '1px solid rgba(201,168,76,0.2)',
                 color: 'rgba(245,240,232,0.75)',
-                background: 'rgba(229,50,50,0.04)',
+                background: 'rgba(201,168,76,0.04)',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(229,50,50,0.09)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(229,50,50,0.04)')}
+              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(201,168,76,0.09)')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'rgba(201,168,76,0.04)')}
             >
               Accedi al tuo account
             </Link>
@@ -157,8 +157,8 @@ export default function HeroSection() {
                 key={label}
                 className="rounded-2xl p-3 text-center border-glow"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(229,50,50,0.06), rgba(15,8,8,0.6))',
-                  border: '1px solid rgba(229,50,50,0.12)',
+                  background: 'linear-gradient(135deg, rgba(201,168,76,0.06), rgba(15,8,8,0.6))',
+                  border: '1px solid rgba(201,168,76,0.12)',
                 }}
               >
                 <Icon size={16} className="mx-auto mb-1.5" style={{ color: 'var(--accent)' }} />

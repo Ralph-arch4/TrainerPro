@@ -44,7 +44,7 @@ export default function AppNav() {
           <div className="w-9 h-9 rounded-xl accent-btn flex items-center justify-center flex-shrink-0">
             <Dumbbell size={18} />
           </div>
-          <span className="font-bold text-lg accent-text">TrainerPro</span>
+          <span className="font-bold text-lg accent-text">REC Studio</span>
         </div>
         <ThemeToggle />
       </div>
@@ -58,7 +58,7 @@ export default function AppNav() {
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all"
               style={{
-                background: active ? "rgba(229,50,50,0.12)" : "transparent",
+                background: active ? "rgba(201,168,76,0.12)" : "transparent",
                 color: active ? "var(--accent-light)" : "var(--text-muted)",
                 fontWeight: active ? "600" : "400",
                 borderLeft: active ? "2px solid var(--accent)" : "2px solid transparent",
@@ -71,7 +71,7 @@ export default function AppNav() {
       </nav>
 
       {/* Bottom: user info */}
-      <div className="px-3 pb-4 pt-2" style={{ borderTop: "1px solid rgba(229,50,50,0.08)" }}>
+      <div className="px-3 pb-4 pt-2" style={{ borderTop: "1px solid rgba(201,168,76,0.08)" }}>
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ background: "var(--surface-sm)" }}>
           <div className="w-8 h-8 rounded-full accent-btn flex items-center justify-center text-xs font-bold flex-shrink-0">
             {user?.name?.charAt(0)?.toUpperCase() ?? "T"}
@@ -96,7 +96,7 @@ export default function AppNav() {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 glass-dark">
         <div className="flex items-center gap-2">
           <Dumbbell size={20} style={{ color: "var(--accent)" }} />
-          <span className="font-bold accent-text">TrainerPro</span>
+          <span className="font-bold accent-text">REC Studio</span>
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle size={15} />

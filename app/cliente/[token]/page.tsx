@@ -86,8 +86,8 @@ function WeeklyDietPlan({ calories, protein, carbs, fat }: { calories: number; p
           <button key={i} onClick={() => setSelectedDay(i)}
             className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold transition-all"
             style={{
-              background: selectedDay === i ? "rgba(229,50,50,0.18)" : "var(--surface-sm)",
-              border: `1px solid ${selectedDay === i ? "rgba(229,50,50,0.4)" : "var(--surface-md)"}`,
+              background: selectedDay === i ? "rgba(201,168,76,0.18)" : "var(--surface-sm)",
+              border: `1px solid ${selectedDay === i ? "rgba(201,168,76,0.4)" : "var(--surface-md)"}`,
               color: selectedDay === i ? "var(--accent-light)" : "var(--text-muted)",
             }}>
             {d.slice(0, 3)}
@@ -304,7 +304,7 @@ function SignatureStroke({ name }: { name: string }) {
       {/* Main signature flourish — flowing bezier */}
       <path
         d="M2 14 C12 7, 24 17, 38 11 C52 5, 60 16, 74 10 C88 4, 100 15, 116 9"
-        stroke="rgba(229,50,50,0.52)"
+        stroke="rgba(201,168,76,0.52)"
         strokeWidth="1.6"
         strokeLinecap="round"
         fill="none"
@@ -315,13 +315,13 @@ function SignatureStroke({ name }: { name: string }) {
         }}
       />
       {/* Terminal dot — appears after the line finishes */}
-      <circle cx="116" cy="9" r="1.8" fill="rgba(229,50,50,0.52)"
+      <circle cx="116" cy="9" r="1.8" fill="rgba(201,168,76,0.52)"
         style={{ animation: "signatureFlare 0.45s ease-out 2.05s both" }}
       />
       {/* Subtle name-length underline echo */}
       <line
         x1="2" y1="18" x2={Math.min(8 + name.length * 6.2, 116)} y2="18"
-        stroke="rgba(229,50,50,0.14)"
+        stroke="rgba(201,168,76,0.14)"
         strokeWidth="0.8"
         strokeLinecap="round"
         style={{
@@ -342,11 +342,11 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
   const cardNum  = shareToken.replace(/-/g, "").toUpperCase().slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
   return (
     <div className="mb-5 rounded-3xl overflow-hidden relative select-none holo-card"
-      style={{ background: "linear-gradient(135deg, rgba(12,4,4,0.98) 0%, rgba(45,8,8,0.92) 55%, rgba(18,6,6,0.98) 100%)", border: "1px solid rgba(229,50,50,0.22)", boxShadow: "0 8px 32px rgba(229,50,50,0.1), inset 0 1px 0 var(--border-subtle)" }}>
+      style={{ background: "linear-gradient(135deg, rgba(12,4,4,0.98) 0%, rgba(45,8,8,0.92) 55%, rgba(18,6,6,0.98) 100%)", border: "1px solid rgba(201,168,76,0.22)", boxShadow: "0 8px 32px rgba(201,168,76,0.1), inset 0 1px 0 var(--border-subtle)" }}>
       {/* Holographic shimmer overlay */}
       <div className="holo-shimmer" />
       <div className="absolute top-0 right-0 w-56 h-56 pointer-events-none rounded-full"
-        style={{ background: "radial-gradient(circle, rgba(229,50,50,0.09) 0%, transparent 70%)", transform: "translate(30%,-30%)" }} />
+        style={{ background: "radial-gradient(circle, rgba(201,168,76,0.09) 0%, transparent 70%)", transform: "translate(30%,-30%)" }} />
       {/* Dot-matrix hologram pattern */}
       <div className="absolute bottom-7 right-4 pointer-events-none"
         style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "3px", opacity: 0.07 }}>
@@ -358,10 +358,10 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: "rgba(229,50,50,0.18)", border: "1px solid rgba(229,50,50,0.32)" }}>
+              style={{ background: "rgba(201,168,76,0.18)", border: "1px solid rgba(201,168,76,0.32)" }}>
               <span className="text-xs font-black" style={{ color: "var(--accent)", lineHeight: 1 }}>TP</span>
             </div>
-            <span className="text-xs font-bold tracking-[0.14em] uppercase" style={{ color: "var(--text-dim)" }}>TrainerPro</span>
+            <span className="text-xs font-bold tracking-[0.14em] uppercase" style={{ color: "var(--text-dim)" }}>REC Studio</span>
           </div>
           <div className="flex items-center gap-2.5">
             {/* Gold EMV chip */}
@@ -378,7 +378,7 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
             </div>
             <div className="flex flex-col items-end gap-1">
               <span className="text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider"
-                style={{ background: "rgba(229,50,50,0.1)", border: "1px solid rgba(229,50,50,0.22)", color: "rgba(229,50,50,0.75)" }}>
+                style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.22)", color: "rgba(201,168,76,0.75)" }}>
                 Piano Attivo
               </span>
               <span className="font-black uppercase tracking-wider"
@@ -392,7 +392,7 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
         <p className="text-xs mb-4" style={{ color: "var(--text-dim)" }}>
           {daysPerWeek} giorni/settimana · {totalWeeks > 0 ? `${totalWeeks} settimane` : "piano continuo"}
         </p>
-        <div className="h-px mb-4" style={{ background: "linear-gradient(90deg, rgba(229,50,50,0.28), transparent)" }} />
+        <div className="h-px mb-4" style={{ background: "linear-gradient(90deg, rgba(201,168,76,0.28), transparent)" }} />
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.16em] mb-1" style={{ color: "var(--text-faint)" }}>Firmato da</p>
@@ -418,9 +418,9 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
               />
             </svg>
             {/* Glow */}
-            <div style={{ position: "absolute", inset: 8, borderRadius: "50%", background: "rgba(229,50,50,0.24)", filter: "blur(7px)" }} />
+            <div style={{ position: "absolute", inset: 8, borderRadius: "50%", background: "rgba(201,168,76,0.24)", filter: "blur(7px)" }} />
             {/* Trainer initials */}
-            <div style={{ position: "absolute", inset: 8, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "radial-gradient(circle at 38% 32%, rgba(229,50,50,0.32), rgba(8,8,8,0.9))", border: "1.5px solid rgba(229,50,50,0.55)" }}>
+            <div style={{ position: "absolute", inset: 8, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "radial-gradient(circle at 38% 32%, rgba(201,168,76,0.32), rgba(8,8,8,0.9))", border: "1.5px solid rgba(201,168,76,0.55)" }}>
               <span className="text-base font-black" style={{ color: "var(--accent)" }}>{initials}</span>
             </div>
             {/* Level badge */}
@@ -431,7 +431,7 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
         </div>
         <p className="text-xs mt-3 font-mono" style={{ color: "var(--text-faint)", letterSpacing: "0.16em" }}>{cardNum}</p>
       </div>
-      <div className="h-1" style={{ background: "linear-gradient(90deg, var(--accent), rgba(229,50,50,0.15), transparent)" }} />
+      <div className="h-1" style={{ background: "linear-gradient(90deg, var(--accent), rgba(201,168,76,0.15), transparent)" }} />
     </div>
   );
 }
@@ -515,9 +515,9 @@ function MilestoneBanner({ dayOnJourney, trainerName }: { dayOnJourney: number |
   if (!hit) return null;
   return (
     <div className="mb-4 rounded-2xl p-5 relative overflow-hidden"
-      style={{ background: "linear-gradient(135deg, rgba(229,50,50,0.1), rgba(255,154,108,0.04))", border: "1px solid rgba(229,50,50,0.3)" }}>
+      style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.1), rgba(255,154,108,0.04))", border: "1px solid rgba(201,168,76,0.3)" }}>
       <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(229,50,50,0.1), transparent)" }} />
+        style={{ background: "radial-gradient(circle, rgba(201,168,76,0.1), transparent)" }} />
       <button onClick={() => setDismissed(true)}
         className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full text-sm font-bold"
         style={{ background: "var(--surface-md)", color: "var(--text-dim)" }}>
@@ -525,7 +525,7 @@ function MilestoneBanner({ dayOnJourney, trainerName }: { dayOnJourney: number |
       </button>
       <div className="flex items-center gap-2 mb-2">
         <Trophy size={14} style={{ color: "var(--accent)", flexShrink: 0 }} />
-        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(229,50,50,0.65)", letterSpacing: "0.13em" }}>
+        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(201,168,76,0.65)", letterSpacing: "0.13em" }}>
           Traguardo raggiunto
         </p>
       </div>
@@ -535,7 +535,7 @@ function MilestoneBanner({ dayOnJourney, trainerName }: { dayOnJourney: number |
       <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
         &ldquo;{hit.msg}&rdquo;
       </p>
-      <p className="text-xs mt-3 font-semibold" style={{ color: "rgba(229,50,50,0.48)" }}>
+      <p className="text-xs mt-3 font-semibold" style={{ color: "rgba(201,168,76,0.48)" }}>
         — {trainerName}
       </p>
     </div>
@@ -618,18 +618,18 @@ function AthleteStatusBand({ dayOnJourney, streak }: {
 }) {
   return (
     <div className="mb-4 rounded-2xl overflow-hidden"
-      style={{ background: "rgba(10,10,10,0.6)", border: "1px solid rgba(229,50,50,0.15)" }}>
-      <div className="h-px" style={{ background: "linear-gradient(90deg,transparent,rgba(229,50,50,0.55),transparent)" }} />
+      style={{ background: "rgba(10,10,10,0.6)", border: "1px solid rgba(201,168,76,0.15)" }}>
+      <div className="h-px" style={{ background: "linear-gradient(90deg,transparent,rgba(201,168,76,0.55),transparent)" }} />
       <div className="flex items-stretch">
         {/* LIVE dot */}
         <div className="flex items-center gap-2 px-4 py-3 flex-shrink-0"
-          style={{ borderRight: "1px solid rgba(229,50,50,0.12)" }}>
+          style={{ borderRight: "1px solid rgba(201,168,76,0.12)" }}>
           <span className="pulse-glow" style={{ display: "block", width: 7, height: 7, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 8px #22c55e" }} />
           <span className="text-xs font-black tracking-[0.18em] uppercase" style={{ color: "rgba(34,197,94,0.85)" }}>Live</span>
         </div>
         {/* Day counter */}
         <div className="flex-1 flex items-center justify-center gap-1.5 px-3 py-3"
-          style={{ borderRight: "1px solid rgba(229,50,50,0.12)" }}>
+          style={{ borderRight: "1px solid rgba(201,168,76,0.12)" }}>
           <Calendar size={11} style={{ color: "var(--text-dim)", flexShrink: 0 }} />
           <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
             {dayOnJourney !== null ? `Giorno ${dayOnJourney} del percorso` : "Percorso non ancora iniziato"}
@@ -643,7 +643,7 @@ function AthleteStatusBand({ dayOnJourney, streak }: {
           </span>
         </div>
       </div>
-      <div className="h-px" style={{ background: "linear-gradient(90deg,transparent,rgba(229,50,50,0.25),transparent)" }} />
+      <div className="h-px" style={{ background: "linear-gradient(90deg,transparent,rgba(201,168,76,0.25),transparent)" }} />
     </div>
   );
 }
@@ -1076,7 +1076,7 @@ export default function ClientPortalPage() {
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
 
       {/* ── Top bar ──────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-40 border-b glass-dark" style={{ borderColor: "rgba(229,50,50,0.14)" }}>
+      <div className="sticky top-0 z-40 border-b glass-dark" style={{ borderColor: "rgba(201,168,76,0.14)" }}>
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-lg accent-btn flex items-center justify-center flex-shrink-0">
@@ -1091,7 +1091,7 @@ export default function ClientPortalPage() {
             <ThemeToggle size={14} />
             <button onClick={copyLink}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs transition-all active:scale-95"
-              style={{ border: "1px solid rgba(229,50,50,0.2)", color: copied ? "#22c55e" : "var(--text-muted)", minHeight: "2.5rem" }}>
+              style={{ border: "1px solid rgba(201,168,76,0.2)", color: copied ? "#22c55e" : "var(--text-muted)", minHeight: "2.5rem" }}>
               {copied ? <Check size={13} /> : <Copy size={13} />}
               <span className="hidden sm:inline">{copied ? "Copiato!" : "Copia link"}</span>
             </button>
@@ -1134,21 +1134,21 @@ export default function ClientPortalPage() {
         {plan.description && (
           <div className="mb-4 p-5 rounded-2xl relative overflow-hidden"
             style={{
-              background: "linear-gradient(135deg, rgba(229,50,50,0.07), rgba(255,154,108,0.03))",
-              border: "1px solid rgba(229,50,50,0.22)",
+              background: "linear-gradient(135deg, rgba(201,168,76,0.07), rgba(255,154,108,0.03))",
+              border: "1px solid rgba(201,168,76,0.22)",
             }}>
             <div className="absolute top-2 right-4 text-7xl font-black leading-none select-none pointer-events-none"
-              style={{ color: "rgba(229,50,50,0.07)", fontFamily: "Georgia, serif", lineHeight: 1 }}>
+              style={{ color: "rgba(201,168,76,0.07)", fontFamily: "Georgia, serif", lineHeight: 1 }}>
               &ldquo;
             </div>
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-                style={{ background: "rgba(229,50,50,0.14)", border: "1px solid rgba(229,50,50,0.28)" }}>
+                style={{ background: "rgba(201,168,76,0.14)", border: "1px solid rgba(201,168,76,0.28)" }}>
                 <MessageSquare size={15} style={{ color: "var(--accent)" }} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold uppercase tracking-widest mb-2"
-                  style={{ color: "rgba(229,50,50,0.65)", letterSpacing: "0.12em" }}>
+                  style={{ color: "rgba(201,168,76,0.65)", letterSpacing: "0.12em" }}>
                   Messaggio dal tuo Trainer
                 </p>
                 <p className="text-sm leading-relaxed"
@@ -1156,7 +1156,7 @@ export default function ClientPortalPage() {
                   &ldquo;{plan.description}&rdquo;
                 </p>
                 <p className="text-xs mt-3 font-semibold"
-                  style={{ color: "rgba(229,50,50,0.48)" }}>
+                  style={{ color: "rgba(201,168,76,0.48)" }}>
                   — {trainerName}
                 </p>
               </div>
@@ -1166,11 +1166,11 @@ export default function ClientPortalPage() {
 
         {/* ── Level + XP card ────────────────────────────────────────────────── */}
         <div className="mb-4 p-4 rounded-2xl relative overflow-hidden"
-          style={{ background: "linear-gradient(135deg, rgba(229,50,50,0.1), rgba(170,21,21,0.05))", border: "1px solid rgba(229,50,50,0.22)" }}>
+          style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.1), rgba(170,21,21,0.05))", border: "1px solid rgba(201,168,76,0.22)" }}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl flex items-center justify-center font-black text-lg flex-shrink-0"
-                style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-dark))", boxShadow: "0 0 20px rgba(229,50,50,0.35)" }}>
+                style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-dark))", boxShadow: "0 0 20px rgba(201,168,76,0.35)" }}>
                 {level}
               </div>
               <div>
@@ -1194,7 +1194,7 @@ export default function ClientPortalPage() {
             </p>
             {dayOnJourney !== null && (
               <span className="text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0"
-                style={{ background: "rgba(229,50,50,0.08)", color: "var(--text-muted)", border: "1px solid rgba(229,50,50,0.15)" }}>
+                style={{ background: "rgba(201,168,76,0.08)", color: "var(--text-muted)", border: "1px solid rgba(201,168,76,0.15)" }}>
                 Giorno {dayOnJourney}
               </span>
             )}
@@ -1242,7 +1242,7 @@ export default function ClientPortalPage() {
         {/* ── Program progress bar (hidden for unlimited plans) ──────────────── */}
         {!isUnlimited && pct !== null && (
           <div className="mb-4 p-4 rounded-2xl"
-            style={{ background: "rgba(229,50,50,0.04)", border: "1px solid rgba(229,50,50,0.12)" }}>
+            style={{ background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.12)" }}>
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-bold" style={{ color: "var(--text)" }}>Avanzamento programma</p>
               <span className="text-sm font-black accent-text">{pct}%</span>
@@ -1315,8 +1315,8 @@ export default function ClientPortalPage() {
             <button key={key} onClick={() => { setTab(key); if (key === "scan") loadScans(); }}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0"
               style={{
-                background: tab === key ? "rgba(229,50,50,0.12)" : "var(--surface-sm)",
-                border: `1px solid ${tab === key ? "rgba(229,50,50,0.32)" : "var(--border-subtle)"}`,
+                background: tab === key ? "rgba(201,168,76,0.12)" : "var(--surface-sm)",
+                border: `1px solid ${tab === key ? "rgba(201,168,76,0.32)" : "var(--border-subtle)"}`,
                 color: tab === key ? "var(--accent-light)" : "var(--text-muted)",
               }}>
               <Icon size={14} />
@@ -1407,9 +1407,9 @@ export default function ClientPortalPage() {
                           background: count === 0
                             ? "var(--surface)"
                             : count <= 2
-                              ? "rgba(229,50,50,0.35)"
-                              : "rgba(229,50,50,0.75)",
-                          border: isToday ? "1px solid rgba(229,50,50,0.8)" : "none",
+                              ? "rgba(201,168,76,0.35)"
+                              : "rgba(201,168,76,0.75)",
+                          border: isToday ? "1px solid rgba(201,168,76,0.8)" : "none",
                         }}
                       />
                     );
@@ -1417,7 +1417,7 @@ export default function ClientPortalPage() {
                 </div>
                 <div className="flex items-center gap-2 mt-2 justify-end">
                   <span className="text-xs" style={{ color: "var(--text-faint)" }}>meno</span>
-                  {["var(--surface)", "rgba(229,50,50,0.25)", "rgba(229,50,50,0.5)", "rgba(229,50,50,0.8)"].map((bg, i) => (
+                  {["var(--surface)", "rgba(201,168,76,0.25)", "rgba(201,168,76,0.5)", "rgba(201,168,76,0.8)"].map((bg, i) => (
                     <div key={i} style={{ width: 12, height: 12, borderRadius: 3, background: bg }} />
                   ))}
                   <span className="text-xs" style={{ color: "var(--text-faint)" }}>più</span>
@@ -1486,14 +1486,14 @@ export default function ClientPortalPage() {
             )}
             <MoodCheckIn trainerName={trainerName} />
             <div className="mb-4 p-3 rounded-xl text-sm flex items-start gap-2"
-              style={{ background: "rgba(229,50,50,0.06)", border: "1px solid rgba(229,50,50,0.14)", color: "var(--text-muted)" }}>
+              style={{ background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.14)", color: "var(--text-muted)" }}>
               <span className="text-base leading-none mt-0.5">💡</span>
               <span><strong style={{ color: "var(--accent-light)" }}>Come usare la scheda:</strong> clicca su una cella per inserire il peso e le ripetizioni. I dati vengono salvati automaticamente settimana per settimana.</span>
             </div>
             {plan.exercises.length === 0 ? (
               <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
-                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(229,50,50,0.08)" }}>
-                  <Dumbbell size={22} style={{ color: "rgba(229,50,50,0.4)" }} />
+                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(201,168,76,0.08)" }}>
+                  <Dumbbell size={22} style={{ color: "rgba(201,168,76,0.4)" }} />
                 </div>
                 <p className="font-semibold text-sm mb-1" style={{ color: "var(--text-muted)" }}>Scheda in preparazione</p>
                 <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Il tuo trainer sta costruendo la tua scheda personalizzata su misura. Torni tra poco.</p>
@@ -1519,8 +1519,8 @@ export default function ClientPortalPage() {
           <div>
             {diets.length === 0 ? (
               <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
-                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(229,50,50,0.08)" }}>
-                  <UtensilsCrossed size={22} style={{ color: "rgba(229,50,50,0.4)" }} />
+                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(201,168,76,0.08)" }}>
+                  <UtensilsCrossed size={22} style={{ color: "rgba(201,168,76,0.4)" }} />
                 </div>
                 <p className="font-semibold text-sm mb-1" style={{ color: "var(--text-muted)" }}>Piano alimentare in preparazione</p>
                 <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Il tuo piano alimentare personalizzato apparirà qui. Il trainer lo sta preparando su misura per i tuoi obiettivi.</p>
@@ -1532,10 +1532,10 @@ export default function ClientPortalPage() {
               const d = diets[0];
               return (
                 <div className="mb-6 rounded-2xl overflow-hidden"
-                  style={{ border: "1px solid rgba(229,50,50,0.2)", background: "linear-gradient(135deg,rgba(229,50,50,0.06),rgba(8,6,6,0.6))" }}>
+                  style={{ border: "1px solid rgba(201,168,76,0.2)", background: "linear-gradient(135deg,rgba(201,168,76,0.06),rgba(8,6,6,0.6))" }}>
                   <div className="flex items-center gap-3 px-5 py-4">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: "rgba(229,50,50,0.12)", border: "1px solid rgba(229,50,50,0.2)" }}>
+                      style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.2)" }}>
                       <Calendar size={18} style={{ color: "var(--accent)" }} />
                     </div>
                     <div>
@@ -1575,9 +1575,9 @@ export default function ClientPortalPage() {
                     max && max > min ? `${min}–${max}${unit}` : `${min}${unit}`;
 
                   return (
-                    <div key={diet.id} className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(229,50,50,0.15)" }}>
+                    <div key={diet.id} className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(201,168,76,0.15)" }}>
                       {/* Header */}
-                      <div className="p-5" style={{ background: "rgba(229,50,50,0.04)" }}>
+                      <div className="p-5" style={{ background: "rgba(201,168,76,0.04)" }}>
                         <div className="flex items-start justify-between mb-4">
                           <div>
                             <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>{diet.name}</h2>
@@ -1608,12 +1608,12 @@ export default function ClientPortalPage() {
 
                       {/* Meals */}
                       {meals.length > 0 && (
-                        <div className="divide-y" style={{ borderTop: "1px solid rgba(229,50,50,0.12)", borderColor: "rgba(229,50,50,0.08)" }}>
+                        <div className="divide-y" style={{ borderTop: "1px solid rgba(201,168,76,0.12)", borderColor: "rgba(201,168,76,0.08)" }}>
                           {meals.map((meal, mi) => (
                             <div key={meal.id} className="p-4">
                               <div className="flex items-center gap-2 mb-3">
                                 <span className="w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center flex-shrink-0"
-                                  style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent-light)" }}>{mi + 1}</span>
+                                  style={{ background: "rgba(201,168,76,0.14)", color: "var(--accent-light)" }}>{mi + 1}</span>
                                 <div className="flex items-baseline gap-2">
                                   <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{meal.name}</p>
                                   {meal.time && <span className="text-xs" style={{ color: "var(--text-dim)" }}>{meal.time}</span>}
@@ -1658,8 +1658,8 @@ export default function ClientPortalPage() {
           <div>
             {(!plan.supplements || plan.supplements.length === 0) ? (
               <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
-                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(229,50,50,0.08)" }}>
-                  <ShoppingBag size={22} style={{ color: "rgba(229,50,50,0.4)" }} />
+                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(201,168,76,0.08)" }}>
+                  <ShoppingBag size={22} style={{ color: "rgba(201,168,76,0.4)" }} />
                 </div>
                 <p className="font-semibold text-sm mb-1" style={{ color: "var(--text-muted)" }}>Integratori in arrivo</p>
                 <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Il tuo trainer aggiungerà presto i consigli sugli integratori più adatti al tuo programma.</p>
@@ -1707,14 +1707,14 @@ export default function ClientPortalPage() {
                   <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Data foto *</label>
                   <input type="date" value={scanUploadDate} onChange={e => setScanUploadDate(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(201,168,76,0.2)", color: "var(--text)" }} />
                 </div>
                 <div>
                   <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Note (opzionale)</label>
                   <input type="text" value={scanUploadNotes} onChange={e => setScanUploadNotes(e.target.value)}
                     placeholder="es. Fronte, Schiena, Lato…"
                     className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid rgba(201,168,76,0.2)", color: "var(--text)" }} />
                 </div>
               </div>
               <label className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all ${scanUploading ? "opacity-60 pointer-events-none" : "hover:opacity-90"} accent-btn`}>
@@ -1760,7 +1760,7 @@ export default function ClientPortalPage() {
             {/* Scan timeline */}
             {scansLoading ? (
               <div className="text-center py-10">
-                <Loader2 size={22} className="animate-spin mx-auto mb-2" style={{ color: "rgba(229,50,50,0.5)" }} />
+                <Loader2 size={22} className="animate-spin mx-auto mb-2" style={{ color: "rgba(201,168,76,0.5)" }} />
                 <p className="text-xs" style={{ color: "var(--text-dim)" }}>Caricamento…</p>
               </div>
             ) : !scansLoaded ? (
@@ -1773,7 +1773,7 @@ export default function ClientPortalPage() {
               </div>
             ) : scans.length === 0 ? (
               <div className="text-center py-14 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
-                <Brain size={34} className="mx-auto mb-3" style={{ color: "rgba(229,50,50,0.3)" }} />
+                <Brain size={34} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
                 <p className="text-sm font-semibold mb-1" style={{ color: "var(--text-muted)" }}>Nessuna foto ancora</p>
                 <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>
                   Carica la prima foto — il tuo trainer potrà tracciare i tuoi progressi mese per mese.
@@ -1810,7 +1810,7 @@ export default function ClientPortalPage() {
                         {/* Month header */}
                         <div className="flex items-center gap-2 mb-3">
                           <div className="w-2 h-2 rounded-full flex-shrink-0"
-                            style={{ background: monthIdx === 0 ? "var(--accent)" : "rgba(229,50,50,0.35)" }} />
+                            style={{ background: monthIdx === 0 ? "var(--accent)" : "rgba(201,168,76,0.35)" }} />
                           <p className="text-xs font-bold capitalize" style={{ color: monthIdx === 0 ? "var(--accent-light)" : "var(--text-muted)", letterSpacing: "0.06em" }}>
                             {monthLabel}
                             {monthIdx === 0 && <span className="ml-2 text-xs font-normal" style={{ color: "var(--text-faint)" }}>· mese corrente</span>}
@@ -1826,7 +1826,7 @@ export default function ClientPortalPage() {
                         <div className="grid grid-cols-2 gap-3 mb-3">
                           {monthScans.map(scan => (
                             <div key={scan.id} className="rounded-2xl overflow-hidden transition-all"
-                              style={{ background: "var(--surface-sm)", border: "1px solid rgba(229,50,50,0.12)", boxShadow: "0 2px 12px rgba(0,0,0,0.18)" }}>
+                              style={{ background: "var(--surface-sm)", border: "1px solid rgba(201,168,76,0.12)", boxShadow: "0 2px 12px rgba(0,0,0,0.18)" }}>
                               <div className="aspect-[3/4] relative bg-black">
                                 {scan.signed_url ? (
                                   <img
@@ -1843,7 +1843,7 @@ export default function ClientPortalPage() {
                                 {/* Fallback shown when no URL or image fails to load */}
                                 <div className={`w-full h-full flex flex-col items-center justify-center absolute inset-0 ${scan.signed_url ? "hidden" : ""}`}
                                   style={{ background: "var(--surface-xs)" }}>
-                                  <Scan size={22} style={{ color: "rgba(229,50,50,0.3)" }} />
+                                  <Scan size={22} style={{ color: "rgba(201,168,76,0.3)" }} />
                                   <p className="text-xs mt-1.5" style={{ color: "var(--text-faint)", fontSize: "0.6rem" }}>
                                     {scan.signed_url ? "URL scaduta" : "—"}
                                   </p>
@@ -1857,7 +1857,7 @@ export default function ClientPortalPage() {
                                 {/* AI badge */}
                                 {scan.ai_analysis && (
                                   <div className="absolute top-2 left-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full"
-                                    style={{ background: "rgba(229,50,50,0.9)", backdropFilter: "blur(6px)" }}>
+                                    style={{ background: "rgba(201,168,76,0.9)", backdropFilter: "blur(6px)" }}>
                                     <Sparkles size={8} style={{ color: "#fff" }} />
                                     <span style={{ color: "#fff", fontSize: "0.5rem", fontWeight: 700, letterSpacing: "0.05em" }}>AI</span>
                                   </div>
@@ -1889,7 +1889,7 @@ export default function ClientPortalPage() {
                         {monthScans[0]?.ai_analysis && (() => {
                           const a = monthScans[0].ai_analysis!;
                           return (
-                            <div className="rounded-2xl p-4" style={{ background: "rgba(229,50,50,0.04)", border: "1px solid rgba(229,50,50,0.14)" }}>
+                            <div className="rounded-2xl p-4" style={{ background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.14)" }}>
                               <div className="flex items-center gap-2 mb-3">
                                 <Sparkles size={12} style={{ color: "var(--accent)" }} />
                                 <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--accent)", letterSpacing: "0.1em" }}>
@@ -1918,7 +1918,7 @@ export default function ClientPortalPage() {
                                   {a.recommendations.map((r, i) => (
                                     <div key={i} className="flex items-start gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
                                       <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 font-bold"
-                                        style={{ background: "rgba(229,50,50,0.14)", color: "var(--accent)", fontSize: "0.58rem" }}>{i + 1}</span>
+                                        style={{ background: "rgba(201,168,76,0.14)", color: "var(--accent)", fontSize: "0.58rem" }}>{i + 1}</span>
                                       {r}
                                     </div>
                                   ))}
@@ -1949,7 +1949,7 @@ export default function ClientPortalPage() {
       {/* ── Footer ───────────────────────────────────────────────────────────── */}
       <div className="text-center py-8">
         <p className="text-xs" style={{ color: "var(--text-faint)" }}>
-          Powered by <span className="accent-text font-semibold">TrainerPro</span>
+          Powered by <span className="accent-text font-semibold">REC Studio</span>
         </p>
       </div>
 
@@ -1961,12 +1961,12 @@ export default function ClientPortalPage() {
             <div className="max-w-sm w-full rounded-2xl p-4 flex items-start gap-3"
               style={{
                 background: "rgba(8,8,8,0.97)",
-                border: "1px solid rgba(229,50,50,0.5)",
-                boxShadow: "0 8px 40px rgba(229,50,50,0.22), 0 0 0 1px rgba(255,255,255,0.03)",
+                border: "1px solid rgba(201,168,76,0.5)",
+                boxShadow: "0 8px 40px rgba(201,168,76,0.22), 0 0 0 1px rgba(255,255,255,0.03)",
                 backdropFilter: "blur(20px)",
               }}>
               <div className="w-11 h-11 rounded-full flex items-center justify-center font-black flex-shrink-0"
-                style={{ background: "radial-gradient(circle at 35% 30%, rgba(229,50,50,0.35), rgba(8,8,8,0.92))", border: "1.5px solid rgba(229,50,50,0.6)" }}>
+                style={{ background: "radial-gradient(circle at 35% 30%, rgba(201,168,76,0.35), rgba(8,8,8,0.92))", border: "1.5px solid rgba(201,168,76,0.6)" }}>
                 <span style={{ color: "var(--accent)", fontSize: "0.85rem" }}>{initials}</span>
               </div>
               <div className="flex-1 min-w-0">

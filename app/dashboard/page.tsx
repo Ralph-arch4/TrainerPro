@@ -284,7 +284,7 @@ export default function DashboardPage() {
   const revenueLabel = monthlyRevenue > 0 ? `€${monthlyRevenue.toLocaleString("it-IT")}/mese` : "—";
 
   const stats = [
-    { label: "Clienti attivi",      value: `${activeClients} / ${clients.length}`,   icon: Users,       color: "#FF6B2B" },
+    { label: "Clienti attivi",      value: `${activeClients} / ${clients.length}`,   icon: Users,       color: "#C9A84C" },
     { label: "Fatturato mensile",   value: revenueLabel,                              icon: Euro,        color: "#fbbf24" },
     { label: "Log questo mese",     value: String(logsThisMonth),                     icon: TrendingUp,  color: "#34d399" },
     { label: "Senza attività (14g)",value: inactiveCount > 0 ? String(inactiveCount) : "—", icon: Activity, color: inactiveCount > 0 ? "#f87171" : "#6b7280" },

@@ -83,7 +83,7 @@ export default function AdminFeedbackPage() {
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #E53232, #AA1515)", boxShadow: "0 0 20px rgba(229,50,50,0.3)" }}>
+            style={{ background: "linear-gradient(135deg, #C9A84C, #8B6820)", boxShadow: "0 0 20px rgba(201,168,76,0.3)" }}>
             <MessageSquare size={22} />
           </div>
           <div>
@@ -120,8 +120,8 @@ export default function AdminFeedbackPage() {
             <button key={v} onClick={() => setCatFilter(v)}
               className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
               style={{
-                background: catFilter === v ? "rgba(229,50,50,0.18)" : "var(--surface-sm)",
-                border: `1px solid ${catFilter === v ? "rgba(229,50,50,0.4)" : "var(--surface-md)"}`,
+                background: catFilter === v ? "rgba(201,168,76,0.18)" : "var(--surface-sm)",
+                border: `1px solid ${catFilter === v ? "rgba(201,168,76,0.4)" : "var(--surface-md)"}`,
                 color: catFilter === v ? "#FF9A6C" : "var(--text-muted)",
               }}>
               {v === "all" ? "Tutte le categorie" : CATEGORY_META[v as keyof typeof CATEGORY_META].label}

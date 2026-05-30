@@ -1,11 +1,11 @@
-'use client'
+﻿'use client'
 import { useRef, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 // ── Colours ────────────────────────────────────────────────────────────────
-const RED  = new THREE.Color('#E53232')
-const ORG  = new THREE.Color('#FF6B2B')
+const RED  = new THREE.Color('#C9A84C')
+const ORG  = new THREE.Color('#C9A84C')
 
 // ── Particle cloud (sphere distribution) ──────────────────────────────────
 function ParticleField() {
@@ -88,7 +88,7 @@ function DNAHelix() {
     color: ORG, emissive: ORG, emissiveIntensity: 1.0, roughness: 0.3, metalness: 0.6,
   }), [])
   const rungMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#FF9A6C', emissive: '#FF6B2B', emissiveIntensity: 0.7,
+    color: '#FF9A6C', emissive: '#C9A84C', emissiveIntensity: 0.7,
     transparent: true, opacity: 0.55,
   }), [])
 

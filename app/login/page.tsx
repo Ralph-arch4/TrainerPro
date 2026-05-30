@@ -44,7 +44,7 @@ export default function LoginPage() {
           <div className="w-10 h-10 rounded-xl accent-btn flex items-center justify-center">
             <Dumbbell size={20} />
           </div>
-          <span className="font-bold text-xl accent-text">TrainerPro</span>
+          <span className="font-bold text-xl accent-text">REC Studio</span>
         </div>
 
         {/* Center content */}
@@ -61,7 +61,7 @@ export default function LoginPage() {
           {/* Mini stat cards */}
           <div className="space-y-3">
             {[
-              { icon: Users, label: "Clienti gestiti", value: "Tutti in un posto", color: "#E53232" },
+              { icon: Users, label: "Clienti gestiti", value: "Tutti in un posto", color: "#C9A84C" },
               { icon: Activity, label: "Fasi & Allenamento", value: "Bulk · Cut · Maintenance", color: "#818cf8" },
               { icon: TrendingUp, label: "Progressi tracciati", value: "Misurazioni & Grafici", color: "#34d399" },
             ].map(({ icon: Icon, label, value, color }) => (
@@ -97,12 +97,12 @@ export default function LoginPage() {
             <div className="w-14 h-14 rounded-2xl accent-btn flex items-center justify-center mb-3">
               <Dumbbell size={28} />
             </div>
-            <h1 className="text-2xl font-bold accent-text">TrainerPro</h1>
+            <h1 className="text-2xl font-bold accent-text">REC Studio</h1>
           </div>
 
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-1" style={{ color: "var(--text)" }}>Bentornato</h2>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>Accedi al tuo account TrainerPro</p>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>Accedi al tuo account REC Studio</p>
           </div>
 
           <div className="glass-dark rounded-2xl p-8">

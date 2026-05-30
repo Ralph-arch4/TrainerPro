@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import Link from "next/link";
 import HeroSection from "@/components/HeroSection";
 import TiltCard from "@/components/TiltCard";
@@ -28,7 +28,7 @@ function SectionHeader({ eyebrow, title, sub }: { eyebrow?: string; title: React
     >
       {eyebrow && (
         <span className="inline-block mb-3 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest"
-          style={{ background: "rgba(229,50,50,0.07)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--accent-light)" }}>
+          style={{ background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.2)", color: "var(--accent-light)" }}>
           {eyebrow}
         </span>
       )}
@@ -46,12 +46,12 @@ export default function LandingPage() {
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-12 h-16 glass-dark">
         <div className="absolute bottom-0 left-0 right-0 h-px"
-          style={{ background: "linear-gradient(90deg, transparent, rgba(229,50,50,0.5) 30%, rgba(229,50,50,0.5) 70%, transparent)" }} />
+          style={{ background: "linear-gradient(90deg, transparent, rgba(201,168,76,0.5) 30%, rgba(201,168,76,0.5) 70%, transparent)" }} />
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl accent-btn flex items-center justify-center pulse-glow">
             <Dumbbell size={18} />
           </div>
-          <span className="font-black text-lg accent-text tracking-tight">TrainerPro</span>
+          <span className="font-black text-lg accent-text tracking-tight">REC Studio</span>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/login" className="nav-ghost-link text-sm px-4 py-2 rounded-xl transition-all font-medium">Accedi</Link>
@@ -63,7 +63,7 @@ export default function LandingPage() {
       <HeroSection />
 
       {/* How it works */}
-      <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(229,50,50,0.08)" }}>
+      <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(201,168,76,0.08)" }}>
         <div className="max-w-4xl mx-auto">
           <SectionHeader
             eyebrow="Come funziona"
@@ -87,12 +87,12 @@ export default function LandingPage() {
                 <TiltCard className="relative card-luxury rounded-2xl p-6 h-full overflow-hidden">
                   {/* Step number watermark */}
                   <div className="absolute -top-2 -right-1 text-8xl font-black leading-none select-none pointer-events-none"
-                    style={{ background: "linear-gradient(135deg, rgba(229,50,50,0.12), rgba(229,50,50,0.03))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                    style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.12), rgba(201,168,76,0.03))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                     {step}
                   </div>
                   <div className="relative z-10">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-4 text-xs font-bold"
-                      style={{ background: "rgba(229,50,50,0.1)", border: "1px solid rgba(229,50,50,0.2)", color: "var(--accent)" }}>
+                      style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)", color: "var(--accent)" }}>
                       {step}
                     </div>
                     <h3 className="font-bold mb-2 text-base" style={{ color: "var(--text)" }}>{title}</h3>
@@ -106,7 +106,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(229,50,50,0.08)" }}>
+      <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(201,168,76,0.08)" }}>
         <div className="max-w-6xl mx-auto">
           <SectionHeader
             eyebrow="Funzionalità"
@@ -126,9 +126,9 @@ export default function LandingPage() {
                   <div className="relative z-10">
                     <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-all duration-300"
                       style={{
-                        background: "linear-gradient(135deg, rgba(229,50,50,0.15), rgba(229,50,50,0.05))",
-                        border: "1px solid rgba(229,50,50,0.15)",
-                        boxShadow: "0 0 20px rgba(229,50,50,0.07)",
+                        background: "linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05))",
+                        border: "1px solid rgba(201,168,76,0.15)",
+                        boxShadow: "0 0 20px rgba(201,168,76,0.07)",
                       }}>
                       <Icon size={20} style={{ color: "var(--accent)" }} />
                     </div>
@@ -143,7 +143,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(229,50,50,0.08)" }}>
+      <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(201,168,76,0.08)" }}>
         <div className="max-w-3xl mx-auto">
           <SectionHeader
             eyebrow="Pricing"
@@ -198,7 +198,7 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(229,50,50,0.08)" }}>
+      <section className="py-24 px-6 lg:px-12" style={{ borderTop: "1px solid rgba(201,168,76,0.08)" }}>
         <div className="max-w-2xl mx-auto">
           <SectionHeader
             eyebrow="FAQ"
@@ -206,7 +206,7 @@ export default function LandingPage() {
             sub="Tutto quello che devi sapere per iniziare oggi."
           />
           {[
-            { q: "TrainerPro è davvero gratuito?", a: "Sì, completamente. Nessuna carta di credito, nessun piano a pagamento, nessun limite nascosto. Accesso completo a tutte le funzionalità." },
+            { q: "REC Studio è davvero gratuito?", a: "Sì, completamente. Nessuna carta di credito, nessun piano a pagamento, nessun limite nascosto. Accesso completo a tutte le funzionalità." },
             { q: "Posso esportare i piani in PDF?", a: "Sì, tutti i piani di allenamento e le diete possono essere esportati in PDF per essere condivisi con i clienti." },
             { q: "I miei dati sono al sicuro?", a: "Assolutamente. I dati sono archiviati su Supabase con crittografia e accesso protetto da Row Level Security." },
             { q: "Quanti clienti posso gestire?", a: "Clienti illimitati. Non c'è nessun tetto massimo: puoi aggiungere tutti i clienti che vuoi dal primo giorno." },
@@ -218,7 +218,7 @@ export default function LandingPage() {
               viewport={{ once: true, margin: "-30px" }}
               transition={{ duration: 0.55, delay: i * 0.08, ease: EASE }}
               className="mb-6 pb-6"
-              style={{ borderBottom: "1px solid rgba(229,50,50,0.08)" }}
+              style={{ borderBottom: "1px solid rgba(201,168,76,0.08)" }}
             >
               <h3 className="font-semibold mb-2" style={{ color: "var(--text)" }}>{q}</h3>
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>{a}</p>
@@ -249,14 +249,14 @@ export default function LandingPage() {
           className="max-w-2xl mx-auto relative z-10"
         >
           <div className="inline-block mb-6 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase"
-            style={{ background: "rgba(229,50,50,0.08)", border: "1px solid rgba(229,50,50,0.25)", color: "var(--accent-light)" }}>
+            style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.25)", color: "var(--accent-light)" }}>
             Inizia oggi · Gratis
           </div>
           <h2 className="text-3xl lg:text-5xl font-black mb-4 tracking-tight">
             Pronto a fare il <span className="accent-text">salto</span>?
           </h2>
           <p className="text-base mb-10 leading-relaxed" style={{ color: "var(--text-muted)" }}>
-            Unisciti ai personal trainer che usano TrainerPro per gestire il loro business in modo professionale.
+            Unisciti ai personal trainer che usano REC Studio per gestire il loro business in modo professionale.
           </p>
           <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} transition={{ type: "spring", stiffness: 400, damping: 20 }}>
             <Link href="/register" className="accent-btn inline-flex items-center gap-2 px-10 py-4 rounded-xl text-base font-bold">
@@ -267,8 +267,8 @@ export default function LandingPage() {
       </section>
 
       <footer className="px-6 lg:px-12 py-8 text-center text-sm"
-        style={{ borderTop: "1px solid rgba(229,50,50,0.08)", color: "var(--text-dim)" }}>
-        © {new Date().getFullYear()} TrainerPro · Tutti i diritti riservati
+        style={{ borderTop: "1px solid rgba(201,168,76,0.08)", color: "var(--text-dim)" }}>
+        © {new Date().getFullYear()} REC Studio · Tutti i diritti riservati
       </footer>
     </div>
   );
