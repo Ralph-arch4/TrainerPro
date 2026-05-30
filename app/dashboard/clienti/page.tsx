@@ -7,7 +7,7 @@ import { dbClients } from "@/lib/db";
 import {
   Users, Plus, Search, ChevronRight,
   Mail, Phone, Activity, Loader2, X, AlertCircle, Trash2, TrendingDown,
-  Gift, Heart
+  Gift, Heart, TrendingUp
 } from "lucide-react";
 import type { Client } from "@/lib/store";
 
@@ -108,6 +108,21 @@ function getTogetherLabel(client: Client): string | null {
   if (days < 365) return `${Math.floor(days / 30)} mesi insieme`;
   const y = Math.floor(days / 365);
   return `${y} ${y === 1 ? "anno" : "anni"} insieme`;
+}
+
+function getProgressionReady(client: Client): number {
+  const activePlan = client.workoutPlans.find(p => p.active);
+  if (!activePlan || !activePlan.logs?.length) return 0;
+  let readyCount = 0;
+  const exerciseIds = [...new Set(activePlan.exercises.map(e => e.id))];
+  for (const exId of exerciseIds) {
+    const logs = (activePlan.logs ?? [])
+      .filter(l => l.exerciseId === exId && l.weight != null && l.weight > 0)
+      .sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime())
+      .slice(0, 3);
+    if (logs.length >= 3 && logs.every(l => l.weight === logs[0].weight)) readyCount++;
+  }
+  return readyCount;
 }
 
 function getRiskDays(client: Client): number | null {
@@ -280,6 +295,7 @@ function ClientiPageInner() {
           const forma = getFormaScore(client);
           const birthdayInfo = getBirthdayStatus(client);
           const togetherLabel = getTogetherLabel(client);
+          const progressionReady = getProgressionReady(client);
           return (
           <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
             className="card-luxury rounded-2xl p-5 transition-all group block"
@@ -369,23 +385,43 @@ function ClientiPageInner() {
                 {client.monthlyFee && <span style={{ color: "var(--accent-light)" }}>€{client.monthlyFee}/m</span>}
               </div>
             </div>
-            {forma && (
+            {(forma || progressionReady > 0) && (
               <div className="mt-3 pt-3 flex items-center justify-between"
                 style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                <span className="text-xs" style={{ color: "var(--text-dim)" }}>Indice forma</span>
-                <div className="flex items-center gap-2">
-                  <div className="relative w-7 h-7 flex-shrink-0">
-                    <svg className="w-7 h-7" style={{ transform: "rotate(-90deg)" }} viewBox="0 0 28 28">
-                      <circle cx="14" cy="14" r="11" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3" />
-                      <circle cx="14" cy="14" r="11" fill="none" stroke={forma.color} strokeWidth="3"
-                        strokeDasharray={`${((forma.score / 100) * 69.11).toFixed(1)} 69.11`}
-                        strokeLinecap="round" />
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center font-bold"
-                      style={{ fontSize: "7px", color: forma.color }}>{forma.score}</span>
-                  </div>
-                  <span className="text-xs font-semibold" style={{ color: forma.color }}>{forma.label}</span>
-                </div>
+                {forma ? (
+                  <>
+                    <span className="text-xs" style={{ color: "var(--text-dim)" }}>Indice forma</span>
+                    <div className="flex items-center gap-2">
+                      {progressionReady > 0 && (
+                        <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
+                          style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.2)" }}>
+                          <TrendingUp size={10} />
+                          {progressionReady} {progressionReady === 1 ? "esercizio" : "esercizi"} +
+                        </span>
+                      )}
+                      <div className="relative w-7 h-7 flex-shrink-0">
+                        <svg className="w-7 h-7" style={{ transform: "rotate(-90deg)" }} viewBox="0 0 28 28">
+                          <circle cx="14" cy="14" r="11" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3" />
+                          <circle cx="14" cy="14" r="11" fill="none" stroke={forma.color} strokeWidth="3"
+                            strokeDasharray={`${((forma.score / 100) * 69.11).toFixed(1)} 69.11`}
+                            strokeLinecap="round" />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center font-bold"
+                          style={{ fontSize: "7px", color: forma.color }}>{forma.score}</span>
+                      </div>
+                      <span className="text-xs font-semibold" style={{ color: forma.color }}>{forma.label}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs" style={{ color: "var(--text-dim)" }}>Progressione</span>
+                    <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
+                      style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.2)" }}>
+                      <TrendingUp size={10} />
+                      {progressionReady} {progressionReady === 1 ? "esercizio pronto" : "esercizi pronti"} per aumento carico
+                    </span>
+                  </>
+                )}
               </div>
             )}
           </Link>
