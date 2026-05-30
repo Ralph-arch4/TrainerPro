@@ -31,6 +31,20 @@ export default function HeroSection() {
       className="relative min-h-screen flex items-center overflow-hidden pt-16 grid-texture"
       style={{ background: 'var(--black)' }}
     >
+      {/* ── Aurora gold gradient mesh — 10s loop (UI/UX Pro Max pattern) ── */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true"
+        style={{
+          background: [
+            'radial-gradient(ellipse 90% 70% at 15% 40%, rgba(201,168,76,0.09) 0%, transparent 55%)',
+            'radial-gradient(ellipse 70% 90% at 85% 60%, rgba(201,168,76,0.07) 0%, transparent 55%)',
+            'radial-gradient(ellipse 60% 50% at 50% 10%, rgba(232,201,107,0.06) 0%, transparent 50%)',
+            'radial-gradient(ellipse 80% 40% at 50% 95%, rgba(139,104,32,0.08) 0%, transparent 55%)',
+          ].join(','),
+          backgroundSize: '200% 200%',
+          animation: 'auraMesh 10s ease-in-out infinite',
+        }}
+      />
+
       {/* ── Laser beams (parallax slow layer) ──────────────────────── */}
       <motion.div style={{ y: bgY }} className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         {[
@@ -70,7 +84,7 @@ export default function HeroSection() {
         className="absolute right-0 top-1/2 -translate-y-1/2 w-[700px] h-[700px] pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse at 60% 50%, rgba(201,168,76,0.16) 0%, rgba(200,20,20,0.06) 45%, transparent 70%), radial-gradient(ellipse at 35% 65%, rgba(255,80,30,0.07) 0%, transparent 55%)',
+            'radial-gradient(ellipse at 60% 50%, rgba(201,168,76,0.18) 0%, rgba(139,104,32,0.06) 45%, transparent 70%), radial-gradient(ellipse at 35% 65%, rgba(201,168,76,0.07) 0%, transparent 55%)',
         }}
       />
 
@@ -81,7 +95,7 @@ export default function HeroSection() {
             <div
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 tracking-wide"
               style={{
-                background: 'linear-gradient(135deg, rgba(201,168,76,0.06) 0%, rgba(255,80,30,0.14) 50%, rgba(201,168,76,0.06) 100%)',
+                background: 'linear-gradient(135deg, rgba(201,168,76,0.06) 0%, rgba(201,168,76,0.14) 50%, rgba(201,168,76,0.06) 100%)',
                 backgroundSize: '200% auto',
                 animation: 'shimmer 3s linear infinite',
                 border: '1px solid rgba(201,168,76,0.3)',

@@ -15,7 +15,7 @@ function Dumbbell() {
   // All cylinder parts share rotation [0,0,π/2] so they lie along the X axis
   const H = [0, 0, Math.PI / 2] as [number, number, number]
   const wf  = (opacity: number, bright = false) => ({
-    color: bright ? '#FF9A6C' : '#C9A84C',
+    color: bright ? '#E8C96B' : '#C9A84C',
     wireframe: true,
     transparent: true,
     opacity,
@@ -76,13 +76,13 @@ function Dumbbell() {
         {([-1.56, 1.56] as const).map((x) => (
           <mesh key={`rim-${x}`} position={[x, 0, 0]}>
             <torusGeometry args={[0.66, 0.028, 4, 40]} />
-            <meshBasicMaterial color="#FF9A6C" transparent opacity={0.70} />
+            <meshBasicMaterial color="#E8C96B" transparent opacity={0.70} />
           </mesh>
         ))}
         {([-1.32, 1.32] as const).map((x) => (
           <mesh key={`rim2-${x}`} position={[x, 0, 0]}>
             <torusGeometry args={[0.50, 0.022, 4, 32]} />
-            <meshBasicMaterial color="#FF9A6C" transparent opacity={0.45} />
+            <meshBasicMaterial color="#E8C96B" transparent opacity={0.45} />
           </mesh>
         ))}
       </group>
@@ -131,7 +131,7 @@ function OrangeParticles({ count = 55 }: { count?: number }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial color="#FF9A6C" size={0.055} transparent opacity={0.55} sizeAttenuation />
+      <pointsMaterial color="#E8C96B" size={0.055} transparent opacity={0.55} sizeAttenuation />
     </points>
   )
 }

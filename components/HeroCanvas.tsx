@@ -8,7 +8,7 @@ const HeroScene3D = dynamic(() => import('./HeroScene3D'), { ssr: false })
 
 const R = '#C9A84C'
 const O = '#C9A84C'
-const L = '#FF9A6C'
+const L = '#E8C96B'
 const D = 'rgba(245,240,232,0.38)'
 
 function Bracket({ x, y, s = 12, fx = 1, fy = 1 }: {
