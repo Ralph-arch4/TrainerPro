@@ -36,12 +36,16 @@ function RevealDiv({ children, delay = 0, className = "", style = {} }: {
   const reduced = useReducedMotion();
   return (
     <motion.div
-      initial={{ opacity: 0, y: reduced ? 0 : 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.8, delay, ease: EASE }}
+      initial={reduced ? { opacity: 0 } : { opacity: 0, rotateX: 18, y: 50, scale: 0.97 }}
+      whileInView={reduced ? { opacity: 1 } : { opacity: 1, rotateX: 0, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.85, delay, ease: EASE }}
       className={className}
-      style={style}
+      style={{
+        transformPerspective: 1100,
+        transformOrigin: "center bottom",
+        ...style,
+      }}
     >
       {children}
     </motion.div>
@@ -182,14 +186,19 @@ function Marquee() {
 
 // ── Editorial section wrapper ─────────────────────────────────────────────────
 function EditorialSection({ id, num, children }: { id?: string; num: string; children: React.ReactNode }) {
+  const reduced = useReducedMotion();
   return (
     <section
       id={id}
       className="relative py-32 lg:py-40 px-6 lg:px-14 overflow-hidden"
       style={{ borderBottom: "1px solid rgba(201,168,76,0.06)" }}
     >
-      {/* Giant watermark number */}
-      <div
+      {/* Giant watermark number — 3D sweep from right */}
+      <motion.div
+        initial={reduced ? { opacity: 0 } : { opacity: 0, x: 60, rotateY: -12 }}
+        whileInView={reduced ? { opacity: 1 } : { opacity: 1, x: 0, rotateY: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 1.0, ease: EASE }}
         className="absolute -top-4 right-0 select-none pointer-events-none font-black leading-none"
         style={{
           fontSize: "clamp(8rem, 22vw, 20rem)",
@@ -197,11 +206,13 @@ function EditorialSection({ id, num, children }: { id?: string; num: string; chi
           color: "transparent",
           letterSpacing: "-0.06em",
           lineHeight: 0.85,
+          transformPerspective: 800,
+          transformOrigin: "right center",
         }}
         aria-hidden
       >
         {num}
-      </div>
+      </motion.div>
       <div className="max-w-7xl mx-auto relative z-10">
         {children}
       </div>
@@ -397,8 +408,8 @@ export default function LandingPage() {
                 ].map((f, i) => (
                   <motion.li
                     key={f}
-                    initial={{ opacity: 0, x: -12 }}
-                    whileInView={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, x: -16, rotateX: 12 }}
+                    whileInView={{ opacity: 1, x: 0, rotateX: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.4, delay: 0.1 + i * 0.04 }}
                     className="flex items-center gap-3 text-sm"
