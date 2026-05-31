@@ -6,7 +6,7 @@ import {
   Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight,
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
   Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle, Scale, TrendingDown,
-  BarChart2, CreditCard,
+  BarChart2, CreditCard, Target,
 } from "lucide-react";
 
 function timeGreeting() {
@@ -259,6 +259,56 @@ export default function DashboardPage() {
       })
       .sort((a, b) => (a.thisWeek / a.target) - (b.thisWeek / b.target))
       .slice(0, 6);
+  }, [clients]);
+
+  // Traiettoria fase: clients with active bulk/cut and measurable weight progress vs target
+  const phaseTrajectoryAlerts = useMemo(() => {
+    const now = Date.now();
+    const results: {
+      client: typeof clients[0];
+      phase: typeof clients[0]["phases"][0];
+      currentWeight: number;
+      daysRemaining: number;
+      requiredPerWeek: number;
+      actualPerWeek: number;
+      status: "ottimo" | "in_linea" | "in_ritardo";
+    }[] = [];
+
+    for (const c of clients.filter(cl => cl.status === "attivo")) {
+      const activePhase = [...c.phases]
+        .filter(p => !p.completed && p.targetWeight != null && p.endDate)
+        .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())[0];
+      if (!activePhase) continue;
+
+      const sortedM = [...c.measurements]
+        .filter(m => m.weight != null)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      if (sortedM.length < 2) continue;
+
+      const currentWeight = sortedM[0].weight!;
+      const daysRemaining = Math.floor((new Date(activePhase.endDate!).getTime() - now) / 86400000);
+      if (daysRemaining <= 3) continue;
+
+      const weeksRemaining = daysRemaining / 7;
+      const requiredPerWeek = (activePhase.targetWeight! - currentWeight) / weeksRemaining;
+      if (Math.abs(requiredPerWeek) < 0.05) continue;
+
+      const fourWeeksAgo = now - 28 * 86400000;
+      const recent = sortedM.filter(m => new Date(m.date).getTime() >= fourWeeksAgo);
+      if (recent.length < 2) continue;
+      const oldest = recent[recent.length - 1];
+      const newest = recent[0];
+      const daysDiff = (new Date(newest.date).getTime() - new Date(oldest.date).getTime()) / 86400000;
+      if (daysDiff < 3) continue;
+      const actualPerWeek = ((newest.weight! - oldest.weight!) / daysDiff) * 7;
+
+      const efficiency = requiredPerWeek !== 0 ? actualPerWeek / requiredPerWeek : 0;
+      const status: "ottimo" | "in_linea" | "in_ritardo" =
+        efficiency >= 1.1 ? "ottimo" : efficiency >= 0.65 ? "in_linea" : "in_ritardo";
+
+      results.push({ client: c, phase: activePhase, currentWeight, daysRemaining, requiredPerWeek, actualPerWeek, status });
+    }
+    return results.sort((a, b) => ({ in_ritardo: 0, in_linea: 1, ottimo: 2 }[a.status] - { in_ritardo: 0, in_linea: 1, ottimo: 2 }[b.status])).slice(0, 5);
   }, [clients]);
 
   // Smart onboarding: check what's actually done
@@ -796,6 +846,56 @@ export default function DashboardPage() {
                     </a>
                   )}
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Traiettoria Fase ────────────────────────────────────────────── */}
+      {phaseTrajectoryAlerts.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(56,189,248,0.04)", border: "1px solid rgba(56,189,248,0.18)" }}>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <Target size={14} style={{ color: "#38bdf8" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Traiettoria Fase
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+              style={{ background: "rgba(56,189,248,0.15)", color: "#38bdf8" }}>
+              {phaseTrajectoryAlerts.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
+              peso reale vs obiettivo fase
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {phaseTrajectoryAlerts.map(({ client, phase, currentWeight, daysRemaining, requiredPerWeek, actualPerWeek, status }) => {
+              const statusColor = status === "ottimo" ? "#22c55e" : status === "in_linea" ? "#38bdf8" : "#f87171";
+              const statusLabel = status === "ottimo" ? "In anticipo" : status === "in_linea" ? "In linea" : "In ritardo";
+              const phaseLabel = phase.type === "bulk" ? "Massa" : phase.type === "cut" ? "Cut" : phase.name;
+              const fmt = (v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(2)}kg/sett`;
+              return (
+                <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
+                  className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0"
+                    style={{ background: `${statusColor}18`, color: statusColor }}>
+                    {client.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{client.name}</p>
+                      <span className="text-xs px-1.5 py-0.5 rounded font-bold flex-shrink-0"
+                        style={{ background: `${statusColor}18`, color: statusColor }}>{statusLabel}</span>
+                    </div>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>
+                      {phaseLabel} · {currentWeight}kg → {phase.targetWeight}kg · {daysRemaining}gg rimasti
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs font-bold" style={{ color: statusColor }}>{fmt(actualPerWeek)}</p>
+                    <p className="text-xs" style={{ color: "var(--text-dim)" }}>serve {fmt(requiredPerWeek)}</p>
+                  </div>
+                </Link>
               );
             })}
           </div>
