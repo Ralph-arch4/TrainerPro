@@ -96,16 +96,6 @@ function Hero() {
         style={{ y: textY }}
         className="relative z-10 px-6 lg:px-14 pb-16 lg:pb-24"
       >
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2, ease: EASE }}
-          className="text-xs font-mono tracking-[0.3em] uppercase mb-6"
-          style={{ color: "var(--accent)" }}
-        >
-          REC STUDIO · CRM per Personal Trainer
-        </motion.p>
-
         <motion.h1
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

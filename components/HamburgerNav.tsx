@@ -24,10 +24,14 @@ export default function HamburgerNav() {
   return (
     <>
       {/* Fixed top bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-14 h-16">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-7 h-7 rounded-lg accent-btn flex items-center justify-center flex-shrink-0 text-xs font-black">R</div>
-          <span className="font-black text-sm tracking-[0.18em] uppercase accent-text">REC STUDIO</span>
+      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-14 h-16"
+        style={{ background: 'linear-gradient(to bottom, rgba(5,5,5,0.72) 0%, transparent 100%)', backdropFilter: 'none' }}>
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-lg accent-btn flex items-center justify-center flex-shrink-0 text-xs font-black">R</div>
+          <div className="flex flex-col leading-none">
+            <span className="font-black text-sm tracking-[0.16em] uppercase accent-text">REC STUDIO</span>
+            <span className="text-[10px] font-mono tracking-[0.18em] uppercase mt-0.5" style={{ color: 'var(--text-faint)' }}>CRM · Personal Trainer</span>
+          </div>
         </Link>
 
         <button
