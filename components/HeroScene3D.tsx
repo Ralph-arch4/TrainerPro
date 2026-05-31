@@ -194,9 +194,11 @@ function ConnectorLines() {
     <>
       {nodePositions.map((pos, i) => {
         const points = [new THREE.Vector3(0,0,0), new THREE.Vector3(...pos)]
-        const geo = new THREE.BufferGeometry().setFromPoints(points)
-        const mat = new THREE.LineBasicMaterial({ color: GOLD, transparent: true, opacity: 0.12 })
-        return <line key={i} geometry={geo} material={mat} />
+        const obj = new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints(points),
+          new THREE.LineBasicMaterial({ color: GOLD, transparent: true, opacity: 0.12 })
+        )
+        return <primitive key={i} object={obj} />
       })}
     </>
   )
