@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useMemo } from "react";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
@@ -218,6 +218,53 @@ export default function DashboardPage() {
     return results.sort((a, b) => a.daysUntil - b.daysUntil);
   }, [clients]);
 
+  // Coach Pulse: sintesi settimanale — score 0-100 per lo studio
+  const coachPulse = useMemo(() => {
+    const now = Date.now();
+    const active = clients.filter(c => c.status === "attivo");
+    if (active.length === 0) return null;
+
+    const loggedThisWeek = active.filter(c =>
+      c.workoutPlans.flatMap(p => p.logs ?? []).some(l => new Date(l.loggedAt).getTime() > now - 7 * 86400000)
+    ).length;
+
+    const loggedLastWeek = active.filter(c =>
+      c.workoutPlans.flatMap(p => p.logs ?? []).some(l => {
+        const t = new Date(l.loggedAt).getTime();
+        return t > now - 14 * 86400000 && t <= now - 7 * 86400000;
+      })
+    ).length;
+
+    const adherenceRatio = loggedThisWeek / active.length;
+    const trend = loggedLastWeek > 0 ? (loggedThisWeek - loggedLastWeek) / loggedLastWeek : 0;
+
+    const prCount = weekHighlights.filter(h => h.type === "pr").length;
+    const prBonus = Math.min(20, prCount * 5);
+
+    const score = Math.round(adherenceRatio * 60 + Math.max(-15, Math.min(20, trend * 20)) + prBonus);
+    const clamped = Math.max(0, Math.min(100, score));
+
+    const label =
+      clamped >= 80 ? "Studio in ottima forma" :
+      clamped >= 60 ? "Settimana positiva" :
+      clamped >= 40 ? "Settimana nella norma" :
+      "Settimana da monitorare";
+
+    const color =
+      clamped >= 80 ? "#22c55e" :
+      clamped >= 60 ? "#fbbf24" :
+      clamped >= 40 ? "#fb923c" : "#ef4444";
+
+    const trendLabel = trend > 0.05 ? `+${Math.round(trend * 100)}% vs settimana scorsa` :
+      trend < -0.05 ? `${Math.round(trend * 100)}% vs settimana scorsa` : "Stabile vs settimana scorsa";
+
+    const sentence =
+      `${loggedThisWeek} su ${active.length} clienti attivi hanno allenato questa settimana` +
+      (prCount > 0 ? ` · ${prCount} record ${prCount === 1 ? "personale" : "personali"}` : "");
+
+    return { score: clamped, label, color, trendLabel, sentence, trend };
+  }, [clients, weekHighlights]);
+
   // Stallo peso: clients with 3+ consecutive measurements within ±0.5kg
   const measurementPlateauAlerts = useMemo(() => {
     const results: { client: typeof clients[0]; weight: number; lastDate: string }[] = [];
@@ -420,6 +467,38 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* ── Coach Pulse ─────────────────────────────────────────────────── */}
+      {coachPulse && (
+        <div className="flex items-center gap-4 p-4 rounded-2xl mb-4"
+          style={{ background: `${coachPulse.color}09`, border: `1px solid ${coachPulse.color}30` }}>
+          {/* Score ring */}
+          <div className="relative flex-shrink-0" style={{ width: 52, height: 52 }}>
+            <svg width="52" height="52" style={{ transform: "rotate(-90deg)" }}>
+              <circle cx="26" cy="26" r="21" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
+              <circle cx="26" cy="26" r="21" fill="none" stroke={coachPulse.color} strokeWidth="4"
+                strokeDasharray={`${(coachPulse.score / 100 * 131.9).toFixed(1)} 131.9`}
+                strokeLinecap="round" />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center font-black"
+              style={{ fontSize: 13, color: coachPulse.color }}>{coachPulse.score}</span>
+          </div>
+          {/* Text */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold" style={{ color: coachPulse.color }}>{coachPulse.label}</p>
+            <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>{coachPulse.sentence}</p>
+          </div>
+          {/* Trend pill */}
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
+            style={{
+              background: `${coachPulse.color}18`,
+              color: coachPulse.color,
+              border: `1px solid ${coachPulse.color}30`,
+            }}>
+            {coachPulse.trendLabel}
+          </span>
+        </div>
+      )}
 
       {/* ── Secondary metrics row ─────────────────────────────────────────── */}
       {activeClients > 0 && (
