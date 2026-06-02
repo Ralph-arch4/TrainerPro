@@ -816,6 +816,8 @@ export default function ClientPortalPage() {
   const [trainerName, setTrainerName] = useState("Il tuo Trainer");
   const [trainerReaction, setTrainerReaction] = useState<string | null>(null);
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [personalRecord, setPersonalRecord] = useState<{ exerciseName: string; newWeight: number; prevWeight: number } | null>(null);
+  const prTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fitness Scan state
   const [scans, setScans] = useState<ClientScan[]>([]);
@@ -962,9 +964,25 @@ export default function ClientPortalPage() {
         note: logData.note ?? null,
       });
       setLogs((prev) => prev.map((l) => l.exerciseId === logData.exerciseId && l.weekNumber === logData.weekNumber ? { ...l, id: saved.id } : l));
-      if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
-      setTrainerReaction(TRAINER_REACTIONS[Math.floor(Math.random() * TRAINER_REACTIONS.length)]);
-      reactionTimerRef.current = setTimeout(() => setTrainerReaction(null), 3800);
+
+      // Check for Personal Record (weight-based)
+      let isPR = false;
+      if (logData.weight && logData.weight > 0) {
+        const prevLogs = snapshot.filter(l => l.exerciseId === logData.exerciseId && l.weight && l.weight > 0);
+        const prevBest = prevLogs.length > 0 ? Math.max(...prevLogs.map(l => l.weight!)) : 0;
+        if (logData.weight > prevBest && prevBest > 0) {
+          isPR = true;
+          const exerciseName = plan.exercises.find(e => e.id === logData.exerciseId)?.name ?? "Esercizio";
+          if (prTimerRef.current) clearTimeout(prTimerRef.current);
+          setPersonalRecord({ exerciseName, newWeight: logData.weight, prevWeight: prevBest });
+          prTimerRef.current = setTimeout(() => setPersonalRecord(null), 5500);
+        }
+      }
+      if (!isPR) {
+        if (reactionTimerRef.current) clearTimeout(reactionTimerRef.current);
+        setTrainerReaction(TRAINER_REACTIONS[Math.floor(Math.random() * TRAINER_REACTIONS.length)]);
+        reactionTimerRef.current = setTimeout(() => setTrainerReaction(null), 3800);
+      }
     } catch {
       setLogs(snapshot);
       setSaveError(true);
@@ -1952,6 +1970,48 @@ export default function ClientPortalPage() {
           Powered by <span className="accent-text font-semibold">REC Studio</span>
         </p>
       </div>
+
+      {/* ── Personal Record celebration toast ───────────────────────────────── */}
+      {personalRecord && (() => {
+        const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
+        const delta = +(personalRecord.newWeight - personalRecord.prevWeight).toFixed(1);
+        return (
+          <div className="fixed bottom-6 left-4 right-4 z-50 flex justify-center pointer-events-none fade-in">
+            <div className="max-w-sm w-full rounded-2xl p-4 relative overflow-hidden"
+              style={{
+                background: "rgba(8,8,8,0.97)",
+                border: "1px solid rgba(229,50,50,0.6)",
+                boxShadow: "0 8px 40px rgba(229,50,50,0.28), 0 0 0 1px rgba(255,255,255,0.03)",
+                backdropFilter: "blur(20px)",
+              }}>
+              <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl"
+                style={{ background: "linear-gradient(90deg,transparent,rgba(229,50,50,0.85),transparent)" }} />
+              <div className="flex items-start gap-3">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center font-black flex-shrink-0"
+                  style={{ background: "radial-gradient(circle at 35% 30%, rgba(229,50,50,0.38), rgba(8,8,8,0.92))", border: "1.5px solid rgba(229,50,50,0.65)" }}>
+                  <span style={{ color: "var(--accent)", fontSize: "0.85rem" }}>{initials}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-xs font-bold" style={{ color: "var(--accent)" }}>{trainerName}</p>
+                    <span className="text-xs font-black px-2 py-0.5 rounded-full uppercase tracking-wider"
+                      style={{ background: "rgba(229,50,50,0.2)", color: "var(--accent)", fontSize: "0.55rem", letterSpacing: "0.1em" }}>
+                      RECORD PERSONALE
+                    </span>
+                  </div>
+                  <p className="text-sm font-black mb-1" style={{ color: "var(--text)" }}>
+                    {personalRecord.exerciseName} · {personalRecord.newWeight} kg
+                  </p>
+                  <p className="text-xs leading-snug" style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+                    &ldquo;Nuovo massimo personale! +{delta} kg rispetto al tuo precedente best. Questo è quello che costruisce i campioni.&rdquo;
+                  </p>
+                  <p className="text-xs mt-2 font-semibold" style={{ color: "rgba(229,50,50,0.5)" }}>— {trainerName}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Reazione Trainer (toast post-log) ──────────────────────────────── */}
       {trainerReaction && (() => {
