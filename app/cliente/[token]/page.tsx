@@ -803,6 +803,71 @@ function RadarAtletico({ streak, totalLogs, level, pct, recentDays }: {
   );
 }
 
+// ── Notifica Settimanale dal Trainer ─────────────────────────────────────────
+const TRAINER_WEEKLY_NOTES = [
+  "Ho rivisto il tuo programma questa settimana — ogni dettaglio è pensato per te.",
+  "Stavo guardando i tuoi progressi: stai crescendo anche quando non lo senti.",
+  "Ho pensato a te durante la settimana — la costanza che stai dimostrando mi soddisfa.",
+  "Ho controllato i tuoi log: i miglioramenti ci sono, fidati del processo.",
+  "Questa settimana ho perfezionato qualcosa nel tuo piano — continua a registrare.",
+  "Ti seguo più da vicino di quanto pensi — ogni dato che inserisci mi parla.",
+  "Ho in mente il prossimo step per te. Continua su questa strada.",
+  "Stavo rivedendo i tuoi risultati degli ultimi mesi — sono soddisfatto di te.",
+  "Ho analizzato i tuoi carichi: sei pronto per il prossimo livello.",
+  "Pensavo a te oggi — il tuo impegno non passa inosservato.",
+  "Ho confrontato i tuoi dati con gli obiettivi: sei in linea. Avanti così.",
+  "Questa settimana ti dedico un pensiero in più — stai lavorando bene.",
+];
+
+function TrainerNotificationBanner({ trainerName }: { trainerName: string }) {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const weekNum = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
+  const weekKey = `trainer_notif_w${weekNum}_${now.getFullYear()}`;
+  const [dismissed, setDismissed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(weekKey) === "1";
+  });
+  function dismiss() { localStorage.setItem(weekKey, "1"); setDismissed(true); }
+  if (dismissed) return null;
+  const msg  = TRAINER_WEEKLY_NOTES[(weekNum - 1) % TRAINER_WEEKLY_NOTES.length];
+  const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
+  const mins = now.getMinutes().toString().padStart(2, "0");
+  const timeStr = `${now.getHours()}:${mins}`;
+  return (
+    <div className="mb-4 rounded-2xl p-4 relative fade-in"
+      style={{ background: "linear-gradient(135deg,rgba(34,197,94,0.07),rgba(34,197,94,0.02))", border: "1px solid rgba(34,197,94,0.22)" }}>
+      <button onClick={dismiss}
+        className="absolute top-3 right-3 w-5 h-5 flex items-center justify-center rounded-full text-xs font-black"
+        style={{ background: "var(--surface-md)", color: "var(--text-dim)" }}>&times;</button>
+      <div className="flex items-start gap-3 pr-6">
+        <div className="relative flex-shrink-0">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm"
+            style={{ background: "radial-gradient(circle at 38% 32%,rgba(34,197,94,0.28),rgba(8,8,8,0.92))", border: "1.5px solid rgba(34,197,94,0.45)" }}>
+            <span style={{ color: "#22c55e" }}>{initials}</span>
+          </div>
+          {/* Online badge */}
+          <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+            style={{ background: "#22c55e", border: "2px solid var(--bg)", boxShadow: "0 0 6px rgba(34,197,94,0.7)" }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1.5">
+            <p className="text-xs font-black" style={{ color: "#22c55e" }}>{trainerName}</p>
+            <span className="text-xs px-1.5 py-0.5 rounded-full font-bold"
+              style={{ background: "rgba(34,197,94,0.12)", color: "rgba(34,197,94,0.7)", fontSize: "0.58rem" }}>
+              Sett. {weekNum}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-faint)" }}>{timeStr}</span>
+          </div>
+          <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+            &ldquo;{msg}&rdquo;
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -1141,6 +1206,9 @@ export default function ClientPortalPage() {
           streak={streak}
           totalLogs={totalLogs}
         />
+
+        {/* ── Notifica settimanale dal trainer ─────────────────────────────── */}
+        <TrainerNotificationBanner trainerName={trainerName} />
 
         {/* ── Principio della settimana ────────────────────────────────────── */}
         <WeeklyPrincipleCard trainerName={trainerName} />
