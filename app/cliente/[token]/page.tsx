@@ -1064,10 +1064,60 @@ export default function ClientPortalPage() {
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
-        <div className="text-center">
-          <Loader2 size={32} className="animate-spin mx-auto mb-3" style={{ color: "var(--accent)" }} />
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>Caricamento portale…</p>
+      <div className="min-h-screen flex flex-col items-center justify-center grid-texture"
+        style={{ background: "var(--bg)", position: "relative", overflow: "hidden" }}>
+        {/* Laser beams */}
+        {[
+          { top: "34%", height: "1.5px", op: 0.38, dur: "3.2s", delay: "0s"    },
+          { top: "65%", height: "0.8px", op: 0.22, dur: "4.1s", delay: "1.4s"  },
+        ].map((b, i) => (
+          <div key={i} className="laser-line" style={{
+            top: b.top, height: b.height,
+            "--beam-op": b.op, "--beam-dur": b.dur,
+            "--beam-delay": b.delay, "--beam-angle": "-27deg",
+            filter: `blur(${parseFloat(b.height) < 1 ? "0.8px" : "0.3px"})`,
+            boxShadow: `0 0 ${parseFloat(b.height)*12}px rgba(201,168,76,0.45)`,
+          } as React.CSSProperties} />
+        ))}
+
+        {/* Central TP logo */}
+        <div style={{ position: "relative", marginBottom: "2rem" }}>
+          <div style={{
+            position: "absolute", inset: -28, borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%)",
+          }} className="pulse-glow" />
+          <div style={{
+            width: 88, height: 88, borderRadius: 26,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "linear-gradient(135deg, rgba(201,168,76,0.16) 0%, rgba(201,168,76,0.04) 100%)",
+            border: "1.5px solid rgba(201,168,76,0.38)",
+            boxShadow: "0 0 40px rgba(201,168,76,0.14), inset 0 1px 0 rgba(255,255,255,0.06)",
+          }}>
+            <span style={{
+              fontSize: "2rem", fontWeight: 900, lineHeight: 1,
+              background: "linear-gradient(135deg, #c8a84b 0%, #f0d060 50%, #b07828 100%)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+            }}>TP</span>
+          </div>
+        </div>
+
+        {/* Brand text */}
+        <h1 className="text-xl font-black tracking-tight mb-1" style={{ color: "var(--text)" }}>
+          TrainerPro
+        </h1>
+        <p className="text-xs tracking-[0.22em] uppercase mb-10" style={{ color: "var(--text-dim)" }}>
+          Il tuo piano personale
+        </p>
+
+        {/* Pulsing dots */}
+        <div style={{ display: "flex", gap: "0.55rem" }}>
+          {[0, 1, 2].map(i => (
+            <div key={i} style={{
+              width: 6, height: 6, borderRadius: "50%",
+              background: "rgba(201,168,76,0.65)",
+              animation: `athlete-node 1.3s ease-in-out ${i * 0.22}s infinite`,
+            }} />
+          ))}
         </div>
       </div>
     );
