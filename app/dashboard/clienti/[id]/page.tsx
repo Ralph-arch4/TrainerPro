@@ -1000,7 +1000,10 @@ export default function ClientDetailPage() {
                           )}
                         </div>
                         {wp.description && (
-                          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{wp.description}</p>
+                          <div className="flex items-start gap-1.5 mt-1.5">
+                            <span className="text-xs px-1.5 py-0.5 rounded-md flex-shrink-0 font-medium" style={{ background: "rgba(201,168,76,0.1)", color: "rgba(201,168,76,0.65)", border: "1px solid rgba(201,168,76,0.18)" }}>messaggio</span>
+                            <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{wp.description}</p>
+                          </div>
                         )}
                       </div>
                       {/* Action buttons */}
@@ -2261,8 +2264,24 @@ export default function ClientDetailPage() {
                 <input value={workoutForm.name} onChange={(e) => setWorkoutForm({ ...workoutForm, name: e.target.value })} placeholder="es. Scheda A — Push/Pull/Legs" className={inputClass} style={inputStyle} />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Descrizione</label>
-                <textarea value={workoutForm.description} onChange={(e) => setWorkoutForm({ ...workoutForm, description: e.target.value })} rows={2} placeholder="Obiettivi, note sulla scheda…" className={`${inputClass} resize-none`} style={inputStyle} />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Messaggio personale al cliente</label>
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.1)", color: "rgba(201,168,76,0.7)", border: "1px solid rgba(201,168,76,0.2)" }}>visibile sul portale</span>
+                </div>
+                <textarea value={workoutForm.description} onChange={(e) => setWorkoutForm({ ...workoutForm, description: e.target.value })} rows={3} placeholder="Scrivi qualcosa di personale — il cliente lo vedrà ogni volta che apre il piano…" className={`${inputClass} resize-none`} style={inputStyle} />
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {[
+                    { label: "Processo", text: "Fidati del processo e di ogni singola rep — questo piano è fatto su misura per te." },
+                    { label: "Percorso", text: "Ogni settimana qui dentro è un passo verso la versione migliore di te. Ci sono." },
+                    { label: "Su misura", text: "Ho costruito tutto questo pensando a te. Dagli il tempo che merita." },
+                  ].map(({ label, text }) => (
+                    <button key={label} type="button" onClick={() => setWorkoutForm({ ...workoutForm, description: text })}
+                      className="text-xs px-2.5 py-1 rounded-lg transition-all hover:opacity-80"
+                      style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.18)", color: "rgba(201,168,76,0.65)" }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -2315,9 +2334,25 @@ export default function ClientDetailPage() {
                   className={inputClass} style={inputStyle} />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Descrizione</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Messaggio personale al cliente</label>
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.1)", color: "rgba(201,168,76,0.7)", border: "1px solid rgba(201,168,76,0.2)" }}>visibile sul portale</span>
+                </div>
                 <textarea value={editingPlan.description} onChange={(e) => setEditingPlan({ ...editingPlan, description: e.target.value })}
-                  rows={2} className={`${inputClass} resize-none`} style={inputStyle} />
+                  rows={3} placeholder="Scrivi qualcosa di personale — il cliente lo vedrà ogni volta che apre il piano…" className={`${inputClass} resize-none`} style={inputStyle} />
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {[
+                    { label: "Processo", text: "Fidati del processo e di ogni singola rep — questo piano è fatto su misura per te." },
+                    { label: "Percorso", text: "Ogni settimana qui dentro è un passo verso la versione migliore di te. Ci sono." },
+                    { label: "Su misura", text: "Ho costruito tutto questo pensando a te. Dagli il tempo che merita." },
+                  ].map(({ label, text }) => (
+                    <button key={label} type="button" onClick={() => setEditingPlan({ ...editingPlan, description: text })}
+                      className="text-xs px-2.5 py-1 rounded-lg transition-all hover:opacity-80"
+                      style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.18)", color: "rgba(201,168,76,0.65)" }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
