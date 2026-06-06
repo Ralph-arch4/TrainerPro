@@ -2,7 +2,7 @@
 import Link from "next/link";
 import HamburgerNav from "@/components/HamburgerNav";
 import TiltCard from "@/components/TiltCard";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
 import { useRef } from "react";
 import {
   Users, Activity, UtensilsCrossed, TrendingUp,
@@ -60,22 +60,54 @@ function Hero() {
   const imgY  = useTransform(scrollY, [0, 700], [0, reduced ? 0 : 80]);
   const textY = useTransform(scrollY, [0, 700], [0, reduced ? 0 : -60]);
 
+  // ── Mouse-driven 3D parallax (smooth, spring-damped) ──
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const spring = { stiffness: 70, damping: 18, mass: 0.6 };
+  const rotateX = useSpring(useTransform(my, [-0.5, 0.5], [5, -5]), spring);
+  const rotateY = useSpring(useTransform(mx, [-0.5, 0.5], [-7, 7]), spring);
+  const videoX  = useSpring(useTransform(mx, [-0.5, 0.5], [-26, 26]), spring);
+  const videoYm = useSpring(useTransform(my, [-0.5, 0.5], [-18, 18]), spring);
+  const textXm  = useSpring(useTransform(mx, [-0.5, 0.5], [20, -20]), spring);
+
+  function handleMove(e: React.MouseEvent) {
+    if (reduced || !ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    mx.set((e.clientX - r.left) / r.width - 0.5);
+    my.set((e.clientY - r.top) / r.height - 0.5);
+  }
+  function handleLeave() { mx.set(0); my.set(0); }
+
   return (
-    <section ref={ref} className="relative h-screen min-h-[600px] flex flex-col justify-end overflow-hidden">
-      {/* ── Athlete photo background (save image as /public/hero-athlete.jpg) ── */}
+    <section
+      ref={ref}
+      onMouseMove={handleMove}
+      onMouseLeave={handleLeave}
+      className="relative h-screen min-h-[600px] flex flex-col justify-end overflow-hidden"
+      style={{ perspective: 1300 }}
+    >
+      {/* ── Looping video background (scroll parallax + mouse-driven 3D tilt) ── */}
       <motion.div
-        style={{ y: imgY, position: "absolute", inset: "-10% 0 -10% 0" }}
+        style={{ y: imgY, position: "absolute", inset: "-8% -4%", transformStyle: "preserve-3d" }}
         aria-hidden
       >
-        <div
+        <motion.video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster="/hero-athlete.jpg"
           style={{
+            x: videoX, y: videoYm, rotateX, rotateY, scale: 1.14,
             position: "absolute", inset: 0,
-            backgroundImage: "url(/hero-athlete.jpg)",
-            backgroundSize: "cover",
-            backgroundPosition: "center 20%",
-            filter: "contrast(1.12) brightness(0.6) saturate(0.9)",
+            width: "100%", height: "100%", objectFit: "cover",
+            transformOrigin: "center center",
+            filter: "contrast(1.08) brightness(0.62) saturate(1.04)",
           }}
-        />
+        >
+          <source src="/hero.mp4" type="video/mp4" />
+        </motion.video>
       </motion.div>
 
       {/* ── Overlays ── */}
@@ -95,9 +127,9 @@ function Hero() {
       {/* ── Nav (inside hero for z-index stacking) ── */}
       <HamburgerNav />
 
-      {/* ── Hero text ── */}
+      {/* ── Hero text (floats above video, mouse parallax) ── */}
       <motion.div
-        style={{ y: textY }}
+        style={{ y: textY, x: textXm, z: 60, transformStyle: "preserve-3d" }}
         className="relative z-10 px-6 lg:px-14 pb-16 lg:pb-24"
       >
         <motion.h1
