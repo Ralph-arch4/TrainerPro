@@ -3,7 +3,7 @@ import Link from "next/link";
 import HamburgerNav from "@/components/HamburgerNav";
 import TiltCard from "@/components/TiltCard";
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   Users, Activity, UtensilsCrossed, TrendingUp,
   FileDown, Calculator, CheckCircle, ArrowRight,
@@ -70,6 +70,9 @@ function Hero() {
   const videoYm = useSpring(useTransform(my, [-0.5, 0.5], [-18, 18]), spring);
   const textXm  = useSpring(useTransform(mx, [-0.5, 0.5], [20, -20]), spring);
 
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoReady, setVideoReady] = useState(false);
+
   function handleMove(e: React.MouseEvent) {
     if (reduced || !ref.current) return;
     const r = ref.current.getBoundingClientRect();
@@ -83,27 +86,35 @@ function Hero() {
       ref={ref}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
-      className="relative h-screen min-h-[600px] flex flex-col justify-end overflow-hidden"
-      style={{ perspective: 1300 }}
+      className="relative min-h-screen flex flex-col justify-end overflow-hidden"
+      style={{ perspective: 1300, minHeight: "100svh", background: "#050505" }}
     >
-      {/* ── Looping video background (scroll parallax + mouse-driven 3D tilt) ── */}
+      {/* ── Looping video background — fades in when ready (NO poster, no old-photo flash) ── */}
       <motion.div
-        style={{ y: imgY, position: "absolute", inset: "-8% -4%", transformStyle: "preserve-3d" }}
+        style={{
+          y: imgY, position: "absolute", inset: "-8% -4%",
+          transformStyle: "preserve-3d",
+          opacity: videoReady ? 1 : 0,
+          transition: "opacity 0.8s ease",
+        }}
         aria-hidden
       >
         <motion.video
+          ref={videoRef}
           autoPlay
           muted
           loop
           playsInline
-          preload="metadata"
-          poster="/hero-athlete.jpg"
+          preload="auto"
+          onLoadedData={() => setVideoReady(true)}
+          onPlaying={() => setVideoReady(true)}
           style={{
             x: videoX, y: videoYm, rotateX, rotateY, scale: 1.14,
             position: "absolute", inset: 0,
             width: "100%", height: "100%", objectFit: "cover",
+            objectPosition: "center 30%",
             transformOrigin: "center center",
-            filter: "contrast(1.08) brightness(0.62) saturate(1.04)",
+            filter: "contrast(1.08) brightness(0.6) saturate(1.04)",
           }}
         >
           <source src="/hero.mp4" type="video/mp4" />
@@ -137,7 +148,7 @@ function Hero() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.1 }}
           className="leading-[0.88] font-black tracking-tight"
-          style={{ fontSize: "clamp(4.5rem, 13vw, 11rem)", letterSpacing: "-0.04em" }}
+          style={{ fontSize: "clamp(3rem, 13.5vw, 11rem)", letterSpacing: "-0.04em" }}
         >
           {["GESTISCI", "SCALA.", "DOMINA"].map((word, i) => (
             <motion.span
