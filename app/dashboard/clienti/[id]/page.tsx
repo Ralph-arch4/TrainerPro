@@ -721,6 +721,30 @@ export default function ClientDetailPage() {
     return null;
   }, [client]);
 
+  const quickMessages = useMemo(() => {
+    if (!client.phone) return [];
+    const fn = client.name.split(" ")[0];
+    const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
+    const weekLogs = allLogs.filter(l => new Date(l.loggedAt).getTime() > Date.now() - 7 * 86400000);
+    const sessionsThisWeek = new Set(weekLogs.map(l => new Date(l.loggedAt).toDateString())).size;
+    let bestPR: { name: string; weight: number } | null = null;
+    for (const plan of client.workoutPlans) {
+      for (const log of weekLogs.filter(l => l.weight)) {
+        const ex = plan.exercises.find(e => e.id === log.exerciseId);
+        if (ex && (!bestPR || log.weight! > bestPR.weight)) bestPR = { name: ex.name, weight: log.weight! };
+      }
+    }
+    const lastW = [...client.measurements].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.weight;
+    const msgs: { label: string; color: string; bg: string; text: string }[] = [];
+    if (sessionsThisWeek >= 2)
+      msgs.push({ label: `${sessionsThisWeek} sessioni questa sett.`, color: "#fbbf24", bg: "rgba(251,191,36,0.08)", text: `Ciao ${fn}! ${sessionsThisWeek} sessioni questa settimana — sei in forma. Grande lavoro, continua così!` });
+    if (bestPR)
+      msgs.push({ label: `Record: ${bestPR.name}`, color: "#f97316", bg: "rgba(249,115,22,0.08)", text: `Ciao ${fn}! Ho visto che hai spinto ${bestPR.weight}kg su ${bestPR.name} questa settimana — ottimo record, stai progredendo alla grande!` });
+    msgs.push({ label: "Check-in rapido", color: "#38bdf8", bg: "rgba(56,189,248,0.08)", text: `Ciao ${fn}, come stai? Volevo fare un check-in veloce — come ti senti con gli allenamenti? Hai domande o vorresti modificare qualcosa?` });
+    if (lastW) msgs.push({ label: `Peso: ${lastW}kg`, color: "#818cf8", bg: "rgba(99,102,241,0.08)", text: `Ciao ${fn}! Sei a ${lastW}kg dall'ultima misurazione — come ti senti fisicamente? Stai seguendo le indicazioni alimentari?` });
+    return msgs.slice(0, 4);
+  }, [client]);
+
   return (
     <div className="p-4 pt-20 lg:pt-8 lg:p-8 fade-in">
       {/* Back + header */}
@@ -892,6 +916,32 @@ export default function ClientDetailPage() {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {client.phone && quickMessages.length > 0 && (
+            <div className="card-luxury rounded-2xl p-5 sm:col-span-2">
+              <div className="flex items-center gap-2 mb-3">
+                <MessageCircle size={14} style={{ color: "#22c55e" }} />
+                <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Messaggi Rapidi WhatsApp</h3>
+                <span className="text-xs px-2 py-0.5 rounded-full ml-1" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>
+                  {quickMessages.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {quickMessages.map((msg, i) => (
+                  <a key={i}
+                    href={`https://wa.me/${client.phone!.replace(/\D/g, "")}?text=${encodeURIComponent(msg.text)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex flex-col gap-1 p-3 rounded-xl transition-all hover:opacity-80"
+                    style={{ background: msg.bg, border: `1px solid ${msg.color}25` }}>
+                    <span className="text-xs font-bold leading-tight" style={{ color: msg.color }}>{msg.label}</span>
+                    <span className="text-xs mt-0.5" style={{ color: "var(--text-dim)", fontSize: "0.68rem" }}>
+                      {msg.text.length > 60 ? msg.text.slice(0, 60) + "…" : msg.text}
+                    </span>
+                  </a>
+                ))}
               </div>
             </div>
           )}
