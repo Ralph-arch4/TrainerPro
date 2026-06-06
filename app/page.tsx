@@ -3,7 +3,7 @@ import Link from "next/link";
 import HamburgerNav from "@/components/HamburgerNav";
 import TiltCard from "@/components/TiltCard";
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Users, Activity, UtensilsCrossed, TrendingUp,
   FileDown, Calculator, CheckCircle, ArrowRight,
@@ -73,6 +73,16 @@ function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoReady, setVideoReady] = useState(false);
 
+  // On mobile show the FULL video frame (contain), no zoom/parallax; cover on desktop.
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
   function handleMove(e: React.MouseEvent) {
     if (reduced || !ref.current) return;
     const r = ref.current.getBoundingClientRect();
@@ -92,7 +102,7 @@ function Hero() {
       {/* ── Looping video background — fades in when ready (NO poster, no old-photo flash) ── */}
       <motion.div
         style={{
-          y: imgY, position: "absolute", inset: "-8% -4%",
+          y: imgY, position: "absolute", inset: isMobile ? 0 : "-8% -4%",
           transformStyle: "preserve-3d",
           opacity: videoReady ? 1 : 0,
           transition: "opacity 0.8s ease",
@@ -109,12 +119,17 @@ function Hero() {
           onLoadedData={() => setVideoReady(true)}
           onPlaying={() => setVideoReady(true)}
           style={{
-            x: videoX, y: videoYm, rotateX, rotateY, scale: 1.14,
+            x: isMobile ? 0 : videoX, y: isMobile ? 0 : videoYm,
+            rotateX: isMobile ? 0 : rotateX, rotateY: isMobile ? 0 : rotateY,
+            scale: isMobile ? 1 : 1.14,
             position: "absolute", inset: 0,
-            width: "100%", height: "100%", objectFit: "cover",
-            objectPosition: "center 30%",
+            width: "100%", height: "100%",
+            objectFit: isMobile ? "contain" : "cover",
+            objectPosition: "center center",
             transformOrigin: "center center",
-            filter: "contrast(1.08) brightness(0.6) saturate(1.04)",
+            filter: isMobile
+              ? "contrast(1.05) brightness(0.92) saturate(1.04)"
+              : "contrast(1.08) brightness(0.6) saturate(1.04)",
           }}
         >
           <source src="/hero.mp4" type="video/mp4" />
