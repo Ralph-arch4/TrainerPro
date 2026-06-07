@@ -627,6 +627,47 @@ export default function ClientDetailPage() {
     setSaving(false);
   }
 
+  function generateSmartNote() {
+    if (!client) return;
+    const parts: string[] = [];
+    const now = Date.now();
+    const weekAgo = now - 7 * 86400000;
+
+    const activePlan = client.workoutPlans.find((p) => p.active);
+    if (activePlan) {
+      const target = activePlan.daysPerWeek || 3;
+      const sessionsThisWeek = new Set(
+        activePlan.logs.filter((l) => new Date(l.loggedAt).getTime() > weekAgo).map((l) => new Date(l.loggedAt).toDateString())
+      ).size;
+      if (sessionsThisWeek >= target) parts.push(`Settimana eccellente: ${sessionsThisWeek}/${target} sessioni completate, costanza esemplare.`);
+      else if (sessionsThisWeek > 0) parts.push(`${sessionsThisWeek}/${target} sessioni questa settimana — margine di miglioramento sull'aderenza.`);
+      else parts.push(`Nessuna sessione registrata negli ultimi 7 giorni: da ricontattare per capire il motivo.`);
+
+      const byExercise: Record<string, typeof activePlan.logs> = {};
+      for (const log of activePlan.logs) {
+        if (log.weight == null) continue;
+        (byExercise[log.exerciseId] ??= []).push(log);
+      }
+      for (const [exId, logs] of Object.entries(byExercise)) {
+        const sorted = [...logs].sort((a, b) => b.weekNumber - a.weekNumber);
+        if (sorted.length < 2) continue;
+        if (sorted[0].weight! > sorted[1].weight!) {
+          const ex = activePlan.exercises.find((e) => e.id === exId);
+          if (ex) { parts.push(`Nuovo record su ${ex.name}: ${sorted[0].weight}kg (da ${sorted[1].weight}kg). Ottimo progresso!`); break; }
+        }
+      }
+    }
+
+    const sortedMeasurements = [...client.measurements].filter((m) => m.weight != null).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    if (sortedMeasurements.length >= 2) {
+      const delta = Math.round((sortedMeasurements[0].weight! - sortedMeasurements[1].weight!) * 10) / 10;
+      if (delta !== 0) parts.push(`Peso corporeo: ${sortedMeasurements[0].weight}kg (${delta > 0 ? "+" : ""}${delta}kg rispetto alla rilevazione precedente).`);
+    }
+
+    if (parts.length === 0) parts.push(`${client.name}: nessun dato sufficiente per una nota automatica, aggiungi log o misurazioni.`);
+    setNoteText(parts.join(" "));
+  }
+
   async function saveNote() {
     if (!noteText.trim()) return;
     const n = addNote(client!.id, noteText.trim());
@@ -1266,7 +1307,13 @@ export default function ClientDetailPage() {
               rows={3}
               className="w-full bg-transparent outline-none text-sm resize-none"
               style={{ color: "var(--text)" }} />
-            <div className="flex justify-end mt-2">
+            <div className="flex justify-between items-center mt-2">
+              <button onClick={generateSmartNote}
+                className="px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all hover:opacity-80"
+                style={{ color: "var(--accent)", border: "1px solid rgba(229,50,50,0.25)", background: "rgba(229,50,50,0.06)" }}
+                title="Genera una bozza basata sui dati recenti del cliente">
+                <Sparkles size={13} /> Genera nota smart
+              </button>
               <button onClick={saveNote} disabled={!noteText.trim()}
                 className="accent-btn px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 disabled:opacity-40">
                 <Plus size={13} /> Aggiungi nota
