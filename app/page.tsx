@@ -91,6 +91,147 @@ function Hero() {
   }
   function handleLeave() { mx.set(0); my.set(0); }
 
+  // ── Mount guard (prevents a flash of the wrong layout on first paint) ──
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  // ── Mobile gyroscope tilt for the framed video card ──
+  const gx = useMotionValue(0);
+  const gy = useMotionValue(0);
+  const cardRotX = useSpring(useTransform(gy, [-1, 1], [7, -7]), spring);
+  const cardRotY = useSpring(useTransform(gx, [-1, 1], [-9, 9]), spring);
+  useEffect(() => {
+    if (!isMobile || reduced) return;
+    const clamp = (v: number, m: number) => Math.max(-1, Math.min(1, v / m));
+    const onOrient = (e: DeviceOrientationEvent) => {
+      gx.set(clamp(e.gamma ?? 0, 40));
+      gy.set(clamp((e.beta ?? 0) - 45, 40));
+    };
+    window.addEventListener("deviceorientation", onOrient, true);
+    return () => window.removeEventListener("deviceorientation", onOrient, true);
+  }, [isMobile, reduced, gx, gy]);
+
+  const words = ["GESTISCI", "SCALA.", "DOMINA"];
+
+  // Pre-mount: neutral dark shell (no flash of the wrong layout)
+  if (!mounted) {
+    return (
+      <section className="relative overflow-hidden" style={{ minHeight: "100svh", background: "#050505" }}>
+        <HamburgerNav />
+      </section>
+    );
+  }
+
+  // ── MOBILE: premium FRAMED video (full frame, zero crop) in normal scroll flow ──
+  if (isMobile) {
+    return (
+      <section className="relative flex flex-col overflow-hidden" style={{ minHeight: "100svh", background: "#050505" }}>
+        <div className="absolute inset-0 pointer-events-none" aria-hidden style={{
+          background: "radial-gradient(ellipse 75% 42% at 50% 16%, rgba(201,168,76,0.16) 0%, transparent 60%)",
+        }} />
+        <HamburgerNav />
+
+        <div className="relative z-10 flex flex-col px-5 pt-20 pb-12 gap-8">
+          {/* Framed video card — levitates + tilts with the gyroscope */}
+          <motion.div
+            initial={{ opacity: 0, y: 26 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: EASE }}
+            style={{ perspective: 1100 }}
+          >
+            <motion.div
+              animate={reduced ? {} : { y: [0, -7, 0] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <motion.div
+                style={{
+                  rotateX: cardRotX, rotateY: cardRotY, transformStyle: "preserve-3d",
+                  opacity: videoReady ? 1 : 0, transition: "opacity 0.7s ease",
+                  background: "linear-gradient(140deg, rgba(201,168,76,0.55), rgba(201,168,76,0.08) 55%, rgba(201,168,76,0.32))",
+                  boxShadow: "0 30px 80px rgba(0,0,0,0.55), 0 0 50px rgba(201,168,76,0.18)",
+                }}
+                className="relative rounded-[26px] p-[1.5px]"
+              >
+                <div className="relative rounded-[25px] overflow-hidden" style={{ background: "#0b0b0b" }}>
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="auto"
+                    onLoadedData={() => setVideoReady(true)}
+                    onPlaying={() => setVideoReady(true)}
+                    className="block w-full h-auto"
+                    style={{ filter: "contrast(1.06) saturate(1.06)" }}
+                  >
+                    <source src="/hero.mp4" type="video/mp4" />
+                  </video>
+                  {/* sheen + base fade */}
+                  <div className="absolute inset-0 pointer-events-none" aria-hidden style={{
+                    background: "linear-gradient(160deg, rgba(255,255,255,0.12) 0%, transparent 34%), linear-gradient(to top, rgba(5,5,5,0.5), transparent 42%)",
+                  }} />
+                  {/* corner accents */}
+                  {["top-3 left-3 border-t-2 border-l-2 rounded-tl-md", "top-3 right-3 border-t-2 border-r-2 rounded-tr-md", "bottom-3 left-3 border-b-2 border-l-2 rounded-bl-md", "bottom-3 right-3 border-b-2 border-r-2 rounded-br-md"].map(c => (
+                    <span key={c} className={`absolute w-6 h-6 ${c}`} style={{ borderColor: "rgba(201,168,76,0.7)" }} />
+                  ))}
+                  {/* live badge */}
+                  <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full"
+                    style={{ background: "rgba(5,5,5,0.6)", border: "1px solid rgba(201,168,76,0.3)", backdropFilter: "blur(8px)" }}>
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--accent)", boxShadow: "0 0 8px var(--accent)" }} />
+                    <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "var(--accent-light, #E8CC7A)" }}>TrainerPro</span>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+
+          {/* Headline + copy + CTA (normal flow → whole page stays visible/scrollable) */}
+          <div>
+            <h1 className="leading-[0.9] font-black tracking-tight" style={{ fontSize: "clamp(2.4rem, 12vw, 3.6rem)", letterSpacing: "-0.03em" }}>
+              {words.map((word, i) => (
+                <motion.span
+                  key={word}
+                  initial={{ opacity: 0, y: reduced ? 0 : 26 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, delay: 0.15 + i * 0.1, ease: EASE }}
+                  className="block"
+                  style={{ color: i === 1 ? undefined : "var(--ivory)" }}
+                >
+                  {i === 1 ? <span className="accent-text">{word}</span> : word}
+                </motion.span>
+              ))}
+            </h1>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-4 text-base leading-relaxed"
+              style={{ color: "rgba(245,240,232,0.6)" }}
+            >
+              L&apos;unico CRM pensato per chi trasforma i corpi. Schede, nutrizione e progressi — tutto in un click.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, ease: EASE }}
+              className="mt-7 flex flex-col gap-3"
+            >
+              <Link href="/register" className="accent-btn inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl text-base font-bold">
+                Inizia gratis <ArrowRight size={16} />
+              </Link>
+              <Link href="/login" className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl text-base font-medium"
+                style={{ border: "1px solid rgba(201,168,76,0.25)", color: "rgba(245,240,232,0.8)", background: "rgba(201,168,76,0.05)" }}>
+                Accedi al tuo account
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ── DESKTOP: cinematic full-bleed video + 3D mouse parallax (unchanged) ──
   return (
     <section
       ref={ref}
