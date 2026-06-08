@@ -43,6 +43,12 @@ const levelLabel: Record<string, string> = {
   avanzato: "Avanzato",
 };
 
+function clientHue(name: string): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  return Math.abs(hash) % 360;
+}
+
 function getFormaScore(client: Client): { score: number; label: string; color: string } | null {
   if (client.status !== "attivo") return null;
   const now = Date.now();
@@ -296,6 +302,7 @@ function ClientiPageInner() {
           const birthdayInfo = getBirthdayStatus(client);
           const togetherLabel = getTogetherLabel(client);
           const progressionReady = getProgressionReady(client);
+          const hue = clientHue(client.name);
           return (
           <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
             className="card-luxury rounded-2xl p-5 transition-all group block"
@@ -332,7 +339,11 @@ function ClientiPageInner() {
             ) : null}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl accent-btn flex items-center justify-center text-base font-bold flex-shrink-0">
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center text-base font-bold flex-shrink-0 text-white"
+                  style={{
+                    background: `linear-gradient(135deg, hsl(${hue} 68% 46%), hsl(${(hue + 48) % 360} 62% 30%))`,
+                    boxShadow: `0 3px 12px hsl(${hue} 60% 40% / 0.4), inset 0 1px 0 rgba(255,255,255,0.18)`,
+                  }}>
                   {client.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
