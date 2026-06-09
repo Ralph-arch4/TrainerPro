@@ -6,7 +6,7 @@ import {
   Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight,
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
   Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle, Scale, TrendingDown,
-  BarChart2, CreditCard, Target,
+  BarChart2, CreditCard, Target, Heart,
 } from "lucide-react";
 
 function timeGreeting() {
@@ -129,6 +129,27 @@ export default function DashboardPage() {
       })
       .filter(b => b.daysUntil <= 7)
       .sort((a, b) => a.daysUntil - b.daysUntil);
+  }, [clients]);
+
+  // Anniversari del percorso: collaborazioni che raggiungono 30/60/90/180/365 giorni entro 7 giorni
+  const anniversaryAlerts = useMemo(() => {
+    const MILESTONES = [30, 60, 90, 180, 365];
+    const now = new Date();
+    const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const results: { client: typeof clients[0]; days: number; daysUntil: number; label: string }[] = [];
+    for (const c of clients.filter(cl => cl.status === "attivo" && cl.startDate)) {
+      const start = new Date(c.startDate!);
+      for (const days of MILESTONES) {
+        const msDt = new Date(start.getTime() + days * 86400000);
+        const msMs = new Date(msDt.getFullYear(), msDt.getMonth(), msDt.getDate()).getTime();
+        const diff = Math.floor((msMs - todayMs) / 86400000);
+        if (diff >= 0 && diff <= 7) {
+          const label = days < 365 ? `${days} giorni insieme` : "1 anno insieme";
+          results.push({ client: c, days, daysUntil: diff, label });
+        }
+      }
+    }
+    return results.sort((a, b) => a.daysUntil - b.daysUntil).slice(0, 4);
   }, [clients]);
 
   // Highlights settimana: PR battuti e ritorni dopo assenza lunga
@@ -827,6 +848,50 @@ export default function DashboardPage() {
                 </div>
                 {client.phone && (
                   <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Tanti auguri ${client.name.split(" ")[0]}!`)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
+                    style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                    <MessageCircle size={11} />
+                    WA
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Anniversari del percorso ────────────────────────────────────── */}
+      {anniversaryAlerts.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(236,72,153,0.05)", border: "1px solid rgba(236,72,153,0.2)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <Heart size={14} style={{ color: "#f472b6" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Anniversari del percorso
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full ml-1 font-bold"
+              style={{ background: "rgba(236,72,153,0.18)", color: "#f472b6" }}>
+              {anniversaryAlerts.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {anniversaryAlerts.map(({ client, label, daysUntil }, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl"
+                style={{ background: daysUntil === 0 ? "rgba(236,72,153,0.1)" : "rgba(236,72,153,0.04)" }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0"
+                  style={{ background: "rgba(236,72,153,0.15)", color: "#f472b6" }}>
+                  {client.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{ color: "var(--text)" }}>
+                    {client.name}
+                  </p>
+                  <p className="text-xs font-medium" style={{ color: daysUntil === 0 ? "#f472b6" : "var(--text-muted)" }}>
+                    {daysUntil === 0 ? `Oggi — ${label}!` : daysUntil === 1 ? `Domani — ${label}` : `Tra ${daysUntil} giorni — ${label}`}
+                  </p>
+                </div>
+                {client.phone && (
+                  <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}! Oggi festeggiamo ${label} di percorso insieme — sono fiero dei tuoi progressi. Continua così!`)}`}
                     target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
                     style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
