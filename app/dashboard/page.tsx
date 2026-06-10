@@ -2,11 +2,12 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
+import { showToast } from "@/components/Toast";
 import {
   Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight,
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
   Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle, Scale, TrendingDown,
-  BarChart2, CreditCard, Target, Heart,
+  BarChart2, CreditCard, Target, Heart, ClipboardCopy,
 } from "lucide-react";
 
 function timeGreeting() {
@@ -286,6 +287,47 @@ export default function DashboardPage() {
     return { score: clamped, label, color, trendLabel, sentence, trend };
   }, [clients, weekHighlights]);
 
+  // Riepilogo settimanale: testo pronto da copiare per WhatsApp/note del trainer
+  const weeklyRecap = useMemo(() => {
+    const lines: string[] = [];
+    lines.push(`Riepilogo settimanale — ${new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" })}`);
+    if (coachPulse) {
+      lines.push("");
+      lines.push(`${coachPulse.label} (${coachPulse.score}/100)`);
+      lines.push(coachPulse.sentence);
+    }
+    if (weekHighlights.length) {
+      lines.push("");
+      lines.push("Highlights della settimana:");
+      weekHighlights.forEach(h => lines.push(`- ${h.clientName}: ${h.label} (${h.detail})`));
+    }
+    if (atRiskClients.length) {
+      lines.push("");
+      lines.push("Da contattare:");
+      atRiskClients.forEach(({ client, daysSinceLast }) => lines.push(`- ${client.name}: ${daysSinceLast}gg senza sessioni`));
+    }
+    if (renewalAlerts.length) {
+      lines.push("");
+      lines.push("Rinnovi in arrivo:");
+      renewalAlerts.forEach(({ client, daysUntil, fee }) => lines.push(`- ${client.name}: €${fee} ${daysUntil === 0 ? "(oggi)" : daysUntil === 1 ? "(domani)" : `(tra ${daysUntil} giorni)`}`));
+    }
+    if (upcomingBirthdays.length) {
+      lines.push("");
+      lines.push("Compleanni in arrivo:");
+      upcomingBirthdays.forEach(({ client, daysUntil }) => lines.push(`- ${client.name}: ${daysUntil === 0 ? "oggi" : daysUntil === 1 ? "domani" : `tra ${daysUntil} giorni`}`));
+    }
+    return lines.join("\n");
+  }, [coachPulse, weekHighlights, atRiskClients, renewalAlerts, upcomingBirthdays]);
+
+  const copyWeeklyRecap = async () => {
+    try {
+      await navigator.clipboard.writeText(weeklyRecap);
+      showToast("Riepilogo copiato negli appunti");
+    } catch {
+      showToast("Impossibile copiare il riepilogo", "error");
+    }
+  };
+
   // Stallo peso: clients with 3+ consecutive measurements within ±0.5kg
   const measurementPlateauAlerts = useMemo(() => {
     const results: { client: typeof clients[0]; weight: number; lastDate: string }[] = [];
@@ -518,6 +560,12 @@ export default function DashboardPage() {
             }}>
             {coachPulse.trendLabel}
           </span>
+          {/* Copia riepilogo */}
+          <button onClick={copyWeeklyRecap} title="Copia riepilogo settimanale"
+            className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
+            style={{ background: `${coachPulse.color}18`, color: coachPulse.color }}>
+            <ClipboardCopy size={14} />
+          </button>
         </div>
       )}
 
