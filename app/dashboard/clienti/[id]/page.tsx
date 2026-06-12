@@ -100,6 +100,11 @@ const statusColor: Record<string, string> = { attivo: "#22c55e", in_pausa: "#f59
 const statusLabel: Record<string, string> = { attivo: "Attivo", in_pausa: "In pausa", inattivo: "Inattivo" };
 
 function formatDate(d: string) { return new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" }); }
+function phaseDurationWeeks(startDate: string, endDate?: string) {
+  const start = new Date(startDate).getTime();
+  const end = endDate ? new Date(endDate).getTime() : Date.now();
+  return Math.max(1, Math.round((end - start) / (7 * 86400000)));
+}
 
 function formatRestTime(sec: number): string {
   if (sec < 60) return `${sec}″`;
@@ -117,6 +122,7 @@ export default function ClientDetailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const client = useAppStore((s) => s.clients.find((c) => c.id === id));
+  const user = useAppStore((s) => s.user);
   const addPhase = useAppStore((s) => s.addPhase);
   const updatePhase = useAppStore((s) => s.updatePhase);
   const removePhase = useAppStore((s) => s.removePhase);
@@ -1044,6 +1050,35 @@ export default function ClientDetailPage() {
                       {phase.notes && <p className="text-xs w-full" style={{ color: "var(--text-muted)" }}>{phase.notes}</p>}
                     </div>
                   )}
+                  {phase.completed && (() => {
+                    const weeks = phaseDurationWeeks(phase.startDate, phase.endDate);
+                    const waText = `Ciao ${client.name.split(" ")[0]}! 🏆 Hai completato la fase "${phase.name}" (${phaseTypeLabel[phase.type]}) in ${weeks} settiman${weeks === 1 ? "a" : "e"}. Sono fiero di te, continuiamo così! — ${user?.name || "il tuo coach"}`;
+                    return (
+                      <div className="mt-3 pt-4 rounded-xl text-center relative"
+                        style={{ border: "1px solid rgba(201,168,76,0.35)", background: "linear-gradient(135deg, rgba(201,168,76,0.07), rgba(201,168,76,0.02))" }}>
+                        <div className="absolute inset-2 rounded-lg pointer-events-none" style={{ border: "1px dashed rgba(201,168,76,0.25)" }} />
+                        <div className="relative py-4 px-4">
+                          <Award size={22} className="mx-auto mb-2" style={{ color: "var(--accent)" }} />
+                          <p className="text-[0.65rem] font-bold uppercase" style={{ color: "var(--accent-light)", letterSpacing: "0.2em" }}>Certificato di Traguardo</p>
+                          <p className="text-lg font-bold mt-1.5" style={{ color: "var(--text)" }}>{client.name}</p>
+                          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                            ha completato la fase &ldquo;{phase.name}&rdquo; in {weeks} settiman{weeks === 1 ? "a" : "e"}
+                          </p>
+                          <p className="text-sm mt-3" style={{ fontFamily: "Georgia, serif", fontStyle: "italic", color: "var(--accent-light)" }}>
+                            — {user?.name || "Il tuo coach"}
+                          </p>
+                          {client.phone && (
+                            <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(waText)}`}
+                              target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-full text-xs font-semibold transition-all hover:opacity-80"
+                              style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.25)" }}>
+                              <MessageCircle size={12} /> Invia il traguardo al cliente
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               ))}
             </div>
