@@ -7,7 +7,7 @@ import {
   Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight,
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
   Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle, Scale, TrendingDown,
-  BarChart2, CreditCard, Target, Heart, ClipboardCopy,
+  BarChart2, CreditCard, Target, Heart, ClipboardCopy, CalendarClock,
 } from "lucide-react";
 
 function timeGreeting() {
@@ -110,6 +110,20 @@ export default function DashboardPage() {
       }
     }
     return results.slice(0, 4);
+  }, [clients]);
+
+  // Piani in scadenza: scheda attiva a tempo che sta per finire — prepara la prossima
+  const planEndingAlerts = useMemo(() => {
+    const results: { client: typeof clients[0]; plan: typeof clients[0]["workoutPlans"][0]; weeksLeft: number }[] = [];
+    for (const client of clients.filter(c => c.status === "attivo")) {
+      for (const plan of client.workoutPlans) {
+        if (!plan.active || !plan.totalWeeks) continue;
+        const maxLogged = plan.logs.length > 0 ? Math.max(...plan.logs.map(l => l.weekNumber)) : 0;
+        const weeksLeft = plan.totalWeeks - maxLogged;
+        if (weeksLeft >= 0 && weeksLeft <= 1) results.push({ client, plan, weeksLeft });
+      }
+    }
+    return results.sort((a, b) => a.weeksLeft - b.weeksLeft).slice(0, 5);
   }, [clients]);
 
   // Birthday radar: clients with birthday in the next 7 days
@@ -701,6 +715,46 @@ export default function DashboardPage() {
                 <div className="text-right flex-shrink-0">
                   <p className="text-xs font-bold" style={{ color: "#fbbf24" }}>{s.weight}kg → {s.suggested}kg</p>
                   <p className="text-xs" style={{ color: "rgba(251,191,36,0.6)" }}>3 sett. stabile</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Piani in scadenza ─────────────────────────────────────────────── */}
+      {planEndingAlerts.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(251,113,133,0.05)", border: "1px solid rgba(251,113,133,0.2)" }}>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <CalendarClock size={14} style={{ color: "#fb7185" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Piani in scadenza
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+              style={{ background: "rgba(251,113,133,0.18)", color: "#fb7185" }}>
+              {planEndingAlerts.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
+              prepara la prossima scheda
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {planEndingAlerts.map(({ client, plan, weeksLeft }) => (
+              <Link key={plan.id} href={`/dashboard/clienti/${client.id}/schede/${plan.id}`}
+                className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                  style={{ background: "rgba(251,113,133,0.12)", color: "#fb7185" }}>
+                  {client.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{client.name}</p>
+                  <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{plan.name}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xs font-bold" style={{ color: "#fb7185" }}>
+                    {weeksLeft === 0 ? "Ultima settimana" : "Penultima settimana"}
+                  </p>
+                  <p className="text-xs" style={{ color: "rgba(251,113,133,0.6)" }}>su {plan.totalWeeks} totali</p>
                 </div>
               </Link>
             ))}
