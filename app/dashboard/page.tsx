@@ -7,7 +7,7 @@ import {
   Users, Activity, TrendingUp, UtensilsCrossed, Plus, ArrowRight,
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
   Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle, Scale, TrendingDown,
-  BarChart2, CreditCard, Target, Heart, ClipboardCopy, CalendarClock,
+  BarChart2, CreditCard, Target, Heart, ClipboardCopy, CalendarClock, ShieldAlert,
 } from "lucide-react";
 
 function timeGreeting() {
@@ -110,6 +110,24 @@ export default function DashboardPage() {
       }
     }
     return results.slice(0, 4);
+  }, [clients]);
+
+  // Note da monitorare: log recenti con possibili segnali di dolore/infortunio
+  const painFlagAlerts = useMemo(() => {
+    const PAIN_RE = /dolor|fastidi|infortun|tirat|stiramento|bruci|formicol|fa male|scrocch|inflam/i;
+    const weekAgo = Date.now() - 7 * 86400000;
+    const results: { clientName: string; clientId: string; exerciseName: string; note: string; loggedAt: string }[] = [];
+    for (const client of clients.filter(c => c.status === "attivo")) {
+      for (const plan of client.workoutPlans) {
+        for (const log of plan.logs) {
+          if (!log.note || !PAIN_RE.test(log.note)) continue;
+          if (new Date(log.loggedAt).getTime() < weekAgo) continue;
+          const ex = plan.exercises.find(e => e.id === log.exerciseId);
+          results.push({ clientName: client.name, clientId: client.id, exerciseName: ex?.name ?? "Esercizio", note: log.note, loggedAt: log.loggedAt });
+        }
+      }
+    }
+    return results.sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime()).slice(0, 4);
   }, [clients]);
 
   // Piani in scadenza: scheda attiva a tempo che sta per finire — prepara la prossima
@@ -716,6 +734,45 @@ export default function DashboardPage() {
                   <p className="text-xs font-bold" style={{ color: "#fbbf24" }}>{s.weight}kg → {s.suggested}kg</p>
                   <p className="text-xs" style={{ color: "rgba(251,191,36,0.6)" }}>3 sett. stabile</p>
                 </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Note da monitorare ───────────────────────────────────────────── */}
+      {painFlagAlerts.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.2)" }}>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <ShieldAlert size={14} style={{ color: "#f87171" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Note da monitorare
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+              style={{ background: "rgba(220,38,38,0.18)", color: "#f87171" }}>
+              {painFlagAlerts.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
+              possibili segnali nei log recenti
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            {painFlagAlerts.map((p, i) => (
+              <Link key={i} href={`/dashboard/clienti/${p.clientId}`}
+                className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                  style={{ background: "rgba(220,38,38,0.12)", color: "#f87171" }}>
+                  {p.clientName.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>
+                    {p.clientName} <span style={{ color: "var(--text-dim)" }}>· {p.exerciseName}</span>
+                  </p>
+                  <p className="text-xs truncate" style={{ color: "rgba(248,113,113,0.75)" }}>&ldquo;{p.note}&rdquo;</p>
+                </div>
+                <span className="text-xs flex-shrink-0" style={{ color: "var(--text-dim)" }}>
+                  {new Date(p.loggedAt).toLocaleDateString("it-IT", { day: "2-digit", month: "short" })}
+                </span>
               </Link>
             ))}
           </div>
