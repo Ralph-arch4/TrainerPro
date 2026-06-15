@@ -117,6 +117,54 @@ function formatCalories(calories: number, caloriesMax?: number): string {
   return `${calories} kcal`;
 }
 
+// Generative cover art per scheda — emblema unico derivato dall'id del piano
+function planArtSeed(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function PlanCoverArt({ seed }: { seed: string }) {
+  const h = planArtSeed(seed);
+  const hue = h % 360;
+  const hue2 = (hue + 38 + (h % 60)) % 360;
+  const c1 = `hsl(${hue} 72% 54%)`;
+  const c2 = `hsl(${hue2} 68% 46%)`;
+  const variant = h % 4;
+  return (
+    <div className="w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden relative"
+      style={{ background: `linear-gradient(135deg, hsl(${hue} 50% 13%), hsl(${hue2} 50% 8%))`, border: "1px solid rgba(255,255,255,0.06)" }}>
+      <svg width="48" height="48" viewBox="0 0 48 48" className="absolute inset-0">
+        {variant === 0 && (
+          <>
+            <circle cx="13" cy="15" r="17" fill={c1} opacity="0.55" />
+            <circle cx="35" cy="35" r="13" fill={c2} opacity="0.65" />
+          </>
+        )}
+        {variant === 1 && (
+          <g transform="rotate(-24 24 24)" opacity="0.6">
+            <rect x="-12" y="4" width="72" height="9" fill={c1} />
+            <rect x="-12" y="26" width="72" height="9" fill={c2} />
+          </g>
+        )}
+        {variant === 2 && (
+          <>
+            <polygon points="24,3 46,45 2,45" fill={c1} opacity="0.5" />
+            <circle cx="24" cy="31" r="10" fill={c2} opacity="0.75" />
+          </>
+        )}
+        {variant === 3 && (
+          <g opacity="0.7">
+            <circle cx="24" cy="24" r="20" fill="none" stroke={c1} strokeWidth="3" />
+            <circle cx="24" cy="24" r="11" fill="none" stroke={c2} strokeWidth="3" />
+            <circle cx="24" cy="24" r="3" fill={c1} />
+          </g>
+        )}
+      </svg>
+    </div>
+  );
+}
+
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -1112,7 +1160,8 @@ export default function ClientDetailPage() {
                 return (
                   <div key={wp.id} className="card-luxury rounded-2xl p-5">
                     {/* Header row */}
-                    <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-start justify-between mb-3 gap-3">
+                      <PlanCoverArt seed={wp.id} />
                       <div className="flex-1 min-w-0 pr-3">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-semibold" style={{ color: "var(--text)" }}>{wp.name}</p>
