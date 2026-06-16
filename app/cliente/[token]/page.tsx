@@ -868,6 +868,52 @@ function TrainerNotificationBanner({ trainerName }: { trainerName: string }) {
   );
 }
 
+// ── Prima Consegna del Piano ─────────────────────────────────────────────────
+function WelcomePlanDelivery({ trainerName, planName, daysPerWeek, totalWeeks, onAccept }: {
+  trainerName: string; planName: string; daysPerWeek: number; totalWeeks: number; onAccept: () => void;
+}) {
+  const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(5,5,5,0.97)", backdropFilter: "blur(12px)" }}>
+      <div className="max-w-sm w-full text-center fade-in">
+        <div className="relative inline-flex mb-6">
+          <div className="w-20 h-20 rounded-full flex items-center justify-center text-xl font-black"
+            style={{
+              background: "linear-gradient(135deg,rgba(201,168,76,0.22),rgba(201,168,76,0.06))",
+              border: "2px solid rgba(201,168,76,0.42)",
+              boxShadow: "0 0 40px rgba(201,168,76,0.2), 0 0 80px rgba(201,168,76,0.08)",
+              color: "#c9a84c",
+            }}>
+            {initials}
+          </div>
+          <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center pulse-glow"
+            style={{ background: "#22c55e", border: "2px solid #050505", boxShadow: "0 0 8px rgba(34,197,94,0.7)" }} />
+        </div>
+        <p className="text-xs uppercase tracking-[0.22em] mb-1" style={{ color: "var(--text-faint)" }}>
+          Consegna personale da
+        </p>
+        <p className="text-lg font-black mb-5" style={{ color: "#c9a84c", fontStyle: "italic", fontFamily: "Georgia,'Times New Roman',serif" }}>
+          {trainerName}
+        </p>
+        <h2 className="text-2xl font-black mb-2" style={{ color: "var(--text)" }}>{planName}</h2>
+        <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
+          {daysPerWeek} giorni/settimana{totalWeeks > 0 ? ` · ${totalWeeks} settimane` : " · piano continuo"}
+        </p>
+        <p className="text-sm leading-relaxed mb-8 px-2" style={{ color: "var(--text-dim)", fontStyle: "italic" }}>
+          &ldquo;Ho preparato questo piano per te con attenzione. Ogni esercizio, ogni serie, ogni riposo — tutto studiato per farti crescere. Fidati del processo.&rdquo;
+        </p>
+        <button onClick={onAccept}
+          className="w-full py-4 rounded-2xl font-black text-base transition-all active:scale-95 accent-btn"
+          style={{ boxShadow: "0 0 32px rgba(229,50,50,0.25), 0 4px 16px rgba(0,0,0,0.4)", letterSpacing: "0.04em" }}>
+          Comincia il percorso
+        </button>
+        <p className="text-xs mt-4" style={{ color: "var(--text-faint)" }}>Il tuo piano ti aspetta</p>
+      </div>
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -883,6 +929,7 @@ export default function ClientPortalPage() {
   const reactionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [personalRecord, setPersonalRecord] = useState<{ exerciseName: string; newWeight: number; prevWeight: number } | null>(null);
   const prTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   // Fitness Scan state
   const [scans, setScans] = useState<ClientScan[]>([]);
@@ -1002,6 +1049,10 @@ export default function ClientPortalPage() {
         if (data.diets) setDiets(data.diets as DietData[]);
         if (data.trainer_name) setTrainerName(data.trainer_name as string);
 
+        if (typeof window !== "undefined" && !localStorage.getItem(`tp_welcomed_${token}`)) {
+          setShowWelcome(true);
+        }
+
       } catch {
         setError("Errore nel caricamento. Riprova.");
       } finally {
@@ -1052,6 +1103,11 @@ export default function ClientPortalPage() {
       setLogs(snapshot);
       setSaveError(true);
     }
+  }
+
+  function acceptWelcome() {
+    if (typeof window !== "undefined") localStorage.setItem(`tp_welcomed_${token}`, "1");
+    setShowWelcome(false);
   }
 
   function copyLink() {
@@ -1207,6 +1263,17 @@ export default function ClientPortalPage() {
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+
+      {/* ── Prima consegna del piano ──────────────────────────────────────────── */}
+      {showWelcome && (
+        <WelcomePlanDelivery
+          trainerName={trainerName}
+          planName={plan.name}
+          daysPerWeek={plan.days_per_week}
+          totalWeeks={plan.total_weeks}
+          onAccept={acceptWelcome}
+        />
+      )}
 
       {/* ── Top bar ──────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-40 border-b glass-dark" style={{ borderColor: "rgba(201,168,76,0.14)" }}>
