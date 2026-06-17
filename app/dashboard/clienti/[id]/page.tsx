@@ -760,6 +760,43 @@ export default function ClientDetailPage() {
     return acc + wp.logs.filter((l) => new Date(l.loggedAt).getTime() > twoWeeksAgo).length;
   }, 0);
 
+  // ── Weekly Volume Analysis: sessions per week for last 6 weeks ──
+  const volumeAnalysis = useMemo(() => {
+    const now = Date.now();
+    const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
+    if (allLogs.length < 2) return null;
+
+    const weeks = Array.from({ length: 6 }, (_, i) => {
+      const wAgo = 5 - i;
+      const from = now - (wAgo + 1) * 7 * 86400000;
+      const to = now - wAgo * 7 * 86400000;
+      const wLogs = allLogs.filter(l => { const t = new Date(l.loggedAt).getTime(); return t > from && t <= to; });
+      const sessions = new Set(wLogs.map(l => new Date(l.loggedAt).toDateString())).size;
+      const totalWeight = Math.round(wLogs.reduce((s, l) => s + (l.weight ?? 0), 0));
+      return { sessions, totalWeight, logCount: wLogs.length };
+    });
+
+    const maxSessions = Math.max(...weeks.map(w => w.sessions), 1);
+    const current = weeks[5];
+    const prev = weeks[4];
+    const trend = prev.sessions > 0
+      ? Math.round(((current.sessions - prev.sessions) / prev.sessions) * 100)
+      : current.sessions > 0 ? 100 : 0;
+
+    const avgSessions = +(weeks.reduce((s, w) => s + w.sessions, 0) / 6).toFixed(1);
+    const activePlan = client.workoutPlans.find(p => p.active);
+    const target = activePlan?.daysPerWeek ?? 3;
+    let insight: string;
+    if (current.sessions === 0 && prev.sessions > 0) insight = "Nessuna sessione questa settimana";
+    else if (trend > 20) insight = `Volume in crescita — ${current.sessions} sessioni vs ${prev.sessions} la scorsa`;
+    else if (trend < -30) insight = `Calo del ${Math.abs(trend)}% — verifica la motivazione`;
+    else if (avgSessions >= target) insight = `Costanza eccellente — media ${avgSessions} sessioni/sett`;
+    else insight = `Volume stabile — media ${avgSessions} sessioni/sett`;
+
+    const totalWeightMoved = weeks.reduce((s, w) => s + w.totalWeight, 0);
+    return { weeks, maxSessions, trend, insight, current, prev, avgSessions, totalWeightMoved, target };
+  }, [client]);
+
   // ── Smart priority brief: single highest-priority action for this client ──
   const priorityBrief = useMemo(() => {
     if (client.status !== "attivo") return null;
@@ -988,6 +1025,58 @@ export default function ClientDetailPage() {
                 {activePhase.targetCalories && (
                   <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: "var(--surface)", color: "var(--text-muted)" }}>
                     {activePhase.targetCalories} kcal target
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {volumeAnalysis && (
+            <div className="card-luxury rounded-2xl p-5 sm:col-span-2">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <BarChart2 size={14} style={{ color: "var(--accent)" }} />
+                  <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Volume Settimanale</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  {volumeAnalysis.trend !== 0 && (
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1"
+                      style={{
+                        background: volumeAnalysis.trend > 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
+                        color: volumeAnalysis.trend > 0 ? "#22c55e" : "#ef4444",
+                        border: `1px solid ${volumeAnalysis.trend > 0 ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}`,
+                      }}>
+                      {volumeAnalysis.trend > 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                      {volumeAnalysis.trend > 0 ? "+" : ""}{volumeAnalysis.trend}%
+                    </span>
+                  )}
+                  <span className="text-xs" style={{ color: "var(--text-dim)" }}>6 settimane</span>
+                </div>
+              </div>
+              <div className="flex items-end gap-1.5" style={{ height: 48 }}>
+                {volumeAnalysis.weeks.map((w, i) => {
+                  const h = Math.max(4, Math.round((w.sessions / volumeAnalysis.maxSessions) * 44));
+                  const isLast = i === 5;
+                  const metTarget = w.sessions >= volumeAnalysis.target;
+                  const color = w.sessions === 0 ? "rgba(255,255,255,0.06)"
+                    : metTarget ? "#22c55e"
+                    : isLast ? "var(--accent)" : "rgba(255,107,43,0.4)";
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <div className="w-full rounded-md transition-all"
+                        style={{ height: h, background: color, minHeight: 4 }} />
+                      <span className="text-[9px] font-bold" style={{ color: isLast ? "var(--text)" : "var(--text-dim)" }}>
+                        {w.sessions > 0 ? w.sessions : "-"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>{volumeAnalysis.insight}</p>
+                {volumeAnalysis.totalWeightMoved > 0 && (
+                  <span className="text-xs font-medium" style={{ color: "var(--text-dim)" }}>
+                    {(volumeAnalysis.totalWeightMoved / 1000).toFixed(1)}t sollevate
                   </span>
                 )}
               </div>
