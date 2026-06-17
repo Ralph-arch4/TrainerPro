@@ -1,6 +1,7 @@
 ﻿"use client";
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import Reveal from "@/components/motion/Reveal";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { dbClients } from "@/lib/db";
@@ -296,7 +297,7 @@ function ClientiPageInner() {
 
       {/* Client grid */}
       <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filtered.map((client) => {
+        {filtered.map((client, i) => {
           const riskDays = getRiskDays(client);
           const forma = getFormaScore(client);
           const birthdayInfo = getBirthdayStatus(client);
@@ -304,7 +305,8 @@ function ClientiPageInner() {
           const progressionReady = getProgressionReady(client);
           const hue = clientHue(client.name);
           return (
-          <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
+          <Reveal key={client.id} delay={Math.min(i, 8) * 0.06}>
+          <Link href={`/dashboard/clienti/${client.id}`}
             className="card-luxury rounded-2xl p-5 transition-all group block"
             style={{ borderColor: riskDays ? "rgba(239,68,68,0.25)" : birthdayInfo ? "rgba(251,191,36,0.2)" : undefined }}>
             {/* Top banner: rischio o compleanno */}
@@ -436,6 +438,7 @@ function ClientiPageInner() {
               </div>
             )}
           </Link>
+          </Reveal>
           );
         })}
       </div>

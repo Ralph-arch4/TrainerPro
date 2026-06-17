@@ -1,6 +1,8 @@
 ﻿"use client";
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useParams } from "next/navigation";
+import { EASE } from "@/components/motion";
 import { createClient } from "@/lib/supabase/client";
 import { dbExerciseLogs } from "@/lib/db";
 import WorkoutLogbook from "@/components/WorkoutLogbook";
@@ -137,6 +139,14 @@ export default function PublicSchedaPage() {
   const [trainerName, setTrainerName] = useState("Trainer");
   const [tab, setTab] = useState<Tab>("allenamento");
   const [saveError, setSaveError] = useState(false);
+
+  const prefersReduced = useReducedMotion();
+  const tabVariants = {
+    initial: { opacity: 0, y: prefersReduced ? 0 : 8 },
+    animate: { opacity: 1, y: 0 },
+    exit:    { opacity: 0, y: prefersReduced ? 0 : -8 },
+  };
+  const tabTransition = { duration: prefersReduced ? 0.01 : 0.25, ease: EASE };
 
   useEffect(() => {
     async function load() {
@@ -317,8 +327,8 @@ export default function PublicSchedaPage() {
             <button key={key} onClick={() => setTab(key)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0"
               style={{
-                background: tab === key ? "rgba(255,107,43,0.12)" : "var(--surface-sm)",
-                border: `1px solid ${tab === key ? "rgba(255,107,43,0.3)" : "var(--surface-md)"}`,
+                background: tab === key ? "rgba(201,168,76,0.12)" : "var(--surface-sm)",
+                border: `1px solid ${tab === key ? "rgba(201,168,76,0.3)" : "var(--surface-md)"}`,
                 color: tab === key ? "var(--accent-light)" : "var(--text-muted)",
               }}>
               <Icon size={14} />
@@ -327,9 +337,11 @@ export default function PublicSchedaPage() {
           ))}
         </div>
 
+        <AnimatePresence mode="wait">
+
         {/* ALLENAMENTO */}
         {tab === "allenamento" && (
-          <div>
+          <motion.div key="allenamento" variants={tabVariants} initial="initial" animate="animate" exit="exit" transition={tabTransition}>
             {saveError && (
               <div className="mb-4 p-3 rounded-xl text-sm flex items-center justify-between gap-3"
                 style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "rgba(239,68,68,0.9)" }}>
@@ -338,7 +350,7 @@ export default function PublicSchedaPage() {
               </div>
             )}
             <div className="mb-5 p-3 rounded-xl text-sm flex items-start gap-2"
-              style={{ background: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.12)", color: "var(--text-muted)" }}>
+              style={{ background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.12)", color: "var(--text-muted)" }}>
               <span className="text-base leading-none mt-0.5">💡</span>
               <span>
                 <strong style={{ color: "var(--accent-light)" }}>Come usare la scheda:</strong>{" "}
@@ -347,8 +359,8 @@ export default function PublicSchedaPage() {
             </div>
             {plan.exercises.length === 0 ? (
               <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
-                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(255,107,43,0.08)" }}>
-                  <Dumbbell size={22} style={{ color: "rgba(255,107,43,0.4)" }} />
+                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(201,168,76,0.08)" }}>
+                  <Dumbbell size={22} style={{ color: "rgba(201,168,76,0.4)" }} />
                 </div>
                 <p className="font-semibold text-sm mb-1" style={{ color: "var(--text-muted)" }}>Scheda in preparazione</p>
                 <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Il tuo trainer sta costruendo la tua scheda personalizzata. Torni tra poco.</p>
@@ -365,16 +377,16 @@ export default function PublicSchedaPage() {
                 onUpsertLog={handleUpsertLog}
               />
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* DIETA */}
         {tab === "dieta" && (
-          <div>
+          <motion.div key="dieta" variants={tabVariants} initial="initial" animate="animate" exit="exit" transition={tabTransition}>
             {diets.length === 0 ? (
               <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
-                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(255,107,43,0.08)" }}>
-                  <UtensilsCrossed size={22} style={{ color: "rgba(255,107,43,0.4)" }} />
+                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(201,168,76,0.08)" }}>
+                  <UtensilsCrossed size={22} style={{ color: "rgba(201,168,76,0.4)" }} />
                 </div>
                 <p className="font-semibold text-sm mb-1" style={{ color: "var(--text-muted)" }}>Piano alimentare in preparazione</p>
                 <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Il tuo piano alimentare personalizzato apparirà qui. Il trainer lo sta preparando su misura per i tuoi obiettivi.</p>
@@ -397,8 +409,8 @@ export default function PublicSchedaPage() {
                     max && max > min ? `${min}–${max}${unit}` : `${min}${unit}`;
 
                   return (
-                    <div key={diet.id} className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(255,107,43,0.15)" }}>
-                      <div className="p-5" style={{ background: "rgba(255,107,43,0.04)" }}>
+                    <div key={diet.id} className="rounded-2xl overflow-hidden" style={{ border: "1px solid rgba(201,168,76,0.15)" }}>
+                      <div className="p-5" style={{ background: "rgba(201,168,76,0.04)" }}>
                         <div className="flex items-start justify-between mb-4">
                           <div>
                             <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>{diet.name}</h2>
@@ -426,12 +438,12 @@ export default function PublicSchedaPage() {
                         </div>
                       </div>
                       {meals.length > 0 && (
-                        <div className="divide-y" style={{ borderTop: "1px solid rgba(255,107,43,0.1)", borderColor: "rgba(255,107,43,0.08)" }}>
+                        <div className="divide-y" style={{ borderTop: "1px solid rgba(201,168,76,0.1)", borderColor: "rgba(201,168,76,0.08)" }}>
                           {meals.map((meal, mi) => (
                             <div key={meal.id} className="p-4">
                               <div className="flex items-center gap-2 mb-3">
                                 <span className="w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center flex-shrink-0"
-                                  style={{ background: "rgba(255,107,43,0.15)", color: "var(--accent-light)" }}>{mi + 1}</span>
+                                  style={{ background: "rgba(201,168,76,0.15)", color: "var(--accent-light)" }}>{mi + 1}</span>
                                 <div className="flex items-baseline gap-2">
                                   <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>{meal.name}</p>
                                   {meal.time && <span className="text-xs" style={{ color: "var(--text-dim)" }}>{meal.time}</span>}
@@ -461,16 +473,16 @@ export default function PublicSchedaPage() {
                 })}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* INTEGRATORI */}
         {tab === "integratori" && (
-          <div>
+          <motion.div key="integratori" variants={tabVariants} initial="initial" animate="animate" exit="exit" transition={tabTransition}>
             {(!plan.supplements || plan.supplements.length === 0) ? (
               <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
-                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(255,107,43,0.08)" }}>
-                  <ShoppingBag size={22} style={{ color: "rgba(255,107,43,0.4)" }} />
+                <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(201,168,76,0.08)" }}>
+                  <ShoppingBag size={22} style={{ color: "rgba(201,168,76,0.4)" }} />
                 </div>
                 <p className="font-semibold text-sm mb-1" style={{ color: "var(--text-muted)" }}>Integratori in arrivo</p>
                 <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Il tuo trainer aggiungerà presto i consigli sugli integratori più adatti al tuo programma.</p>
@@ -487,8 +499,10 @@ export default function PublicSchedaPage() {
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
         )}
+
+        </AnimatePresence>
       </div>
 
       <TrainerSeal trainerName={trainerName} />

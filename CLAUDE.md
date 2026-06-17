@@ -71,8 +71,8 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 Free: 1 client | Personal Coach (EUR29/mo): 15 | Fitness Master: unlimited
 
 ### Palette
-Accent: `#FF6B2B` | Light: `#FF9A6C` | Dark: `#CC4A0A` | BG: `#0A0A0A`
-Classes: `.accent-text`, `.accent-btn`, `.glass`, `.glass-dark`, `.card-luxury`, `.fade-in`
+Accent: `#C9A84C` (gold) | Light: `#E8C96B` | Dark: `#8B6820` | BG: `#080808`
+Classes: `.accent-text`, `.accent-btn`, `.glass`, `.glass-dark`, `.card-luxury`, `.fade-in`, `.outline-btn`, `.scrollbar-hide`
 
 ---
 
@@ -110,6 +110,7 @@ reps: JSON.stringify([{r:"12",w:"80"},{r:"10",w:"75"}])
 - Editing: always Edit (never sed/awk/echo redirect)
 - Build check: `npx next build 2>&1 | tail -30` in background
 - Git: `pull --rebase` before push if rejected
+- PowerShell and Bash pre-approved: `.claude/settings.json` allows `Bash(*)` and `PowerShell(*)` — run terminal commands without asking permission
 
 ---
 
@@ -168,4 +169,4 @@ Fan-out only when genuinely multi-perspective; use Glob/Grep directly for single
 
 ---
 
-*Last updated: 2026-04-12 -- Session: Token optimization + CLAUDE.md v3 compression*
+*Last updated: 2026-06-16 -- Session: Phase 1 motion toolkit + mobile touch-target fixes + palette correction*

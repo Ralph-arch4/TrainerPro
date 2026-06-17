@@ -11,7 +11,11 @@
     { "file": "05-clienti.png",    "label": "Clienti",      "auth": true  },
     { "file": "06-fasi.png",       "label": "Fasi",         "auth": true  },
     { "file": "07-diete.png",      "label": "Diete",        "auth": true  },
-    { "file": "08-intake.png",     "label": "Intake",       "auth": true  }
+    { "file": "08-intake.png",              "label": "Intake",                                    "auth": true  },
+    { "file": "09-cliente-portal-mobile.png",  "label": "Client Portal (mobile, /cliente/[token])",  "auth": false },
+    { "file": "10-cliente-portal-desktop.png", "label": "Client Portal (desktop, /cliente/[token])", "auth": false },
+    { "file": "11-scheda-public-mobile.png",   "label": "Public Scheda (mobile, /scheda/[token])",   "auth": false },
+    { "file": "12-scheda-public-desktop.png",  "label": "Public Scheda (desktop, /scheda/[token])",  "auth": false }
   ],
   "checklists": {
     "Landing": [
@@ -64,6 +68,20 @@
       "Form Intake title visible",
       "Link generation or form list present",
       "Dark styled layout"
+    ],
+    "Client Portal (mobile, /cliente/[token])": [
+      "Tab switch (Scheda/Record/Dieta/Integratori/Fitness Scan) shows fade+slide transition, not instant snap",
+      "RPE buttons (6-10) in workout logbook are at least ~36px and easy to tap with a thumb",
+      "Diet tab: macro pills (P/C/G) visible per meal without scrolling or expanding",
+      "Tabs row scrolls horizontally without a visible scrollbar",
+      "Gold accent color (#C9A84C) throughout, no stray orange"
+    ],
+    "Public Scheda (mobile, /scheda/[token])": [
+      "Tab switch (Scheda/Dieta/Integratori) shows fade+slide transition, not instant snap",
+      "RPE buttons (6-10) in workout logbook are at least ~36px and easy to tap with a thumb",
+      "Tabs row scrolls horizontally without a visible scrollbar",
+      "Gold accent color (#C9A84C) throughout — orange tab colors now fixed",
+      "TrainerSeal renders correctly at bottom"
     ]
   }
 }

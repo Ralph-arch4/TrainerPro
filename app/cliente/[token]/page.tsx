@@ -1,5 +1,6 @@
 ﻿"use client";
 import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { dbExerciseLogs } from "@/lib/db";
@@ -8,6 +9,7 @@ import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
 import { Dumbbell, UtensilsCrossed, ShoppingBag, Loader2, AlertCircle, Copy, Check, Zap, Trophy, Flame, ChevronDown, ChevronUp, Calendar, MessageSquare, Scan, ShieldCheck, Brain, Sparkles, Trash2, Upload } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import type { FitnessScanAnalysis } from "@/lib/db";
+import { EASE } from "@/components/motion";
 
 // ── Meal library (Italian, based on sports nutrition guidelines) ─────────────
 interface MealTpl { name: string; ingredients: string[]; pro: number; cho: number; fat: number; kcal: number; }
@@ -122,7 +124,7 @@ function WeeklyDietPlan({ calories, protein, carbs, fat }: { calories: number; p
             <div key={slot} className="rounded-2xl overflow-hidden"
               style={{ border: "1px solid var(--border)", background: "var(--surface-xs)" }}>
               {/* Header */}
-              <button className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all hover:bg-white/[0.03]"
+              <button className="w-full flex flex-wrap items-center gap-3 px-4 py-3 text-left transition-all hover:bg-white/[0.03]"
                 onClick={() => setExpanded(isOpen ? null : key)}>
                 <span className="text-lg">{MEAL_ICONS[slot]}</span>
                 <div className="flex-1 min-w-0">
@@ -132,7 +134,7 @@ function WeeklyDietPlan({ calories, protein, carbs, fat }: { calories: number; p
                   <p className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>{meal.name}</p>
                 </div>
                 {/* Macro pills */}
-                <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0">
+                <div className="flex items-center gap-1.5 flex-shrink-0 basis-full sm:basis-auto justify-end sm:justify-start order-3 sm:order-none mt-1 sm:mt-0">
                   {[
                     { v: meal.pro,  c: "#a78bfa", l: "P" },
                     { v: meal.cho,  c: "#38bdf8", l: "C" },
@@ -942,6 +944,14 @@ export default function ClientPortalPage() {
   const [scanUploadError, setScanUploadError] = useState<string | null>(null);
   const [scanUploadSuccess, setScanUploadSuccess] = useState(false);
 
+  const prefersReduced = useReducedMotion();
+  const tabVariants = {
+    initial: { opacity: 0, y: prefersReduced ? 0 : 8 },
+    animate: { opacity: 1, y: 0 },
+    exit:    { opacity: 0, y: prefersReduced ? 0 : -8 },
+  };
+  const tabTransition = { duration: prefersReduced ? 0.01 : 0.25, ease: EASE };
+
   async function loadScans(force = false) {
     if ((scansLoaded && !force) || !token || scansLoading) return;
     setScansLoading(true);
@@ -1534,6 +1544,8 @@ export default function ClientPortalPage() {
           ))}
         </div>
 
+        <AnimatePresence mode="wait">
+
         {/* ── RECORD tab ──────────────────────────────────────────────────────── */}
         {tab === "record" && (() => {
           // ── Personal Records ──────────────────────────────────────────────
@@ -1581,7 +1593,7 @@ export default function ClientPortalPage() {
           const firstDow = (new Date(heatDays[0]).getDay() + 6) % 7; // Monday=0
 
           return (
-            <div className="space-y-5">
+            <motion.div key="record" className="space-y-5" variants={tabVariants} initial="initial" animate="animate" exit="exit" transition={tabTransition}>
               {/* Heatmap */}
               <div className="rounded-2xl p-4" style={{ border: "1px solid var(--border)", background: "var(--surface-xs)" }}>
                 <div className="flex items-center justify-between mb-3">
@@ -1673,13 +1685,13 @@ export default function ClientPortalPage() {
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           );
         })()}
 
         {/* ── ALLENAMENTO tab ─────────────────────────────────────────────────── */}
         {tab === "allenamento" && (
-          <div>
+          <motion.div key="allenamento" variants={tabVariants} initial="initial" animate="animate" exit="exit" transition={tabTransition}>
             {saveError && (
               <div className="mb-4 p-3 rounded-xl text-sm flex items-center justify-between gap-3"
                 style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "rgba(239,68,68,0.9)" }}>
@@ -1714,12 +1726,12 @@ export default function ClientPortalPage() {
                 onUpsertLog={handleUpsertLog}
               />
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* ── DIETA tab ───────────────────────────────────────────────────────── */}
         {tab === "dieta" && (
-          <div>
+          <motion.div key="dieta" variants={tabVariants} initial="initial" animate="animate" exit="exit" transition={tabTransition}>
             {diets.length === 0 ? (
               <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
                 <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(201,168,76,0.08)" }}>
@@ -1834,7 +1846,7 @@ export default function ClientPortalPage() {
                                         {item.gramsMax && item.gramsMax > item.grams ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
                                       </span>
                                       {(item.protein || item.carbs || item.fat) && (
-                                        <div className="hidden sm:flex items-center gap-2 text-xs flex-shrink-0" style={{ color: "var(--text-dim)" }}>
+                                        <div className="flex items-center gap-2 text-xs flex-shrink-0" style={{ color: "var(--text-dim)" }}>
                                           {item.protein ? <span style={{ color: "#a78bfa" }}>P {item.protein}g</span> : null}
                                           {item.carbs ? <span style={{ color: "#38bdf8" }}>C {item.carbs}g</span> : null}
                                           {item.fat ? <span style={{ color: "#fbbf24" }}>G {item.fat}g</span> : null}
@@ -1853,12 +1865,12 @@ export default function ClientPortalPage() {
                 })}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* ── INTEGRATORI tab ─────────────────────────────────────────────────── */}
         {tab === "integratori" && (
-          <div>
+          <motion.div key="integratori" variants={tabVariants} initial="initial" animate="animate" exit="exit" transition={tabTransition}>
             {(!plan.supplements || plan.supplements.length === 0) ? (
               <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
                 <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(201,168,76,0.08)" }}>
@@ -1879,12 +1891,12 @@ export default function ClientPortalPage() {
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* ── FITNESS SCAN tab ────────────────────────────────────────────────── */}
         {tab === "scan" && (
-          <div className="pb-2">
+          <motion.div key="scan" className="pb-2" variants={tabVariants} initial="initial" animate="animate" exit="exit" transition={tabTransition}>
             {/* Privacy header */}
             <div className="rounded-2xl p-4 mb-4 flex items-start gap-3"
               style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.18)" }}>
@@ -2144,9 +2156,10 @@ export default function ClientPortalPage() {
                 </div>
               );
             })()}
-          </div>
+          </motion.div>
         )}
 
+        </AnimatePresence>
       </div>
 
       {/* ── Footer ───────────────────────────────────────────────────────────── */}

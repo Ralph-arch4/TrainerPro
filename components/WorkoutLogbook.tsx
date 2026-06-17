@@ -247,7 +247,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
                 <div className="flex-1 rounded-xl overflow-hidden"
                   style={{ background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.2)" }}>
                   <p className="text-center pt-1.5 text-xs font-bold" style={{ color: "var(--accent)", fontSize: "0.62rem" }}>RPE</p>
-                  <div className="flex justify-center flex-wrap gap-0.5 px-1 pb-1.5 pt-0.5">
+                  <div className="flex justify-center flex-wrap gap-1.5 px-1 pb-1.5 pt-0.5">
                     {[6,7,8,9,10].map(v => {
                       const active = data[i]?.rpe === String(v);
                       return (
@@ -259,9 +259,9 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
                               onStartTimer(v <= 6 ? 90 : 120, exercise.name);
                             }
                           }}
-                          className="rounded-lg text-xs font-black transition-all"
+                          className="rounded-lg text-xs font-black transition-all flex items-center justify-center"
                           style={{
-                            width: "1.7rem", height: "1.7rem",
+                            width: "2.25rem", height: "2.25rem",
                             background: active ? "rgba(201,168,76,0.3)" : "rgba(201,168,76,0.06)",
                             border: `1px solid ${active ? "rgba(201,168,76,0.8)" : "rgba(201,168,76,0.18)"}`,
                             color: active ? "var(--accent-light)" : "rgba(201,168,76,0.45)",

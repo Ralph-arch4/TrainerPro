@@ -1,6 +1,7 @@
 "use client";
 import { useMemo } from "react";
 import Link from "next/link";
+import Reveal from "@/components/motion/Reveal";
 import { useAppStore } from "@/lib/store";
 import { showToast } from "@/components/Toast";
 import {
@@ -547,8 +548,8 @@ export default function DashboardPage() {
 
       {/* ── Stats grid ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
-        {stats.map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="card-luxury rounded-2xl p-4 lg:p-5">
+        {stats.map(({ label, value, icon: Icon, color }, i) => (
+          <Reveal key={label} delay={0.05 + i * 0.08} className="card-luxury rounded-2xl p-4 lg:p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>{label}</p>
@@ -559,7 +560,7 @@ export default function DashboardPage() {
                 <Icon size={16} style={{ color }} />
               </div>
             </div>
-          </div>
+          </Reveal>
         ))}
       </div>
 
