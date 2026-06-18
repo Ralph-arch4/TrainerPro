@@ -878,7 +878,7 @@ export default function ClientDetailPage() {
   }, [client]);
 
   return (
-    <div className="p-4 pt-20 lg:pt-8 lg:p-8 fade-in">
+    <div className="p-4 pt-4 lg:pt-8 lg:p-8 fade-in">
       {/* Back + header */}
       <button onClick={() => router.push("/dashboard/clienti")}
         className="flex items-center gap-2 text-sm mb-5 hover:opacity-80 transition-all"

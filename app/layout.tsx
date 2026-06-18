@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme";
@@ -15,6 +15,15 @@ export const metadata: Metadata = {
   description: "Il tuo studio professionale. Sempre con te.",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#080808",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,7 +34,7 @@ export default function RootLayout({
       lang="it"
       className={`${dmSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-dvh flex flex-col">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

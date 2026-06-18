@@ -364,6 +364,18 @@ html, body {
   to   { transform-origin: center; transform: rotate(360deg); }
 }
 
+/* ── DASHBOARD MAIN — safe-area aware, responsive ────────────────────────────── */
+.dashboard-main {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (min-width: 1024px) {
+  .dashboard-main {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
 .nav-ghost-link { color: var(--text-muted); }
 .nav-ghost-link:hover { color: var(--text); }
 

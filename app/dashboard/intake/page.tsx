@@ -87,7 +87,7 @@ export default function IntakePage() {
   const submitted = forms.filter((f) => f.status === "submitted");
 
   return (
-    <div className="p-4 pt-20 lg:pt-8 lg:p-8 fade-in">
+    <div className="p-4 pt-4 lg:pt-8 lg:p-8 fade-in">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-start justify-between gap-3 mb-1">

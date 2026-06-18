@@ -93,7 +93,8 @@ export default function AppNav() {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 glass-dark">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 glass-dark"
+        style={{ height: "calc(env(safe-area-inset-top, 0px) + 3.5rem)", paddingTop: "env(safe-area-inset-top, 0px)" }}>
         <div className="flex items-center gap-2">
           <Dumbbell size={20} style={{ color: "var(--accent)" }} />
           <span className="font-bold accent-text">REC Studio</span>
