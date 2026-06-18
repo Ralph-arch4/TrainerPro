@@ -358,6 +358,12 @@ html, body {
   100% { opacity: 0.7; r: 1.8; }
 }
 
+/* ── TRAINER PROFESSIONAL SEAL ──────────────────────────────────────────────── */
+@keyframes sealRotate {
+  from { transform-origin: center; transform: rotate(0deg); }
+  to   { transform-origin: center; transform: rotate(360deg); }
+}
+
 .nav-ghost-link { color: var(--text-muted); }
 .nav-ghost-link:hover { color: var(--text); }
 

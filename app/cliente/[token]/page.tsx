@@ -296,6 +296,76 @@ function SupplementClientCard({ item }: { item: SupplementItem }) {
   );
 }
 
+function TrainerSeal({ initials, level }: { initials: string; level: number }) {
+  const size = 78;
+  const cx = size / 2;
+  const cy = size / 2;
+  const outerR = 36;
+  const notchR = 30;
+  const innerR = 22;
+  const notchCount = 48;
+  const notches = Array.from({ length: notchCount }, (_, i) => {
+    const angle = (i / notchCount) * Math.PI * 2 - Math.PI / 2;
+    const r1 = notchR - 1.5;
+    const r2 = notchR + 1.5;
+    return {
+      x1: cx + Math.cos(angle) * r1,
+      y1: cy + Math.sin(angle) * r1,
+      x2: cx + Math.cos(angle) * r2,
+      y2: cy + Math.sin(angle) * r2,
+    };
+  });
+
+  return (
+    <div className="relative" style={{ width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: "absolute", inset: 0 }}>
+        <defs>
+          <linearGradient id="sealGold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#c8a84b" />
+            <stop offset="50%" stopColor="#f0d060" />
+            <stop offset="100%" stopColor="#b07828" />
+          </linearGradient>
+          <path id="sealCirclePath" fill="none"
+            d={`M ${cx},${cy - 26} A 26,26 0 1,1 ${cx - 0.01},${cy - 26}`} />
+        </defs>
+        <circle cx={cx} cy={cy} r={outerR} fill="none" stroke="rgba(201,168,76,0.12)" strokeWidth="1" />
+        <g style={{ animation: "sealRotate 30s linear infinite" }}>
+          {notches.map((n, i) => (
+            <line key={i} x1={n.x1} y1={n.y1} x2={n.x2} y2={n.y2}
+              stroke="rgba(201,168,76,0.28)" strokeWidth="0.7" />
+          ))}
+        </g>
+        <circle cx={cx} cy={cy} r={outerR} fill="none" stroke="rgba(201,168,76,0.18)" strokeWidth="0.5"
+          strokeDasharray="3 2" style={{ animation: "sealRotate 20s linear infinite reverse" }} />
+        <text fill="rgba(201,168,76,0.35)" fontSize="4.5" fontWeight="900" letterSpacing="3.2" textAnchor="middle">
+          <textPath href="#sealCirclePath" startOffset="50%">CERTIFICATO</textPath>
+        </text>
+        <circle cx={cx} cy={cy} r={innerR}
+          fill="rgba(8,8,8,0.85)" />
+        <circle cx={cx} cy={cy} r={innerR}
+          fill="url(#sealGold)" fillOpacity="0.12"
+          stroke="rgba(201,168,76,0.55)" strokeWidth="1.5" />
+        <circle cx={cx} cy={cy} r={innerR - 3}
+          fill="none" stroke="rgba(201,168,76,0.15)" strokeWidth="0.5" />
+        <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle"
+          fill="url(#sealGold)" fontSize="18" fontWeight="900" fontFamily="DM Sans, sans-serif"
+          style={{ filter: "drop-shadow(0 0 6px rgba(201,168,76,0.4))" }}>
+          {initials}
+        </text>
+      </svg>
+      <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(201,168,76,0.08)", filter: "blur(12px)", pointerEvents: "none" }} />
+      <div style={{
+        position: "absolute", bottom: 0, right: 0, width: 22, height: 22, borderRadius: "50%",
+        background: "linear-gradient(135deg,#7B2FBE,#a78bfa)", border: "2px solid var(--black)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 0 8px rgba(123,47,190,0.55)",
+      }}>
+        <span style={{ color: "#fff", fontSize: "0.55rem", fontWeight: 900, lineHeight: 1 }}>{level}</span>
+      </div>
+    </div>
+  );
+}
+
 function SignatureStroke({ name }: { name: string }) {
   // Path length is fixed at ~148; varies slightly by name length but animation still works
   const pathLen = 148;
@@ -336,9 +406,9 @@ function SignatureStroke({ name }: { name: string }) {
   );
 }
 
-function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToken, level, levelName, xpPct }: {
+function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToken, level, levelName }: {
   planName: string; trainerName: string; daysPerWeek: number; totalWeeks: number; shareToken: string;
-  level: number; levelName: string; xpPct: number;
+  level: number; levelName: string;
 }) {
   const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
   const cardNum  = shareToken.replace(/-/g, "").toUpperCase().slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
@@ -402,34 +472,7 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
             <p className="text-base font-black" style={{ color: "var(--text)", fontStyle: "italic", fontFamily: "Georgia,'Times New Roman',serif", letterSpacing: "0.02em" }}>{trainerName}</p>
             <SignatureStroke name={trainerName} />
           </div>
-          <div className="relative" style={{ width: 68, height: 68, flexShrink: 0 }}>
-            {/* XP progress ring */}
-            <svg width="68" height="68" viewBox="0 0 68 68" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
-              <defs>
-                <linearGradient id="xpRingGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#7B2FBE" />
-                  <stop offset="100%" stopColor="#a78bfa" />
-                </linearGradient>
-              </defs>
-              <circle cx="34" cy="34" r="30" fill="none" stroke="rgba(123,47,190,0.12)" strokeWidth="3.5" />
-              <circle cx="34" cy="34" r="30" fill="none" stroke="url(#xpRingGrad)" strokeWidth="3.5"
-                strokeLinecap="round"
-                strokeDasharray={`${2 * Math.PI * 30}`}
-                strokeDashoffset={`${2 * Math.PI * 30 * (1 - xpPct / 100)}`}
-                style={{ transition: "stroke-dashoffset 0.9s cubic-bezier(.4,0,.2,1)", filter: "drop-shadow(0 0 4px rgba(167,139,250,0.6))" }}
-              />
-            </svg>
-            {/* Glow */}
-            <div style={{ position: "absolute", inset: 8, borderRadius: "50%", background: "rgba(201,168,76,0.24)", filter: "blur(7px)" }} />
-            {/* Trainer initials */}
-            <div style={{ position: "absolute", inset: 8, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: "radial-gradient(circle at 38% 32%, rgba(201,168,76,0.32), rgba(8,8,8,0.9))", border: "1.5px solid rgba(201,168,76,0.55)" }}>
-              <span className="text-base font-black" style={{ color: "var(--accent)" }}>{initials}</span>
-            </div>
-            {/* Level badge */}
-            <div style={{ position: "absolute", bottom: 1, right: 1, width: 20, height: 20, borderRadius: "50%", background: "linear-gradient(135deg,#7B2FBE,#a78bfa)", border: "2px solid var(--black)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 0 8px rgba(123,47,190,0.55)" }}>
-              <span style={{ color: "#fff", fontSize: "0.55rem", fontWeight: 900, lineHeight: 1 }}>{level}</span>
-            </div>
-          </div>
+          <TrainerSeal initials={initials} level={level} />
         </div>
         <p className="text-xs mt-3 font-mono" style={{ color: "var(--text-faint)", letterSpacing: "0.16em" }}>{cardNum}</p>
       </div>
@@ -1320,7 +1363,6 @@ export default function ClientPortalPage() {
           shareToken={plan.share_token}
           level={level}
           levelName={levelName}
-          xpPct={xpPct}
         />
 
         {/* ── Stato Atleta ─────────────────────────────────────────────────── */}
