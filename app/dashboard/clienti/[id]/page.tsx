@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { dbProgressPhotos, type ProgressPhoto, dbFitnessScans, type FitnessScan, type FitnessScanAnalysis, dbFitnessScanComparisons, type FitnessScanComparison, type ComparisonAnalysis } from "@/lib/db";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
-import { Scan, Sparkles, ShieldCheck, Brain, GitCompare, TrendingDown, Minus, KeyRound, Activity as ActivityIcon, Utensils, Zap, Award, ChevronRight } from "lucide-react";
+import { Scan, Sparkles, ShieldCheck, Brain, GitCompare, TrendingDown, Minus, KeyRound, Activity as ActivityIcon, Utensils, Zap, Award, ChevronRight, Cake } from "lucide-react";
 import type { BodyFeatures } from "@/lib/cv-analysis";
 import { computeTier, TIERS, TIER_ORDER, tierDelta, type Tier } from "@/lib/tier-system";
 
@@ -877,6 +877,24 @@ export default function ClientDetailPage() {
     return msgs.slice(0, 4);
   }, [client]);
 
+  const birthdayAlert = useMemo(() => {
+    if (!client.birthDate) return null;
+    const today = new Date();
+    const bd = new Date(client.birthDate);
+    const thisYear = new Date(today.getFullYear(), bd.getMonth(), bd.getDate());
+    const nextYear = new Date(today.getFullYear() + 1, bd.getMonth(), bd.getDate());
+    const upcoming = thisYear.getTime() >= today.setHours(0, 0, 0, 0) ? thisYear : nextYear;
+    const diffDays = Math.round((upcoming.getTime() - new Date().setHours(0, 0, 0, 0)) / 86400000);
+    if (diffDays > 7) return null;
+    const age = upcoming.getFullYear() - bd.getFullYear();
+    const fn = client.name.split(" ")[0];
+    const isToday = diffDays === 0;
+    const waMsg = isToday
+      ? `Buon compleanno ${fn}! ${age} anni e una forma sempre migliore. Sono fiero del percorso che stiamo facendo insieme — oggi festeggia, te lo sei meritato!`
+      : `Ciao ${fn}! Il tuo compleanno si avvicina — ti auguro il meglio in anticipo. Ci vediamo in palestra per festeggiare con un allenamento speciale!`;
+    return { isToday, daysLeft: diffDays, age, waMsg };
+  }, [client]);
+
   return (
     <div className="p-4 pt-4 lg:pt-8 lg:p-8 fade-in">
       {/* Back + header */}
@@ -951,6 +969,48 @@ export default function ClientDetailPage() {
               Vedi schede
             </button>
           )}
+        </div>
+      )}
+
+      {/* ── Birthday Proximity Alert ─────────────────────────────────── */}
+      {birthdayAlert && (
+        <div className="mb-4 p-4 rounded-2xl relative overflow-hidden"
+          style={{
+            background: birthdayAlert.isToday
+              ? "linear-gradient(135deg, rgba(251,191,36,0.12), rgba(249,115,22,0.08))"
+              : "rgba(251,191,36,0.06)",
+            border: `1px solid ${birthdayAlert.isToday ? "rgba(251,191,36,0.4)" : "rgba(251,191,36,0.2)"}`,
+          }}>
+          {birthdayAlert.isToday && (
+            <div className="absolute top-0 right-0 w-24 h-24 opacity-[0.07] pointer-events-none"
+              style={{ background: "radial-gradient(circle, #fbbf24 0%, transparent 70%)" }} />
+          )}
+          <div className="flex items-center gap-3 relative">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: birthdayAlert.isToday ? "rgba(251,191,36,0.2)" : "rgba(251,191,36,0.1)" }}>
+              <Cake size={18} style={{ color: "#fbbf24" }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold" style={{ color: birthdayAlert.isToday ? "#fbbf24" : "var(--text)" }}>
+                {birthdayAlert.isToday
+                  ? `Buon compleanno ${client.name.split(" ")[0]}! — ${birthdayAlert.age} anni`
+                  : `Compleanno tra ${birthdayAlert.daysLeft} giorn${birthdayAlert.daysLeft === 1 ? "o" : "i"}`}
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                {birthdayAlert.isToday
+                  ? "Fai sentire al cliente che ci tieni — un messaggio di auguri fa la differenza"
+                  : `${client.name.split(" ")[0]} compie ${birthdayAlert.age} anni il ${new Date(new Date().getFullYear(), new Date(client.birthDate!).getMonth(), new Date(client.birthDate!).getDate()).toLocaleDateString("it-IT", { day: "numeric", month: "long" })}`}
+              </p>
+            </div>
+            {client.phone && (
+              <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(birthdayAlert.waMsg)}`}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold flex-shrink-0 transition-all hover:opacity-80"
+                style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.25)" }}>
+                <MessageCircle size={12} /> {birthdayAlert.isToday ? "Auguri" : "Messaggio"}
+              </a>
+            )}
+          </div>
         </div>
       )}
 
