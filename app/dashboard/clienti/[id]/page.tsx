@@ -895,6 +895,50 @@ export default function ClientDetailPage() {
     return { isToday, daysLeft: diffDays, age, waMsg };
   }, [client]);
 
+  const trainingDNA = useMemo(() => {
+    const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
+    if (allLogs.length < 5) return null;
+    const dayNames = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
+    const dayCounts = [0, 0, 0, 0, 0, 0, 0];
+    const uniqueDays = new Set<string>();
+    for (const log of allLogs) {
+      const d = new Date(log.loggedAt);
+      const dayKey = d.toDateString();
+      if (!uniqueDays.has(dayKey)) {
+        uniqueDays.add(dayKey);
+        dayCounts[(d.getDay() + 6) % 7]++;
+      }
+    }
+    const maxCount = Math.max(...dayCounts, 1);
+    const totalDays = uniqueDays.size;
+    const avg = totalDays / 7;
+    const preferred = dayCounts
+      .map((c, i) => ({ name: dayNames[i], count: c }))
+      .filter(d => d.count > avg)
+      .sort((a, b) => b.count - a.count);
+    const activePlan = client.workoutPlans.find(p => p.active);
+    const target = activePlan?.daysPerWeek ?? 3;
+    const now = Date.now();
+    const firstLog = Math.min(...allLogs.map(l => new Date(l.loggedAt).getTime()));
+    const weeksTracked = Math.max(1, Math.ceil((now - firstLog) / (7 * 86400000)));
+    let weeksOnTarget = 0;
+    for (let w = 0; w < weeksTracked; w++) {
+      const from = firstLog + w * 7 * 86400000;
+      const to = from + 7 * 86400000;
+      const uniq = new Set(allLogs
+        .filter(l => { const t = new Date(l.loggedAt).getTime(); return t >= from && t < to; })
+        .map(l => new Date(l.loggedAt).toDateString())
+      ).size;
+      if (uniq >= target) weeksOnTarget++;
+    }
+    const consistency = Math.round((weeksOnTarget / weeksTracked) * 100);
+    const actualAvg = +(totalDays / weeksTracked).toFixed(1);
+    const rhythm = preferred.length > 0
+      ? preferred.map(d => d.name).join(" - ")
+      : null;
+    return { dayCounts, dayNames, maxCount, preferred, consistency, rhythm, totalDays, weeksTracked, target, actualAvg };
+  }, [client]);
+
   return (
     <div className="p-4 pt-4 lg:pt-8 lg:p-8 fade-in">
       {/* Back + header */}
@@ -1139,6 +1183,69 @@ export default function ClientDetailPage() {
                     {(volumeAnalysis.totalWeightMoved / 1000).toFixed(1)}t sollevate
                   </span>
                 )}
+              </div>
+            </div>
+          )}
+
+          {trainingDNA && (
+            <div className="card-luxury rounded-2xl p-5 sm:col-span-2">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Zap size={14} style={{ color: "var(--accent)" }} />
+                  <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Training DNA</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                    style={{
+                      background: trainingDNA.consistency >= 70 ? "rgba(34,197,94,0.1)" : trainingDNA.consistency >= 40 ? "rgba(251,191,36,0.1)" : "rgba(239,68,68,0.1)",
+                      color: trainingDNA.consistency >= 70 ? "#22c55e" : trainingDNA.consistency >= 40 ? "#fbbf24" : "#ef4444",
+                      border: `1px solid ${trainingDNA.consistency >= 70 ? "rgba(34,197,94,0.25)" : trainingDNA.consistency >= 40 ? "rgba(251,191,36,0.25)" : "rgba(239,68,68,0.25)"}`,
+                    }}>
+                    {trainingDNA.consistency}% costanza
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-end gap-2 mb-3" style={{ height: 52 }}>
+                {trainingDNA.dayCounts.map((count, i) => {
+                  const h = Math.max(6, Math.round((count / trainingDNA.maxCount) * 46));
+                  const intensity = count / trainingDNA.maxCount;
+                  const isPreferred = trainingDNA.preferred.some(p => p.name === trainingDNA.dayNames[i]);
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                      <div className="w-full rounded-lg transition-all"
+                        style={{
+                          height: h,
+                          background: count === 0 ? "rgba(255,255,255,0.04)"
+                            : isPreferred ? `rgba(201,168,76,${0.3 + intensity * 0.7})`
+                            : `rgba(255,255,255,${0.06 + intensity * 0.14})`,
+                          border: isPreferred && count > 0 ? "1px solid rgba(201,168,76,0.4)" : "1px solid transparent",
+                        }} />
+                      <span className="text-[10px] font-semibold" style={{
+                        color: isPreferred ? "var(--accent-light)" : "var(--text-dim)",
+                      }}>
+                        {trainingDNA.dayNames[i]}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {trainingDNA.rhythm && (
+                    <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      Ritmo naturale: <span style={{ color: "var(--accent-light)", fontWeight: 600 }}>{trainingDNA.rhythm}</span>
+                    </span>
+                  )}
+                  {trainingDNA.actualAvg < trainingDNA.target - 0.5 && (
+                    <span className="text-xs px-2 py-0.5 rounded-full"
+                      style={{ background: "rgba(251,191,36,0.08)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.2)" }}>
+                      Media {trainingDNA.actualAvg}/sett vs {trainingDNA.target} pianificate
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs" style={{ color: "var(--text-dim)" }}>
+                  {trainingDNA.totalDays} sessioni in {trainingDNA.weeksTracked} sett
+                </span>
               </div>
             </div>
           )}
