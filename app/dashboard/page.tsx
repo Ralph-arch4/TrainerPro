@@ -454,6 +454,27 @@ export default function DashboardPage() {
     return results.sort((a, b) => ({ in_ritardo: 0, in_linea: 1, ottimo: 2 }[a.status] - { in_ritardo: 0, in_linea: 1, ottimo: 2 }[b.status])).slice(0, 5);
   }, [clients]);
 
+  // Rendimento per Sessione: €/giorno di allenamento per ogni cliente attivo con fee
+  const revenueEfficiency = useMemo(() => {
+    const now = Date.now();
+    const thirtyDaysAgo = now - 30 * 86400000;
+    return clients
+      .filter(c => c.status === "attivo" && c.monthlyFee && c.monthlyFee > 0)
+      .map(c => {
+        const trainingDays = new Set(
+          c.workoutPlans
+            .flatMap(p => p.logs ?? [])
+            .filter(l => new Date(l.loggedAt).getTime() > thirtyDaysAgo)
+            .map(l => new Date(l.loggedAt).toDateString())
+        ).size;
+        const perSession = trainingDays > 0 ? Math.round(c.monthlyFee! / trainingDays) : null;
+        return { client: c, trainingDays, perSession, fee: c.monthlyFee! };
+      })
+      .filter(r => r.trainingDays > 0)
+      .sort((a, b) => (a.perSession ?? 0) - (b.perSession ?? 0))
+      .slice(0, 6);
+  }, [clients]);
+
   // Smart onboarding: check what's actually done
   const hasClients     = clients.length > 0;
   const hasScheda      = clients.some((c) => c.workoutPlans.length > 0);
@@ -1150,6 +1171,51 @@ export default function DashboardPage() {
                     </a>
                   )}
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Rendimento per Sessione ────────────────────────────────────── */}
+      {revenueEfficiency.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.15)" }}>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <Euro size={14} style={{ color: "#fbbf24" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Rendimento per Sessione
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+              style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24" }}>
+              {revenueEfficiency.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
+              €/sessione · ultimi 30 giorni
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {revenueEfficiency.map(({ client, trainingDays, perSession, fee }) => {
+              const efficiency = perSession ?? 0;
+              const color = efficiency >= 25 ? "#22c55e" : efficiency >= 12 ? "#fbbf24" : "#f87171";
+              const label = efficiency >= 25 ? "Premium" : efficiency >= 12 ? "Standard" : "Sotto media";
+              return (
+                <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
+                  className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                    style={{ background: `${color}18`, color }}>
+                    {client.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{client.name}</p>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      €{fee}/mese · {trainingDays} sessioni
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-black" style={{ color }}>€{efficiency}</p>
+                    <p className="text-xs" style={{ color: `${color}99` }}>{label}</p>
+                  </div>
+                </Link>
               );
             })}
           </div>
