@@ -1084,6 +1084,89 @@ export default function ClientDetailPage() {
       {/* ── OVERVIEW ── */}
       {tab === "overview" && (
         <div className="grid sm:grid-cols-2 gap-4">
+          {/* ── Tessera Atleta — luxury membership card ── */}
+          <div className="sm:col-span-2 relative overflow-hidden rounded-2xl"
+            style={{
+              background: "linear-gradient(135deg, rgba(18,14,8,0.95), rgba(30,24,12,0.90), rgba(18,14,8,0.95))",
+              border: "1px solid rgba(201,168,76,0.25)",
+              boxShadow: "0 0 40px rgba(201,168,76,0.06), inset 0 1px 0 rgba(201,168,76,0.1)",
+              aspectRatio: "auto",
+            }}>
+            <svg className="absolute inset-0 w-full h-full opacity-[0.04] pointer-events-none" viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice">
+              {Array.from({ length: 8 }, (_, i) => {
+                const s = planArtSeed(client.id);
+                const x = ((s * (i + 1) * 37) % 400);
+                const y = ((s * (i + 1) * 53) % 200);
+                const r = 20 + ((s * (i + 1)) % 40);
+                return <circle key={i} cx={x} cy={y} r={r} fill="none" stroke="rgba(201,168,76,0.6)" strokeWidth="0.5" />;
+              })}
+            </svg>
+            <div className="absolute top-0 right-0 w-40 h-40 opacity-[0.06] pointer-events-none"
+              style={{ background: "radial-gradient(circle at top right, rgba(201,168,76,0.8), transparent 70%)" }} />
+            <div className="relative p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[10px] tracking-[0.2em] font-semibold uppercase" style={{ color: "rgba(201,168,76,0.5)" }}>
+                    Tessera Atleta
+                  </span>
+                  <div className="flex-1 h-px" style={{ background: "rgba(201,168,76,0.12)" }} />
+                  <span className="text-[10px] tracking-[0.15em] font-mono" style={{ color: "rgba(201,168,76,0.35)" }}>
+                    N. {client.id.slice(-6).toUpperCase()}
+                  </span>
+                </div>
+                <p className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: "var(--text)" }}>
+                  {client.name}
+                </p>
+                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor[client.status] }} />
+                    <span className="text-xs font-medium" style={{ color: statusColor[client.status] }}>{statusLabel[client.status]}</span>
+                  </div>
+                  {client.goal && (
+                    <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.08)", color: "var(--accent-light)", border: "1px solid rgba(201,168,76,0.15)" }}>
+                      {goalLabel[client.goal]}
+                    </span>
+                  )}
+                  {client.level && (
+                    <span className="text-xs" style={{ color: "var(--text-dim)" }}>{levelLabel[client.level]}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-4 mt-3">
+                  <div>
+                    <p className="text-[9px] tracking-[0.15em] uppercase" style={{ color: "rgba(201,168,76,0.4)" }}>Membro dal</p>
+                    <p className="text-xs font-semibold mt-0.5" style={{ color: "var(--text-muted)" }}>{formatDate(client.startDate)}</p>
+                  </div>
+                  <div className="w-px h-6" style={{ background: "rgba(201,168,76,0.12)" }} />
+                  <div>
+                    <p className="text-[9px] tracking-[0.15em] uppercase" style={{ color: "rgba(201,168,76,0.4)" }}>Giorni insieme</p>
+                    <p className="text-xs font-semibold mt-0.5" style={{ color: "var(--text-muted)" }}>
+                      {Math.max(1, Math.floor((Date.now() - new Date(client.startDate).getTime()) / 86400000))}
+                    </p>
+                  </div>
+                  {user?.name && (
+                    <>
+                      <div className="w-px h-6" style={{ background: "rgba(201,168,76,0.12)" }} />
+                      <div>
+                        <p className="text-[9px] tracking-[0.15em] uppercase" style={{ color: "rgba(201,168,76,0.4)" }}>Coach</p>
+                        <p className="text-xs font-semibold mt-0.5" style={{ color: "var(--text-muted)" }}>{user.name}</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, rgba(201,168,76,0.12), rgba(201,168,76,0.04))",
+                  border: "1px solid rgba(201,168,76,0.2)",
+                  boxShadow: "0 0 24px rgba(201,168,76,0.08)",
+                }}>
+                <span className="text-2xl sm:text-3xl font-black" style={{ color: "var(--accent)", letterSpacing: "-0.02em" }}>
+                  {client.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+                </span>
+              </div>
+            </div>
+          </div>
+
           <div className="card-luxury rounded-2xl p-5">
             <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>Informazioni personali</h3>
             <div className="space-y-3">
