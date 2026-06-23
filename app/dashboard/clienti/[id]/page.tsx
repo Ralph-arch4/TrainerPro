@@ -895,6 +895,31 @@ export default function ClientDetailPage() {
     return { isToday, daysLeft: diffDays, age, waMsg };
   }, [client]);
 
+  const clientMilestone = useMemo(() => {
+    if (client.status !== "attivo") return null;
+    const daysTogether = Math.floor((Date.now() - new Date(client.startDate).getTime()) / 86400000);
+    const totalLogs = client.workoutPlans.flatMap(p => p.logs ?? []).length;
+    const fn = client.name.split(" ")[0];
+
+    const MILESTONES: { threshold: number; type: "days" | "logs"; label: string; detail: string; waMsg: string; color: string }[] = [
+      { threshold: 365, type: "days", label: `Un anno insieme — ${daysTogether} giorni!`, detail: "Un traguardo straordinario. Celebra questo percorso con il tuo atleta.", waMsg: `${fn}! Un anno intero insieme — 365 giorni di lavoro, costanza e crescita. Sono orgoglioso del percorso che abbiamo costruito. Avanti così, sempre!`, color: "#fbbf24" },
+      { threshold: 180, type: "days", label: `6 mesi insieme — ${daysTogether} giorni`, detail: "Mezzo anno di coaching. Il legame con questo cliente è solido.", waMsg: `${fn}, 6 mesi insieme! Mezzo anno di allenamenti, sacrifici e risultati. Sei un atleta vero — il meglio deve ancora venire.`, color: "#f97316" },
+      { threshold: 90, type: "days", label: `90 giorni insieme`, detail: "Un trimestre di percorso. Il cliente sta consolidando l'abitudine.", waMsg: `${fn}, 3 mesi insieme! 90 giorni di dedizione — stai costruendo qualcosa di cui essere fiero. Continua così!`, color: "#a78bfa" },
+      { threshold: 30, type: "days", label: `Primo mese insieme`, detail: "Il primo mese è il più importante. Un messaggio adesso rinforza la fiducia.", waMsg: `${fn}, un mese insieme! Il primo mese è il più difficile e tu lo hai superato alla grande. Sei sulla strada giusta!`, color: "#38bdf8" },
+      { threshold: 100, type: "logs", label: `100 sessioni registrate!`, detail: "Centenario: il cliente ha raggiunto 100 log. Un risultato da celebrare.", waMsg: `${fn}! 100 sessioni registrate — cento volte che hai scelto di presentarti e dare il massimo. Questo è il cuore di un vero atleta!`, color: "#fbbf24" },
+      { threshold: 50, type: "logs", label: `50 sessioni registrate`, detail: "Cinquanta log salvati. La costanza sta pagando.", waMsg: `${fn}, 50 sessioni nel diario! Mezzo centinario di allenamenti — la tua costanza mi motiva. Avanti tutta!`, color: "#34d399" },
+    ];
+
+    const WINDOW = 7;
+    for (const m of MILESTONES) {
+      const value = m.type === "days" ? daysTogether : totalLogs;
+      if (value >= m.threshold && value < m.threshold + WINDOW) {
+        return { ...m, waMsg: m.waMsg };
+      }
+    }
+    return null;
+  }, [client]);
+
   const trainingDNA = useMemo(() => {
     const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
     if (allLogs.length < 5) return null;
@@ -1052,6 +1077,40 @@ export default function ClientDetailPage() {
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold flex-shrink-0 transition-all hover:opacity-80"
                 style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.25)" }}>
                 <MessageCircle size={12} /> {birthdayAlert.isToday ? "Auguri" : "Messaggio"}
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Client Milestone Celebration ────────────────────────────── */}
+      {clientMilestone && (
+        <div className="mb-4 p-4 rounded-2xl relative overflow-hidden"
+          style={{
+            background: `linear-gradient(135deg, ${clientMilestone.color}0F, ${clientMilestone.color}06)`,
+            border: `1px solid ${clientMilestone.color}38`,
+          }}>
+          <div className="absolute top-0 right-0 w-28 h-28 opacity-[0.06] pointer-events-none"
+            style={{ background: `radial-gradient(circle, ${clientMilestone.color} 0%, transparent 70%)` }} />
+          <div className="flex items-center gap-3 relative">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: `${clientMilestone.color}1A`, border: `1px solid ${clientMilestone.color}30` }}>
+              <Award size={18} style={{ color: clientMilestone.color }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold uppercase tracking-widest mb-0.5"
+                style={{ color: `${clientMilestone.color}90`, letterSpacing: "0.1em", fontSize: "0.6rem" }}>
+                Traguardo raggiunto
+              </p>
+              <p className="text-sm font-bold" style={{ color: clientMilestone.color }}>{clientMilestone.label}</p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>{clientMilestone.detail}</p>
+            </div>
+            {client.phone && (
+              <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(clientMilestone.waMsg)}`}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold flex-shrink-0 transition-all hover:opacity-80"
+                style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.25)" }}>
+                <MessageCircle size={12} /> Festeggia
               </a>
             )}
           </div>
