@@ -964,6 +964,44 @@ export default function ClientDetailPage() {
     return { dayCounts, dayNames, maxCount, preferred, consistency, rhythm, totalDays, weeksTracked, target, actualAvg };
   }, [client]);
 
+  const muscleBalance = useMemo(() => {
+    const activePlan = client.workoutPlans.find(p => p.active);
+    if (!activePlan || activePlan.exercises.length === 0) return null;
+
+    const groupSets: Record<string, number> = {};
+    let pushSets = 0, pullSets = 0, upperSets = 0, lowerSets = 0;
+    const upperGroups = new Set(["Petto", "Schiena", "Spalle", "Bicipiti", "Tricipiti", "Avambracci"]);
+    const lowerGroups = new Set(["Quadricipiti", "Femorali", "Glutei", "Polpacci", "Gambe"]);
+    const pushGroups = new Set(["Petto", "Spalle", "Tricipiti"]);
+    const pullGroups = new Set(["Schiena", "Bicipiti", "Avambracci"]);
+
+    for (const ex of activePlan.exercises) {
+      const mg = ex.muscleGroup || "Altro";
+      const sets = ex.sets || 1;
+      groupSets[mg] = (groupSets[mg] || 0) + sets;
+      if (pushGroups.has(mg)) pushSets += sets;
+      if (pullGroups.has(mg)) pullSets += sets;
+      if (upperGroups.has(mg)) upperSets += sets;
+      if (lowerGroups.has(mg)) lowerSets += sets;
+    }
+
+    const sorted = Object.entries(groupSets).sort((a, b) => b[1] - a[1]);
+    const maxSets = sorted[0]?.[1] || 1;
+    const totalSets = sorted.reduce((s, [, v]) => s + v, 0);
+
+    const mgColors: Record<string, string> = {
+      Petto: "#ef4444", Schiena: "#3b82f6", Spalle: "#f59e0b", Quadricipiti: "#22c55e",
+      Femorali: "#10b981", Glutei: "#8b5cf6", Bicipiti: "#ec4899", Tricipiti: "#f97316",
+      Addominali: "#06b6d4", Polpacci: "#14b8a6", Gambe: "#84cc16", Avambracci: "#a855f7",
+      "Full Body": "#64748b",
+    };
+
+    const pushPullRatio = pullSets > 0 ? pushSets / pullSets : pushSets > 0 ? 999 : 0;
+    const upperLowerRatio = lowerSets > 0 ? upperSets / lowerSets : upperSets > 0 ? 999 : 0;
+
+    return { sorted, maxSets, totalSets, mgColors, pushSets, pullSets, upperSets, lowerSets, pushPullRatio, upperLowerRatio };
+  }, [client.workoutPlans]);
+
   return (
     <div className="p-4 pt-4 lg:pt-8 lg:p-8 fade-in">
       {/* Back + header */}
@@ -1436,6 +1474,65 @@ export default function ClientDetailPage() {
                   </a>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* ── Bilancio Muscolare ── */}
+          {muscleBalance && (
+            <div className="card-luxury rounded-2xl p-5 sm:col-span-2">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Bilancio Muscolare</h3>
+                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--surface)", color: "var(--text-dim)" }}>
+                  {muscleBalance.totalSets} serie totali
+                </span>
+              </div>
+              <div className="space-y-2 mb-4">
+                {muscleBalance.sorted.map(([mg, sets]) => (
+                  <div key={mg} className="flex items-center gap-3">
+                    <span className="text-xs w-24 text-right flex-shrink-0 truncate" style={{ color: "var(--text-muted)" }}>{mg}</span>
+                    <div className="flex-1 h-4 rounded-full overflow-hidden" style={{ background: "var(--surface-sm)" }}>
+                      <div className="h-full rounded-full transition-all" style={{
+                        width: `${Math.max(8, (sets / muscleBalance.maxSets) * 100)}%`,
+                        background: muscleBalance.mgColors[mg] || "var(--accent)",
+                        opacity: 0.75,
+                      }} />
+                    </div>
+                    <span className="text-xs w-8 font-bold" style={{ color: muscleBalance.mgColors[mg] || "var(--accent)" }}>{sets}</span>
+                  </div>
+                ))}
+              </div>
+              {(muscleBalance.pushSets > 0 || muscleBalance.pullSets > 0) && (
+                <div className="flex gap-3 pt-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+                  <div className="flex-1 rounded-xl p-3" style={{ background: "var(--surface-sm)" }}>
+                    <p className="text-xs mb-1" style={{ color: "var(--text-dim)" }}>Push / Pull</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold" style={{ color: muscleBalance.pushPullRatio > 1.5 ? "#f59e0b" : muscleBalance.pushPullRatio < 0.67 ? "#f59e0b" : "#22c55e" }}>
+                        {muscleBalance.pushSets} / {muscleBalance.pullSets}
+                      </span>
+                      <span className="text-xs px-1.5 py-0.5 rounded-full" style={{
+                        background: muscleBalance.pushPullRatio > 1.5 || muscleBalance.pushPullRatio < 0.67 ? "rgba(245,158,11,0.12)" : "rgba(34,197,94,0.12)",
+                        color: muscleBalance.pushPullRatio > 1.5 || muscleBalance.pushPullRatio < 0.67 ? "#f59e0b" : "#22c55e",
+                      }}>
+                        {muscleBalance.pushPullRatio > 1.5 ? "Push dominante" : muscleBalance.pushPullRatio < 0.67 ? "Pull dominante" : "Bilanciato"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex-1 rounded-xl p-3" style={{ background: "var(--surface-sm)" }}>
+                    <p className="text-xs mb-1" style={{ color: "var(--text-dim)" }}>Upper / Lower</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold" style={{ color: muscleBalance.upperLowerRatio > 2 ? "#f59e0b" : muscleBalance.upperLowerRatio < 0.5 ? "#f59e0b" : "#22c55e" }}>
+                        {muscleBalance.upperSets} / {muscleBalance.lowerSets}
+                      </span>
+                      <span className="text-xs px-1.5 py-0.5 rounded-full" style={{
+                        background: muscleBalance.upperLowerRatio > 2 || muscleBalance.upperLowerRatio < 0.5 ? "rgba(245,158,11,0.12)" : "rgba(34,197,94,0.12)",
+                        color: muscleBalance.upperLowerRatio > 2 || muscleBalance.upperLowerRatio < 0.5 ? "#f59e0b" : "#22c55e",
+                      }}>
+                        {muscleBalance.upperLowerRatio > 2 ? "Upper dominante" : muscleBalance.upperLowerRatio < 0.5 ? "Lower dominante" : "Bilanciato"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
