@@ -11,6 +11,74 @@ import {
   BarChart2, CreditCard, Target, Heart, ClipboardCopy, CalendarClock, ShieldAlert,
 } from "lucide-react";
 
+function nameHash(name: string): number[] {
+  const h: number[] = [];
+  for (let i = 0; i < name.length; i++) h.push(name.charCodeAt(i));
+  while (h.length < 6) h.push(h.reduce((a, b) => a + b, 42) % 256);
+  return h;
+}
+
+function StudioIdentityStrip({ name, plan }: { name: string; plan: string }) {
+  const initials = name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "TP";
+  const h = nameHash(name);
+  const tierLabel: Record<string, string> = { free: "Starter", personal_coach: "Personal Coach", fitness_master: "Fitness Master" };
+  const tierColor: Record<string, string> = { free: "rgba(201,168,76,0.6)", personal_coach: "#C9A84C", fitness_master: "#f0d060" };
+  const cx = 32, cy = 32;
+  const petalCount = 4 + (h[0] % 3);
+  const innerR = 14 + (h[1] % 5);
+
+  return (
+    <div className="mb-6 rounded-2xl overflow-hidden relative"
+      style={{ background: "linear-gradient(135deg, rgba(12,4,4,0.95) 0%, rgba(30,12,6,0.85) 50%, rgba(12,4,4,0.95) 100%)", border: "1px solid rgba(201,168,76,0.18)" }}>
+      <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 20% 50%, rgba(201,168,76,0.06) 0%, transparent 60%)" }} />
+      <div className="relative flex items-center gap-5 px-5 py-4">
+        {/* Generated monogram */}
+        <div className="relative flex-shrink-0" style={{ width: 64, height: 64 }}>
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            <circle cx={cx} cy={cy} r="30" fill="none" stroke="rgba(201,168,76,0.12)" strokeWidth="0.6" />
+            <circle cx={cx} cy={cy} r="22" fill="none" stroke="rgba(201,168,76,0.2)" strokeWidth="0.8" strokeDasharray="2 3" />
+            {Array.from({ length: petalCount }, (_, i) => {
+              const angle = (i * 360 / petalCount - 90) * Math.PI / 180;
+              const x1 = cx + Math.cos(angle) * innerR;
+              const y1 = cy + Math.sin(angle) * innerR;
+              const x2 = cx + Math.cos(angle) * 28;
+              const y2 = cy + Math.sin(angle) * 28;
+              return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(201,168,76,0.22)" strokeWidth="0.7" />;
+            })}
+            {[0, 90, 180, 270].map(a => {
+              const r = (a * Math.PI) / 180;
+              return <circle key={a} cx={cx + Math.cos(r) * 27} cy={cy + Math.sin(r) * 27} r="1.3" fill="rgba(201,168,76,0.3)" />;
+            })}
+            <circle cx={cx} cy={cy} r="15" fill="rgba(201,168,76,0.08)" />
+            <circle cx={cx} cy={cy} r="15" fill="none" stroke="rgba(201,168,76,0.35)" strokeWidth="1" />
+            <text x={cx} y={cy + 5.5} textAnchor="middle" fontSize="13" fontWeight="900"
+              fill="rgba(201,168,76,0.8)" fontFamily="Georgia,'Times New Roman',serif" fontStyle="italic">
+              {initials}
+            </text>
+          </svg>
+        </div>
+
+        {/* Studio info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] mb-1" style={{ color: "rgba(201,168,76,0.45)" }}>Il tuo studio</p>
+          <p className="text-lg font-black tracking-tight" style={{ color: "var(--text)", fontFamily: "Georgia,'Times New Roman',serif", fontStyle: "italic" }}>{name}</p>
+          <div className="h-px mt-2 mb-2" style={{ background: "linear-gradient(90deg, rgba(201,168,76,0.3), transparent)", maxWidth: 180 }} />
+          <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: tierColor[plan] ?? tierColor.free }}>
+            {tierLabel[plan] ?? "Starter"}
+          </p>
+        </div>
+
+        {/* Brand mark */}
+        <div className="hidden sm:flex flex-col items-end gap-1 flex-shrink-0">
+          <span className="text-xs font-black tracking-[0.14em] uppercase" style={{ color: "rgba(201,168,76,0.28)" }}>REC Studio</span>
+          <span className="text-xs" style={{ color: "rgba(201,168,76,0.18)" }}>TrainerPro</span>
+        </div>
+      </div>
+      <div className="h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(201,168,76,0.25), rgba(201,168,76,0.4), rgba(201,168,76,0.25), transparent)" }} />
+    </div>
+  );
+}
+
 function timeGreeting() {
   const h = new Date().getHours();
   if (h >= 5 && h < 12) return "Buongiorno";
@@ -553,6 +621,9 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 pt-4 lg:pt-8 lg:p-8 fade-in">
+
+      {/* ── Studio Identity ──────────────────────────────────────────────── */}
+      {user && <StudioIdentityStrip name={user.name || "Trainer"} plan={user.plan || "free"} />}
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="mb-8">
