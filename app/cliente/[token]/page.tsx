@@ -848,6 +848,84 @@ function RadarAtletico({ streak, totalLogs, level, pct, recentDays }: {
   );
 }
 
+// ── Insight Personalizzato dal Trainer ───────────────────────────────────────
+function PersonalizedInsightCard({ exercises, logs, trainerName }: {
+  exercises: Exercise[]; logs: ExerciseLog[]; trainerName: string;
+}) {
+  if (logs.length < 3) return null;
+
+  const logsByExercise = new Map<string, number>();
+  logs.forEach(l => logsByExercise.set(l.exerciseId, (logsByExercise.get(l.exerciseId) ?? 0) + 1));
+  const topEntry = Array.from(logsByExercise.entries()).sort((a, b) => b[1] - a[1])[0];
+  const topExercise = topEntry ? exercises.find(e => e.id === topEntry[0]) : null;
+  const topCount = topEntry?.[1] ?? 0;
+
+  let bestImprovement: { name: string; delta: number; from: number; to: number } | null = null;
+  const weightedIds = new Set(logs.filter(l => l.weight && l.weight > 0).map(l => l.exerciseId));
+  for (const eid of weightedIds) {
+    const eLogs = logs.filter(l => l.exerciseId === eid && l.weight && l.weight > 0)
+      .sort((a, b) => a.weekNumber - b.weekNumber);
+    if (eLogs.length >= 2) {
+      const first = eLogs[0].weight!;
+      const last = eLogs[eLogs.length - 1].weight!;
+      const delta = last - first;
+      if (delta > 0 && (!bestImprovement || delta > bestImprovement.delta)) {
+        const ex = exercises.find(e => e.id === eid);
+        if (ex) bestImprovement = { name: ex.name, delta, from: first, to: last };
+      }
+    }
+  }
+
+  const twoWeeksAgo = Date.now() - 14 * 86400000;
+  const recentActiveDays = new Set(
+    logs.filter(l => new Date(l.loggedAt).getTime() > twoWeeksAgo)
+      .map(l => new Date(l.loggedAt).toISOString().slice(0, 10))
+  ).size;
+
+  const muscleGroups = new Set(exercises.filter(e => e.muscleGroup).map(e => e.muscleGroup));
+
+  const insights: { icon: string; text: string; color: string }[] = [];
+  if (topExercise) {
+    insights.push({ icon: "⭐", text: `Il tuo esercizio piu registrato e ${topExercise.name} con ${topCount} sessioni`, color: "#fbbf24" });
+  }
+  if (bestImprovement) {
+    insights.push({ icon: "📈", text: `Hai aumentato +${bestImprovement.delta}kg su ${bestImprovement.name} — da ${bestImprovement.from}kg a ${bestImprovement.to}kg`, color: "#22c55e" });
+  }
+  if (recentActiveDays > 0) {
+    insights.push({ icon: "🗓️", text: `${recentActiveDays} giorni attivi nelle ultime 2 settimane`, color: "#38bdf8" });
+  }
+  if (muscleGroups.size >= 3) {
+    insights.push({ icon: "🎯", text: `${muscleGroups.size} gruppi muscolari nel programma — allenamento completo`, color: "#a78bfa" });
+  }
+
+  if (insights.length === 0) return null;
+
+  return (
+    <div className="mb-4 rounded-2xl p-4 relative overflow-hidden"
+      style={{ background: "var(--surface-xs)", border: "1px solid rgba(229,50,50,0.14)" }}>
+      <div className="absolute -right-6 -top-6 w-28 h-28 rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(229,50,50,0.08), transparent)" }} />
+      <div className="flex items-center gap-2 mb-3">
+        <Brain size={14} style={{ color: "var(--accent)" }} />
+        <p className="text-xs font-black uppercase tracking-[0.14em]" style={{ color: "var(--text-dim)" }}>
+          Il tuo Trainer ha notato
+        </p>
+      </div>
+      <div className="space-y-2.5">
+        {insights.map((ins, i) => (
+          <div key={i} className="flex items-start gap-2.5">
+            <span className="text-sm leading-none mt-0.5 flex-shrink-0">{ins.icon}</span>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>{ins.text}</p>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs mt-3 font-semibold" style={{ color: "var(--text-faint)" }}>
+        — analisi personalizzata da {trainerName}
+      </p>
+    </div>
+  );
+}
+
 // ── Notifica Settimanale dal Trainer ─────────────────────────────────────────
 const TRAINER_WEEKLY_NOTES = [
   "Ho rivisto il tuo programma questa settimana — ogni dettaglio è pensato per te.",
@@ -1556,6 +1634,13 @@ export default function ClientPortalPage() {
           recentDays={Array.from(logsByDayGlobal.keys()).filter(d =>
             Math.floor((Date.now() - new Date(d).getTime()) / 86400000) <= 30
           ).length}
+        />
+
+        {/* ── Insight Personalizzato ─────────────────────────────────────── */}
+        <PersonalizedInsightCard
+          exercises={plan.exercises}
+          logs={logs}
+          trainerName={trainerName}
         />
 
         {/* ── Tabs ───────────────────────────────────────────────────────────── */}
