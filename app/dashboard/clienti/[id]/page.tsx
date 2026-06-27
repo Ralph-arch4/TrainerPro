@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { dbProgressPhotos, type ProgressPhoto, dbFitnessScans, type FitnessScan, type FitnessScanAnalysis, dbFitnessScanComparisons, type FitnessScanComparison, type ComparisonAnalysis } from "@/lib/db";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
-import { Scan, Sparkles, ShieldCheck, Brain, GitCompare, TrendingDown, Minus, KeyRound, Activity as ActivityIcon, Utensils, Zap, Award, ChevronRight, Cake } from "lucide-react";
+import { Scan, Sparkles, ShieldCheck, Brain, GitCompare, TrendingDown, Minus, KeyRound, Activity as ActivityIcon, Utensils, Zap, Award, ChevronRight, Cake, AlertTriangle } from "lucide-react";
 import type { BodyFeatures } from "@/lib/cv-analysis";
 import { computeTier, TIERS, TIER_ORDER, tierDelta, type Tier } from "@/lib/tier-system";
 
@@ -797,6 +797,25 @@ export default function ClientDetailPage() {
     return { weeks, maxSessions, trend, insight, current, prev, avgSessions, totalWeightMoved, target };
   }, [client]);
 
+  // ── Stato Piano Attivo: week progress + expiry alert ──
+  const planStatus = useMemo(() => {
+    const activePlan = client.workoutPlans.find(p => p.active);
+    if (!activePlan || !activePlan.totalWeeks) return null;
+
+    const logs = activePlan.logs ?? [];
+    if (logs.length === 0) return { plan: activePlan, currentWeek: 0, totalWeeks: activePlan.totalWeeks, pct: 0, status: "nuovo" as const };
+
+    const maxWeek = Math.max(...logs.map(l => l.weekNumber));
+    const pct = Math.min(100, Math.round((maxWeek / activePlan.totalWeeks) * 100));
+    const remaining = activePlan.totalWeeks - maxWeek;
+
+    const status: "completato" | "in_scadenza" | "attivo" | "nuovo" =
+      remaining <= 0 ? "completato" :
+      remaining <= 2 ? "in_scadenza" : "attivo";
+
+    return { plan: activePlan, currentWeek: maxWeek, totalWeeks: activePlan.totalWeeks, pct, status, remaining };
+  }, [client]);
+
   // ── Smart priority brief: single highest-priority action for this client ──
   const priorityBrief = useMemo(() => {
     if (client.status !== "attivo") return null;
@@ -1312,6 +1331,51 @@ export default function ClientDetailPage() {
                   </span>
                 )}
               </div>
+            </div>
+          )}
+
+          {planStatus && (
+            <div className="card-luxury rounded-2xl p-5 sm:col-span-2">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Timer size={14} style={{ color: planStatus.status === "in_scadenza" ? "#fb923c" : planStatus.status === "completato" ? "#ef4444" : "var(--accent)" }} />
+                  <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Stato Piano Attivo</h3>
+                </div>
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{
+                  background: planStatus.status === "completato" ? "rgba(239,68,68,0.1)" : planStatus.status === "in_scadenza" ? "rgba(249,115,22,0.1)" : planStatus.status === "nuovo" ? "rgba(56,189,248,0.1)" : "rgba(34,197,94,0.1)",
+                  color: planStatus.status === "completato" ? "#ef4444" : planStatus.status === "in_scadenza" ? "#fb923c" : planStatus.status === "nuovo" ? "#38bdf8" : "#22c55e",
+                  border: `1px solid ${planStatus.status === "completato" ? "rgba(239,68,68,0.25)" : planStatus.status === "in_scadenza" ? "rgba(249,115,22,0.25)" : planStatus.status === "nuovo" ? "rgba(56,189,248,0.25)" : "rgba(34,197,94,0.25)"}`,
+                }}>
+                  {planStatus.status === "completato" ? "Completato" : planStatus.status === "in_scadenza" ? `${planStatus.remaining} sett. rimaste` : planStatus.status === "nuovo" ? "Non iniziato" : `Settimana ${planStatus.currentWeek}`}
+                </span>
+              </div>
+              <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>{planStatus.plan.name}</p>
+              <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: "var(--surface-sm)" }}>
+                <div className="h-full rounded-full transition-all" style={{
+                  width: `${Math.max(2, planStatus.pct)}%`,
+                  background: planStatus.status === "completato" ? "#ef4444" : planStatus.status === "in_scadenza" ? "linear-gradient(90deg, var(--accent), #fb923c)" : "var(--accent)",
+                }} />
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-xs" style={{ color: "var(--text-dim)" }}>Settimana {planStatus.currentWeek} di {planStatus.totalWeeks}</span>
+                <span className="text-xs font-bold" style={{ color: "var(--accent-light)" }}>{planStatus.pct}%</span>
+              </div>
+              {(planStatus.status === "in_scadenza" || planStatus.status === "completato") && (
+                <div className="mt-3 p-2.5 rounded-xl flex items-center gap-2" style={{
+                  background: planStatus.status === "completato" ? "rgba(239,68,68,0.06)" : "rgba(249,115,22,0.06)",
+                  border: `1px solid ${planStatus.status === "completato" ? "rgba(239,68,68,0.15)" : "rgba(249,115,22,0.15)"}`,
+                }}>
+                  <AlertTriangle size={12} style={{ color: planStatus.status === "completato" ? "#ef4444" : "#fb923c", flexShrink: 0 }} />
+                  <span className="text-xs" style={{ color: planStatus.status === "completato" ? "#f87171" : "#fdba74" }}>
+                    {planStatus.status === "completato" ? "Piano completato — prepara la prossima scheda" : "Piano in scadenza — inizia a pianificare la prossima scheda"}
+                  </span>
+                  <button onClick={() => setTab("schede")} className="ml-auto text-xs px-2.5 py-1 rounded-lg font-bold flex-shrink-0 transition-all hover:opacity-80" style={{
+                    background: "rgba(201,168,76,0.12)", color: "var(--accent-light)",
+                  }}>
+                    Schede
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
