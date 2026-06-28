@@ -8,7 +8,7 @@ import { dbClients } from "@/lib/db";
 import {
   Users, Plus, Search, ChevronRight,
   Mail, Phone, Activity, Loader2, X, AlertCircle, Trash2, TrendingDown,
-  Gift, Heart, TrendingUp
+  Gift, Heart, TrendingUp, Zap, Clock, Ruler, Dumbbell
 } from "lucide-react";
 import type { Client } from "@/lib/store";
 
@@ -140,6 +140,97 @@ function getRiskDays(client: Client): number | null {
   const days = Math.floor((Date.now() - ref.getTime()) / 86400000);
   return days >= 7 ? days : null;
 }
+
+interface DailyPriority {
+  client: Client;
+  reason: string;
+  urgency: number;
+  icon: "risk" | "expiry" | "progression" | "measurement";
+}
+
+function getDailyPriorities(clients: Client[]): DailyPriority[] {
+  const now = Date.now();
+  const priorities: DailyPriority[] = [];
+
+  for (const c of clients) {
+    if (c.status !== "attivo") continue;
+
+    const allLogs = c.workoutPlans.flatMap(p => p.logs ?? []);
+    const lastLog = allLogs.length
+      ? Math.max(...allLogs.map(l => new Date(l.loggedAt).getTime()))
+      : null;
+    const daysSinceLog = lastLog ? Math.floor((now - lastLog) / 86400000) : null;
+
+    if (daysSinceLog !== null && daysSinceLog >= 5) {
+      priorities.push({
+        client: c,
+        reason: `Nessun log da ${daysSinceLog} giorni`,
+        urgency: 100 + daysSinceLog,
+        icon: "risk",
+      });
+      continue;
+    }
+
+    const activePlan = c.workoutPlans.find(p => p.active);
+    if (activePlan && activePlan.totalWeeks) {
+      const planLogs = activePlan.logs ?? [];
+      const maxWeek = planLogs.length
+        ? Math.max(...planLogs.map(l => l.weekNumber))
+        : 0;
+      const weeksLeft = activePlan.totalWeeks - maxWeek;
+      if (weeksLeft <= 2 && weeksLeft > 0) {
+        priorities.push({
+          client: c,
+          reason: weeksLeft === 1 ? "Ultima settimana di piano" : "Piano scade fra 2 settimane",
+          urgency: 90 - weeksLeft,
+          icon: "expiry",
+        });
+        continue;
+      }
+    }
+
+    const progReady = getProgressionReady(c);
+    if (progReady >= 3) {
+      priorities.push({
+        client: c,
+        reason: `${progReady} esercizi pronti per +carico`,
+        urgency: 60 + progReady,
+        icon: "progression",
+      });
+      continue;
+    }
+
+    const lastMeasurement = c.measurements?.length
+      ? Math.max(...c.measurements.map(m => new Date(m.date).getTime()))
+      : null;
+    const daysSinceMeasurement = lastMeasurement
+      ? Math.floor((now - lastMeasurement) / 86400000)
+      : null;
+    if (daysSinceMeasurement !== null && daysSinceMeasurement >= 30) {
+      priorities.push({
+        client: c,
+        reason: `Misurazioni da ${daysSinceMeasurement} giorni`,
+        urgency: 40 + Math.min(daysSinceMeasurement, 30),
+        icon: "measurement",
+      });
+    }
+  }
+
+  return priorities.sort((a, b) => b.urgency - a.urgency).slice(0, 4);
+}
+
+const priorityIconMap = {
+  risk: TrendingDown,
+  expiry: Clock,
+  progression: Dumbbell,
+  measurement: Ruler,
+};
+const priorityColorMap = {
+  risk: "#ef4444",
+  expiry: "#f59e0b",
+  progression: "#22c55e",
+  measurement: "#38bdf8",
+};
 
 interface ClientFormData {
   name: string;
@@ -276,6 +367,58 @@ function ClientiPageInner() {
           <option value="performance">Performance</option>
         </select>
       </div>
+
+      {/* Priorita del Giorno */}
+      {(() => {
+        const priorities = getDailyPriorities(clients);
+        if (!priorities.length) return null;
+        const today = new Date();
+        const dayNames = ["Domenica", "Lunedi", "Martedi", "Mercoledi", "Giovedi", "Venerdi", "Sabato"];
+        const monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+        return (
+          <div className="mb-6 card-luxury rounded-2xl p-4 fade-in"
+            style={{ borderLeft: "3px solid var(--accent)" }}>
+            <div className="flex items-center gap-2 mb-3">
+              <Zap size={14} style={{ color: "var(--accent)" }} />
+              <span className="text-sm font-bold" style={{ color: "var(--text)" }}>
+                Priorita del Giorno
+              </span>
+              <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
+                {dayNames[today.getDay()]} {today.getDate()} {monthNames[today.getMonth()]}
+              </span>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {priorities.map((p, i) => {
+                const Icon = priorityIconMap[p.icon];
+                const color = priorityColorMap[p.icon];
+                return (
+                  <Link key={p.client.id}
+                    href={`/dashboard/clienti/${p.client.id}`}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:brightness-125"
+                    style={{ background: `${color}08`, border: `1px solid ${color}20` }}>
+                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ background: `${color}15` }}>
+                      <Icon size={12} style={{ color }} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>
+                        {p.client.name}
+                      </p>
+                      <p className="text-xs truncate" style={{ color }}>
+                        {p.reason}
+                      </p>
+                    </div>
+                    <span className="text-xs font-bold flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
+                      style={{ background: `${color}18`, color, fontSize: "9px" }}>
+                      {i + 1}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Empty state */}
       {filtered.length === 0 && (
