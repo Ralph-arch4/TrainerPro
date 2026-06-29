@@ -18,6 +18,61 @@ function nameHash(name: string): number[] {
   return h;
 }
 
+function StudioPattern({ name }: { name: string }) {
+  const h = nameHash(name);
+  const initials = name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "TP";
+  const cellSize = 48;
+  const cols = 8;
+  const rows = 3;
+  const variant = h[0] % 4;
+  const angle = 10 + (h[1] % 20);
+
+  return (
+    <svg
+      className="absolute inset-0 w-full h-full pointer-events-none"
+      viewBox={`0 0 ${cols * cellSize} ${rows * cellSize}`}
+      preserveAspectRatio="xMidYMid slice"
+      style={{ opacity: 0.028 }}
+      aria-hidden="true"
+    >
+      <defs>
+        <pattern id="studio-trama" x="0" y="0" width={cellSize} height={cellSize} patternUnits="userSpaceOnUse" patternTransform={`rotate(${angle})`}>
+          {variant === 0 && (
+            <>
+              <circle cx={cellSize / 2} cy={cellSize / 2} r={6} fill="none" stroke="var(--accent)" strokeWidth="1.2" />
+              <text x={cellSize / 2} y={cellSize / 2 + 3} textAnchor="middle" fontSize="6" fontWeight="900" fill="var(--accent)" fontFamily="Georgia,serif" fontStyle="italic">{initials}</text>
+            </>
+          )}
+          {variant === 1 && (
+            <>
+              <path d={`M${cellSize / 2} 4 L${cellSize - 4} ${cellSize / 2} L${cellSize / 2} ${cellSize - 4} L4 ${cellSize / 2}Z`} fill="none" stroke="var(--accent)" strokeWidth="0.8" />
+              <circle cx={cellSize / 2} cy={cellSize / 2} r={3} fill="var(--accent)" />
+            </>
+          )}
+          {variant === 2 && (
+            <>
+              <line x1="0" y1="0" x2={cellSize} y2={cellSize} stroke="var(--accent)" strokeWidth="0.6" />
+              <line x1={cellSize} y1="0" x2="0" y2={cellSize} stroke="var(--accent)" strokeWidth="0.6" />
+              <text x={cellSize / 2} y={cellSize / 2 + 3.5} textAnchor="middle" fontSize="7" fontWeight="900" fill="var(--accent)" fontFamily="Georgia,serif">{initials}</text>
+            </>
+          )}
+          {variant === 3 && (
+            <>
+              <rect x="6" y="6" width={cellSize - 12} height={cellSize - 12} rx="4" fill="none" stroke="var(--accent)" strokeWidth="0.8" />
+              <circle cx={cellSize / 2} cy={cellSize / 2} r={2} fill="var(--accent)" />
+              {[0, 90, 180, 270].map(a => {
+                const r = (a * Math.PI) / 180;
+                return <circle key={a} cx={cellSize / 2 + Math.cos(r) * 10} cy={cellSize / 2 + Math.sin(r) * 10} r="1.2" fill="var(--accent)" />;
+              })}
+            </>
+          )}
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#studio-trama)" />
+    </svg>
+  );
+}
+
 function StudioIdentityStrip({ name, plan }: { name: string; plan: string }) {
   const initials = name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "TP";
   const h = nameHash(name);
@@ -30,6 +85,7 @@ function StudioIdentityStrip({ name, plan }: { name: string; plan: string }) {
   return (
     <div className="mb-6 rounded-2xl overflow-hidden relative"
       style={{ background: "linear-gradient(135deg, rgba(12,4,4,0.95) 0%, rgba(30,12,6,0.85) 50%, rgba(12,4,4,0.95) 100%)", border: "1px solid rgba(201,168,76,0.18)" }}>
+      <StudioPattern name={name} />
       <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 20% 50%, rgba(201,168,76,0.06) 0%, transparent 60%)" }} />
       <div className="relative flex items-center gap-5 px-5 py-4">
         {/* Generated monogram */}
