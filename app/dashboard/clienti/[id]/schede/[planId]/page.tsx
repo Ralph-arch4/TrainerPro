@@ -6,7 +6,7 @@ import { dbWorkoutPlans, dbExerciseLogs } from "@/lib/db";
 import WorkoutSpreadsheet from "@/components/WorkoutSpreadsheet";
 import WorkoutLogbook from "@/components/WorkoutLogbook";
 import type { Exercise, SupplementItem } from "@/lib/store";
-import { ArrowLeft, Dumbbell, LayoutGrid, Table2 } from "lucide-react";
+import { ArrowLeft, Dumbbell, LayoutGrid, Table2, MessageSquare, Check, Pencil } from "lucide-react";
 
 type ViewMode = "logbook" | "spreadsheet";
 
@@ -24,6 +24,9 @@ export default function WorkoutPlanPage() {
   const updateWorkoutPlan = useAppStore((s) => s.updateWorkoutPlan);
   const synced = useRef(false);
   const [viewMode, setViewMode] = useState<ViewMode>("logbook");
+  const [description, setDescription] = useState(() => plan?.description ?? "");
+  const [editingDedica, setEditingDedica] = useState(false);
+  const [dedicaSaved, setDedicaSaved] = useState(false);
 
   // Auto-repair: ensure share_token is persisted to DB
   useEffect(() => {
@@ -127,6 +130,15 @@ export default function WorkoutPlanPage() {
     dbWorkoutPlans.update(planId, { supplements: items } as Parameters<typeof dbWorkoutPlans.update>[1]).catch(() => {});
   }
 
+  function handleSaveDedica() {
+    if (!plan) return;
+    updateWorkoutPlan(id, planId, { description });
+    dbWorkoutPlans.update(planId, { description }).catch(() => {});
+    setEditingDedica(false);
+    setDedicaSaved(true);
+    setTimeout(() => setDedicaSaved(false), 2500);
+  }
+
   return (
     <div className="p-4 pt-4 lg:pt-8 lg:p-8 fade-in">
       {/* Back */}
@@ -168,6 +180,68 @@ export default function WorkoutPlanPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* ── Dedica Personale ─────────────────────────────────────────────────── */}
+      <div className="mb-5 rounded-2xl overflow-hidden"
+        style={{ border: "1px solid rgba(201,168,76,0.18)", background: "rgba(201,168,76,0.04)" }}>
+        <div className="flex items-center justify-between px-4 py-3"
+          style={{ borderBottom: editingDedica ? "1px solid rgba(201,168,76,0.12)" : "none" }}>
+          <div className="flex items-center gap-2 flex-wrap">
+            <MessageSquare size={14} style={{ color: "var(--accent)", flexShrink: 0 }} />
+            <p className="text-xs font-bold uppercase tracking-widest"
+              style={{ color: "rgba(201,168,76,0.65)", letterSpacing: "0.12em" }}>
+              Dedica personale
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+              style={{ background: "rgba(201,168,76,0.1)", color: "rgba(201,168,76,0.5)", fontSize: "0.6rem", border: "1px solid rgba(201,168,76,0.15)" }}>
+              visibile al cliente
+            </span>
+          </div>
+          <button
+            onClick={() => { setEditingDedica(e => !e); setDedicaSaved(false); }}
+            className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg transition-all font-medium flex-shrink-0"
+            style={{ background: editingDedica ? "var(--surface-md)" : "rgba(201,168,76,0.1)", color: editingDedica ? "var(--text-muted)" : "var(--accent)", border: "1px solid rgba(201,168,76,0.18)" }}>
+            {editingDedica ? "Annulla" : description ? <><Pencil size={11} />Modifica</> : "Aggiungi"}
+          </button>
+        </div>
+        {editingDedica ? (
+          <div className="p-4">
+            <textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Scrivi un messaggio personale per il tuo cliente — apparirà nel suo portale…"
+              rows={3}
+              maxLength={400}
+              className="w-full resize-none text-sm rounded-xl px-4 py-3 outline-none"
+              style={{ background: "var(--surface-sm)", border: "1px solid rgba(201,168,76,0.22)", color: "var(--text)", fontStyle: "italic", lineHeight: 1.6 }}
+            />
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-xs" style={{ color: "var(--text-faint)" }}>{description.length}/400</span>
+              <button onClick={handleSaveDedica}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 accent-btn">
+                <Check size={13} /> Salva dedica
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="px-4 py-3">
+            {description ? (
+              <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+                &ldquo;{description}&rdquo;
+              </p>
+            ) : (
+              <p className="text-xs" style={{ color: "var(--text-faint)" }}>
+                Nessuna dedica — aggiungine una per rendere il piano più personale
+              </p>
+            )}
+          </div>
+        )}
+        {dedicaSaved && (
+          <div className="px-4 pb-3 flex items-center gap-2 text-xs font-semibold" style={{ color: "#22c55e" }}>
+            <Check size={12} /> Dedica salvata — il cliente la vedrà nel suo portale
+          </div>
+        )}
       </div>
 
       {/* ── Logbook view (Google Sheets style) ── */}
