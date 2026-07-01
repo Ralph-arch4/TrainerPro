@@ -9,6 +9,7 @@ import {
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
   Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle, Scale, TrendingDown,
   BarChart2, CreditCard, Target, Heart, ClipboardCopy, CalendarClock, ShieldAlert,
+  CalendarCheck,
 } from "lucide-react";
 
 function nameHash(name: string): number[] {
@@ -599,6 +600,33 @@ export default function DashboardPage() {
       .slice(0, 6);
   }, [clients]);
 
+  // Heatmap settimanale: esercizi unici loggati per ogni giorno della settimana corrente
+  const weeklyHeatmap = useMemo(() => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0=Dom, 1=Lun...
+    const mondayDate = new Date(now);
+    mondayDate.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
+    mondayDate.setHours(0, 0, 0, 0);
+    const todayIndex = (dayOfWeek + 6) % 7; // Lun=0..Dom=6
+    const rows = clients
+      .filter(c => c.status === "attivo")
+      .map(c => {
+        const allLogs = c.workoutPlans.flatMap(p => p.logs ?? []);
+        const days = Array.from({ length: 7 }, (_, i) => {
+          const dayStart = mondayDate.getTime() + i * 86400000;
+          const dayEnd = dayStart + 86400000;
+          return new Set(
+            allLogs
+              .filter(l => { const t = new Date(l.loggedAt).getTime(); return t >= dayStart && t < dayEnd; })
+              .map(l => l.exerciseId)
+          ).size;
+        });
+        return { client: c, days };
+      })
+      .slice(0, 10);
+    return { rows, todayIndex };
+  }, [clients]);
+
   // Smart onboarding: check what's actually done
   const hasClients     = clients.length > 0;
   const hasScheda      = clients.some((c) => c.workoutPlans.length > 0);
@@ -775,6 +803,64 @@ export default function DashboardPage() {
               {inactiveCount} {inactiveCount === 1 ? "cliente" : "clienti"} senza attività da 14 giorni
             </Link>
           )}
+        </div>
+      )}
+
+      {/* ── Heatmap Settimana in Palestra ────────────────────────────────── */}
+      {weeklyHeatmap.rows.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.15)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <CalendarCheck size={14} style={{ color: "#C9A84C" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Settimana in Palestra
+            </p>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>settimana corrente</span>
+          </div>
+          {/* Day labels */}
+          <div className="flex items-center gap-1.5 mb-1.5" style={{ paddingLeft: 80 }}>
+            {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map((d, i) => (
+              <div key={i} className="flex-1 text-center"
+                style={{ fontSize: 10, fontWeight: 700, color: i === weeklyHeatmap.todayIndex ? "#C9A84C" : "var(--text-dim)" }}>
+                {d}
+              </div>
+            ))}
+          </div>
+          {/* Client rows */}
+          <div className="space-y-1.5">
+            {weeklyHeatmap.rows.map(({ client, days }) => (
+              <Link key={client.id} href={`/dashboard/clienti/${client.id}`} className="flex items-center gap-1.5 group">
+                <p className="text-xs font-semibold truncate group-hover:underline"
+                  style={{ width: 76, flexShrink: 0, color: "var(--text)" }}>
+                  {client.name.split(" ")[0]}
+                </p>
+                {days.map((count, i) => {
+                  const isToday = i === weeklyHeatmap.todayIndex;
+                  const isFuture = i > weeklyHeatmap.todayIndex;
+                  const bg = count === 0
+                    ? isFuture ? "rgba(255,255,255,0.02)" : isToday ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.05)"
+                    : count >= 4 ? "rgba(201,168,76,0.75)" : count >= 2 ? "rgba(201,168,76,0.5)" : "rgba(201,168,76,0.3)";
+                  return (
+                    <div key={i} className="flex-1 rounded-md"
+                      style={{ height: 22, background: bg, border: isToday ? "1px solid rgba(201,168,76,0.35)" : "1px solid transparent" }} />
+                  );
+                })}
+              </Link>
+            ))}
+          </div>
+          {/* Legend */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            {[
+              { bg: "rgba(255,255,255,0.05)", label: "Nessuna sessione" },
+              { bg: "rgba(201,168,76,0.3)", label: "1–2 esercizi" },
+              { bg: "rgba(201,168,76,0.5)", label: "3–4 esercizi" },
+              { bg: "rgba(201,168,76,0.75)", label: "5+ esercizi" },
+            ].map(({ bg, label }) => (
+              <div key={label} className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-sm" style={{ background: bg }} />
+                <span className="text-xs" style={{ color: "var(--text-dim)" }}>{label}</span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
