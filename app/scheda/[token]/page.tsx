@@ -82,11 +82,44 @@ function SupplementCard({ item }: { item: SupplementItem }) {
   );
 }
 
+function TrainerBrandHeader({ trainerName, planName }: { trainerName: string; planName: string }) {
+  const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
+  return (
+    <div className="relative overflow-hidden mb-6 rounded-[1.25rem]"
+      style={{ background: "linear-gradient(160deg, rgba(12,4,4,0.97) 0%, rgba(28,10,6,0.92) 55%, rgba(12,4,4,0.97) 100%)", border: "1px solid rgba(201,168,76,0.14)" }}>
+      <div className="absolute inset-0 flex items-center justify-end pr-5 pointer-events-none select-none" aria-hidden="true">
+        <span style={{ fontSize: 110, fontFamily: "Georgia,'Times New Roman',serif", fontStyle: "italic", color: "rgba(201,168,76,0.045)", lineHeight: 1 }}>{initials}</span>
+      </div>
+      <div className="absolute top-0 left-0 w-44 h-44 pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%)", transform: "translate(-20%,-20%)" }} />
+      <div className="relative px-5 py-5">
+        <div className="flex items-center gap-4">
+          <div className="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center"
+            style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.28)" }}>
+            <span className="text-xl font-black" style={{ color: "rgba(201,168,76,0.85)", fontFamily: "Georgia,'Times New Roman',serif", fontStyle: "italic" }}>{initials}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] uppercase tracking-[0.28em] mb-0.5" style={{ color: "rgba(201,168,76,0.45)" }}>Piano personale by</p>
+            <p className="text-base font-black leading-tight" style={{ color: "var(--text)", fontFamily: "Georgia,'Times New Roman',serif", fontStyle: "italic" }}>{trainerName}</p>
+          </div>
+          <div className="flex-shrink-0 text-right">
+            <p className="text-[10px] font-black tracking-[0.22em] uppercase" style={{ color: "rgba(201,168,76,0.3)" }}>Trainer</p>
+            <p className="text-[10px] font-black tracking-[0.22em] uppercase" style={{ color: "rgba(201,168,76,0.3)" }}>Pro</p>
+          </div>
+        </div>
+        <div className="h-px mt-4 mb-3" style={{ background: "linear-gradient(90deg, rgba(201,168,76,0.25), rgba(201,168,76,0.08), transparent)" }} />
+        <p className="text-sm font-bold truncate" style={{ color: "var(--text-dim)" }}>{planName}</p>
+      </div>
+    </div>
+  );
+}
+
 function TrainerSeal({ trainerName }: { trainerName: string }) {
   const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
   const cx = 64, cy = 64, textR = 44;
   const arcPath = `M ${cx - textR},${cy} a ${textR},${textR} 0 1,1 ${textR * 2},0 a ${textR},${textR} 0 1,1 -${textR * 2},0`;
-  const sealText = "· PIANO CERTIFICATO · REC Studio ·";
+  const nameSlug = trainerName.toUpperCase().slice(0, 18);
+  const sealText = `· PIANO CERTIFICATO · ${nameSlug} ·`;
   return (
     <div className="flex flex-col items-center py-6">
       <div className="relative" style={{ width: 128, height: 128 }}>
@@ -279,11 +312,14 @@ export default function PublicSchedaPage() {
               </p>
             </div>
           </div>
-          <span className="text-xs font-semibold accent-text">REC Studio</span>
+          <span className="text-xs font-semibold accent-text truncate max-w-[100px]">{trainerName}</span>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
+
+        {/* Trainer brand header */}
+        <TrainerBrandHeader trainerName={trainerName} planName={plan.name} />
 
         {/* Progress ring */}
         <div className="flex items-center gap-5 mb-6 p-4 rounded-2xl"
