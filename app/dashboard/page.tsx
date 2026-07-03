@@ -742,7 +742,7 @@ export default function DashboardPage() {
 
       {/* ── Coach Pulse ─────────────────────────────────────────────────── */}
       {coachPulse && (
-        <div className="flex items-center gap-4 p-4 rounded-2xl mb-4"
+        <div className="flex items-center gap-4 p-4 rounded-2xl mb-4 flex-wrap"
           style={{ background: `${coachPulse.color}09`, border: `1px solid ${coachPulse.color}30` }}>
           {/* Score ring */}
           <div className="relative flex-shrink-0" style={{ width: 52, height: 52 }}>
@@ -760,21 +760,23 @@ export default function DashboardPage() {
             <p className="text-sm font-bold" style={{ color: coachPulse.color }}>{coachPulse.label}</p>
             <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>{coachPulse.sentence}</p>
           </div>
-          {/* Trend pill */}
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
-            style={{
-              background: `${coachPulse.color}18`,
-              color: coachPulse.color,
-              border: `1px solid ${coachPulse.color}30`,
-            }}>
-            {coachPulse.trendLabel}
-          </span>
-          {/* Copia riepilogo */}
-          <button onClick={copyWeeklyRecap} title="Copia riepilogo settimanale"
-            className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
-            style={{ background: `${coachPulse.color}18`, color: coachPulse.color }}>
-            <ClipboardCopy size={14} />
-          </button>
+          {/* Trend pill + copy button: wrap onto their own row on mobile, inline on desktop */}
+          <div className="flex items-center gap-2 flex-shrink-0 basis-full sm:basis-auto justify-end">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
+              style={{
+                background: `${coachPulse.color}18`,
+                color: coachPulse.color,
+                border: `1px solid ${coachPulse.color}30`,
+              }}>
+              {coachPulse.trendLabel}
+            </span>
+            {/* Copia riepilogo */}
+            <button onClick={copyWeeklyRecap} title="Copia riepilogo settimanale"
+              className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
+              style={{ background: `${coachPulse.color}18`, color: coachPulse.color }}>
+              <ClipboardCopy size={14} />
+            </button>
+          </div>
         </div>
       )}
 
@@ -816,36 +818,42 @@ export default function DashboardPage() {
             </p>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>settimana corrente</span>
           </div>
-          {/* Day labels */}
-          <div className="flex items-center gap-1.5 mb-1.5" style={{ paddingLeft: 80 }}>
-            {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map((d, i) => (
-              <div key={i} className="flex-1 text-center"
-                style={{ fontSize: 10, fontWeight: 700, color: i === weeklyHeatmap.todayIndex ? "#C9A84C" : "var(--text-dim)" }}>
-                {d}
+          {/* Scrollable grid: day labels + client rows */}
+          <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
+            <div className="min-w-max">
+              {/* Day labels */}
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <div style={{ width: 76, flexShrink: 0 }} />
+                {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map((d, i) => (
+                  <div key={i} className="text-center"
+                    style={{ width: 34, flexShrink: 0, fontSize: 10, fontWeight: 700, color: i === weeklyHeatmap.todayIndex ? "#C9A84C" : "var(--text-dim)" }}>
+                    {d}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          {/* Client rows */}
-          <div className="space-y-1.5">
-            {weeklyHeatmap.rows.map(({ client, days }) => (
-              <Link key={client.id} href={`/dashboard/clienti/${client.id}`} className="flex items-center gap-1.5 group">
-                <p className="text-xs font-semibold truncate group-hover:underline"
-                  style={{ width: 76, flexShrink: 0, color: "var(--text)" }}>
-                  {client.name.split(" ")[0]}
-                </p>
-                {days.map((count, i) => {
-                  const isToday = i === weeklyHeatmap.todayIndex;
-                  const isFuture = i > weeklyHeatmap.todayIndex;
-                  const bg = count === 0
-                    ? isFuture ? "rgba(255,255,255,0.02)" : isToday ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.05)"
-                    : count >= 4 ? "rgba(201,168,76,0.75)" : count >= 2 ? "rgba(201,168,76,0.5)" : "rgba(201,168,76,0.3)";
-                  return (
-                    <div key={i} className="flex-1 rounded-md"
-                      style={{ height: 22, background: bg, border: isToday ? "1px solid rgba(201,168,76,0.35)" : "1px solid transparent" }} />
-                  );
-                })}
-              </Link>
-            ))}
+              {/* Client rows */}
+              <div className="space-y-1.5">
+                {weeklyHeatmap.rows.map(({ client, days }) => (
+                  <Link key={client.id} href={`/dashboard/clienti/${client.id}`} className="flex items-center gap-1.5 group">
+                    <p className="text-xs font-semibold truncate group-hover:underline"
+                      style={{ width: 76, flexShrink: 0, color: "var(--text)" }}>
+                      {client.name.split(" ")[0]}
+                    </p>
+                    {days.map((count, i) => {
+                      const isToday = i === weeklyHeatmap.todayIndex;
+                      const isFuture = i > weeklyHeatmap.todayIndex;
+                      const bg = count === 0
+                        ? isFuture ? "rgba(255,255,255,0.02)" : isToday ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.05)"
+                        : count >= 4 ? "rgba(201,168,76,0.75)" : count >= 2 ? "rgba(201,168,76,0.5)" : "rgba(201,168,76,0.3)";
+                      return (
+                        <div key={i} className="rounded-md"
+                          style={{ width: 34, height: 22, flexShrink: 0, background: bg, border: isToday ? "1px solid rgba(201,168,76,0.35)" : "1px solid transparent" }} />
+                      );
+                    })}
+                  </Link>
+                ))}
+              </div>
+            </div>
           </div>
           {/* Legend */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>

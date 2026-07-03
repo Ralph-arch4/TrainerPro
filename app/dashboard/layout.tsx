@@ -7,7 +7,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-dvh flex" style={{ background: "var(--black)" }}>
       <AppNav />
       <SupabaseDataLoader />
-      <main className="dashboard-main flex-1 lg:ml-60 min-h-dvh">
+      <main className="dashboard-main flex-1 min-w-0 lg:ml-60 min-h-dvh">
         {children}
       </main>
       <ToastProvider />
