@@ -991,6 +991,68 @@ function TrainerNotificationBanner({ trainerName }: { trainerName: string }) {
   );
 }
 
+// ── Segnale al Trainer ───────────────────────────────────────────────────────
+function SignalButton({ emoji, label, msg, color }: { emoji: string; label: string; msg: string; color: string }) {
+  const [copied, setCopied] = useState(false);
+  function send() {
+    navigator.clipboard.writeText(msg).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2800);
+    });
+  }
+  return (
+    <button onClick={send}
+      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all active:scale-[0.98]"
+      style={{ background: copied ? `${color}12` : "var(--surface-sm)", border: `1px solid ${copied ? color + "35" : "var(--border)"}` }}>
+      <span style={{ fontSize: "1.1rem", lineHeight: 1, flexShrink: 0 }}>{emoji}</span>
+      <span className="flex-1 text-sm font-medium" style={{ color: copied ? color : "var(--text-muted)" }}>
+        {copied ? "Copiato! Incollalo su WhatsApp" : label}
+      </span>
+      {copied ? <Check size={13} style={{ color, flexShrink: 0 }} /> : <Copy size={13} style={{ color: "var(--text-faint)", flexShrink: 0 }} />}
+    </button>
+  );
+}
+
+function TrainerSignalCard({ trainerName, streak, totalLogs }: { trainerName: string; streak: number; totalLogs: number }) {
+  const signals = [
+    {
+      emoji: "🙋",
+      label: "Ho una domanda sul piano",
+      msg: `Ciao ${trainerName}! Ho una domanda sul mio piano d'allenamento. Quando hai un momento, fammi sapere. Grazie!`,
+      color: "#38bdf8",
+    },
+    {
+      emoji: "🏆",
+      label: totalLogs > 0 ? `Ho completato ${totalLogs} sessioni — grazie!` : "Ho completato il piano!",
+      msg: `Ciao ${trainerName}! Volevo dirtelo — ho appena completato ${totalLogs > 0 ? `${totalLogs} sessioni` : "il piano"}! Sono soddisfatto dei progressi. Quando iniziamo il prossimo step?`,
+      color: "#fbbf24",
+    },
+    {
+      emoji: "😥",
+      label: "Ho bisogno di un tuo consiglio",
+      msg: `Ciao ${trainerName}, avrei bisogno di un tuo consiglio${streak > 2 ? ` (sono in streak da ${streak} giorni ma ho qualcosa da chiederti)` : ""}. Quando puoi, contattami. Grazie!`,
+      color: "#f472b6",
+    },
+  ];
+  return (
+    <div className="mt-6 rounded-2xl p-4"
+      style={{ background: "var(--surface-xs)", border: "1px solid var(--border)" }}>
+      <div className="flex items-center gap-2 mb-3">
+        <MessageSquare size={13} style={{ color: "var(--text-dim)" }} />
+        <p className="text-xs font-black uppercase tracking-[0.14em]" style={{ color: "var(--text-dim)" }}>
+          Invia un segnale a {trainerName}
+        </p>
+      </div>
+      <div className="space-y-2">
+        {signals.map(s => <SignalButton key={s.emoji} {...s} />)}
+      </div>
+      <p className="text-xs mt-3 text-center" style={{ color: "var(--text-faint)" }}>
+        Il messaggio viene copiato — incollalo su WhatsApp o email
+      </p>
+    </div>
+  );
+}
+
 // ── Prima Consegna del Piano ─────────────────────────────────────────────────
 function WelcomePlanDelivery({ trainerName, planName, daysPerWeek, totalWeeks, onAccept }: {
   trainerName: string; planName: string; daysPerWeek: number; totalWeeks: number; onAccept: () => void;
@@ -1853,6 +1915,7 @@ export default function ClientPortalPage() {
                 onUpsertLog={handleUpsertLog}
               />
             )}
+            <TrainerSignalCard trainerName={trainerName} streak={streak} totalLogs={totalLogs} />
           </motion.div>
         )}
 
