@@ -7,7 +7,7 @@ import WorkoutSpreadsheet from "@/components/WorkoutSpreadsheet";
 import WorkoutLogbook from "@/components/WorkoutLogbook";
 import { showToast } from "@/components/Toast";
 import type { Exercise, SupplementItem } from "@/lib/store";
-import { ArrowLeft, Dumbbell, LayoutGrid, Table2, MessageSquare, Check, Pencil } from "lucide-react";
+import { ArrowLeft, Dumbbell, LayoutGrid, Table2, MessageSquare, Check, Pencil, Loader2 } from "lucide-react";
 
 type ViewMode = "logbook" | "spreadsheet";
 
@@ -16,6 +16,7 @@ export default function WorkoutPlanPage() {
   const router = useRouter();
   const client = useAppStore((s) => s.clients.find((c) => c.id === id));
   const plan = client?.workoutPlans.find((p) => p.id === planId);
+  const dataLoaded = useAppStore((s) => s.dataLoaded);
   const addExercise = useAppStore((s) => s.addExercise);
   const updateExercise = useAppStore((s) => s.updateExercise);
   const removeExercise = useAppStore((s) => s.removeExercise);
@@ -56,6 +57,15 @@ export default function WorkoutPlanPage() {
   }, [planId]);
 
   if (!client || !plan) {
+    // Store is empty until SupabaseDataLoader finishes (client data is no longer
+    // persisted to localStorage): show a loader instead of a false "not found".
+    if (!dataLoaded) {
+      return (
+        <div className="p-8 flex items-center justify-center" style={{ minHeight: "60vh" }}>
+          <Loader2 size={24} className="animate-spin" style={{ color: "var(--accent)" }} />
+        </div>
+      );
+    }
     return (
       <div className="p-8 text-center">
         <p style={{ color: "var(--text-dim)" }}>Scheda non trovata.</p>

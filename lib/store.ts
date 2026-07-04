@@ -354,6 +354,15 @@ export const useAppStore = create<AppState>()(
       removeNote: (clientId, noteId) =>
         set((s) => ({ clients: s.clients.map((c) => c.id === clientId ? { ...c, notes: c.notes.filter((n) => n.id !== noteId) } : c) })),
     }),
-    { name: "trainerpro-storage" }
+    {
+      name: "trainerpro-storage",
+      // Persist only lightweight session state. The `clients` array (and all its
+      // plans/logs/measurements) is the heavy part and is always re-fetched from
+      // Supabase — the source of truth — by SupabaseDataLoader on mount. Keeping
+      // it out of localStorage avoids the ~5MB quota ceiling (which silently
+      // breaks persist for trainers with many clients) and the synchronous
+      // multi-MB serialization that runs on every store mutation.
+      partialize: (s) => ({ user: s.user, activeClientId: s.activeClientId }),
+    }
   )
 );

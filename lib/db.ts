@@ -7,10 +7,17 @@ type NullablePatch<T> = { [K in keyof T]?: T[K] | null };
 
 const db = () => createClient();
 
+// Returns the current user id for populating user_id on inserts.
+//
+// Uses getSession() (reads the locally cached session, no network) instead of
+// getUser() (a round-trip to the auth server on EVERY write). This is safe here:
+// the id is only used to fill the user_id column, and every table's RLS policy
+// enforces `auth.uid() = user_id` server-side from the real JWT — a tampered or
+// stale id can never write a row it shouldn't, the INSERT just fails the policy.
 async function uid(): Promise<string> {
-  const { data: { user } } = await createClient().auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  return user.id;
+  const { data: { session } } = await createClient().auth.getSession();
+  if (!session?.user) throw new Error("Not authenticated");
+  return session.user.id;
 }
 
 // ─── Profiles ─────────────────────────────────────────────────────────────────

@@ -253,6 +253,7 @@ function ClientiPageInner() {
   const searchParams = useSearchParams();
   const user = useAppStore((s) => s.user);
   const clients = useAppStore((s) => s.clients);
+  const dataLoaded = useAppStore((s) => s.dataLoaded);
   const addClient = useAppStore((s) => s.addClient);
   const removeClient = useAppStore((s) => s.removeClient);
 
@@ -427,8 +428,15 @@ function ClientiPageInner() {
         );
       })()}
 
+      {/* Loading state — store is populated by SupabaseDataLoader (not persisted) */}
+      {filtered.length === 0 && clients.length === 0 && !dataLoaded && (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 size={24} className="animate-spin" style={{ color: "var(--accent)" }} />
+        </div>
+      )}
+
       {/* Empty state */}
-      {filtered.length === 0 && (
+      {filtered.length === 0 && (clients.length > 0 || dataLoaded) && (
         <div className="text-center py-20 card-luxury rounded-2xl">
           <Users size={48} className="mx-auto mb-4" style={{ color: "rgba(255,107,43,0.25)" }} />
           <p className="font-semibold mb-1" style={{ color: "var(--text)" }}>

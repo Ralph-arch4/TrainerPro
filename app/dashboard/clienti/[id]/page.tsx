@@ -170,6 +170,7 @@ export default function ClientDetailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const client = useAppStore((s) => s.clients.find((c) => c.id === id));
+  const dataLoaded = useAppStore((s) => s.dataLoaded);
   const user = useAppStore((s) => s.user);
   const updateClient = useAppStore((s) => s.updateClient);
   const addPhase = useAppStore((s) => s.addPhase);
@@ -537,6 +538,16 @@ export default function ClientDetailPage() {
 
 
   if (!client) {
+    // Client data is no longer persisted to localStorage: on a deep-link reload
+    // the store is empty until SupabaseDataLoader finishes. Show a loader while
+    // it's still loading instead of a false "not found".
+    if (!dataLoaded) {
+      return (
+        <div className="p-8 flex items-center justify-center" style={{ minHeight: "60vh" }}>
+          <Loader2 size={24} className="animate-spin" style={{ color: "var(--accent)" }} />
+        </div>
+      );
+    }
     return (
       <div className="p-8 text-center">
         <p style={{ color: "var(--text-muted)" }}>Cliente non trovato.</p>

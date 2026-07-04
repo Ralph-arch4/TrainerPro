@@ -1,7 +1,7 @@
 ﻿"use client";
 import { useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
-import { FileDown, Printer, CheckCircle2, Dumbbell, UtensilsCrossed, TrendingUp, Activity, User, Users } from "lucide-react";
+import { FileDown, Printer, CheckCircle2, Dumbbell, UtensilsCrossed, TrendingUp, Activity, User, Users, Loader2 } from "lucide-react";
 
 const phaseTypeLabel: Record<string, string> = { bulk: "Bulk", cut: "Cut", maintenance: "Mantenimento", custom: "Personalizzata" };
 const goalLabel: Record<string, string> = { dimagrimento: "Dimagrimento", massa: "Massa", tonificazione: "Tonificazione", performance: "Performance" };
@@ -15,6 +15,7 @@ type ExportSection = "anagrafica" | "fasi" | "schede" | "dieta" | "misurazioni";
 
 export default function ExportPage() {
   const clients = useAppStore((s) => s.clients);
+  const dataLoaded = useAppStore((s) => s.dataLoaded);
   const user = useAppStore((s) => s.user);
 
   const [selectedClientId, setSelectedClientId] = useState<string>(clients[0]?.id ?? "");
@@ -44,6 +45,16 @@ export default function ExportPage() {
     { key: "dieta", label: "Piani alimentari", icon: UtensilsCrossed, count: client?.dietPlans.length },
     { key: "misurazioni", label: "Misurazioni corporee", icon: TrendingUp, count: client?.measurements.length },
   ];
+
+  // Client data is no longer persisted to localStorage: avoid flashing the
+  // "no clients" empty state before SupabaseDataLoader has populated the store.
+  if (clients.length === 0 && !dataLoaded) {
+    return (
+      <div className="p-6 lg:p-8 flex items-center justify-center" style={{ minHeight: "60vh" }}>
+        <Loader2 size={24} className="animate-spin" style={{ color: "var(--accent)" }} />
+      </div>
+    );
+  }
 
   if (clients.length === 0) {
     return (

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "crypto";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -19,22 +20,27 @@ function adminDb() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-// ── Simple in-memory rate limiter (best-effort; resets on cold start) ────────
-const rateMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 8;        // max submissions per window
-const WINDOW_MS  = 60_000;   // 1-minute window
+// ── DB-backed rate limiter ───────────────────────────────────────────────────
+// The previous in-memory Map didn't survive serverless cold starts and was not
+// shared across concurrent instances, so the limit was effectively per-instance.
+// The check_rate_limit RPC (migration 018) is atomic and shared across all
+// instances. IP is hashed so no plaintext IP is stored.
+const RATE_LIMIT = 8;     // max submissions per window
+const WINDOW_SEC = 60;    // 1-minute window
+const IP_SALT = process.env.AUDIT_IP_SALT ?? "tp-scan-audit-2026";
 
-function checkRateLimit(ip: string): boolean {
-  const now   = Date.now();
-  const entry = rateMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateMap.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+async function checkRateLimit(db: ReturnType<typeof adminDb>, ip: string): Promise<boolean> {
+  const key = `intake:${createHash("sha256").update(IP_SALT + ip).digest("hex").slice(0, 16)}`;
+  try {
+    const { data } = await db.rpc("check_rate_limit", {
+      p_key: key, p_limit: RATE_LIMIT, p_window_sec: WINDOW_SEC,
+    });
+    return data === true;
+  } catch {
+    // If the limiter backend is unavailable, fail open rather than block
+    // legitimate submissions (the whitelist + size guards still apply).
     return true;
   }
-  entry.count++;
-  // Prune map to avoid unbounded growth in long-lived instances
-  if (rateMap.size > 2000) rateMap.clear();
-  return entry.count <= RATE_LIMIT;
 }
 
 function getIp(req: NextRequest): string {
@@ -74,9 +80,10 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ token: string }> },
 ) {
-  // Rate limiting
+  // Rate limiting (DB-backed, shared across serverless instances)
   const ip = getIp(req);
-  if (!checkRateLimit(ip)) {
+  const db = adminDb();
+  if (!(await checkRateLimit(db, ip))) {
     return NextResponse.json(
       { error: "too_many_requests" },
       { status: 429, headers: { ...CORS, "Retry-After": "60" } },
@@ -140,7 +147,7 @@ export async function POST(
   }
 
   try {
-    const { error } = await adminDb()
+    const { error } = await db
       .from("intake_forms")
       .update({
         status:       "submitted",
