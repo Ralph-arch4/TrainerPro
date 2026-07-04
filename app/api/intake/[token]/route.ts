@@ -106,14 +106,37 @@ export async function POST(
     return NextResponse.json({ error: "missing_name" }, { status: 422, headers: CORS });
   }
 
-  // Sanitise: strip any keys that exceed 2 KB in value length
+  // Sanitise with a strict whitelist: only known IntakeResponse keys, only
+  // string values (trainingTypePreference: array of strings). Anything else —
+  // nested objects, numbers, extra keys — is dropped so it can never reach
+  // the trainer's UI.
+  const STRING_KEYS = new Set([
+    "fullName", "age", "height", "currentWeight",
+    "primaryGoal", "secondaryGoals", "motivation",
+    "gymExperience", "trainingYears", "hasFollowedProgram", "knownExercises",
+    "musclesFelt", "musclesNotFelt", "favoriteExercises", "unwantedExercises",
+    "strongExercises", "weakExercises", "pastSports", "currentSports",
+    "fitnessAssessment",
+    "sessionDuration", "trainingDaysPerWeek", "canTrainWeekend", "canTrainHome",
+    "homeEquipment", "fixedSchedule", "trainingPartner", "preferredTrainingTime",
+    "jointProblems", "pathologies", "injuries", "medications", "supplements",
+    "digestiveIssues",
+    "workDemanding", "workDaysPerWeek", "activityLevel", "sleepHours", "sleepQuality",
+    "eatingOutFrequency", "cheatFoods", "dietType", "foodAllergies",
+    "mealsPerDay", "mealDistribution", "canPrepMeals", "waterIntake",
+    "alcoholConsumption", "typicalDayMeals",
+  ]);
   const sanitised: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(body)) {
-    if (typeof v === "string" && v.length > 2000) {
-      sanitised[k] = v.slice(0, 2000);
-    } else {
-      sanitised[k] = v;
+    if (k === "trainingTypePreference") {
+      if (Array.isArray(v)) {
+        const arr = v.filter((x): x is string => typeof x === "string").map((x) => x.slice(0, 200)).slice(0, 20);
+        if (arr.length > 0) sanitised[k] = arr;
+      }
+      continue;
     }
+    if (!STRING_KEYS.has(k) || typeof v !== "string") continue;
+    sanitised[k] = v.length > 2000 ? v.slice(0, 2000) : v;
   }
 
   try {

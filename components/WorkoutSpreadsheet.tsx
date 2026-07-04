@@ -89,6 +89,29 @@ function exerciseToForm(ex: Exercise): ExerciseFormData {
   };
 }
 
+// ── Cell formatting for logs ──────────────────────────────────────────────────
+// Client-side logging stores per-set data as JSON in `reps`
+// ([{r:"12",w:"80",e:"8"},…]); render it human-readable instead of raw JSON.
+function formatCellLog(log: ExerciseLog | undefined): { weight: string | null; reps: string | null } {
+  if (!log) return { weight: null, reps: null };
+  const raw = log.reps ?? "";
+  try {
+    const p = JSON.parse(raw);
+    if (Array.isArray(p) && p[0] && typeof p[0] === "object" && "r" in p[0]) {
+      const sets = p as Array<{ r?: string; w?: string }>;
+      const repsList = sets.map((s) => (s.r ?? "").trim());
+      const weightList = sets.map((s) => (s.w ?? "").trim()).filter(Boolean);
+      const uniqueWeights = Array.from(new Set(weightList));
+      const weight = weightList.length === 0
+        ? (log.weight != null ? String(log.weight) : null)
+        : uniqueWeights.length === 1 ? uniqueWeights[0] : weightList.join("/");
+      const reps = repsList.some(Boolean) ? repsList.map((r) => r || "—").join("/") : null;
+      return { weight, reps };
+    }
+  } catch { /* legacy format below */ }
+  return { weight: log.weight != null ? String(log.weight) : null, reps: raw || null };
+}
+
 // Superset group color palette
 const SUPERSET_COLORS: Record<string, string> = {
   A: "#a78bfa", B: "#38bdf8", C: "#34d399", D: "#fbbf24",
@@ -322,7 +345,11 @@ export default function WorkoutSpreadsheet({
   onAddExercise, onRemoveExercise, onUpdateExercise,
   onMoveExercise, onUpsertLog,
 }: Props) {
-  const weeks = Array.from({ length: totalWeeks }, (_, i) => i + 1);
+  // totalWeeks === 0 means an open-ended plan: show logged weeks + the next one
+  const maxLoggedWeek = logs.length > 0 ? Math.max(...logs.map((l) => l.weekNumber)) : 0;
+  const isUnlimited = totalWeeks === 0;
+  const effectiveTotal = isUnlimited ? Math.max(maxLoggedWeek + 1, 4) : totalWeeks;
+  const weeks = Array.from({ length: effectiveTotal }, (_, i) => i + 1);
   const days = Array.from({ length: daysPerWeek }, (_, i) => i + 1);
 
   const [activeDay, setActiveDay] = useState(1);
@@ -350,9 +377,10 @@ export default function WorkoutSpreadsheet({
 
   useEffect(() => {
     if (!isMobile || logs.length === 0) return;
-    const lastWeek = Math.min(Math.max(...logs.map((l) => l.weekNumber)), totalWeeks);
-    setMobileWeek(lastWeek);
-  }, [isMobile, logs.length, totalWeeks]);
+    const lastWeek = Math.min(Math.max(...logs.map((l) => l.weekNumber)), effectiveTotal);
+    setMobileWeek(Math.max(1, lastWeek));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobile, logs.length, effectiveTotal]);
 
   const shareUrl = typeof window !== "undefined" && shareToken
     ? `${window.location.origin}/scheda/${shareToken}`
@@ -400,13 +428,30 @@ export default function WorkoutSpreadsheet({
 
   function openCell(exerciseId: string, week: number) {
     const existing = getLog(exerciseId, week);
-    setActiveCell({ exerciseId, week, weight: existing?.weight?.toString() ?? "", reps: existing?.reps ?? "", note: existing?.note ?? "" });
+    // Per-set JSON logs are converted to the editable "12/10/8" form —
+    // saving from here rewrites the log in the legacy format (explicit trainer edit).
+    const formatted = formatCellLog(existing);
+    setActiveCell({
+      exerciseId, week,
+      weight: existing?.weight?.toString() ?? "",
+      reps: formatted.reps ?? "",
+      note: existing?.note ?? "",
+    });
   }
 
   function saveCell() {
     if (!activeCell) return;
     const { exerciseId, week, weight, reps, note } = activeCell;
-    if (!weight && !reps) { setActiveCell(null); return; }
+    const existing = getLog(exerciseId, week);
+    if (!weight && !reps && !note) {
+      // Everything blank: clear the cell if it had data, otherwise just close.
+      if (existing && (existing.weight != null || existing.reps || existing.note)) {
+        onUpsertLog({ exerciseId, weekNumber: week, weight: undefined, reps: undefined, note: undefined });
+        showToast("Cella svuotata");
+      }
+      setActiveCell(null);
+      return;
+    }
     onUpsertLog({ exerciseId, weekNumber: week, weight: weight ? parseFloat(weight) : undefined, reps: reps || undefined, note: note || undefined });
     setActiveCell(null);
     showToast("Salvato ✓");
@@ -538,9 +583,9 @@ export default function WorkoutSpreadsheet({
           </button>
           <div className="text-center">
             <p className="text-sm font-bold" style={{ color: "var(--ivory)" }}>Settimana {mobileWeek}</p>
-            <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>di {totalWeeks}</p>
+            <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{isUnlimited ? "piano aperto" : `di ${totalWeeks}`}</p>
           </div>
-          <button onClick={() => setMobileWeek((w) => Math.min(totalWeeks, w + 1))} disabled={mobileWeek === totalWeeks}
+          <button onClick={() => setMobileWeek((w) => Math.min(effectiveTotal, w + 1))} disabled={mobileWeek >= effectiveTotal}
             className="p-2 rounded-xl disabled:opacity-30" style={{ background: "rgba(255,255,255,0.05)" }}>
             <ChevronRight size={16} style={{ color: "var(--ivory)" }} />
           </button>
@@ -594,6 +639,7 @@ export default function WorkoutSpreadsheet({
               const prevEx = idx > 0 ? dayExercises[idx - 1] : null;
               const isSupersetContinue = color && prevEx?.supersetGroup === ex.supersetGroup;
               const log = getLog(ex.id, mobileWeek);
+              const cell = formatCellLog(log);
               const isEditingThis = editId === ex.id;
 
               return (
@@ -684,13 +730,13 @@ export default function WorkoutSpreadsheet({
                       <button onClick={() => openCell(ex.id, mobileWeek)}
                         className="w-full mt-2 py-2.5 rounded-xl text-sm transition-all"
                         style={{
-                          background: log?.weight || log?.reps ? "rgba(255,107,43,0.08)" : "rgba(255,255,255,0.03)",
-                          border: `1px solid ${log?.weight || log?.reps ? "rgba(255,107,43,0.2)" : "rgba(255,255,255,0.06)"}`,
+                          background: cell.weight || cell.reps ? "rgba(255,107,43,0.08)" : "rgba(255,255,255,0.03)",
+                          border: `1px solid ${cell.weight || cell.reps ? "rgba(255,107,43,0.2)" : "rgba(255,255,255,0.06)"}`,
                         }}>
-                        {log?.weight || log?.reps ? (
+                        {cell.weight || cell.reps ? (
                           <div className="flex items-center justify-center gap-3">
-                            {log?.weight && <span className="font-bold" style={{ color: "var(--accent-light)" }}>{log.weight} kg</span>}
-                            {log?.reps && <span style={{ color: "rgba(245,240,232,0.6)" }}>{log.reps} rep</span>}
+                            {cell.weight && <span className="font-bold" style={{ color: "var(--accent-light)" }}>{cell.weight} kg</span>}
+                            {cell.reps && <span style={{ color: "rgba(245,240,232,0.6)" }}>{cell.reps} rep</span>}
                             {log?.note && <span className="text-xs italic" style={{ color: "rgba(245,240,232,0.35)" }}>{log.note}</span>}
                             <Pencil size={11} style={{ color: "rgba(245,240,232,0.3)" }} />
                           </div>
@@ -822,7 +868,7 @@ export default function WorkoutSpreadsheet({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl" style={{ border: "1px solid rgba(255,107,43,0.12)" }}>
-          <table className="w-full border-collapse" style={{ minWidth: `${360 + totalWeeks * 120}px` }}>
+          <table className="w-full border-collapse" style={{ minWidth: `${360 + weeks.length * 120}px` }}>
             <thead>
               <tr style={{ background: "rgba(255,107,43,0.08)" }}>
                 {mode === "trainer" && <th className="w-8 p-2" style={{ borderRight: "1px solid rgba(255,107,43,0.1)" }} />}
@@ -934,8 +980,9 @@ export default function WorkoutSpreadsheet({
                     {/* Week log cells */}
                     {weeks.map((w) => {
                       const log = getLog(ex.id, w);
+                      const cell = formatCellLog(log);
                       const isActive = activeCell?.exerciseId === ex.id && activeCell?.week === w;
-                      const hasData = log?.weight || log?.reps;
+                      const hasData = cell.weight || cell.reps;
                       return (
                         <td key={w} className="p-0" style={{ borderRight: "1px solid rgba(255,107,43,0.05)", verticalAlign: "top" }}>
                           {isActive ? (
@@ -967,8 +1014,8 @@ export default function WorkoutSpreadsheet({
                               style={{ minHeight: "64px", cursor: "pointer" }}>
                               {hasData ? (
                                 <div>
-                                  {log?.weight && <p className="text-sm font-bold" style={{ color: "var(--accent-light)" }}>{log.weight} kg</p>}
-                                  {log?.reps && <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.6)" }}>{log.reps}</p>}
+                                  {cell.weight && <p className="text-sm font-bold" style={{ color: "var(--accent-light)" }}>{cell.weight} kg</p>}
+                                  {cell.reps && <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.6)" }}>{cell.reps}</p>}
                                   {log?.note && <p className="text-xs mt-0.5 italic truncate" style={{ color: "rgba(245,240,232,0.3)" }}>{log.note}</p>}
                                 </div>
                               ) : (

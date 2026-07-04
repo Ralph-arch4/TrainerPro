@@ -75,6 +75,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[fitness-scan] error:", msg);
-    return NextResponse.json({ error: "internal_error", detail: msg }, { status: 500 });
+    // Never echo internal error details to the client
+    return NextResponse.json({ error: "internal_error" }, { status: 500 });
   }
 }

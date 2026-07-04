@@ -93,7 +93,7 @@ export default function AppNav() {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 glass-dark"
+      <div className="lg:hidden print:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 glass-dark"
         style={{ height: "calc(env(safe-area-inset-top, 0px) + 3.5rem)", paddingTop: "env(safe-area-inset-top, 0px)" }}>
         <div className="flex items-center gap-2">
           <Dumbbell size={20} style={{ color: "var(--accent)" }} />
@@ -109,7 +109,7 @@ export default function AppNav() {
 
       {/* Mobile drawer */}
       {open && (
-        <div className="lg:hidden fixed inset-0 z-40" onClick={() => setOpen(false)}>
+        <div className="lg:hidden print:hidden fixed inset-0 z-40" onClick={() => setOpen(false)}>
           <div className="absolute inset-0" style={{ background: "var(--surface-modal)" }} />
           <div className="absolute left-0 top-0 bottom-0 w-64 glass-dark" onClick={(e) => e.stopPropagation()}>
             <NavContent />
@@ -118,7 +118,7 @@ export default function AppNav() {
       )}
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-60 glass-dark z-30">
+      <aside className="hidden lg:flex print:hidden flex-col fixed left-0 top-0 bottom-0 w-60 glass-dark z-30">
         <NavContent />
       </aside>
     </>

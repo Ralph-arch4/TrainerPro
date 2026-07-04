@@ -89,8 +89,10 @@ export const TIER_ORDER: Tier[] = ["E", "D", "C", "B", "A", "S"];
 export function computeTier(
   bodyFat: number | null,
   muscleMass: string | null
-): Tier {
-  const bf = bodyFat ?? 28;
+): Tier | null {
+  // No measured body fat = no rank. Assigning a default would fabricate a result.
+  if (bodyFat == null) return null;
+  const bf = bodyFat;
   const highMuscle = muscleMass?.toLowerCase().includes("alta") || muscleMass?.toLowerCase().includes("high");
   const lowMuscle  = muscleMass?.toLowerCase().includes("bassa") || muscleMass?.toLowerCase().includes("low");
 

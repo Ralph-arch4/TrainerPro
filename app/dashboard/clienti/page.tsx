@@ -321,8 +321,15 @@ function ClientiPageInner() {
     e.preventDefault();
     e.stopPropagation();
     if (!confirm(`Eliminare "${name}"? Questa azione è irreversibile.`)) return;
+    const snapshot = useAppStore.getState().clients.find((c) => c.id === id);
     removeClient(id);
-    try { await dbClients.remove(id); } catch {}
+    try {
+      await dbClients.remove(id);
+    } catch {
+      // DB delete failed: restore the client so UI and DB stay in sync
+      if (snapshot) useAppStore.setState((s) => ({ clients: [...s.clients, snapshot] }));
+      alert("Errore nell'eliminazione del cliente. Riprova.");
+    }
   }
 
   return (
@@ -538,7 +545,7 @@ function ClientiPageInner() {
                   </span>
                 )}
                 <span className="flex items-center gap-1"><Activity size={11} /> {client.phases.length} fasi</span>
-                {client.monthlyFee && <span style={{ color: "var(--accent-light)" }}>€{client.monthlyFee}/m</span>}
+                {client.monthlyFee != null && <span style={{ color: "var(--accent-light)" }}>€{client.monthlyFee}/m</span>}
               </div>
             </div>
             {(forma || progressionReady > 0) && (

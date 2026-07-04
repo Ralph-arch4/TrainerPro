@@ -5,6 +5,7 @@ import { useAppStore } from "@/lib/store";
 import { dbWorkoutPlans, dbExerciseLogs } from "@/lib/db";
 import WorkoutSpreadsheet from "@/components/WorkoutSpreadsheet";
 import WorkoutLogbook from "@/components/WorkoutLogbook";
+import { showToast } from "@/components/Toast";
 import type { Exercise, SupplementItem } from "@/lib/store";
 import { ArrowLeft, Dumbbell, LayoutGrid, Table2, MessageSquare, Check, Pencil } from "lucide-react";
 
@@ -23,6 +24,7 @@ export default function WorkoutPlanPage() {
   const removeLog = useAppStore((s) => s.removeLog);
   const updateWorkoutPlan = useAppStore((s) => s.updateWorkoutPlan);
   const synced = useRef(false);
+  const syncQueue = useRef<Promise<void>>(Promise.resolve());
   const [viewMode, setViewMode] = useState<ViewMode>("logbook");
   const [description, setDescription] = useState(() => plan?.description ?? "");
   const [editingDedica, setEditingDedica] = useState(false);
@@ -65,9 +67,14 @@ export default function WorkoutPlanPage() {
   }
 
   function syncExercisesToDb(exercises: Exercise[]) {
-    dbWorkoutPlans.update(planId, {
-      exercises: JSON.stringify(exercises) as unknown as Exercise[],
-    } as Parameters<typeof dbWorkoutPlans.update>[1]).catch(() => {});
+    // Serialize writes: rapid successive edits (e.g. CSV import adding N rows)
+    // each rewrite the whole exercises array — if requests complete out of
+    // order, an older/smaller array could win. Chaining guarantees ordering.
+    syncQueue.current = syncQueue.current
+      .then(() => dbWorkoutPlans.update(planId, { exercises }))
+      .catch(() => {
+        showToast("Errore nel salvataggio degli esercizi. Ricarica la pagina.", "error");
+      });
   }
 
   function getExercises() {
@@ -158,7 +165,7 @@ export default function WorkoutPlanPage() {
           <div>
             <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>{plan.name}</h1>
             <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>
-              {plan.daysPerWeek} giorni/sett · {plan.totalWeeks} settimane · {plan.exercises.length} esercizi
+              {plan.daysPerWeek} giorni/sett · {plan.totalWeeks ? `${plan.totalWeeks} settimane` : "durata libera"} · {plan.exercises.length} esercizi
             </p>
           </div>
         </div>
