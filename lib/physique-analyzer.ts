@@ -63,11 +63,6 @@ function seededPick<T>(arr: T[], seed: number, slot: number): T {
   return arr[h % arr.length];
 }
 
-function seededFloat(seed: number, slot: number, min: number, max: number): number {
-  const h = (((seed ^ (slot * 0x6c62272e)) * 0x01000193) >>> 0);
-  return min + ((h & 0xFFFF) / 0xFFFF) * (max - min);
-}
-
 // ── Classification ────────────────────────────────────────────────────────────
 
 type BodyType = "mesomorfo" | "ectomorfo" | "endomorfo" | "misto";
@@ -79,10 +74,8 @@ function classifyBodyType(
   const m = features?.metrics;
 
   if (!m || m.shoulder_hip_ratio == null) {
-    // No keypoint data — seed-based fallback with realistic distribution
-    // Population approx: 40% misto, 30% meso, 20% ecto, 10% endo
-    const types: BodyType[] = ["misto", "misto", "misto", "misto", "mesomorfo", "mesomorfo", "mesomorfo", "ectomorfo", "ectomorfo", "endomorfo"];
-    return { body_type: seededPick(types, seed, 99), confidence: "low" };
+    // No keypoint data: refuse to guess. Callers must handle the null path.
+    return { body_type: "misto", confidence: "low" };
   }
 
   const shr = m.shoulder_hip_ratio;
@@ -139,7 +132,11 @@ function estimateBodyFat(
     else if (whr > 0.92) { min += 2; max += 2; }  // wider waist
   }
 
-  return Math.round(seededFloat(seed, 7, Math.max(5, min), Math.min(35, max)) * 10) / 10;
+  void seed;
+  // Midpoint of the range derived from measured proportions — no hash noise.
+  const lo = Math.max(5, min);
+  const hi = Math.min(35, max);
+  return Math.round(((lo + hi) / 2) * 10) / 10;
 }
 
 function estimateMuscleMass(bodyType: BodyType, bf: number): string {
@@ -304,6 +301,29 @@ export function analysePhysique(
 ): PhysiqueAnalysis {
   const seed = hash32(scanId);
 
+  // Without pose keypoints there is nothing to measure: return an honest
+  // "insufficient data" result instead of fabricating body fat / body type.
+  const hasFeatures = bodyFeatures?.metrics?.shoulder_hip_ratio != null;
+  if (!hasFeatures) {
+    return {
+      body_fat_est:    null,
+      muscle_mass_est: null,
+      body_type:       null,
+      confidence:      "low",
+      summary:
+        "Dati insufficienti per un'analisi delle proporzioni: la foto non contiene punti di riferimento corporei rilevabili. " +
+        "Per una stima attendibile carica una foto a figura intera, frontale, in posizione anatomica e con buona illuminazione.",
+      biomechanics: seededPick(BIOMECHANICS.none, seed, 13),
+      recommendations: [
+        "Richiedi una foto a figura intera in posizione anatomica (frontale e laterale)",
+        "Assicurati che tutto il corpo sia visibile nell'inquadratura, con sfondo uniforme",
+        "Ripeti lo scan con la nuova foto per ottenere stime su composizione e proporzioni",
+      ],
+      analyzed_at: new Date().toISOString(),
+      model:       "physique-engine-v1",
+    };
+  }
+
   const { body_type, confidence } = classifyBodyType(bodyFeatures, seed);
   const body_fat_est    = estimateBodyFat(body_type, bodyFeatures, seed);
   const muscle_mass_est = estimateMuscleMass(body_type, body_fat_est);
@@ -316,11 +336,11 @@ export function analysePhysique(
   // Summary
   const summary = seededPick(SUMMARIES[body_type], seed, 1);
 
-  // TDEE and protein
+  // TDEE and protein — range midpoints for the classified body type
   const [tdeeMin, tdeeMax] = TDEE_RANGES[body_type];
   const [protMin, protMax] = PROTEIN_RANGES[body_type];
-  const nutrition_calories  = Math.round(seededFloat(seed, 11, tdeeMin, tdeeMax) / 50) * 50;
-  const nutrition_protein_g = Math.round(seededFloat(seed, 12, protMin, protMax));
+  const nutrition_calories  = Math.round(((tdeeMin + tdeeMax) / 2) / 50) * 50;
+  const nutrition_protein_g = Math.round((protMin + protMax) / 2);
 
   return {
     body_fat_est,

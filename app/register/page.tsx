@@ -17,7 +17,7 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: name, plan: "free" } },
@@ -30,6 +30,12 @@ export default function RegisterPage() {
       } else {
         setError(`Errore: ${error.message}`);
       }
+      setLoading(false);
+    } else if (data.user && data.user.identities?.length === 0) {
+      // With email confirmation on, Supabase returns a fake success for
+      // existing emails (anti-enumeration): identities is empty. Without this
+      // check the user waits for a confirmation email that never arrives.
+      setError("Email già registrata. Accedi oppure usa “Password dimenticata” per recuperarla.");
       setLoading(false);
     } else {
       setSuccess(true);

@@ -1,5 +1,5 @@
 ﻿"use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Dumbbell, Lock, Loader2, CheckCircle2 } from "lucide-react";
@@ -7,10 +7,19 @@ import { Dumbbell, Lock, Loader2, CheckCircle2 } from "lucide-react";
 export default function ResetPasswordPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
+  // The timeout below runs in a closure that would capture a stale `ready`:
+  // mirror the value in a ref so the check reads the current state.
+  const readyRef = useRef(false);
   const [error, setError] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+
+  function markReady() {
+    readyRef.current = true;
+    setReady(true);
+    setError("");
+  }
 
   useEffect(() => {
     const supabase = createClient();
@@ -23,27 +32,28 @@ export default function ResetPasswordPage() {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (!error) {
           window.history.replaceState({}, "", "/reset-password");
-          setReady(true);
+          markReady();
           return;
         }
       }
 
       // Case 2: existing session
       const { data } = await supabase.auth.getSession();
-      if (data.session) { setReady(true); return; }
+      if (data.session) { markReady(); return; }
 
       // Case 3: PASSWORD_RECOVERY event (implicit flow)
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-        if (event === "PASSWORD_RECOVERY") { setReady(true); subscription.unsubscribe(); }
+        if (event === "PASSWORD_RECOVERY") { markReady(); subscription.unsubscribe(); }
       });
 
       // Timeout fallback
       setTimeout(() => {
-        if (!ready) setError("Link non valido o scaduto. Richiedi un nuovo link di recupero.");
+        if (!readyRef.current) setError("Link non valido o scaduto. Richiedi un nuovo link di recupero.");
       }, 2000);
     }
 
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {

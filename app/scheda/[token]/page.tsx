@@ -293,7 +293,8 @@ export default function PublicSchedaPage() {
   }
 
   const weeksLogged = logs.length > 0 ? Math.max(...logs.map((l) => l.weekNumber)) : 0;
-  const pct = Math.min(100, Math.round((weeksLogged / plan.total_weeks) * 100));
+  const isUnlimited = !plan.total_weeks; // 0 = open-ended plan: no percentage
+  const pct = isUnlimited ? 0 : Math.min(100, Math.round((weeksLogged / plan.total_weeks) * 100));
   const circumference = 2 * Math.PI * 30;
 
   return (
@@ -308,7 +309,7 @@ export default function PublicSchedaPage() {
             <div className="min-w-0">
               <p className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>{plan.name}</p>
               <p className="text-xs" style={{ color: "var(--text-dim)" }}>
-                {plan.days_per_week} giorni/sett · {plan.total_weeks} sett · <span style={{ color: "rgba(201,168,76,0.7)" }}>{trainerName}</span>
+                {plan.days_per_week} giorni/sett · {plan.total_weeks ? `${plan.total_weeks} sett` : "piano aperto"} · <span style={{ color: "rgba(201,168,76,0.7)" }}>{trainerName}</span>
               </p>
             </div>
           </div>
@@ -343,12 +344,16 @@ export default function PublicSchedaPage() {
               </defs>
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-sm font-bold" style={{ color: "var(--text)" }}>{pct}%</span>
+              <span className="text-sm font-bold" style={{ color: "var(--text)" }}>{isUnlimited ? "∞" : `${pct}%`}</span>
             </div>
           </div>
           <div>
             <p className="text-base font-bold mb-0.5" style={{ color: "var(--text)" }}>Avanzamento piano</p>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{weeksLogged} di {plan.total_weeks} settimane completate</p>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+              {isUnlimited
+                ? `${weeksLogged} ${weeksLogged === 1 ? "settimana registrata" : "settimane registrate"} · piano aperto`
+                : `${weeksLogged} di ${plan.total_weeks} settimane registrate`}
+            </p>
             <p className="text-xs mt-1" style={{ color: "var(--text-dim)" }}>{logs.length} registrazioni totali</p>
           </div>
         </div>

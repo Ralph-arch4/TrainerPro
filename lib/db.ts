@@ -1,6 +1,10 @@
 import { createClient } from "@/lib/supabase/client";
 import type { Client, WorkoutPlan, Phase, DietPlan, BodyMeasurement, Note, ExerciseLog, PlanTier } from "@/lib/store";
 
+// Patch type for update() functions: `undefined` = leave column untouched,
+// `null` = explicitly clear the column in the DB.
+type NullablePatch<T> = { [K in keyof T]?: T[K] | null };
+
 const db = () => createClient();
 
 async function uid(): Promise<string> {
@@ -43,7 +47,7 @@ export const dbClients = {
         goal:        payload.goal || null,
         level:       payload.level || null,
         status:      payload.status,
-        monthly_fee: payload.monthlyFee || null,
+        monthly_fee: payload.monthlyFee ?? null,
         start_date:  payload.startDate || null,
       })
       .select()
@@ -51,7 +55,7 @@ export const dbClients = {
     if (error) throw error;
     return data;
   },
-  async update(id: string, payload: Partial<Client>) {
+  async update(id: string, payload: NullablePatch<Client>) {
     const mapped: Record<string, unknown> = {};
     if (payload.name        !== undefined) mapped.name        = payload.name;
     if (payload.email       !== undefined) mapped.email       = payload.email;
@@ -106,7 +110,7 @@ export const dbWorkoutPlans = {
     if (error) throw error;
     return data;
   },
-  async update(id: string, payload: Partial<WorkoutPlan>) {
+  async update(id: string, payload: NullablePatch<WorkoutPlan>) {
     // Map any camelCase keys the caller might pass to their snake_case column names.
     const mapped: Record<string, unknown> = {};
     if (payload.name         !== undefined) mapped.name          = payload.name;
@@ -162,7 +166,7 @@ export const dbPhases = {
     if (error) throw error;
     return data;
   },
-  async update(id: string, payload: Partial<Phase>) {
+  async update(id: string, payload: NullablePatch<Phase>) {
     const mapped: Record<string, unknown> = {};
     if (payload.name             !== undefined) mapped.name             = payload.name;
     if (payload.type             !== undefined) mapped.type             = payload.type;
@@ -219,7 +223,7 @@ export const dbDietPlans = {
     if (error) throw error;
     return data;
   },
-  async update(id: string, payload: Partial<DietPlan>) {
+  async update(id: string, payload: NullablePatch<DietPlan>) {
     const mapped: Record<string, unknown> = {};
     if (payload.phaseId  !== undefined) mapped.phase_id = payload.phaseId;
     if (payload.name     !== undefined) mapped.name     = payload.name;
@@ -277,7 +281,7 @@ export const dbMeasurements = {
     if (error) throw error;
     return data;
   },
-  async update(id: string, payload: Partial<BodyMeasurement>) {
+  async update(id: string, payload: NullablePatch<BodyMeasurement>) {
     const mapped: Record<string, unknown> = {};
     if (payload.date    !== undefined) mapped.date     = payload.date;
     if (payload.weight  !== undefined) mapped.weight   = payload.weight;
@@ -340,20 +344,8 @@ export const dbExerciseLogs = {
     if ((data as { error?: string })?.error === "not_found") throw new Error("Piano non trovato");
     return data as { id: string };
   },
-  // Public access via share token (no auth)
-  async listByShareToken(shareToken: string) {
-    const { data: plan, error: planErr } = await db()
-      .from("workout_plans")
-      .select("id, name, description, days_per_week, total_weeks, exercises, share_token")
-      .eq("share_token", shareToken)
-      .single();
-    if (planErr || !plan) return null;
-    const { data: logs } = await db()
-      .from("exercise_logs")
-      .select("*")
-      .eq("workout_plan_id", plan.id);
-    return { plan, logs: logs ?? [] };
-  },
+  // NOTE: public share-token reads go through the get_portal_data RPC
+  // (migration 010 dropped the direct anon SELECT policies).
 };
 
 // ─── Intake Forms ─────────────────────────────────────────────────────────────
@@ -492,7 +484,9 @@ export const dbNotes = {
     return data;
   },
   async update(id: string, payload: Partial<Note>) {
-    const { error } = await db().from("notes").update(payload).eq("id", id);
+    const mapped: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (payload.content !== undefined) mapped.content = payload.content;
+    const { error } = await db().from("notes").update(mapped).eq("id", id);
     if (error) throw error;
   },
   async remove(id: string) {

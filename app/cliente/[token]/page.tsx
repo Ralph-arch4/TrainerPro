@@ -1189,7 +1189,9 @@ export default function ClientPortalPage() {
     setScanDeleting(scan.id);
     setScans(prev => prev.filter(s => s.id !== scan.id));
     try {
-      await fetch(`/api/fitness-scan/client?token=${encodeURIComponent(token)}&id=${scan.id}`, { method: "DELETE" });
+      const resp = await fetch(`/api/fitness-scan/client?token=${encodeURIComponent(token)}&id=${scan.id}`, { method: "DELETE" });
+      // fetch resolves on 4xx/5xx too: a rate-limited delete must also restore
+      if (!resp.ok) throw new Error(String(resp.status));
     } catch { setScans(prev => [scan, ...prev]); }
     setScanDeleting(null);
   }
@@ -1395,15 +1397,18 @@ export default function ClientPortalPage() {
   const pct: number | null = isUnlimited ? null : Math.round((weeksCompleted / plan.total_weeks) * 100);
 
   // ── Streak (consecutive calendar days with a log) ─────────────────────────
+  // Local calendar days, not UTC: a log at 00:30 Italian time belongs to
+  // "today", not to the previous UTC day. sv-SE locale formats as YYYY-MM-DD.
+  const localDay = (d: Date) => d.toLocaleDateString("sv-SE");
   const logsByDayGlobal = new Map<string, number>();
   logs.forEach(l => {
-    const day = new Date(l.loggedAt).toISOString().slice(0, 10);
+    const day = localDay(new Date(l.loggedAt));
     logsByDayGlobal.set(day, (logsByDayGlobal.get(day) ?? 0) + 1);
   });
   let streak = 0;
   const sortedLogDays = Array.from(logsByDayGlobal.keys()).sort();
   if (sortedLogDays.length > 0) {
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayStr = localDay(new Date());
     const lastDay  = sortedLogDays[sortedLogDays.length - 1];
     const diffToday = Math.floor((new Date(todayStr).getTime() - new Date(lastDay).getTime()) / 86400000);
     if (diffToday <= 1) {

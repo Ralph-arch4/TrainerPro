@@ -194,7 +194,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
                 ["Obiettivo", client.goal ? goalLabel[client.goal] : "—"],
                 ["Livello", client.level ? levelLabel[client.level] : "—"],
                 ["Stato", client.status],
-                ["Quota mensile", client.monthlyFee ? `€${client.monthlyFee}` : "—"],
+                ["Quota mensile", client.monthlyFee != null ? `€${client.monthlyFee}` : "—"],
               ].map(([label, value]) => (
                 <div key={label}>
                   <p className="text-xs" style={{ color: mutedColor }}>{label}</p>

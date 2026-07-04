@@ -31,9 +31,13 @@ function serializeSetData(data: SetData[]): { reps?: string; weight?: number } {
   const hasE = data.some(s => s.rpe.trim());
   if (!hasR && !hasW && !hasE) return {};
   if (hasW || hasE) {
+    // `weight` (legacy NUMERIC column) drives all analytics (PRs, progression
+    // suggestions): store the best set, not the first one, or pyramid schemes
+    // never register real records.
+    const weights = data.map(s => parseFloat(s.weight)).filter(w => !isNaN(w) && w > 0);
     return {
       reps: JSON.stringify(data.map(s => ({ r: s.reps.trim(), w: s.weight.trim(), e: s.rpe.trim() }))),
-      weight: parseFloat(data[0]?.weight) || undefined,
+      weight: weights.length > 0 ? Math.max(...weights) : undefined,
     };
   }
   return { reps: data.map(s => s.reps).join("/") || undefined };
@@ -116,7 +120,9 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
 
   function handleSave() {
     const { reps, weight } = serializeSetData(data);
-    onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps, weight });
+    // Preserve any existing note (written by the trainer via spreadsheet):
+    // the upsert writes null for missing fields, so omitting it would wipe it.
+    onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps, weight, note: log?.note });
     orig.current = [...data];
     const msg = mode === "client"
       ? MOTIVATIONAL[Math.floor(Math.random() * MOTIVATIONAL.length)]
@@ -126,7 +132,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
   function handleClear() {
     const blank = Array.from({ length: sets }, () => ({ reps: "", weight: "", rpe: "" }));
     setData(blank);
-    onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps: undefined, weight: undefined });
+    onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps: undefined, weight: undefined, note: log?.note });
     orig.current = blank;
     showToast("Dati cancellati");
   }

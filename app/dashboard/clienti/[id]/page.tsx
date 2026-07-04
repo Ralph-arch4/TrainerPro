@@ -2,8 +2,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
-import type { DietPlan, BodyMeasurement } from "@/lib/store";
-import { dbPhases, dbWorkoutPlans, dbDietPlans, dbNotes, dbMeasurements } from "@/lib/db";
+import type { DietPlan } from "@/lib/store";
+import { dbClients, dbPhases, dbWorkoutPlans, dbDietPlans, dbNotes, dbMeasurements } from "@/lib/db";
 import { showToast } from "@/components/Toast";
 import DietPlanEditor from "@/components/DietPlanEditor";
 import Link from "next/link";
@@ -171,6 +171,7 @@ export default function ClientDetailPage() {
   const searchParams = useSearchParams();
   const client = useAppStore((s) => s.clients.find((c) => c.id === id));
   const user = useAppStore((s) => s.user);
+  const updateClient = useAppStore((s) => s.updateClient);
   const addPhase = useAppStore((s) => s.addPhase);
   const updatePhase = useAppStore((s) => s.updatePhase);
   const removePhase = useAppStore((s) => s.removePhase);
@@ -188,6 +189,12 @@ export default function ClientDetailPage() {
   const [tab, setTab] = useState<Tab>((searchParams.get("tab") as Tab) || "overview");
   const [saving, setSaving] = useState(false);
 
+  // Client edit modal
+  const [editingClient, setEditingClient] = useState<{
+    name: string; email: string; phone: string; birthDate: string;
+    goal: string; level: string; status: string; monthlyFee: string;
+  } | null>(null);
+
   // Measurements form
   const emptyMeasForm = () => ({
     date: new Date().toISOString().split("T")[0],
@@ -199,24 +206,27 @@ export default function ClientDetailPage() {
   async function saveMeasurement() {
     if (!measForm.date || !measForm.weight) return;
     setMeasSaving(true);
+    // addMeasurement generates its own id: use the returned object for the DB
+    // write so store and DB share the same id (otherwise delete/edit break
+    // until the next reload).
+    const m = addMeasurement(client!.id, {
+      date: measForm.date,
+      weight: parseFloat(measForm.weight),
+      bodyFat: measForm.bodyFat ? parseFloat(measForm.bodyFat) : undefined,
+      chest: measForm.chest ? parseFloat(measForm.chest) : undefined,
+      waist: measForm.waist ? parseFloat(measForm.waist) : undefined,
+      hips: measForm.hips ? parseFloat(measForm.hips) : undefined,
+      arms: measForm.arms ? parseFloat(measForm.arms) : undefined,
+      legs: measForm.legs ? parseFloat(measForm.legs) : undefined,
+    });
     try {
-      const payload: BodyMeasurement = {
-        id: crypto.randomUUID(),
-        clientId: client!.id,
-        date: measForm.date,
-        weight: parseFloat(measForm.weight),
-        bodyFat: measForm.bodyFat ? parseFloat(measForm.bodyFat) : undefined,
-        chest: measForm.chest ? parseFloat(measForm.chest) : undefined,
-        waist: measForm.waist ? parseFloat(measForm.waist) : undefined,
-        hips: measForm.hips ? parseFloat(measForm.hips) : undefined,
-        arms: measForm.arms ? parseFloat(measForm.arms) : undefined,
-        legs: measForm.legs ? parseFloat(measForm.legs) : undefined,
-      };
-      addMeasurement(client!.id, payload);
-      await dbMeasurements.create(payload);
+      await dbMeasurements.create(m);
       setMeasForm(emptyMeasForm());
       showToast("Misurazione salvata");
-    } catch { showToast("Errore nel salvataggio"); }
+    } catch {
+      removeMeasurement(client!.id, m.id);
+      showToast("Errore nel salvataggio", "error");
+    }
     finally { setMeasSaving(false); }
   }
   const [saveError, setSaveError] = useState("");
@@ -333,7 +343,10 @@ export default function ClientDetailPage() {
     setScans(prev => prev.filter(s => s.id !== scan.id));
     setScanUrls(prev => { const n = { ...prev }; delete n[scan.id]; return n; });
     try { await dbFitnessScans.remove(scan.id, scan.storage_path); }
-    catch { showToast("Errore nell'eliminazione", "error"); }
+    catch {
+      setScans(prev => [scan, ...prev]);
+      showToast("Errore nell'eliminazione", "error");
+    }
   }
 
   async function handleScanAnalyze(scan: FitnessScan) {
@@ -505,7 +518,10 @@ export default function ClientDetailPage() {
   async function handlePhotoDelete(photo: ProgressPhoto) {
     setPhotos(prev => prev.filter(p => p.id !== photo.id));
     try { await dbProgressPhotos.remove(photo.id, photo.storage_path); }
-    catch { showToast("Errore nell'eliminazione", "error"); }
+    catch {
+      setPhotos(prev => [photo, ...prev]);
+      showToast("Errore nell'eliminazione", "error");
+    }
   }
 
   // Portal link copy
@@ -557,7 +573,7 @@ export default function ClientDetailPage() {
   async function saveEditPhase() {
     if (!editingPhase || !editingPhase.name || !editingPhase.startDate) return;
     setSaving(true); setSaveError("");
-    const patch = {
+    updatePhase(client!.id, editingPhase.id, {
       name: editingPhase.name.trim(),
       type: editingPhase.type as "bulk" | "cut" | "maintenance" | "custom",
       startDate: editingPhase.startDate,
@@ -565,13 +581,62 @@ export default function ClientDetailPage() {
       targetCalories: editingPhase.targetCalories ? parseInt(editingPhase.targetCalories) : undefined,
       targetWeight: editingPhase.targetWeight ? parseFloat(editingPhase.targetWeight) : undefined,
       notes: editingPhase.notes || undefined,
-    };
-    updatePhase(client!.id, editingPhase.id, patch);
+    });
     try {
-      await dbPhases.update(editingPhase.id, patch);
+      // Cleared optional fields must reach the DB as explicit nulls,
+      // otherwise the old values resurrect on reload.
+      await dbPhases.update(editingPhase.id, {
+        name: editingPhase.name.trim(),
+        type: editingPhase.type as "bulk" | "cut" | "maintenance" | "custom",
+        startDate: editingPhase.startDate,
+        endDate: editingPhase.endDate || null,
+        targetCalories: editingPhase.targetCalories ? parseInt(editingPhase.targetCalories) : null,
+        targetWeight: editingPhase.targetWeight ? parseFloat(editingPhase.targetWeight) : null,
+        notes: editingPhase.notes || null,
+      });
       setEditingPhase(null);
       showToast("Fase aggiornata");
     } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
+      showToast("Errore nel salvataggio", "error");
+    }
+    setSaving(false);
+  }
+
+  async function saveClientEdit() {
+    if (!editingClient || !editingClient.name.trim()) return;
+    setSaving(true); setSaveError("");
+    const prev = {
+      name: client!.name, email: client!.email, phone: client!.phone,
+      birthDate: client!.birthDate, goal: client!.goal, level: client!.level,
+      status: client!.status, monthlyFee: client!.monthlyFee,
+    };
+    const fee = editingClient.monthlyFee.trim() !== "" ? parseFloat(editingClient.monthlyFee) : undefined;
+    updateClient(client!.id, {
+      name: editingClient.name.trim(),
+      email: editingClient.email.trim(),
+      phone: editingClient.phone.trim() || undefined,
+      birthDate: editingClient.birthDate || undefined,
+      goal: (editingClient.goal || undefined) as "dimagrimento" | "massa" | "tonificazione" | "performance" | undefined,
+      level: (editingClient.level || undefined) as "principiante" | "intermedio" | "avanzato" | undefined,
+      status: editingClient.status as "attivo" | "inattivo" | "in_pausa",
+      monthlyFee: fee != null && !isNaN(fee) ? fee : undefined,
+    });
+    try {
+      await dbClients.update(client!.id, {
+        name: editingClient.name.trim(),
+        email: editingClient.email.trim() || null,
+        phone: editingClient.phone.trim() || null,
+        birthDate: editingClient.birthDate || null,
+        goal: (editingClient.goal || null) as "dimagrimento" | "massa" | "tonificazione" | "performance" | null,
+        level: (editingClient.level || null) as "principiante" | "intermedio" | "avanzato" | null,
+        status: editingClient.status as "attivo" | "inattivo" | "in_pausa",
+        monthlyFee: fee != null && !isNaN(fee) ? fee : null,
+      });
+      setEditingClient(null);
+      showToast("Cliente aggiornato");
+    } catch (err) {
+      updateClient(client!.id, prev);
       setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
       showToast("Errore nel salvataggio", "error");
     }
@@ -585,7 +650,8 @@ export default function ClientDetailPage() {
     const w = addWorkoutPlan(client!.id, {
       name: workoutForm.name, description: workoutForm.description,
       daysPerWeek: parseInt(workoutForm.daysPerWeek),
-      totalWeeks: parseInt(workoutForm.totalWeeks) || 12,
+      // "" = "Senza limite" → 0 (open-ended plan), not the 12-week default
+      totalWeeks: workoutForm.totalWeeks === "" ? 0 : (parseInt(workoutForm.totalWeeks) || 12),
       restSeconds: rest,
       phaseId: workoutForm.phaseId || undefined,
       active: true,
@@ -606,17 +672,28 @@ export default function ClientDetailPage() {
   async function saveEditPlan() {
     if (!editingPlan || !editingPlan.name.trim()) return;
     setSaving(true); setSaveError("");
-    const patch = {
+    const totalWeeks = editingPlan.totalWeeks === "" ? 0 : (parseInt(editingPlan.totalWeeks) || 12);
+    const description = editingPlan.description.trim();
+    const restSeconds = parseInt(editingPlan.restSeconds) || undefined;
+    updateWorkoutPlan(client!.id, editingPlan.id, {
       name: editingPlan.name.trim(),
-      description: editingPlan.description.trim() || undefined,
+      description: description || undefined,
       daysPerWeek: parseInt(editingPlan.daysPerWeek),
-      totalWeeks: parseInt(editingPlan.totalWeeks) || 12,
-      restSeconds: parseInt(editingPlan.restSeconds) || undefined,
+      totalWeeks,
+      restSeconds,
       phaseId: editingPlan.phaseId || undefined,
-    };
-    updateWorkoutPlan(client!.id, editingPlan.id, patch);
+    });
     try {
-      await dbWorkoutPlans.update(editingPlan.id, patch);
+      // Cleared optional fields must reach the DB as explicit nulls,
+      // otherwise the old values resurrect on reload.
+      await dbWorkoutPlans.update(editingPlan.id, {
+        name: editingPlan.name.trim(),
+        description: description || null,
+        daysPerWeek: parseInt(editingPlan.daysPerWeek),
+        totalWeeks,
+        restSeconds: restSeconds ?? null,
+        phaseId: editingPlan.phaseId || null,
+      });
       setEditingPlan(null);
       showToast("Scheda aggiornata");
     } catch (err) {
@@ -655,7 +732,16 @@ export default function ClientDetailPage() {
       // Edit existing
       updateDietPlan(client!.id, editingDietPlan.id, data);
       try {
-        await dbDietPlans.update(editingDietPlan.id, data);
+        // Cleared optional fields → explicit nulls, or old values resurrect on reload
+        await dbDietPlans.update(editingDietPlan.id, {
+          ...data,
+          phaseId: data.phaseId ?? null,
+          caloriesMax: data.caloriesMax ?? null,
+          proteinMax: data.proteinMax ?? null,
+          carbsMax: data.carbsMax ?? null,
+          fatMax: data.fatMax ?? null,
+          notes: data.notes ?? null,
+        });
         setDietEditorOpen(false);
         setEditingDietPlan(null);
         showToast("Piano aggiornato");
@@ -1047,12 +1133,30 @@ export default function ClientDetailPage() {
             </div>
           </div>
         </div>
-        {client.monthlyFee && (
-          <div className="text-right">
-            <p className="text-xs" style={{ color: "var(--text-dim)" }}>Quota mensile</p>
-            <p className="text-xl font-bold" style={{ color: "var(--accent)" }}>€{client.monthlyFee}</p>
-          </div>
-        )}
+        <div className="flex items-start gap-3">
+          {client.monthlyFee != null && (
+            <div className="text-right">
+              <p className="text-xs" style={{ color: "var(--text-dim)" }}>Quota mensile</p>
+              <p className="text-xl font-bold" style={{ color: "var(--accent)" }}>€{client.monthlyFee}</p>
+            </div>
+          )}
+          <button
+            onClick={() => setEditingClient({
+              name: client.name,
+              email: client.email ?? "",
+              phone: client.phone ?? "",
+              birthDate: client.birthDate ?? "",
+              goal: client.goal ?? "",
+              level: client.level ?? "",
+              status: client.status,
+              monthlyFee: client.monthlyFee != null ? String(client.monthlyFee) : "",
+            })}
+            title="Modifica cliente"
+            className="p-2 rounded-xl transition-all hover:opacity-80 flex-shrink-0"
+            style={{ background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
+            <Pencil size={13} style={{ color: "var(--text-muted)" }} />
+          </button>
+        </div>
       </div>
 
       {/* Save error banner */}
@@ -1749,7 +1853,7 @@ export default function ClientDetailPage() {
                           <Copy size={13} style={{ color: "var(--text-muted)" }} />
                         </button>
                         <button
-                          onClick={() => setEditingPlan({ id: wp.id, name: wp.name, description: wp.description ?? "", daysPerWeek: String(wp.daysPerWeek), totalWeeks: String(wp.totalWeeks ?? 12), restSeconds: String(wp.restSeconds ?? 90), phaseId: wp.phaseId ?? "" })}
+                          onClick={() => setEditingPlan({ id: wp.id, name: wp.name, description: wp.description ?? "", daysPerWeek: String(wp.daysPerWeek), totalWeeks: wp.totalWeeks ? String(wp.totalWeeks) : "", restSeconds: String(wp.restSeconds ?? 90), phaseId: wp.phaseId ?? "" })}
                           className="p-1.5 rounded-lg hover:bg-white/5 transition-all"
                           title="Modifica scheda">
                           <Pencil size={13} style={{ color: "var(--text-muted)" }} />
@@ -1974,7 +2078,15 @@ export default function ClientDetailPage() {
                 <div key={note.id} className="card-luxury rounded-2xl p-4">
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-sm flex-1" style={{ color: "var(--text-muted)" }}>{note.content}</p>
-                    <button onClick={async () => { removeNote(client!.id, note.id); try { await dbNotes.remove(note.id); } catch {} }}
+                    <button onClick={async () => {
+                      const snapshot = note;
+                      removeNote(client!.id, note.id);
+                      try { await dbNotes.remove(note.id); }
+                      catch {
+                        useAppStore.setState((s) => ({ clients: s.clients.map((c) => c.id === client!.id ? { ...c, notes: [...c.notes, snapshot] } : c) }));
+                        showToast("Errore nell'eliminazione della nota", "error");
+                      }
+                    }}
                       className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all flex-shrink-0">
                       <Trash2 size={13} style={{ color: "rgba(239,68,68,0.5)" }} />
                     </button>
@@ -2270,7 +2382,15 @@ export default function ClientDetailPage() {
                         </div>
                       )}
                     </div>
-                    <button onClick={async () => { removeMeasurement(client!.id, m.id); try { await dbMeasurements.remove(m.id); } catch {} }}
+                    <button onClick={async () => {
+                      const snapshot = m;
+                      removeMeasurement(client!.id, m.id);
+                      try { await dbMeasurements.remove(m.id); }
+                      catch {
+                        useAppStore.setState((s) => ({ clients: s.clients.map((c) => c.id === client!.id ? { ...c, measurements: [...c.measurements, snapshot] } : c) }));
+                        showToast("Errore nell'eliminazione", "error");
+                      }
+                    }}
                       className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all flex-shrink-0">
                       <Trash2 size={13} style={{ color: "rgba(239,68,68,0.5)" }} />
                     </button>
@@ -2302,7 +2422,8 @@ export default function ClientDetailPage() {
           .map(s => ({
             date: s.taken_at,
             tier: computeTier(s.ai_analysis!.body_fat_est, s.ai_analysis!.muscle_mass_est),
-          }));
+          }))
+          .filter((h): h is { date: string; tier: Tier } => h.tier != null);
         const currentTier = tierHistory.length > 0 ? tierHistory[tierHistory.length - 1].tier : null;
         const prevTier    = tierHistory.length > 1 ? tierHistory[tierHistory.length - 2].tier : null;
         const delta       = currentTier && prevTier ? tierDelta(prevTier, currentTier) : 0;
@@ -3130,6 +3251,82 @@ export default function ClientDetailPage() {
               </button>
               <button onClick={saveEditPlan} disabled={saving || !editingPlan.name.trim()}
                 className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Pencil size={14} />} Salva modifiche
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit client modal */}
+      {editingClient && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setEditingClient(null)}>
+          <div className="absolute inset-0" style={{ background: "var(--surface-modal)" }} />
+          <div className="relative w-full max-w-md glass-dark rounded-2xl p-6 fade-in max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-bold" style={{ color: "var(--text)" }}>Modifica cliente</h3>
+              <button onClick={() => setEditingClient(null)}><X size={16} style={{ color: "var(--text-muted)" }} /></button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Nome completo *</label>
+                <input value={editingClient.name} onChange={(e) => setEditingClient({ ...editingClient, name: e.target.value })}
+                  className={inputClass} style={inputStyle} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Email</label>
+                  <input type="email" value={editingClient.email} onChange={(e) => setEditingClient({ ...editingClient, email: e.target.value })}
+                    className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Telefono</label>
+                  <input type="tel" value={editingClient.phone} onChange={(e) => setEditingClient({ ...editingClient, phone: e.target.value })}
+                    className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Data di nascita</label>
+                  <input type="date" value={editingClient.birthDate} onChange={(e) => setEditingClient({ ...editingClient, birthDate: e.target.value })}
+                    className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Quota mensile (€)</label>
+                  <input type="number" min="0" value={editingClient.monthlyFee} onChange={(e) => setEditingClient({ ...editingClient, monthlyFee: e.target.value })}
+                    placeholder="—" className={inputClass} style={inputStyle} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Obiettivo</label>
+                  <select value={editingClient.goal} onChange={(e) => setEditingClient({ ...editingClient, goal: e.target.value })}
+                    className={inputClass} style={selectStyle}>
+                    <option value="">— Nessuno —</option>
+                    {Object.entries(goalLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Livello</label>
+                  <select value={editingClient.level} onChange={(e) => setEditingClient({ ...editingClient, level: e.target.value })}
+                    className={inputClass} style={selectStyle}>
+                    <option value="">— Nessuno —</option>
+                    {Object.entries(levelLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                  </select>
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Stato</label>
+                  <select value={editingClient.status} onChange={(e) => setEditingClient({ ...editingClient, status: e.target.value })}
+                    className={inputClass} style={selectStyle}>
+                    {Object.entries(statusLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => setEditingClient(null)}
+                className="flex-1 py-2.5 rounded-xl text-sm"
+                style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}>
+                Annulla
+              </button>
+              <button onClick={saveClientEdit} disabled={saving || !editingClient.name.trim()}
+                className="flex-1 accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 disabled:opacity-40">
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Pencil size={14} />} Salva modifiche
               </button>
             </div>

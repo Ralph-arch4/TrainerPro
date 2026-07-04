@@ -361,7 +361,11 @@ function ResponseDetail({ form }: { form: IntakeForm }) {
 
   const F = ({ n, label, value }: { n: number; label: string; value?: string | string[] | null }) => {
     if (!value || (Array.isArray(value) && value.length === 0)) return null;
-    const display = Array.isArray(value) ? value.join(", ") : value;
+    // Legacy records may contain non-string values (the API now whitelists
+    // strings only): coerce defensively so a bad value can't crash the page.
+    const display = Array.isArray(value)
+      ? value.map((v) => (typeof v === "string" ? v : JSON.stringify(v))).join(", ")
+      : typeof value === "string" ? value : JSON.stringify(value);
     return (
       <div className="flex gap-2">
         <span className="text-xs font-bold flex-shrink-0 mt-0.5 w-5 text-right" style={{ color: "rgba(255,107,43,0.5)" }}>{n}.</span>
