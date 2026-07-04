@@ -68,6 +68,34 @@ function calcSuggestion(prevData: SetData[]): { weight: number; delta: number; r
   return { weight: suggested, delta: suggested - avgW, rpeAvg: avgRpe };
 }
 
+// ── Weight trend sparkline ────────────────────────────────────────────────────
+function WeightSparkline({ history }: { history: number[] }) {
+  if (history.length < 2) return null;
+  const min = Math.min(...history);
+  const max = Math.max(...history);
+  const range = max - min || 1;
+  const W = 52, H = 18, P = 2;
+  const pts = history.map((v, i) => {
+    const x = P + (i / (history.length - 1)) * (W - P * 2);
+    const y = P + (1 - (v - min) / range) * (H - P * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const last = history[history.length - 1];
+  const first = history[0];
+  const color = last > first + 0.4 ? "#22c55e" : last < first - 0.4 ? "#f87171" : "#9ca3af";
+  const [lastX, lastY] = pts[pts.length - 1].split(",").map(Number);
+  return (
+    <div className="flex items-center gap-1 flex-shrink-0">
+      <svg width={W} height={H} style={{ flexShrink: 0 }}>
+        <polyline points={pts.join(" ")} fill="none" stroke={color} strokeWidth="1.5"
+          strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
+        <circle cx={lastX} cy={lastY} r="2.2" fill={color} />
+      </svg>
+      <span style={{ color, fontSize: "10px", fontWeight: 700, flexShrink: 0 }}>{last}kg</span>
+    </div>
+  );
+}
+
 // ── Superset colors ───────────────────────────────────────────────────────────
 const SS_COLORS: Record<string, string> = {
   A: "#a78bfa", B: "#38bdf8", C: "#34d399",
@@ -90,9 +118,10 @@ interface CardProps {
   onStartTimer?: (secs: number, label: string) => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  weightHistory?: number[];
 }
 
-function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onStartTimer, onEdit, onDelete }: CardProps) {
+function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onStartTimer, onEdit, onDelete, weightHistory }: CardProps) {
   const sets = Math.max(1, exercise.sets || 3);
   const [data, setData] = useState<SetData[]>(() => parseSetData(log, sets));
   const orig             = useRef<SetData[]>(parseSetData(log, sets));
@@ -180,6 +209,9 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
             </span>
           )}
         </div>
+        {weightHistory && weightHistory.length >= 2 && (
+          <WeightSparkline history={weightHistory} />
+        )}
         {mode === "trainer" && (
           <div className="flex gap-1.5 shrink-0">
             <button onClick={onEdit} className="p-1.5 rounded-lg hover:opacity-80 transition-opacity"
@@ -436,6 +468,14 @@ export default function WorkoutLogbook({
 }: Props) {
   const isUnlimited   = totalWeeks === 0;
   const maxLoggedWeek = logs.length > 0 ? Math.max(...logs.map(l => l.weekNumber)) : 0;
+
+  function getWeightHistory(exId: string): number[] {
+    return logs
+      .filter(l => l.exerciseId === exId && l.weight != null)
+      .sort((a, b) => a.weekNumber - b.weekNumber)
+      .map(l => l.weight!)
+      .slice(-8);
+  }
   const effectiveMax  = isUnlimited ? Math.max(maxLoggedWeek + 1, 1) : totalWeeks;
   const weeks         = Array.from({ length: isUnlimited ? maxLoggedWeek : totalWeeks }, (_, i) => i + 1);
   const days          = Array.from({ length: daysPerWeek }, (_, i) => i + 1);
@@ -676,6 +716,7 @@ export default function WorkoutLogbook({
               week={activeWeek}
               mode={mode}
               onUpsertLog={onUpsertLog}
+              weightHistory={getWeightHistory(ex.id)}
               onStartTimer={mode === "client" ? startRestTimer : undefined}
               onEdit={() => {
                 if (!onUpdateExercise) return;
