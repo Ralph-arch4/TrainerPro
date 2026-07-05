@@ -34,6 +34,7 @@ export interface Exercise {
 export interface MealItem {
   id: string;
   name: string;
+  foodId?: string; // link to lib/foodDatabase entry (enables gram->macro recalc)
   grams: number;
   gramsMax?: number; // if set, show as range
   protein?: number;
