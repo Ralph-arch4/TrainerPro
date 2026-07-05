@@ -7,7 +7,7 @@ import WorkoutSpreadsheet from "@/components/WorkoutSpreadsheet";
 import WorkoutLogbook from "@/components/WorkoutLogbook";
 import { showToast } from "@/components/Toast";
 import type { Exercise, SupplementItem } from "@/lib/store";
-import { ArrowLeft, Dumbbell, LayoutGrid, Table2, MessageSquare, Check, Pencil } from "lucide-react";
+import { ArrowLeft, Dumbbell, LayoutGrid, Table2, MessageSquare, Check, Pencil, TrendingUp } from "lucide-react";
 
 type ViewMode = "logbook" | "spreadsheet";
 
@@ -250,6 +250,64 @@ export default function WorkoutPlanPage() {
           </div>
         )}
       </div>
+
+      {/* ── Progressi Piano ─────────────────────────────────────────────────── */}
+      {(() => {
+        const progress = plan.exercises
+          .map(ex => {
+            const logs = plan.logs
+              .filter(l => l.exerciseId === ex.id && l.weight != null)
+              .sort((a, b) => a.weekNumber - b.weekNumber);
+            if (logs.length < 2) return null;
+            const first = logs[0];
+            const last = logs[logs.length - 1];
+            const delta = Math.round((last.weight! - first.weight!) * 10) / 10;
+            const last3 = logs.slice(-3);
+            const plateau = last3.length >= 3 && last3.every(l => l.weight === last3[last3.length - 1].weight);
+            return { ex, firstW: first.weight!, lastW: last.weight!, delta, plateau };
+          })
+          .filter((x): x is NonNullable<typeof x> => x !== null);
+        if (!progress.length) return null;
+        const growing = progress.filter(p => p.delta > 0 && !p.plateau).length;
+        const plateaued = progress.filter(p => p.plateau).length;
+        return (
+          <div className="mb-5 rounded-2xl overflow-hidden"
+            style={{ border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.018)" }}>
+            <div className="flex items-center gap-2 px-4 py-3"
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <TrendingUp size={13} style={{ color: "var(--accent)" }} />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
+                Progressi Piano
+              </span>
+              <span className="ml-auto text-xs" style={{ color: "var(--text-dim)" }}>
+                {growing > 0 && <span style={{ color: "#22c55e" }}>{growing} in crescita</span>}
+                {growing > 0 && plateaued > 0 && <span style={{ color: "var(--text-dim)" }}> · </span>}
+                {plateaued > 0 && <span style={{ color: "#fb923c" }}>{plateaued} plateau</span>}
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <div className="min-w-[320px]">
+                {progress.map(({ ex, firstW, lastW, delta, plateau }, i) => (
+                  <div key={ex.id} className="flex items-center gap-3 px-4 py-2.5"
+                    style={{ borderBottom: i < progress.length - 1 ? "1px solid rgba(255,255,255,0.035)" : "none" }}>
+                    <span className="text-xs flex-1 truncate" style={{ color: "var(--text)", minWidth: 0 }}>{ex.name}</span>
+                    <span className="text-xs flex-shrink-0" style={{ color: "var(--text-dim)" }}>
+                      {firstW}kg → {lastW}kg
+                    </span>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+                      style={{
+                        background: plateau ? "rgba(251,146,60,0.12)" : delta > 0 ? "rgba(34,197,94,0.1)" : delta < 0 ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.06)",
+                        color: plateau ? "#fb923c" : delta > 0 ? "#22c55e" : delta < 0 ? "#ef4444" : "#6b7280",
+                      }}>
+                      {plateau ? "Plateau" : delta > 0 ? `+${delta}kg` : delta === 0 ? "Stabile" : `${delta}kg`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Logbook view (Google Sheets style) ── */}
       {viewMode === "logbook" && (
