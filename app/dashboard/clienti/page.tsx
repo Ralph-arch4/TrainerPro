@@ -50,6 +50,48 @@ function clientHue(name: string): number {
   return Math.abs(hash) % 360;
 }
 
+function AthleticFingerprint({ name, size = 44 }: { name: string; size?: number }) {
+  const hue = clientHue(name);
+  const src = name.length ? name : "X";
+  const h = Array.from({ length: 10 }, (_, i) => src.charCodeAt(i % src.length));
+  const uid = src.split("").reduce((a, c) => ((a * 31 + c.charCodeAt(0)) | 0), 0);
+  const gradId = `fp${(uid < 0 ? -uid : uid).toString(36)}`;
+  const cx = size / 2, cy = size / 2;
+  const outerR = size / 2 - 2;
+  const innerR = size * 0.28;
+  const spokes = 5 + (h[0] % 4);
+  const pts = Array.from({ length: spokes }, (_, i) => {
+    const angle = (i / spokes) * Math.PI * 2 - Math.PI / 2;
+    const r = outerR * (0.45 + 0.55 * (h[i % h.length] % 100) / 100);
+    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+  });
+  const poly = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const initials = src.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("").slice(0, 2);
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+      <defs>
+        <radialGradient id={gradId} cx="38%" cy="32%" r="68%">
+          <stop offset="0%" stopColor={`hsl(${hue},68%,62%)`} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={`hsl(${(hue + 30) % 360},55%,18%)`} stopOpacity="0.78" />
+        </radialGradient>
+      </defs>
+      <circle cx={cx} cy={cy} r={outerR} fill={`hsla(${hue},60%,50%,0.07)`} stroke={`hsla(${hue},60%,60%,0.2)`} strokeWidth="0.8" />
+      {pts.map((p, i) => (
+        <line key={i} x1={cx} y1={cy} x2={p.x.toFixed(1)} y2={p.y.toFixed(1)} stroke={`hsla(${hue},65%,62%,0.22)`} strokeWidth="0.6" />
+      ))}
+      <polygon points={poly} fill={`hsla(${hue},65%,55%,0.16)`} stroke={`hsla(${hue},70%,65%,0.75)`} strokeWidth="1.3" strokeLinejoin="round" />
+      {pts.map((p, i) => (
+        <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="1.4" fill={`hsla(${hue},70%,68%,0.55)`} />
+      ))}
+      <circle cx={cx} cy={cy} r={innerR} fill={`url(#${gradId})`} />
+      <circle cx={cx} cy={cy} r={innerR} fill="none" stroke={`hsla(${hue},60%,60%,0.35)`} strokeWidth="0.8" />
+      <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"
+        fontSize={initials.length > 1 ? size * 0.27 : size * 0.32} fontWeight="900"
+        fill={`hsl(${hue},70%,82%)`} fontFamily="system-ui,sans-serif">{initials}</text>
+    </svg>
+  );
+}
+
 function getFormaScore(client: Client): { score: number; label: string; color: string } | null {
   if (client.status !== "attivo") return null;
   const now = Date.now();
@@ -491,13 +533,7 @@ function ClientiPageInner() {
             ) : null}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center text-base font-bold flex-shrink-0 text-white"
-                  style={{
-                    background: `linear-gradient(135deg, hsl(${hue} 68% 46%), hsl(${(hue + 48) % 360} 62% 30%))`,
-                    boxShadow: `0 3px 12px hsl(${hue} 60% 40% / 0.4), inset 0 1px 0 rgba(255,255,255,0.18)`,
-                  }}>
-                  {client.name.charAt(0).toUpperCase()}
-                </div>
+                <AthleticFingerprint name={client.name} size={44} />
                 <div>
                   <p className="font-semibold" style={{ color: "var(--text)" }}>{client.name}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
