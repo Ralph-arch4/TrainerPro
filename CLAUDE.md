@@ -39,6 +39,8 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 | `lib/db.ts` | All Supabase calls (camelCase<->snake_case). NEVER raw calls in components. |
 | `lib/exerciseLibrary.ts` | 110+ Italian exercises. `searchExercises(q, muscleGroup?)` |
 | `lib/plan-limits.ts` | `checkLimit(plan, "clients", count)` -- tier gating |
+| `lib/foodDatabase.ts` | 75 Italian foods, per-100g macros. `searchFoods(q)`, `getFood(id)`, `macrosFor(food, g)` |
+| `lib/nutritionGenerator.ts` | `generateNutritionPlan({protein,carbs,fat,mealsCount,preference,seed})` -> Meal[] with exact grams (Gauss-Seidel solver + fine-tune) |
 | `components/SupabaseDataLoader.tsx` | Loads all data at mount (logs, supplements). Has `dataLoaded` flag. |
 | `components/WorkoutLogbook.tsx` | Card grid view, per-set logging, supplements |
 | `components/WorkoutSpreadsheet.tsx` | Table view: add/edit/reorder exercises + autocomplete |
