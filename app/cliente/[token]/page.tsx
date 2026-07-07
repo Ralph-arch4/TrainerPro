@@ -515,6 +515,75 @@ const WEEKLY_PRINCIPLES: { cat: string; text: string; accent: string }[] = [
   { cat: "Mentalità",    text: "Ogni sessione saltata non è una colpa — è un dato. Prendi nota e riprogramma.", accent: "#fbbf24" },
 ];
 
+// ── Lettera Mensile dal Trainer ──────────────────────────────────────────────
+const MONTHLY_LETTERS = [
+  { month: "Gennaio",   text: "Un nuovo anno, un nuovo capitolo. Il lavoro che hai fatto fino ad oggi è il fondamento — ora costruiamo sopra." },
+  { month: "Febbraio",  text: "Il freddo rallenta tutto, ma non te. Ogni sessione in questo mese vale doppio." },
+  { month: "Marzo",     text: "La primavera si avvicina. È il momento di accelerare — il tuo corpo è pronto per il prossimo livello." },
+  { month: "Aprile",    text: "Aprile porta energia nuova. Ho rivisto il piano con attenzione — ogni dettaglio è pensato per questa fase." },
+  { month: "Maggio",    text: "Cinque mesi per costruire abitudini solide. Ora le hai — questo mese le rafforziamo." },
+  { month: "Giugno",    text: "Estate in arrivo. Sei pronto? Il lavoro di questi mesi sta per mostrare i suoi frutti." },
+  { month: "Luglio",    text: "Luglio è il mese della verità. Il caldo testa la tua disciplina — e so che la supererai." },
+  { month: "Agosto",    text: "Agosto è per i forti. Molti si fermano — tu no. Questo mese ti distinguerai." },
+  { month: "Settembre", text: "Settembre è il momento di rimettersi in moto. Riprendiamo con più energia di prima." },
+  { month: "Ottobre",   text: "L'autunno è la stagione dei progressi concreti. Ho in mente qualcosa di speciale per te questo mese." },
+  { month: "Novembre",  text: "Novembre è lungo, ma ogni giorno conta. Uno alla volta — arriviamo a dicembre più forti." },
+  { month: "Dicembre",  text: "Un anno quasi compiuto. Guarda quanto sei cambiato — questo è il risultato del lavoro che abbiamo fatto insieme." },
+];
+
+function MonthlyLetterCard({ trainerName, streak, totalLogs }: { trainerName: string; streak: number; totalLogs: number }) {
+  const now = new Date();
+  const monthKey = `tp_monthly_letter_${now.getFullYear()}_${now.getMonth()}`;
+  const [visible, setVisible] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return !localStorage.getItem(monthKey);
+  });
+  function dismiss() { localStorage.setItem(monthKey, "1"); setVisible(false); }
+  if (!visible) return null;
+  const letter = MONTHLY_LETTERS[now.getMonth()];
+  const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
+  const ps = streak >= 5
+    ? `P.S. — ${streak} giorni di fila. Sono fiero di te.`
+    : totalLogs >= 20
+      ? `P.S. — ${totalLogs} sessioni registrate. Il lavoro non mente.`
+      : "";
+  return (
+    <div className="mb-4 rounded-2xl overflow-hidden fade-in"
+      style={{ background: "linear-gradient(160deg, rgba(201,168,76,0.07) 0%, rgba(8,8,8,0.88) 100%)", border: "1px solid rgba(201,168,76,0.26)", position: "relative" }}>
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: "repeating-linear-gradient(0deg, transparent, transparent 24px, rgba(201,168,76,0.025) 24px, rgba(201,168,76,0.025) 25px)" }} />
+      <button onClick={dismiss}
+        className="absolute top-3 right-3 w-5 h-5 flex items-center justify-center rounded-full text-xs font-black z-10"
+        style={{ background: "var(--surface-md)", color: "var(--text-dim)" }}>&times;</button>
+      <div className="relative p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, transparent, rgba(201,168,76,0.3))" }} />
+          <p className="text-xs font-bold uppercase tracking-[0.2em]" style={{ color: "rgba(201,168,76,0.5)" }}>Lettera del mese</p>
+          <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, rgba(201,168,76,0.3), transparent)" }} />
+        </div>
+        <p className="text-xs mb-3" style={{ color: "var(--text-dim)", fontStyle: "italic" }}>
+          {letter.month} {now.getFullYear()}
+        </p>
+        <p className="text-sm leading-relaxed mb-3"
+          style={{ color: "var(--text-muted)", fontStyle: "italic", fontFamily: "Georgia,'Times New Roman',serif" }}>
+          &ldquo;{letter.text}&rdquo;
+        </p>
+        {ps && <p className="text-xs mb-4" style={{ color: "var(--text-faint)", fontStyle: "italic" }}>{ps}</p>}
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
+            style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", color: "rgba(201,168,76,0.8)" }}>
+            {initials}
+          </div>
+          <div>
+            <p className="text-xs font-bold" style={{ color: "rgba(201,168,76,0.7)" }}>{trainerName}</p>
+            <p className="text-xs" style={{ color: "var(--text-faint)" }}>Il tuo Personal Trainer</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function WeeklyPrincipleCard({ trainerName }: { trainerName: string }) {
   const now = new Date();
   const startOfYear = new Date(now.getFullYear(), 0, 1);
@@ -1523,6 +1592,9 @@ export default function ClientPortalPage() {
 
         {/* ── Notifica settimanale dal trainer ─────────────────────────────── */}
         <TrainerNotificationBanner trainerName={trainerName} />
+
+        {/* ── Lettera mensile dal trainer ──────────────────────────────────── */}
+        <MonthlyLetterCard trainerName={trainerName} streak={streak} totalLogs={totalLogs} />
 
         {/* ── Principio della settimana ────────────────────────────────────── */}
         <WeeklyPrincipleCard trainerName={trainerName} />
