@@ -79,8 +79,8 @@ export const FOODS: Food[] = [
 
   // ── Fat sources ──
   { id: "olio-evo", name: "Olio extravergine d'oliva", category: "fat", per100: { protein: 0, carbs: 0, fat: 100 }, slots: ["pranzo", "cena"], step: 1, maxGrams: 60, unitNote: "1 cucchiaio ≈ 10 g" },
-  { id: "mandorle", name: "Mandorle", category: "fat", per100: { protein: 22, carbs: 4.6, fat: 55.3 }, slots: ["colazione", "spuntino"], step: 1, maxGrams: 60 },
-  { id: "noci", name: "Noci", category: "fat", per100: { protein: 14.3, carbs: 5.1, fat: 63 }, slots: ["colazione", "spuntino", "cena"], step: 1, maxGrams: 60, unitNote: "1 noce ≈ 5 g" },
+  { id: "mandorle", name: "Mandorle", category: "fat", per100: { protein: 22, carbs: 4.6, fat: 55.3 }, slots: ["colazione", "spuntino", "pranzo", "cena"], step: 1, maxGrams: 60 },
+  { id: "noci", name: "Noci", category: "fat", per100: { protein: 14.3, carbs: 5.1, fat: 63 }, slots: ["colazione", "spuntino", "pranzo", "cena"], step: 1, maxGrams: 60, unitNote: "1 noce ≈ 5 g" },
   { id: "nocciole", name: "Nocciole", category: "fat", per100: { protein: 13.8, carbs: 6.1, fat: 64.1 }, slots: ["colazione", "spuntino"], step: 1, maxGrams: 60 },
   { id: "burro-arachidi", name: "Burro d'arachidi", category: "fat", per100: { protein: 25, carbs: 11.6, fat: 50 }, slots: ["colazione", "spuntino"], step: 1, maxGrams: 50 },
   { id: "avocado", name: "Avocado", category: "fat", per100: { protein: 1.9, carbs: 1.8, fat: 23 }, slots: ["pranzo", "cena", "colazione"], step: 5, maxGrams: 150 },

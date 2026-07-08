@@ -1937,7 +1937,7 @@ export default function ClientDetailPage() {
             <div className="space-y-4">
               {client.dietPlans.map((dp) => {
                 const linkedPhase = client.phases.find((ph) => ph.id === dp.phaseId);
-                const mealsData: Array<{ id: string; name: string; time?: string; items: Array<{ id: string; name: string; grams: number; gramsMax?: number; protein?: number; carbs?: number; fat?: number }> }> = (() => {
+                const mealsData: Array<{ id: string; name: string; time?: string; items: Array<{ id: string; name: string; grams: number; gramsMax?: number; protein?: number; carbs?: number; fat?: number; alternatives?: Array<{ name: string; grams: number }> }> }> = (() => {
                   try { const p = JSON.parse(dp.meals); if (Array.isArray(p) && p[0]?.items) return p; } catch {}
                   return [];
                 })();
@@ -2017,15 +2017,23 @@ export default function ClientDetailPage() {
                                 {meal.items.length > 0 && (
                                   <div className="space-y-1">
                                     {meal.items.map((item) => (
-                                      <div key={item.id} className="flex items-center gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
-                                        <span className="flex-1">{item.name || "—"}</span>
-                                        <span className="font-medium" style={{ color: "var(--text)" }}>
-                                          {item.gramsMax ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
-                                        </span>
-                                        {(item.protein || item.carbs || item.fat) && (
-                                          <span className="text-xs" style={{ color: "var(--text-dim)" }}>
-                                            {item.protein ? `P:${item.protein}g` : ""}{item.carbs ? ` C:${item.carbs}g` : ""}{item.fat ? ` G:${item.fat}g` : ""}
+                                      <div key={item.id} className="text-xs" style={{ color: "var(--text-muted)" }}>
+                                        <div className="flex items-center gap-2">
+                                          <span className="flex-1">{item.name || "—"}</span>
+                                          <span className="font-medium" style={{ color: "var(--text)" }}>
+                                            {item.gramsMax ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
                                           </span>
+                                          {(item.protein || item.carbs || item.fat) && (
+                                            <span className="text-xs" style={{ color: "var(--text-dim)" }}>
+                                              {item.protein ? `P:${item.protein}g` : ""}{item.carbs ? ` C:${item.carbs}g` : ""}{item.fat ? ` G:${item.fat}g` : ""}
+                                            </span>
+                                          )}
+                                        </div>
+                                        {item.alternatives && item.alternatives.length > 0 && (
+                                          <p className="mt-0.5 leading-relaxed" style={{ color: "var(--text-dim)" }}>
+                                            <span style={{ color: "var(--accent-light)" }}>oppure</span>{" "}
+                                            {item.alternatives.map((a) => `${a.name} ${a.grams}g`).join(" · ")}
+                                          </p>
                                         )}
                                       </div>
                                     ))}

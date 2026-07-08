@@ -437,7 +437,7 @@ export default function PublicSchedaPage() {
                 {diets.map((diet) => {
                   const meals: Array<{
                     id: string; name: string; time?: string; notes?: string;
-                    items: Array<{ id: string; name: string; grams: number; gramsMax?: number; protein?: number; carbs?: number; fat?: number; notes?: string; }>;
+                    items: Array<{ id: string; name: string; grams: number; gramsMax?: number; protein?: number; carbs?: number; fat?: number; notes?: string; alternatives?: Array<{ name: string; grams: number }>; }>;
                   }> = (() => {
                     try {
                       const p = JSON.parse(diet.meals ?? "[]");
@@ -495,12 +495,25 @@ export default function PublicSchedaPage() {
                                 <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border-subtle)" }}>
                                   {meal.items.map((item, ii) => (
                                     <div key={item.id}
-                                      className="flex items-center gap-3 px-3 py-2.5"
+                                      className="px-3 py-2.5"
                                       style={{ background: ii % 2 === 0 ? "var(--surface-xs)" : "transparent" }}>
-                                      <span className="flex-1 text-sm" style={{ color: "var(--text)" }}>{item.name || "—"}</span>
-                                      <span className="text-sm font-bold flex-shrink-0" style={{ color: "var(--accent-light)" }}>
-                                        {item.gramsMax && item.gramsMax > item.grams ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
-                                      </span>
+                                      <div className="flex items-center gap-3">
+                                        <span className="flex-1 text-sm" style={{ color: "var(--text)" }}>{item.name || "—"}</span>
+                                        <span className="text-sm font-bold flex-shrink-0" style={{ color: "var(--accent-light)" }}>
+                                          {item.gramsMax && item.gramsMax > item.grams ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
+                                        </span>
+                                      </div>
+                                      {item.alternatives && item.alternatives.length > 0 && (
+                                        <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "var(--text-dim)" }}>
+                                          <span style={{ color: "var(--accent-light)" }}>oppure</span>{" "}
+                                          {item.alternatives.map((a, ai) => (
+                                            <span key={ai}>
+                                              {ai > 0 && <span style={{ opacity: 0.5 }}> · </span>}
+                                              {a.name} <b style={{ color: "var(--text-muted)" }}>{a.grams}g</b>
+                                            </span>
+                                          ))}
+                                        </p>
+                                      )}
                                     </div>
                                   ))}
                                 </div>

@@ -159,6 +159,22 @@ function MealItemRow({ item, onChange, onRemove }: MealItemRowProps) {
           <Trash2 size={13} style={{ color: "rgba(239,68,68,0.55)" }} />
         </button>
       </div>
+      {/* equivalent alternatives */}
+      {item.alternatives && item.alternatives.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 mt-2">
+          <span className="text-xs flex-shrink-0" style={{ color: "rgba(245,240,232,0.35)" }}>Oppure:</span>
+          {item.alternatives.map((alt, i) => (
+            <span key={i} className="inline-flex items-center gap-1.5 text-xs pl-2.5 pr-1.5 py-1 rounded-full"
+              style={{ background: "rgba(56,189,248,0.06)", border: "1px solid rgba(56,189,248,0.18)", color: "rgba(245,240,232,0.75)" }}>
+              {alt.name} <b style={{ color: "var(--accent-light)" }}>{alt.grams}g</b>
+              <button onClick={() => onChange({ alternatives: item.alternatives!.filter((_, j) => j !== i) })}
+                className="p-0.5 rounded-full hover:bg-red-500/15 transition-all" aria-label="Rimuovi alternativa">
+                <X size={10} style={{ color: "rgba(239,68,68,0.6)" }} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
       {/* notes per item */}
       <input value={item.notes || ""} onChange={(e) => onChange({ notes: e.target.value || undefined })}
         placeholder="Note (es. cottura a vapore, olio extra…)"

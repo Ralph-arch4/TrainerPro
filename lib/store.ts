@@ -31,6 +31,12 @@ export interface Exercise {
 }
 
 // ─── Meal Food Item ────────────────────────────────────────────────────────────
+export interface MealItemAlternative {
+  foodId?: string;
+  name: string;
+  grams: number; // solved to match the main item's dominant macro
+}
+
 export interface MealItem {
   id: string;
   name: string;
@@ -42,6 +48,7 @@ export interface MealItem {
   fat?: number;
   calories?: number;
   notes?: string;
+  alternatives?: MealItemAlternative[]; // equivalent foods with matched grams
 }
 
 // ─── Meal ─────────────────────────────────────────────────────────────────────

@@ -305,7 +305,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
           <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#C9A84C" : "var(--accent)" }}>Piani Alimentari</h2>
           <div className="space-y-4">
             {client.dietPlans.map((d) => {
-              const meals: Array<{ id: string; name: string; time?: string; notes?: string; items: Array<{ id: string; name: string; grams: number; gramsMax?: number; }> }> = (() => {
+              const meals: Array<{ id: string; name: string; time?: string; notes?: string; items: Array<{ id: string; name: string; grams: number; gramsMax?: number; alternatives?: Array<{ name: string; grams: number }>; }> }> = (() => {
                 try { const p = JSON.parse(d.meals ?? "[]"); return Array.isArray(p) ? p : []; } catch { return []; }
               })();
               const fmt = (min: number, max?: number, unit = "g") => max && max > min ? `${min}–${max}${unit}` : `${min}${unit}`;
@@ -333,8 +333,15 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
                           <tbody>
                             {meal.items.map((item, ii) => (
                               <tr key={item.id} style={{ background: ii % 2 === 0 ? (forPrint ? "#f9fafb" : "var(--surface-xs)") : "transparent" }}>
-                                <td style={{ padding: "3px 0" }}>{item.name || "—"}</td>
-                                <td style={{ textAlign: "right", padding: "3px 0", color: mutedColor, paddingLeft: "12px", whiteSpace: "nowrap" }}>
+                                <td style={{ padding: "3px 0" }}>
+                                  {item.name || "—"}
+                                  {item.alternatives && item.alternatives.length > 0 && (
+                                    <span style={{ color: mutedColor, fontSize: "11px" }}>
+                                      {" "}— oppure {item.alternatives.map((a) => `${a.name} ${a.grams}g`).join(" · ")}
+                                    </span>
+                                  )}
+                                </td>
+                                <td style={{ textAlign: "right", padding: "3px 0", color: mutedColor, paddingLeft: "12px", whiteSpace: "nowrap", verticalAlign: "top" }}>
                                   {item.gramsMax && item.gramsMax > item.grams ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
                                 </td>
                               </tr>

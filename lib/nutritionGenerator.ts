@@ -5,8 +5,8 @@
 // (Gauss-Seidel: each food is dominant in its own macro, so it converges),
 // then a day-level fine-tune pass corrects rounding drift to ~1 g.
 
-import type { Meal, MealItem } from "./store";
-import { FOODS, type Food, type MealSlot, displayName, macrosFor } from "./foodDatabase";
+import type { Meal, MealItem, MealItemAlternative } from "./store";
+import { FOODS, type Food, type FoodCategory, type MealSlot, displayName, macrosFor } from "./foodDatabase";
 
 export type DietPreference = "onnivora" | "pescetariana" | "vegetariana";
 
@@ -151,7 +151,7 @@ function solveTrio(target: { p: number; c: number; f: number }, carb: Food, prot
   return { gC, gP, gF };
 }
 
-function toMealItem(si: SolvedItem): MealItem {
+function toMealItem(si: SolvedItem, alternatives: MealItemAlternative[]): MealItem {
   const m = macrosFor(si.food, si.grams);
   return {
     id: uid(),
@@ -163,7 +163,51 @@ function toMealItem(si: SolvedItem): MealItem {
     fat: m.fat,
     calories: m.calories,
     notes: si.food.unitNote,
+    alternatives: alternatives.length > 0 ? alternatives : undefined,
   };
+}
+
+const MAX_ALTERNATIVES = 5;
+
+// Equivalent substitutes: same slot and role, grams solved so the substitute
+// carries the same amount of the item's dominant macro (e.g. 90 g of rice and
+// 99 g of pasta both provide ~70 g of carbs).
+function alternativesFor(si: SolvedItem, slot: MealSlot, pref: DietPreference, seed: number): MealItemAlternative[] {
+  // Vegetable sides are quasi-free: swap at equal weight.
+  if (si.role === "fixed" && si.food.category === "veg") {
+    const pool = rotate(FOODS.filter((f) => f.category === "veg" && f.id !== si.food.id), seed);
+    return pool.slice(0, MAX_ALTERNATIVES).map((f) => ({ foodId: f.id, name: displayName(f), grams: si.grams }));
+  }
+
+  const macro: "protein" | "carbs" | "fat" =
+    si.role === "protein" ? "protein" : si.role === "fat" ? "fat" : "carbs";
+  const categories: FoodCategory[] =
+    si.role === "protein" ? ["protein"]
+    : si.role === "fat" ? ["fat"]
+    : si.role === "fixed" ? ["fruit"]
+    : ["carb", "fruit"];
+
+  const target = (si.food.per100[macro] * si.grams) / 100;
+  const pool = FOODS.filter((f) =>
+    f.id !== si.food.id &&
+    categories.includes(f.category) &&
+    f.slots.includes(slot) &&
+    allowed(f, pref) &&
+    f.per100[macro] > 0 &&
+    // must reach ~the same macro amount within a realistic portion
+    (f.per100[macro] * (f.maxGrams ?? 600)) / 100 >= target * 0.9,
+  );
+
+  return rotate(pool, seed)
+    .slice(0, MAX_ALTERNATIVES)
+    .map((f) => ({ foodId: f.id, name: displayName(f), grams: clampGrams(roundStep((target / f.per100[macro]) * 100, f), f) }))
+    .filter((a) => a.grams > 0);
+}
+
+function rotate<T>(arr: T[], seed: number): T[] {
+  if (arr.length === 0) return arr;
+  const s = seed % arr.length;
+  return [...arr.slice(s), ...arr.slice(0, s)];
 }
 
 export function generateNutritionPlan(input: GeneratorInput): GeneratedPlan {
@@ -249,7 +293,7 @@ export function generateNutritionPlan(input: GeneratorInput): GeneratedPlan {
     items: mealItems[mi]
       .slice()
       .sort((a, b) => roleOrder(a.role) - roleOrder(b.role))
-      .map(toMealItem),
+      .map((si, ii) => toMealItem(si, alternativesFor(si, slotDef.slot, input.preference, seed + mi + ii))),
   }));
 
   const totals = meals.reduce(
