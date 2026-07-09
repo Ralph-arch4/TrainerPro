@@ -242,6 +242,38 @@ async function resizeImage(file: File): Promise<Blob> {
   });
 }
 
+// ── Weight Progression Sparkline ─────────────────────────────────────────────
+function WeightSparkline({ weights, idx }: { weights: number[]; idx: number }) {
+  if (weights.length < 2) return null;
+  const W = 54; const H = 24;
+  const min = Math.min(...weights);
+  const max = Math.max(...weights);
+  const range = max - min || 1;
+  const pts = weights.map((w, i) => ({
+    x: (i / (weights.length - 1)) * (W - 4) + 2,
+    y: H - 2 - ((w - min) / range) * (H - 8),
+  }));
+  const path = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const area = `${path} L${pts[pts.length - 1].x.toFixed(1)},${H} L${pts[0].x.toFixed(1)},${H} Z`;
+  const up = weights[weights.length - 1] > weights[0];
+  const flat = max === min;
+  const color = flat ? "rgba(245,240,232,0.18)" : up ? "#22c55e" : "#f87171";
+  const gid = `spk${idx}`;
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: "block", flexShrink: 0 }}>
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      <path d={area} fill={`url(#${gid})`} />
+      <path d={path} stroke={color} strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={pts[pts.length - 1].x.toFixed(1)} cy={pts[pts.length - 1].y.toFixed(1)} r="2.5" fill={color} />
+    </svg>
+  );
+}
+
 // ── Client scan type (returned by /api/fitness-scan/client) ──────────────────
 interface ClientScan {
   id: string;
@@ -1846,6 +1878,15 @@ export default function ClientPortalPage() {
           const prs = Array.from(prMap.entries())
             .sort((a, b) => b[1].weight - a[1].weight);
 
+          // Weight history per exercise (sorted by week) — for sparklines
+          const weightHistory = new Map<string, number[]>();
+          plan.exercises.forEach(ex => {
+            const exLogs = logs
+              .filter(l => l.exerciseId === ex.id && l.weight && l.weight > 0)
+              .sort((a, b) => a.weekNumber - b.weekNumber);
+            if (exLogs.length >= 2) weightHistory.set(ex.name, exLogs.map(l => l.weight!));
+          });
+
           // ── Training heatmap ───────────────────────────────────────────────
           const today = new Date();
           const heatDays = Array.from({ length: 56 }, (_, i) => {
@@ -1918,36 +1959,57 @@ export default function ClientPortalPage() {
                   </div>
                 ) : (
                   <div>
-                    {prs.map(([name, pr], idx) => (
-                      <div key={name}
-                        className="flex items-center gap-3 px-4 py-3"
-                        style={{ borderBottom: idx < prs.length - 1 ? "1px solid var(--border-subtle)" : "none" }}>
-                        <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-black"
-                          style={{
-                            background: idx === 0 ? "rgba(255,210,63,0.18)" : idx === 1 ? "rgba(200,200,200,0.12)" : idx === 2 ? "rgba(205,127,50,0.12)" : "var(--surface)",
-                            color: idx === 0 ? "#fbbf24" : idx === 1 ? "#d1d5db" : idx === 2 ? "#cd7f32" : "var(--text-dim)",
-                          }}>
-                          {idx + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>{name}</p>
-                          <p className="text-xs" style={{ color: "var(--text-dim)" }}>
-                            Sett. {pr.week} · {new Date(pr.date).toLocaleDateString("it-IT", { day: "2-digit", month: "short" })}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          {pr.isThisWeek && (
-                            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-                              style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
-                              Nuovo!
-                            </span>
+                    {prs.map(([name, pr], idx) => {
+                      const history = weightHistory.get(name);
+                      const delta = history && history.length >= 2
+                        ? +(history[history.length - 1] - history[0]).toFixed(1)
+                        : null;
+                      return (
+                        <div key={name}
+                          className="flex items-center gap-3 px-4 py-3"
+                          style={{ borderBottom: idx < prs.length - 1 ? "1px solid var(--border-subtle)" : "none" }}>
+                          <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-black"
+                            style={{
+                              background: idx === 0 ? "rgba(255,210,63,0.18)" : idx === 1 ? "rgba(200,200,200,0.12)" : idx === 2 ? "rgba(205,127,50,0.12)" : "var(--surface)",
+                              color: idx === 0 ? "#fbbf24" : idx === 1 ? "#d1d5db" : idx === 2 ? "#cd7f32" : "var(--text-dim)",
+                            }}>
+                            {idx + 1}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>{name}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="text-xs" style={{ color: "var(--text-dim)" }}>
+                                Sett. {pr.week} · {new Date(pr.date).toLocaleDateString("it-IT", { day: "2-digit", month: "short" })}
+                              </p>
+                              {delta !== null && delta !== 0 && (
+                                <span className="text-xs px-1.5 py-0.5 rounded-md font-bold flex-shrink-0"
+                                  style={{
+                                    background: delta > 0 ? "rgba(34,197,94,0.1)" : "rgba(248,113,113,0.1)",
+                                    color: delta > 0 ? "#22c55e" : "#f87171",
+                                    fontSize: "0.6rem",
+                                  }}>
+                                  {delta > 0 ? `+${delta}` : delta} kg
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {history && history.length >= 2 && (
+                            <WeightSparkline weights={history} idx={idx} />
                           )}
-                          <span className="text-base font-black" style={{ color: "var(--accent)" }}>
-                            {pr.weight} kg
-                          </span>
+                          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                            {pr.isThisWeek && (
+                              <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                                style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                                Nuovo!
+                              </span>
+                            )}
+                            <span className="text-base font-black" style={{ color: "var(--accent)" }}>
+                              {pr.weight} kg
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
