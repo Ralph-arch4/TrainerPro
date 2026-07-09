@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import type { DietPlan, Meal, MealItem, Phase } from "@/lib/store";
+import type { DietPlan, Meal, MealItem, MealVariant, Phase } from "@/lib/store";
 import { searchFoods, getFood, displayName, macrosFor, type Food } from "@/lib/foodDatabase";
 import { generateNutritionPlan, type DietPreference } from "@/lib/nutritionGenerator";
 import {
@@ -183,6 +183,52 @@ function MealItemRow({ item, onChange, onRemove }: MealItemRowProps) {
   );
 }
 
+interface VariantCardProps {
+  variant: MealVariant;
+  index: number;
+  onUse: () => void;
+  onRemove: () => void;
+}
+
+function VariantCard({ variant, index, onUse, onRemove }: VariantCardProps) {
+  const [open, setOpen] = useState(false);
+  const kcal = variant.items.reduce((acc, it) => acc + (it.calories ?? 0), 0);
+
+  return (
+    <div className="rounded-xl mb-1.5" style={{ background: "rgba(56,189,248,0.04)", border: "1px solid rgba(56,189,248,0.14)" }}>
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-2 px-3 py-2.5 text-left min-h-11">
+        <span className="text-xs font-semibold flex-1" style={{ color: "rgba(245,240,232,0.75)" }}>
+          {variant.name || `Alternativa ${index + 1}`}
+        </span>
+        <span className="text-xs flex-shrink-0" style={{ color: "rgba(245,240,232,0.4)" }}>~{kcal} kcal</span>
+        {open ? <ChevronUp size={12} style={{ color: "rgba(245,240,232,0.4)" }} /> : <ChevronDown size={12} style={{ color: "rgba(245,240,232,0.4)" }} />}
+      </button>
+      {open && (
+        <div className="px-3 pb-3">
+          {variant.items.map((it) => (
+            <div key={it.id} className="flex items-center justify-between gap-2 text-xs py-1" style={{ color: "rgba(245,240,232,0.65)" }}>
+              <span className="truncate">{it.name}</span>
+              <span className="font-semibold flex-shrink-0" style={{ color: "var(--accent-light)" }}>{it.grams}g</span>
+            </div>
+          ))}
+          <div className="flex gap-2 mt-2">
+            <button onClick={onUse}
+              className="flex-1 py-2 rounded-lg text-xs font-medium transition-all"
+              style={{ background: "rgba(255,107,43,0.1)", border: "1px solid rgba(255,107,43,0.25)", color: "var(--accent-light)" }}>
+              Usa come principale
+            </button>
+            <button onClick={onRemove}
+              className="px-3 py-2 rounded-lg text-xs transition-all hover:bg-red-500/10"
+              style={{ border: "1px solid rgba(239,68,68,0.2)", color: "rgba(239,68,68,0.6)" }}>
+              Elimina
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface MealBlockProps {
   meal: Meal;
   index: number;
@@ -260,6 +306,22 @@ function MealBlock({ meal, index, onUpdate, onRemove }: MealBlockProps) {
             style={{ border: "1px dashed rgba(255,107,43,0.2)", color: "var(--accent-light)", background: "transparent" }}>
             <Plus size={12} /> Aggiungi alimento
           </button>
+          {/* Whole-meal alternatives */}
+          {meal.variants && meal.variants.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs font-semibold mb-2" style={{ color: "rgba(56,189,248,0.7)" }}>
+                Alternative pasto ({meal.variants.length})
+              </p>
+              {meal.variants.map((v, vi) => (
+                <VariantCard key={v.id} variant={v} index={vi}
+                  onUse={() => onUpdate({
+                    items: v.items,
+                    variants: meal.variants!.map((x) => x.id === v.id ? { ...x, items: meal.items } : x),
+                  })}
+                  onRemove={() => onUpdate({ variants: meal.variants!.filter((x) => x.id !== v.id) })} />
+              ))}
+            </div>
+          )}
           {/* Meal notes */}
           <input value={meal.notes || ""} onChange={(e) => onUpdate({ notes: e.target.value || undefined })}
             placeholder="Note pasto (es. post-workout, pre-nanna…)"
@@ -463,7 +525,8 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
             <Sparkles size={14} style={{ color: "var(--accent)" }} /> Generatore automatico
           </h3>
           <p className="text-xs mb-4" style={{ color: "rgba(245,240,232,0.45)" }}>
-            Imposta i macro qui sopra e scegli il numero di pasti: il piano viene calcolato al grammo dal database alimenti.
+            Imposta i macro qui sopra e scegli il numero di pasti: il piano viene calcolato al grammo dal database alimenti,
+            con 6 versioni alternative complete per ogni pasto.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mb-4">

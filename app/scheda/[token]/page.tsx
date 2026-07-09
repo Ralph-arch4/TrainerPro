@@ -438,6 +438,7 @@ export default function PublicSchedaPage() {
                   const meals: Array<{
                     id: string; name: string; time?: string; notes?: string;
                     items: Array<{ id: string; name: string; grams: number; gramsMax?: number; protein?: number; carbs?: number; fat?: number; notes?: string; alternatives?: Array<{ name: string; grams: number }>; }>;
+                    variants?: Array<{ id: string; name?: string; items: Array<{ id: string; name: string; grams: number }> }>;
                   }> = (() => {
                     try {
                       const p = JSON.parse(diet.meals ?? "[]");
@@ -517,6 +518,27 @@ export default function PublicSchedaPage() {
                                     </div>
                                   ))}
                                 </div>
+                              )}
+                              {meal.variants && meal.variants.length > 0 && (
+                                <details className="mt-2">
+                                  <summary className="text-xs cursor-pointer py-2.5 px-3 rounded-xl font-medium min-h-11 flex items-center"
+                                    style={{ background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.15)", color: "var(--accent-light)", listStyle: "none" }}>
+                                    Alternative pasto ({meal.variants.length}) — tocca per vedere
+                                  </summary>
+                                  <div className="mt-2 space-y-2">
+                                    {meal.variants.map((v, vi) => (
+                                      <div key={v.id} className="rounded-xl p-3" style={{ border: "1px solid var(--border-subtle)", background: "var(--surface-xs)" }}>
+                                        <p className="text-xs font-semibold mb-1.5" style={{ color: "var(--accent-light)" }}>{v.name || `Alternativa ${vi + 1}`}</p>
+                                        {v.items.map((it) => (
+                                          <div key={it.id} className="flex items-center justify-between gap-2 text-xs py-1" style={{ color: "var(--text-muted)" }}>
+                                            <span>{it.name}</span>
+                                            <span className="font-bold flex-shrink-0" style={{ color: "var(--text)" }}>{it.grams}g</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </details>
                               )}
                             </div>
                           ))}

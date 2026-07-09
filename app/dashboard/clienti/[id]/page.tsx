@@ -1937,7 +1937,7 @@ export default function ClientDetailPage() {
             <div className="space-y-4">
               {client.dietPlans.map((dp) => {
                 const linkedPhase = client.phases.find((ph) => ph.id === dp.phaseId);
-                const mealsData: Array<{ id: string; name: string; time?: string; items: Array<{ id: string; name: string; grams: number; gramsMax?: number; protein?: number; carbs?: number; fat?: number; alternatives?: Array<{ name: string; grams: number }> }> }> = (() => {
+                const mealsData: Array<{ id: string; name: string; time?: string; items: Array<{ id: string; name: string; grams: number; gramsMax?: number; protein?: number; carbs?: number; fat?: number; alternatives?: Array<{ name: string; grams: number }> }>; variants?: Array<{ id: string; name?: string; items: Array<{ id: string; name: string; grams: number }> }> }> = (() => {
                   try { const p = JSON.parse(dp.meals); if (Array.isArray(p) && p[0]?.items) return p; } catch {}
                   return [];
                 })();
@@ -2038,6 +2038,22 @@ export default function ClientDetailPage() {
                                       </div>
                                     ))}
                                   </div>
+                                )}
+                                {meal.variants && meal.variants.length > 0 && (
+                                  <details className="mt-2">
+                                    <summary className="text-xs cursor-pointer py-1.5 px-2 rounded-lg font-medium"
+                                      style={{ background: "rgba(201,168,76,0.06)", color: "var(--accent-light)", listStyle: "none" }}>
+                                      Alternative pasto ({meal.variants.length})
+                                    </summary>
+                                    <div className="mt-1.5 space-y-1.5">
+                                      {meal.variants.map((v, vi) => (
+                                        <p key={v.id} className="text-xs px-2" style={{ color: "var(--text-dim)" }}>
+                                          <span className="font-semibold" style={{ color: "var(--text-muted)" }}>{v.name || `Alternativa ${vi + 1}`}:</span>{" "}
+                                          {v.items.map((it) => `${it.name} ${it.grams}g`).join(" + ")}
+                                        </p>
+                                      ))}
+                                    </div>
+                                  </details>
                                 )}
                               </div>
                             ))}

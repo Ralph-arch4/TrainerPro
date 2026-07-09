@@ -305,7 +305,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
           <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#C9A84C" : "var(--accent)" }}>Piani Alimentari</h2>
           <div className="space-y-4">
             {client.dietPlans.map((d) => {
-              const meals: Array<{ id: string; name: string; time?: string; notes?: string; items: Array<{ id: string; name: string; grams: number; gramsMax?: number; alternatives?: Array<{ name: string; grams: number }>; }> }> = (() => {
+              const meals: Array<{ id: string; name: string; time?: string; notes?: string; items: Array<{ id: string; name: string; grams: number; gramsMax?: number; alternatives?: Array<{ name: string; grams: number }>; }>; variants?: Array<{ id: string; name?: string; items: Array<{ id: string; name: string; grams: number }> }> }> = (() => {
                 try { const p = JSON.parse(d.meals ?? "[]"); return Array.isArray(p) ? p : []; } catch { return []; }
               })();
               const fmt = (min: number, max?: number, unit = "g") => max && max > min ? `${min}–${max}${unit}` : `${min}${unit}`;
@@ -348,6 +348,16 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
                             ))}
                           </tbody>
                         </table>
+                      )}
+                      {meal.variants && meal.variants.length > 0 && (
+                        <div style={{ marginTop: "6px" }}>
+                          {meal.variants.map((v, vi) => (
+                            <p key={v.id} style={{ fontSize: "11px", color: mutedColor, margin: "2px 0" }}>
+                              <b>{v.name || `Alternativa ${vi + 1}`}:</b>{" "}
+                              {v.items.map((it) => `${it.name} ${it.grams}g`).join(" + ")}
+                            </p>
+                          ))}
+                        </div>
                       )}
                     </div>
                   ))}

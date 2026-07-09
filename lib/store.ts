@@ -52,12 +52,19 @@ export interface MealItem {
 }
 
 // ─── Meal ─────────────────────────────────────────────────────────────────────
+export interface MealVariant {
+  id: string;
+  name: string; // e.g. "Alternativa 1"
+  items: MealItem[]; // complete replacement meal hitting the same macro targets
+}
+
 export interface Meal {
   id: string;
   name: string; // e.g. "Colazione", "Pranzo", "Spuntino"
   time?: string; // e.g. "07:30", "13:00"
   items: MealItem[];
   notes?: string;
+  variants?: MealVariant[]; // full alternative versions of this meal
 }
 
 // ─── Weekly log (filled by client via shared link) ────────────────────────────
