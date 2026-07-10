@@ -1200,6 +1200,73 @@ function WelcomePlanDelivery({ trainerName, planName, daysPerWeek, totalWeeks, o
   );
 }
 
+// ── Obiettivo della Settimana ─────────────────────────────────────────────────
+function WeeklyGoalCard({ logs, daysPerWeek, trainerName }: {
+  logs: ExerciseLog[]; daysPerWeek: number; trainerName: string;
+}) {
+  const now = new Date();
+  const dayOfWeek = (now.getDay() + 6) % 7; // Mon=0, Sun=6
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - dayOfWeek);
+  weekStart.setHours(0, 0, 0, 0);
+  const localDay = (d: Date) => d.toLocaleDateString("sv-SE");
+  const weekStartStr = localDay(weekStart);
+  const todayStr = localDay(now);
+
+  const activeDaysThisWeek = new Set(
+    logs
+      .filter(l => { const d = localDay(new Date(l.loggedAt)); return d >= weekStartStr && d <= todayStr; })
+      .map(l => localDay(new Date(l.loggedAt)))
+  );
+  const done = activeDaysThisWeek.size;
+  const target = daysPerWeek;
+  const complete = done >= target;
+  const color = complete ? "#22c55e" : done >= Math.ceil(target / 2) ? "var(--accent)" : "rgba(201,168,76,0.6)";
+
+  const MSGS = [
+    `La settimana inizia adesso. Ho preparato ${target} sessioni per te — quando vuoi.`,
+    "Prima sessione completata — ottimo inizio di settimana.",
+    "Stai andando bene. Tieni questo ritmo e la settimana sarà tua.",
+    "Quasi ci sei. Ancora uno e chiudiamo la settimana alla grande.",
+    "Settimana completata! Hai fatto esattamente quello che ti avevo chiesto. Ottimo.",
+  ];
+  const msgIdx = complete ? 4 : done === 0 ? 0 : done === 1 ? 1 : done < target - 1 ? 2 : 3;
+
+  const DAY_LABELS = ["L", "M", "M", "G", "V", "S", "D"];
+  return (
+    <div className="mb-4 rounded-2xl p-4 relative overflow-hidden"
+      style={{ background: complete ? "rgba(34,197,94,0.05)" : "var(--surface-xs)", border: `1px solid ${complete ? "rgba(34,197,94,0.22)" : "rgba(201,168,76,0.15)"}` }}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-black uppercase tracking-[0.14em]" style={{ color }}>
+          Obiettivo settimana
+        </p>
+        <span className="text-sm font-black" style={{ color }}>{done}/{target}</span>
+      </div>
+      <div className="flex gap-1.5 mb-2">
+        {DAY_LABELS.map((label, i) => {
+          const d = new Date(weekStart);
+          d.setDate(weekStart.getDate() + i);
+          const dStr = localDay(d);
+          const trained = activeDaysThisWeek.has(dStr);
+          const isFuture = dStr > todayStr;
+          const isToday = dStr === todayStr;
+          return (
+            <div key={i} className="flex-1 flex flex-col items-center gap-1">
+              <div className="w-full h-2 rounded-full transition-all duration-500"
+                style={{ background: trained ? color : isFuture ? "var(--surface-sm)" : "var(--surface-md)", border: isToday ? `1px solid ${color}` : "none", opacity: isFuture ? 0.3 : 1 }} />
+              <span style={{ color: isToday ? color : "var(--text-faint)", fontSize: "0.55rem", fontWeight: 700 }}>{label}</span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-xs leading-relaxed mt-2" style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+        &ldquo;{MSGS[msgIdx]}&rdquo;{" "}
+        <span className="not-italic font-semibold" style={{ color, opacity: 0.8 }}>— {trainerName}</span>
+      </p>
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -1613,6 +1680,9 @@ export default function ClientPortalPage() {
 
         {/* ── Stato Atleta ─────────────────────────────────────────────────── */}
         <AthleteStatusBand dayOnJourney={dayOnJourney} streak={streak} />
+
+        {/* ── Obiettivo della Settimana ────────────────────────────────────── */}
+        <WeeklyGoalCard logs={logs} daysPerWeek={plan.days_per_week} trainerName={trainerName} />
 
         {/* ── Voce del Trainer ─────────────────────────────────────────────── */}
         <TrainerVoiceCard
