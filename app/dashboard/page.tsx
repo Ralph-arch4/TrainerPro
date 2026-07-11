@@ -9,7 +9,7 @@ import {
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
   Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle, Scale, TrendingDown,
   BarChart2, CreditCard, Target, Heart, ClipboardCopy, CalendarClock, ShieldAlert,
-  CalendarCheck,
+  CalendarCheck, ListChecks,
 } from "lucide-react";
 
 function nameHash(name: string): number[] {
@@ -600,6 +600,39 @@ export default function DashboardPage() {
       .slice(0, 6);
   }, [clients]);
 
+  // Focus del giorno: top 5 azioni urgenti aggregate da tutti i radar operativi
+  const priorityActions = useMemo(() => {
+    const actions: { urgency: number; label: string; detail: string; href: string; waLink?: string; color: string }[] = [];
+
+    for (const { client, daysSinceLast } of atRiskClients.slice(0, 2)) {
+      const wa = client.phone
+        ? `https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}, sono passati ${daysSinceLast} giorni dall'ultima sessione. Quando riprendi?`)}`
+        : undefined;
+      actions.push({ urgency: daysSinceLast >= 14 ? 1 : 3, label: client.name, detail: `${daysSinceLast}gg senza sessioni`, href: `/dashboard/clienti/${client.id}`, waLink: wa, color: "#f87171" });
+    }
+
+    for (const { client, turnsAge } of upcomingBirthdays.filter(b => b.daysUntil === 0)) {
+      const wa = client.phone ? `https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Tanti auguri ${client.name.split(" ")[0]}! Spero tu stia passando una bellissima giornata.`)}` : undefined;
+      actions.push({ urgency: 0, label: client.name, detail: `Compleanno oggi — ${turnsAge} anni`, href: `/dashboard/clienti/${client.id}`, waLink: wa, color: "#c084fc" });
+    }
+
+    for (const { client, daysUntil, fee } of renewalAlerts.filter(r => r.daysUntil <= 1)) {
+      const wa = client.phone ? `https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}! Ricordati che il tuo abbonamento (€${fee}) si rinnova ${daysUntil === 0 ? "oggi" : "domani"}.`)}` : undefined;
+      actions.push({ urgency: daysUntil === 0 ? 0 : 2, label: client.name, detail: `Abbonamento €${fee} ${daysUntil === 0 ? "oggi" : "domani"}`, href: `/dashboard/clienti/${client.id}`, waLink: wa, color: "#4ade80" });
+    }
+
+    for (const { client, plan, weeksLeft } of planEndingAlerts.slice(0, 1)) {
+      actions.push({ urgency: weeksLeft === 0 ? 2 : 4, label: client.name, detail: `Scheda "${plan.name}" in scadenza`, href: `/dashboard/clienti/${client.id}/schede/${plan.id}`, color: "#fb7185" });
+    }
+
+    for (const { client, w2, w1, w0 } of churnRiskClients.filter(r => r.risk === "critico").slice(0, 1)) {
+      const wa = client.phone ? `https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}, come stai? Noto che questa settimana non hai ancora allenato — tutto bene?`)}` : undefined;
+      actions.push({ urgency: 2, label: client.name, detail: `Frequenza azzerata (${w2}→${w1}→${w0} sessioni)`, href: `/dashboard/clienti/${client.id}`, waLink: wa, color: "#f97316" });
+    }
+
+    return actions.sort((a, b) => a.urgency - b.urgency).slice(0, 5);
+  }, [atRiskClients, upcomingBirthdays, renewalAlerts, planEndingAlerts, churnRiskClients]);
+
   // Heatmap settimanale: esercizi unici loggati per ogni giorno della settimana corrente
   const weeklyHeatmap = useMemo(() => {
     const now = new Date();
@@ -776,6 +809,43 @@ export default function DashboardPage() {
               style={{ background: `${coachPulse.color}18`, color: coachPulse.color }}>
               <ClipboardCopy size={14} />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Focus del Giorno ────────────────────────────────────────────── */}
+      {priorityActions.length > 0 && (
+        <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(255,107,43,0.05)", border: "1px solid rgba(255,107,43,0.22)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <ListChecks size={14} style={{ color: "var(--accent)" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Focus del giorno
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold ml-1"
+              style={{ background: "rgba(255,107,43,0.18)", color: "var(--accent)" }}>
+              {priorityActions.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>azioni urgenti</span>
+          </div>
+          <div className="space-y-1.5">
+            {priorityActions.map((action, i) => (
+              <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl"
+                style={{ background: `${action.color}08`, borderLeft: `2px solid ${action.color}50` }}>
+                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: action.color }} />
+                <Link href={action.href} className="flex-1 min-w-0 hover:opacity-80 transition-opacity">
+                  <span className="text-xs font-bold" style={{ color: "var(--text)" }}>{action.label}</span>
+                  <span className="text-xs ml-2" style={{ color: "var(--text-muted)" }}>{action.detail}</span>
+                </Link>
+                {action.waLink && (
+                  <a href={action.waLink} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
+                    style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                    <MessageCircle size={11} />
+                    WA
+                  </a>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
