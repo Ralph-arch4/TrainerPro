@@ -238,6 +238,31 @@ export default function DashboardPage() {
     return results.slice(0, 4);
   }, [clients]);
 
+  // Radar Equilibrio Muscolare: gruppi primari non allenati da 14+ giorni nonostante siano in scheda
+  const muscleGapAlerts = useMemo(() => {
+    const PRIMARY_GROUPS = ["Petto", "Schiena", "Spalle", "Quadricipiti", "Femorali", "Glutei"];
+    const CUTOFF = Date.now() - 14 * 86400000;
+    const results: { client: typeof clients[0]; missingGroups: string[] }[] = [];
+    for (const client of clients.filter(c => c.status === "attivo")) {
+      const planGroups = new Set<string>();
+      const recentGroups = new Set<string>();
+      for (const plan of client.workoutPlans) {
+        const exMap: Record<string, string> = {};
+        for (const ex of plan.exercises) {
+          if (ex.muscleGroup) { planGroups.add(ex.muscleGroup); exMap[ex.id] = ex.muscleGroup; }
+        }
+        for (const log of plan.logs) {
+          if (new Date(log.loggedAt).getTime() > CUTOFF && exMap[log.exerciseId]) {
+            recentGroups.add(exMap[log.exerciseId]);
+          }
+        }
+      }
+      const missing = PRIMARY_GROUPS.filter(g => planGroups.has(g) && !recentGroups.has(g));
+      if (missing.length >= 2) results.push({ client, missingGroups: missing });
+    }
+    return results.slice(0, 5);
+  }, [clients]);
+
   // Note da monitorare: log recenti con possibili segnali di dolore/infortunio
   const painFlagAlerts = useMemo(() => {
     const PAIN_RE = /dolor|fastidi|infortun|tirat|stiramento|bruci|formicol|fa male|scrocch|inflam/i;
@@ -1047,6 +1072,51 @@ export default function DashboardPage() {
                   <p className="text-xs font-bold" style={{ color: "#fbbf24" }}>{s.weight}kg → {s.suggested}kg</p>
                   <p className="text-xs" style={{ color: "rgba(251,191,36,0.6)" }}>3 sett. stabile</p>
                 </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Equilibrio Muscolare ─────────────────────────────────────────── */}
+      {muscleGapAlerts.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(99,102,241,0.05)", border: "1px solid rgba(99,102,241,0.18)" }}>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <Scale size={14} style={{ color: "#818cf8" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Equilibrio Muscolare
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+              style={{ background: "rgba(99,102,241,0.18)", color: "#818cf8" }}>
+              {muscleGapAlerts.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
+              gruppi non allenati da 14+ giorni
+            </span>
+          </div>
+          <div className="space-y-2">
+            {muscleGapAlerts.map(({ client, missingGroups }) => (
+              <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
+                className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-all group">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
+                  style={{ background: "rgba(99,102,241,0.12)", color: "#818cf8" }}>
+                  {client.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold mb-1.5 truncate" style={{ color: "var(--text)" }}>
+                    {client.name}
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {missingGroups.map(g => (
+                      <span key={g} className="text-xs px-1.5 py-0.5 rounded font-medium"
+                        style={{ background: "rgba(99,102,241,0.12)", color: "rgba(129,140,248,0.9)" }}>
+                        {g}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <ArrowRight size={13} className="flex-shrink-0 mt-0.5 opacity-40 group-hover:opacity-70 transition-opacity"
+                  style={{ color: "var(--text)" }} />
               </Link>
             ))}
           </div>
