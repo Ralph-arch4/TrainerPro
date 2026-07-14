@@ -1267,6 +1267,92 @@ function WeeklyGoalCard({ logs, daysPerWeek, trainerName }: {
   );
 }
 
+// ── Messaggio Vocale dal Trainer (simulated voice note) ─────────────────────
+const VOICE_MSGS = [
+  { dur: "0:31", text: "Ciao! Sto monitorando i tuoi progressi questa settimana. Stai andando nella direzione giusta — continua così, ci sei." },
+  { dur: "0:24", text: "Ehi, sono qui. Ogni sessione che completi conta più di quanto pensi. Non mollare, il risultato arriva." },
+  { dur: "0:38", text: "Ho registrato i tuoi ultimi allenamenti — il lavoro si vede. Fidati del processo e segui il piano." },
+  { dur: "0:27", text: "Questa settimana voglio che ti concentri sulla qualità. Ogni serie fatta bene vale dieci fatte male." },
+  { dur: "0:33", text: "Ti mando questo messaggio per farti sapere che ci sono. Se hai dubbi sul piano, sai dove trovarmi. Forza!" },
+  { dur: "0:29", text: "Bel lavoro! Ho visto i tuoi log — stai migliorando esattamente come previsto. Avanti così." },
+  { dur: "0:44", text: "Ci vuole coraggio per essere costanti, e tu lo stai dimostrando. Ogni volta che registri stai investendo nel tuo futuro." },
+  { dur: "0:19", text: "Ciao! Solo per dirti: mi fido di te. Tu fidati del piano. Funziona." },
+  { dur: "0:35", text: "So che a volte è dura — ma è esattamente in quei momenti che il cambiamento avviene." },
+  { dur: "0:28", text: "Il tuo ritmo è quello giusto. Non confrontarti con gli altri — confrontati con te stesso di tre mesi fa." },
+  { dur: "0:41", text: "Non sei solo in questo percorso. Io sono qui ogni volta che apri l'app — il piano è il nostro lavoro insieme." },
+  { dur: "0:22", text: "Mancanza di motivazione? Normale. Aprire l'app e allenarsi comunque? Questo è disciplina. E tu ce l'hai." },
+];
+const WAVEFORM = [8, 14, 20, 12, 24, 16, 10, 28, 18, 12, 22, 16, 8, 20, 26, 14, 10, 24, 18, 12, 20, 8, 16, 28, 12];
+
+function TrainerVoiceMessage({ trainerName, totalLogs, streak }: {
+  trainerName: string; totalLogs: number; streak: number;
+}) {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const weekNum = Math.ceil(((now.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
+  const msg = VOICE_MSGS[(weekNum + totalLogs + streak) % VOICE_MSGS.length];
+  const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [done, setDone] = useState(false);
+  const ivRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => () => { if (ivRef.current) clearInterval(ivRef.current); }, []);
+
+  function handlePlay() {
+    if (playing) return;
+    setPlaying(true); setProgress(0); setDone(false);
+    let step = 0;
+    ivRef.current = setInterval(() => {
+      step++;
+      setProgress(Math.round(step / 50 * 100));
+      if (step >= 50) { clearInterval(ivRef.current!); setPlaying(false); setDone(true); }
+    }, 60);
+  }
+
+  return (
+    <div className="mb-4 rounded-2xl p-4" style={{ background: "var(--surface-xs)", border: "1px solid rgba(201,168,76,0.18)" }}>
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs"
+          style={{ background: "rgba(201,168,76,0.15)", border: "1px solid rgba(201,168,76,0.3)", color: "rgba(201,168,76,0.85)" }}>
+          {initials}
+        </div>
+        <p className="text-xs font-black" style={{ color: "rgba(201,168,76,0.8)" }}>{trainerName}</p>
+        <span className="text-xs px-1.5 py-0.5 rounded-full"
+          style={{ background: "rgba(201,168,76,0.1)", color: "rgba(201,168,76,0.5)", fontSize: "0.58rem", border: "1px solid rgba(201,168,76,0.15)" }}>
+          Messaggio vocale
+        </span>
+      </div>
+      <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all"
+        style={{ background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.12)" }}
+        onClick={handlePlay}>
+        <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95"
+          style={{ background: playing ? "rgba(201,168,76,0.22)" : "rgba(201,168,76,0.14)", border: "1px solid rgba(201,168,76,0.28)" }}>
+          {playing
+            ? <span style={{ display: "flex", gap: 3 }}><span style={{ width: 2.5, height: 10, background: "rgba(201,168,76,0.85)", borderRadius: 2, display: "block" }} /><span style={{ width: 2.5, height: 10, background: "rgba(201,168,76,0.85)", borderRadius: 2, display: "block" }} /></span>
+            : <span style={{ width: 0, height: 0, borderTop: "5px solid transparent", borderBottom: "5px solid transparent", borderLeft: "9px solid rgba(201,168,76,0.85)", marginLeft: 3, display: "block" }} />}
+        </div>
+        <div className="flex items-center gap-[2px] h-8 flex-1">
+          {WAVEFORM.map((h, i) => (
+            <div key={i} style={{ width: 3, height: h, borderRadius: 2, flexShrink: 0, transition: "background 0.06s",
+              background: (i / WAVEFORM.length * 100) <= progress ? "rgba(201,168,76,0.75)" : "rgba(201,168,76,0.2)" }} />
+          ))}
+        </div>
+        <span className="font-mono flex-shrink-0" style={{ color: "rgba(201,168,76,0.5)", fontSize: "0.6rem" }}>{msg.dur}</span>
+      </div>
+      {done && (
+        <div className="mt-3 fade-in">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] mb-1.5" style={{ color: "var(--text-faint)" }}>Trascrizione</p>
+          <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)", fontStyle: "italic" }}>&ldquo;{msg.text}&rdquo;</p>
+        </div>
+      )}
+      {!done && !playing && (
+        <p className="text-xs mt-2 text-center" style={{ color: "var(--text-faint)" }}>Tocca per ascoltare il messaggio del tuo trainer</p>
+      )}
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -1694,6 +1780,9 @@ export default function ClientPortalPage() {
 
         {/* ── Notifica settimanale dal trainer ─────────────────────────────── */}
         <TrainerNotificationBanner trainerName={trainerName} />
+
+        {/* ── Messaggio vocale dal trainer ──────────────────────────────────── */}
+        <TrainerVoiceMessage trainerName={trainerName} totalLogs={totalLogs} streak={streak} />
 
         {/* ── Lettera mensile dal trainer ──────────────────────────────────── */}
         <MonthlyLetterCard trainerName={trainerName} streak={streak} totalLogs={totalLogs} />
