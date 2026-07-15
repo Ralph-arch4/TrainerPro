@@ -726,6 +726,46 @@ export default function ClientDetailPage() {
     }
   }
 
+  async function duplicatePlanProgressive(wp: ReturnType<typeof useAppStore.getState>["clients"][0]["workoutPlans"][0]) {
+    const byEx: Record<string, typeof wp.logs> = {};
+    for (const log of wp.logs) {
+      if (!byEx[log.exerciseId]) byEx[log.exerciseId] = [];
+      byEx[log.exerciseId].push(log);
+    }
+    const suggestions: string[] = [];
+    for (const [exId, logs] of Object.entries(byEx)) {
+      const sorted = [...logs].filter(l => l.weight != null).sort((a, b) => b.weekNumber - a.weekNumber);
+      if (sorted.length < 3) continue;
+      const last3 = sorted.slice(0, 3);
+      if (!last3.every(l => l.weight === last3[0].weight)) continue;
+      const ex = wp.exercises.find(e => e.id === exId);
+      if (!ex) continue;
+      const suggested = Math.round((last3[0].weight! + 2.5) * 2) / 2;
+      suggestions.push(`${ex.name}: ${last3[0].weight}kg → ${suggested}kg`);
+    }
+    const description = suggestions.length > 0
+      ? `Progressioni suggerite: ${suggestions.join(" | ")}`
+      : "Piano progressivo — ciclo successivo";
+    const newPlan = addWorkoutPlan(client!.id, {
+      name: `${wp.name} – Ciclo 2`,
+      description,
+      daysPerWeek: wp.daysPerWeek,
+      totalWeeks: wp.totalWeeks,
+      restSeconds: wp.restSeconds,
+      active: false,
+      dayLabels: wp.dayLabels,
+    });
+    const withExercises = { ...newPlan, exercises: wp.exercises.map(e => ({ ...e, id: crypto.randomUUID() })) };
+    updateWorkoutPlan(client!.id, newPlan.id, { exercises: withExercises.exercises });
+    try {
+      await dbWorkoutPlans.create({ ...withExercises });
+      showToast(suggestions.length > 0 ? `Piano creato · ${suggestions.length} progressioni calcolate` : "Piano progressivo creato");
+    } catch {
+      removeWorkoutPlan(client!.id, newPlan.id);
+      showToast("Errore nella creazione", "error");
+    }
+  }
+
   async function handleDietSave(data: Omit<DietPlan, "id" | "clientId" | "createdAt">) {
     setSaving(true); setSaveError("");
     if (editingDietPlan) {
@@ -1851,6 +1891,12 @@ export default function ClientDetailPage() {
                           className="p-1.5 rounded-lg hover:bg-white/5 transition-all"
                           title="Duplica scheda">
                           <Copy size={13} style={{ color: "var(--text-muted)" }} />
+                        </button>
+                        <button
+                          onClick={() => duplicatePlanProgressive(wp)}
+                          className="p-1.5 rounded-lg hover:bg-green-500/10 transition-all"
+                          title="Crea piano progressivo (ciclo successivo con carichi aumentati)">
+                          <TrendingUp size={13} style={{ color: "rgba(34,197,94,0.75)" }} />
                         </button>
                         <button
                           onClick={() => setEditingPlan({ id: wp.id, name: wp.name, description: wp.description ?? "", daysPerWeek: String(wp.daysPerWeek), totalWeeks: wp.totalWeeks ? String(wp.totalWeeks) : "", restSeconds: String(wp.restSeconds ?? 90), phaseId: wp.phaseId ?? "" })}
