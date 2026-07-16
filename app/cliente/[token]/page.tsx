@@ -1353,6 +1353,41 @@ function TrainerVoiceMessage({ trainerName, totalLogs, streak }: {
   );
 }
 
+// ── Monogramma del Trainer (sfondo luxury ripetuto) ──────────────────────────
+// Ispira il pattern LV/Gucci: le iniziali del trainer riempiono l'intera
+// schermata come un tessuto di marca — esclusivo, non invasivo (opacità ≤0.05).
+function TrainerMonogramBg({ initials }: { initials: string }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none", overflow: "hidden" }}>
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="tpMonogram" x="0" y="0" width="110" height="110"
+            patternUnits="userSpaceOnUse" patternTransform="rotate(-28)">
+            {/* Quadrante A: sigla grande */}
+            <text x="28" y="52" textAnchor="middle" dominantBaseline="middle"
+              fontFamily="Georgia,'Times New Roman',serif" fontWeight="900" fontSize="40"
+              fill="rgba(201,168,76,0.048)" letterSpacing="1">
+              {initials}
+            </text>
+            {/* Quadrante B: rombo decorativo */}
+            <polygon
+              points="82,28 88,34 82,40 76,34"
+              fill="none" stroke="rgba(201,168,76,0.032)" strokeWidth="0.8"
+            />
+            {/* Quadrante C: sigla piccola */}
+            <text x="83" y="82" textAnchor="middle" dominantBaseline="middle"
+              fontFamily="Georgia,'Times New Roman',serif" fontWeight="900" fontSize="14"
+              fill="rgba(201,168,76,0.036)" letterSpacing="1">
+              {initials}
+            </text>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#tpMonogram)" />
+      </svg>
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -1713,8 +1748,16 @@ export default function ClientPortalPage() {
 
   const activeDiet = diets[0] ?? null;
 
+  const trainerInitials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
+
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+    <div className="min-h-screen" style={{ background: "var(--bg)", position: "relative" }}>
+
+      {/* ── Monogramma trainer (sfondo luxury) ───────────────────────────────── */}
+      <TrainerMonogramBg initials={trainerInitials} />
+
+      {/* ── Contenuto sopra il monogramma ─────────────────────────────────────── */}
+      <div style={{ position: "relative", zIndex: 1 }}>
 
       {/* ── Prima consegna del piano ──────────────────────────────────────────── */}
       {showWelcome && (
@@ -2731,6 +2774,7 @@ export default function ClientPortalPage() {
           </div>
         );
       })()}
+      </div>{/* /content z:1 wrapper */}
     </div>
   );
 }
