@@ -1027,6 +1027,84 @@ function PersonalizedInsightCard({ exercises, logs, trainerName }: {
   );
 }
 
+// ── Contatore Risultati Animato ──────────────────────────────────────────────
+function AchievementCounter({ totalLogs, logs, trainerName }: {
+  totalLogs: number; logs: ExerciseLog[]; trainerName: string;
+}) {
+  let totalReps = 0, totalKg = 0;
+  logs.forEach(log => {
+    let reps = 0, kgThisLog = 0, isPerSet = false;
+    try {
+      const parsed = JSON.parse(log.reps ?? "");
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.r !== undefined) {
+        isPerSet = true;
+        parsed.forEach((s: { r: string; w?: string }) => {
+          const r = parseInt(s.r) || 0; reps += r;
+          kgThisLog += (parseFloat(s.w ?? "0") || 0) * r;
+        });
+      }
+    } catch {}
+    if (!isPerSet) {
+      (log.reps ?? "").split("/").forEach(p => { reps += parseInt(p) || 0; });
+      kgThisLog = (log.weight ?? 0) * reps;
+    }
+    totalReps += reps; totalKg += kgThisLog;
+  });
+  const totalTons = Math.round(totalKg / 100) / 10;
+
+  const [counts, setCounts] = useState({ logs: 0, reps: 0, tons: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    if (totalLogs === 0) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || startedRef.current) return;
+      startedRef.current = true;
+      const t0 = performance.now(); const dur = 1600;
+      function tick(now: number) {
+        const p = Math.min((now - t0) / dur, 1);
+        const e = 1 - Math.pow(1 - p, 3);
+        setCounts({ logs: Math.round(totalLogs * e), reps: Math.round(totalReps * e), tons: Math.round(totalTons * 10 * e) / 10 });
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }, { threshold: 0.3 });
+    if (containerRef.current) obs.observe(containerRef.current);
+    return () => obs.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalLogs, totalReps, totalTons]);
+
+  if (totalLogs === 0) return null;
+  return (
+    <div ref={containerRef} className="mb-4 rounded-2xl p-5 relative overflow-hidden"
+      style={{ background: "linear-gradient(135deg,rgba(34,197,94,0.05),rgba(8,8,8,0.6))", border: "1px solid rgba(34,197,94,0.16)" }}>
+      <p className="text-xs font-black uppercase tracking-[0.16em] mb-4 text-center" style={{ color: "var(--text-dim)" }}>
+        Il tuo impatto in cifre
+      </p>
+      <div className="grid grid-cols-3 gap-3 text-center">
+        {([
+          { v: counts.logs,  label: "Sessioni",    sub: "registrate", color: "var(--accent)", fmt: (n: number) => n.toString() },
+          { v: counts.reps,  label: "Ripetizioni", sub: "eseguite",   color: "#a78bfa",        fmt: (n: number) => n >= 1000 ? `${(n/1000).toFixed(1)}k` : n.toString() },
+          { v: counts.tons,  label: "Tonnellate",  sub: "di ferro",   color: "#22c55e",        fmt: (n: number) => n.toFixed(1) },
+        ] as const).map((s, i) => (
+          <div key={i}>
+            <p className="text-3xl font-black tabular-nums leading-none"
+              style={{ color: s.color, textShadow: `0 0 24px ${s.color}55` }}>
+              {s.fmt(s.v)}
+            </p>
+            <p className="text-xs font-bold mt-1" style={{ color: "var(--text-muted)" }}>{s.label}</p>
+            <p className="text-xs" style={{ color: "var(--text-faint)" }}>{s.sub}</p>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs mt-4 text-center" style={{ color: "var(--text-faint)" }}>
+        Ogni rep che hai fatto conta — {trainerName} lo sa
+      </p>
+    </div>
+  );
+}
+
 // ── Notifica Settimanale dal Trainer ─────────────────────────────────────────
 const TRAINER_WEEKLY_NOTES = [
   "Ho rivisto il tuo programma questa settimana — ogni dettaglio è pensato per te.",
@@ -2015,6 +2093,9 @@ export default function ClientPortalPage() {
           logs={logs}
           trainerName={trainerName}
         />
+
+        {/* ── Contatore Risultati Animato ───────────────────────────────── */}
+        <AchievementCounter totalLogs={totalLogs} logs={logs} trainerName={trainerName} />
 
         {/* ── Tabs ───────────────────────────────────────────────────────────── */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
