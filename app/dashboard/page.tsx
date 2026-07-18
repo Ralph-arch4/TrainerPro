@@ -658,6 +658,12 @@ export default function DashboardPage() {
     return actions.sort((a, b) => a.urgency - b.urgency).slice(0, 5);
   }, [atRiskClients, upcomingBirthdays, renewalAlerts, planEndingAlerts, churnRiskClients]);
 
+  // Clienti attivi senza scheda attiva: pagano ma non hanno un piano assegnato
+  const noActivePlanClients = useMemo(() =>
+    clients.filter(c => c.status === "attivo" && !c.workoutPlans.some(p => p.active)).slice(0, 6),
+    [clients]
+  );
+
   // Heatmap settimanale: esercizi unici loggati per ogni giorno della settimana corrente
   const weeklyHeatmap = useMemo(() => {
     const now = new Date();
@@ -869,6 +875,47 @@ export default function DashboardPage() {
                     WA
                   </a>
                 )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Clienti senza scheda attiva ─────────────────────────────────── */}
+      {noActivePlanClients.length > 0 && (
+        <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.22)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <ClipboardList size={14} style={{ color: "#fbbf24" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Senza scheda attiva
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold ml-1"
+              style={{ background: "rgba(251,191,36,0.18)", color: "#fbbf24" }}>
+              {noActivePlanClients.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>clienti attivi senza piano</span>
+          </div>
+          <div className="space-y-1.5">
+            {noActivePlanClients.map(c => (
+              <div key={c.id} className="flex items-center gap-3 p-2.5 rounded-xl"
+                style={{ background: "rgba(251,191,36,0.04)", borderLeft: "2px solid rgba(251,191,36,0.3)" }}>
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                  style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24" }}>
+                  {c.name.charAt(0).toUpperCase()}
+                </div>
+                <Link href={`/dashboard/clienti/${c.id}`}
+                  className="flex-1 text-xs font-semibold hover:underline truncate"
+                  style={{ color: "var(--text)" }}>
+                  {c.name}
+                </Link>
+                <span className="text-xs flex-shrink-0" style={{ color: "var(--text-dim)" }}>
+                  {c.monthlyFee ? `€${c.monthlyFee}/m` : ""}
+                </span>
+                <Link href={`/dashboard/clienti/${c.id}`}
+                  className="text-xs px-2.5 py-1 rounded-lg font-semibold flex-shrink-0 transition-all hover:opacity-80"
+                  style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24" }}>
+                  Assegna scheda
+                </Link>
               </div>
             ))}
           </div>
