@@ -664,6 +664,31 @@ export default function DashboardPage() {
     [clients]
   );
 
+  // Radar Nutrizione: clienti in fase bulk/cut senza piano dieta o con calorie sfasate >15%
+  const nutritionMisalignAlerts = useMemo(() => {
+    const results: { client: typeof clients[0]; reason: string; type: "no_plan" | "calorie_gap" }[] = [];
+    for (const c of clients.filter(cl => cl.status === "attivo")) {
+      const activePhase = c.phases.find(p => !p.completed && (p.type === "bulk" || p.type === "cut"));
+      if (!activePhase) continue;
+      const phaseLabel = activePhase.type === "bulk" ? "massa" : "definizione";
+      const activeDiet = c.dietPlans?.find(d => d.active);
+      if (!activeDiet) {
+        results.push({ client: c, reason: `Fase ${phaseLabel} senza piano alimentare`, type: "no_plan" });
+      } else if (activePhase.targetCalories && activePhase.targetCalories > 0) {
+        const diff = Math.abs(activeDiet.calories - activePhase.targetCalories);
+        if (diff / activePhase.targetCalories > 0.15) {
+          const dir = activeDiet.calories > activePhase.targetCalories ? "eccesso" : "deficit";
+          results.push({
+            client: c,
+            reason: `Calorie in ${dir}: ${activeDiet.calories} vs ${activePhase.targetCalories}kcal (fase ${phaseLabel})`,
+            type: "calorie_gap",
+          });
+        }
+      }
+    }
+    return results.slice(0, 5);
+  }, [clients]);
+
   // Heatmap settimanale: esercizi unici loggati per ogni giorno della settimana corrente
   const weeklyHeatmap = useMemo(() => {
     const now = new Date();
@@ -1119,6 +1144,44 @@ export default function DashboardPage() {
                   <p className="text-xs font-bold" style={{ color: "#fbbf24" }}>{s.weight}kg → {s.suggested}kg</p>
                   <p className="text-xs" style={{ color: "rgba(251,191,36,0.6)" }}>3 sett. stabile</p>
                 </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Radar Nutrizione ────────────────────────────────────────────── */}
+      {nutritionMisalignAlerts.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.18)" }}>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <UtensilsCrossed size={14} style={{ color: "#f87171" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Radar Nutrizione
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+              style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>
+              {nutritionMisalignAlerts.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
+              piani alimentari da rivedere
+            </span>
+          </div>
+          <div className="space-y-2">
+            {nutritionMisalignAlerts.map(({ client, reason, type }) => (
+              <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
+                className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                  style={{ background: type === "no_plan" ? "rgba(239,68,68,0.12)" : "rgba(251,191,36,0.12)", color: type === "no_plan" ? "#f87171" : "#fbbf24" }}>
+                  {client.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{client.name}</p>
+                  <p className="text-xs truncate" style={{ color: type === "no_plan" ? "#f87171" : "#fbbf24" }}>{reason}</p>
+                </div>
+                <span className="text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0"
+                  style={{ background: type === "no_plan" ? "rgba(239,68,68,0.1)" : "rgba(251,191,36,0.1)", color: type === "no_plan" ? "#f87171" : "#fbbf24" }}>
+                  {type === "no_plan" ? "Mancante" : "Sfasato"}
+                </span>
               </Link>
             ))}
           </div>
