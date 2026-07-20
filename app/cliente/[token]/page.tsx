@@ -1466,6 +1466,66 @@ function TrainerMonogramBg({ initials }: { initials: string }) {
   );
 }
 
+// ── Anelli di Attività ────────────────────────────────────────────────────────
+// SVG concentric rings: piano % | sessioni sett. | streak — animati all'ingresso.
+// Nessun altro software PT ha questa visualizzazione; ispira Apple Rings ma
+// con l'identità visiva TrainerPro (gold, viola, red).
+function FitnessRingsCard({ pct, streak, logs, daysPerWeek, level, levelName }: {
+  pct: number | null; streak: number; logs: ExerciseLog[];
+  daysPerWeek: number; level: number; levelName: string;
+}) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => { const id = setTimeout(() => setReady(true), 120); return () => clearTimeout(id); }, []);
+  const now = Date.now();
+  const weekSessions = logs.filter(l => now - new Date(l.loggedAt).getTime() < 7 * 86400000).length;
+  const rings = [
+    { pct: Math.min(100, pct ?? 0), r: 52, color: "#C9A84C", label: "Piano",            val: pct !== null ? `${pct}%` : "∞" },
+    { pct: Math.min(100, Math.round(weekSessions / Math.max(1, daysPerWeek) * 100)), r: 38, color: "#a78bfa", label: "Questa settimana", val: `${weekSessions}/${daysPerWeek}` },
+    { pct: Math.min(100, Math.round(streak / 7 * 100)), r: 24, color: "#ef4444", label: "Streak", val: `${streak}gg` },
+  ];
+  return (
+    <div className="mb-4 rounded-2xl p-5 fade-in" style={{ background: "var(--surface-xs)", border: "1px solid var(--border)" }}>
+      <p className="text-xs font-bold uppercase tracking-[0.16em] mb-4" style={{ color: "var(--text-faint)" }}>
+        Anelli Attività
+      </p>
+      <div className="flex items-center gap-6">
+        <div style={{ position: "relative", flexShrink: 0, width: 128, height: 128 }}>
+          <svg width={128} height={128} style={{ transform: "rotate(-90deg)" }}>
+            {rings.map(rg => {
+              const circ = 2 * Math.PI * rg.r;
+              return (
+                <g key={rg.label}>
+                  <circle cx={64} cy={64} r={rg.r} fill="none" stroke={rg.color} strokeWidth={10}
+                    style={{ opacity: 0.13 }} />
+                  <circle cx={64} cy={64} r={rg.r} fill="none" stroke={rg.color} strokeWidth={10}
+                    strokeLinecap="round" strokeDasharray={`${circ}`}
+                    strokeDashoffset={ready ? circ * (1 - rg.pct / 100) : circ}
+                    style={{ opacity: 0.9, filter: `drop-shadow(0 0 5px ${rg.color}77)`,
+                      transition: "stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)" }} />
+                </g>
+              );
+            })}
+          </svg>
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            <span className="font-black" style={{ color: "var(--text)", fontSize: "0.75rem", lineHeight: 1 }}>Lv.{level}</span>
+            <span style={{ color: "var(--text-faint)", fontSize: "0.56rem", lineHeight: 1.7, letterSpacing: "0.05em" }}>{levelName}</span>
+          </div>
+        </div>
+        <div className="flex flex-col gap-3.5 flex-1">
+          {rings.map(rg => (
+            <div key={rg.label} className="flex items-center gap-2.5">
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: rg.color, flexShrink: 0,
+                boxShadow: `0 0 7px ${rg.color}99` }} />
+              <span className="text-xs flex-1" style={{ color: "var(--text-muted)" }}>{rg.label}</span>
+              <span className="text-sm font-black" style={{ color: "var(--text)" }}>{rg.val}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -1887,6 +1947,16 @@ export default function ClientPortalPage() {
 
         {/* ── Stato Atleta ─────────────────────────────────────────────────── */}
         <AthleteStatusBand dayOnJourney={dayOnJourney} streak={streak} />
+
+        {/* ── Anelli Attività ──────────────────────────────────────────────── */}
+        <FitnessRingsCard
+          pct={pct}
+          streak={streak}
+          logs={logs}
+          daysPerWeek={plan.days_per_week}
+          level={level}
+          levelName={levelName}
+        />
 
         {/* ── Obiettivo della Settimana ────────────────────────────────────── */}
         <WeeklyGoalCard logs={logs} daysPerWeek={plan.days_per_week} trainerName={trainerName} />
