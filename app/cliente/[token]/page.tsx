@@ -1345,6 +1345,69 @@ function WeeklyGoalCard({ logs, daysPerWeek, trainerName }: {
   );
 }
 
+// ── Storia dell'Atleta ────────────────────────────────────────────────────────
+const ATHLETE_CHAPTERS = [
+  { from: 0,   to: 6,        chapter: "Capitolo 1", title: "Il Risveglio",    arc: "Hai preso la decisione più importante. Il percorso inizia adesso.",            icon: "🌅", color: "#a78bfa" },
+  { from: 7,   to: 29,       chapter: "Capitolo 2", title: "Il Primo Fuoco",  arc: "Stai costruendo le fondamenta. Ogni sessione è un mattone.",                   icon: "🔥", color: "#fbbf24" },
+  { from: 30,  to: 89,       chapter: "Capitolo 3", title: "La Forgia",       arc: "Le abitudini si sono formate. Il corpo inizia a rispondere.",                   icon: "⚔️", color: "#38bdf8" },
+  { from: 90,  to: 179,      chapter: "Capitolo 4", title: "La Prova",        arc: "Tre mesi di disciplina. Qui i risultati diventano visibili.",                   icon: "🏔️", color: "var(--accent)" },
+  { from: 180, to: 364,      chapter: "Capitolo 5", title: "Il Guerriero",    arc: "Sei mesi di costanza autentica. Non molti arrivano fin qui.",                   icon: "🛡️", color: "#22c55e" },
+  { from: 365, to: Infinity, chapter: "Capitolo 6", title: "La Leggenda",     arc: "Un anno di trasformazione. Questo non è più un programma — è il tuo stile di vita.", icon: "👑", color: "#e8b44a" },
+];
+
+function StoryChapterCard({ dayOnJourney, trainerName, totalLogs }: {
+  dayOnJourney: number | null; trainerName: string; totalLogs: number;
+}) {
+  const day = dayOnJourney ?? 0;
+  const idx = ATHLETE_CHAPTERS.findIndex(c => day >= c.from && day <= c.to);
+  const chapter = ATHLETE_CHAPTERS[Math.max(0, idx)];
+  const next = ATHLETE_CHAPTERS[idx + 1] ?? null;
+  const progress = next
+    ? Math.min(100, Math.round(((day - chapter.from) / (next.from - chapter.from)) * 100))
+    : 100;
+  return (
+    <div className="mb-4 rounded-2xl p-5 relative overflow-hidden"
+      style={{ background: `linear-gradient(135deg, ${chapter.color}0d, rgba(8,8,8,0.72))`, border: `1px solid ${chapter.color}28` }}>
+      <div className="absolute -right-3 -top-3 text-8xl select-none pointer-events-none" style={{ opacity: 0.07, lineHeight: 1 }}>
+        {chapter.icon}
+      </div>
+      <div className="flex items-center gap-2.5 mb-3">
+        <span style={{ fontSize: "1.15rem", lineHeight: 1, flexShrink: 0 }}>{chapter.icon}</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-black uppercase tracking-[0.16em]" style={{ color: chapter.color, opacity: 0.75 }}>
+            {chapter.chapter} · La tua storia
+          </p>
+          <h3 className="text-base font-black leading-tight" style={{ color: "var(--text)" }}>{chapter.title}</h3>
+        </div>
+        {dayOnJourney !== null && (
+          <span className="text-xs font-bold px-2 py-1 rounded-lg flex-shrink-0"
+            style={{ background: `${chapter.color}14`, color: chapter.color, border: `1px solid ${chapter.color}22` }}>
+            Giorno {day}
+          </span>
+        )}
+      </div>
+      <p className="text-sm leading-relaxed mb-3"
+        style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+        &ldquo;{chapter.arc}&rdquo;
+        {" "}<span className="not-italic font-semibold" style={{ color: chapter.color, opacity: 0.7 }}>— {trainerName}</span>
+      </p>
+      {totalLogs > 0 && next && (
+        <div className="space-y-1.5">
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--surface-md)" }}>
+            <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${progress}%`, background: chapter.color, opacity: 0.75 }} />
+          </div>
+          <div className="flex justify-between items-center">
+            <p className="text-xs" style={{ color: "var(--text-faint)" }}>avanzamento capitolo</p>
+            <p className="text-xs font-bold" style={{ color: chapter.color, opacity: 0.6 }}>
+              {next.from - day > 0 ? `${next.from - day}gg al ${next.chapter.toLowerCase()}` : next.chapter}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Messaggio Vocale dal Trainer (simulated voice note) ─────────────────────
 const VOICE_MSGS = [
   { dur: "0:31", text: "Ciao! Sto monitorando i tuoi progressi questa settimana. Stai andando nella direzione giusta — continua così, ci sei." },
@@ -1983,6 +2046,9 @@ export default function ClientPortalPage() {
 
         {/* ── Banner milestone percorso ─────────────────────────────────────── */}
         <MilestoneBanner dayOnJourney={dayOnJourney} trainerName={trainerName} />
+
+        {/* ── Storia dell'Atleta ────────────────────────────────────────────── */}
+        <StoryChapterCard dayOnJourney={dayOnJourney} trainerName={trainerName} totalLogs={totalLogs} />
 
         {/* ── Messaggio dal Trainer ─────────────────────────────────────────── */}
         {plan.description && (
