@@ -942,6 +942,26 @@ export default function ClientDetailPage() {
     return { plan: activePlan, currentWeek: maxWeek, totalWeeks: activePlan.totalWeeks, pct, status, remaining };
   }, [client]);
 
+  // ── Ritmo di Allenamento: 12-week training heatmap ──
+  const trainingCalendar = useMemo(() => {
+    const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
+    const trainedSet = new Set(allLogs.map(l => new Date(l.loggedAt).toDateString()));
+    const today = new Date();
+    const dow = today.getDay();
+    const start = new Date(today);
+    start.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1) - 11 * 7);
+    start.setHours(0, 0, 0, 0);
+    const days = Array.from({ length: 84 }, (_, i) => {
+      const d = new Date(start.getTime() + i * 86400000);
+      const str = d.toDateString();
+      return { d, trained: trainedSet.has(str), isToday: str === today.toDateString(), future: d > today };
+    });
+    const weeks = Array.from({ length: 12 }, (_, w) => days.slice(w * 7, (w + 1) * 7));
+    const total = days.filter(d => d.trained && !d.future).length;
+    const bestWeek = Math.max(0, ...weeks.map(w => w.filter(d => d.trained && !d.future).length));
+    return { weeks, total, bestWeek };
+  }, [client]);
+
   // ── Smart priority brief: single highest-priority action for this client ──
   const priorityBrief = useMemo(() => {
     if (client.status !== "attivo") return null;
@@ -1451,6 +1471,69 @@ export default function ClientDetailPage() {
                   <p className="text-2xl font-bold" style={{ color }}>{value}</p>
                   <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{label}</p>
                 </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Ritmo di Allenamento ── */}
+          <div className="sm:col-span-2 card-luxury rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Zap size={14} style={{ color: "var(--accent)" }} />
+                <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Ritmo di Allenamento</h3>
+                <span className="text-xs" style={{ color: "var(--text-dim)" }}>· 12 settimane</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs">
+                <span>
+                  <span className="font-bold" style={{ color: trainingCalendar.total > 0 ? "#22c55e" : "var(--text-dim)" }}>{trainingCalendar.total}</span>
+                  <span style={{ color: "var(--text-dim)" }}> sessioni</span>
+                </span>
+                {trainingCalendar.bestWeek > 0 && (
+                  <span style={{ color: "var(--text-dim)" }}>
+                    top: <span className="font-bold" style={{ color: "var(--accent-light)" }}>{trainingCalendar.bestWeek}/sett</span>
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-2 items-start">
+              <div className="flex flex-col gap-[3px] pt-px flex-shrink-0" style={{ paddingTop: "1px" }}>
+                {["L","M","M","G","V","S","D"].map((l, i) => (
+                  <span key={i} style={{ fontSize: "8px", color: "var(--text-faint)", width: "8px", textAlign: "right", lineHeight: "10px", display: "block" }}>{l}</span>
+                ))}
+              </div>
+              <div style={{ display: "grid", gridTemplateRows: "repeat(7, 10px)", gridAutoFlow: "column", gridAutoColumns: "1fr", gap: "3px", flex: 1 }}>
+                {trainingCalendar.weeks.flatMap((week, wi) =>
+                  week.map((d, di) => (
+                    <div
+                      key={`${wi}-${di}`}
+                      title={`${d.d.toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" })}${d.trained ? " — allenato" : ""}`}
+                      style={{
+                        borderRadius: "2px",
+                        background: d.future
+                          ? "rgba(255,255,255,0.025)"
+                          : d.isToday
+                          ? (d.trained ? "rgba(201,168,76,0.9)" : "rgba(201,168,76,0.3)")
+                          : d.trained
+                          ? "rgba(34,197,94,0.65)"
+                          : "rgba(255,255,255,0.05)",
+                        border: d.isToday ? "1px solid rgba(201,168,76,0.7)" : "none",
+                        cursor: "default",
+                      }}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-4 mt-3 flex-wrap">
+              {[
+                { bg: "rgba(34,197,94,0.65)", label: "Allenato" },
+                { bg: "rgba(255,255,255,0.05)", label: "Riposo" },
+                { bg: "rgba(201,168,76,0.9)", label: "Oggi" },
+              ].map(({ bg, label }) => (
+                <span key={label} className="flex items-center gap-1.5" style={{ fontSize: "10px", color: "var(--text-dim)" }}>
+                  <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "2px", background: bg }} />
+                  {label}
+                </span>
               ))}
             </div>
           </div>
