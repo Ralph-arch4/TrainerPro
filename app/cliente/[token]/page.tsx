@@ -1105,6 +1105,76 @@ function AchievementCounter({ totalLogs, logs, trainerName }: {
   );
 }
 
+// ── Tessera Fedeltà Atleta ───────────────────────────────────────────────────
+function TrainingLoyaltyCard({ weeksCompleted, currentWeek, totalWeeks, trainerInitials, shareToken, isUnlimited }: {
+  weeksCompleted: number; currentWeek: number; totalWeeks: number;
+  trainerInitials: string; shareToken: string; isUnlimited: boolean;
+}) {
+  const slots = isUnlimited ? Math.max(12, currentWeek + 4) : Math.min(totalWeeks, 20);
+  const memberNum = shareToken.replace(/[^0-9a-f]/gi, "").slice(0, 6).toUpperCase();
+  return (
+    <div className="mb-4 rounded-2xl overflow-hidden"
+      style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.07), rgba(8,8,8,0.6))", border: "1px solid rgba(201,168,76,0.2)" }}>
+      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid rgba(201,168,76,0.1)" }}>
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: "rgba(201,168,76,0.65)" }}>Tessera Atleta</p>
+          <p className="text-xs font-mono" style={{ color: "var(--text-faint)", letterSpacing: "0.12em" }}>#{memberNum}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-sm font-black" style={{ color: "var(--accent-light)" }}>
+            {weeksCompleted}/{isUnlimited ? "∞" : totalWeeks}
+          </p>
+          <p className="text-xs" style={{ color: "var(--text-faint)" }}>settimane</p>
+        </div>
+      </div>
+      <div className="p-4 grid gap-2.5" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
+        {Array.from({ length: slots }, (_, i) => {
+          const w = i + 1;
+          const isDone = w <= weeksCompleted;
+          const isCurrent = w === currentWeek && currentWeek > 0 && !isDone;
+          const tilt = ((i * 7 + 3) % 14) - 7;
+          return (
+            <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+              <div style={{
+                width: 46, height: 46, borderRadius: "50%",
+                border: isDone ? "none" : isCurrent ? "1.5px dashed rgba(201,168,76,0.55)" : "1.5px dashed rgba(201,168,76,0.15)",
+                background: isDone ? "radial-gradient(circle at 38% 32%, rgba(201,168,76,0.22), rgba(8,8,8,0.8))" : "transparent",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transform: isDone ? `rotate(${tilt}deg)` : "none",
+                position: "relative", overflow: "hidden",
+                boxShadow: isDone ? "inset 0 0 10px rgba(201,168,76,0.14), 0 0 14px rgba(201,168,76,0.07)" : "none",
+                animation: isCurrent ? "pulse-glow 2s ease-in-out infinite" : "none",
+              }}>
+                {isDone && (
+                  <>
+                    <div style={{ position: "absolute", inset: 4, borderRadius: "50%", border: "1px solid rgba(201,168,76,0.38)" }} />
+                    <span style={{ color: "rgba(201,168,76,0.88)", fontWeight: 900, fontSize: "0.72rem", fontFamily: "Georgia,'Times New Roman',serif", letterSpacing: "0.04em" }}>
+                      {trainerInitials}
+                    </span>
+                  </>
+                )}
+                {isCurrent && (
+                  <span style={{ color: "rgba(201,168,76,0.65)", fontSize: "0.55rem", fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}>attiva</span>
+                )}
+                {!isDone && !isCurrent && (
+                  <span style={{ color: "rgba(201,168,76,0.2)", fontSize: "0.65rem", fontWeight: 700 }}>{w}</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <p className="text-center text-xs pb-3" style={{ color: "var(--text-faint)" }}>
+        {weeksCompleted === 0
+          ? "Ogni settimana completata riceve il timbro del tuo trainer"
+          : weeksCompleted >= totalWeeks && !isUnlimited
+            ? "Tessera piena — programma completato!"
+            : `${weeksCompleted} ${weeksCompleted === 1 ? "settimana timbrata" : "settimane timbrate"} · ogni timbro vale`}
+      </p>
+    </div>
+  );
+}
+
 // ── Notifica Settimanale dal Trainer ─────────────────────────────────────────
 const TRAINER_WEEKLY_NOTES = [
   "Ho rivisto il tuo programma questa settimana — ogni dettaglio è pensato per te.",
@@ -2232,6 +2302,16 @@ export default function ClientPortalPage() {
 
         {/* ── Contatore Risultati Animato ───────────────────────────────── */}
         <AchievementCounter totalLogs={totalLogs} logs={logs} trainerName={trainerName} />
+
+        {/* ── Tessera Fedeltà Atleta ────────────────────────────────────────── */}
+        <TrainingLoyaltyCard
+          weeksCompleted={weeksCompleted}
+          currentWeek={currentWeek}
+          totalWeeks={plan.total_weeks}
+          trainerInitials={trainerInitials}
+          shareToken={plan.share_token}
+          isUnlimited={isUnlimited}
+        />
 
         {/* ── Tabs ───────────────────────────────────────────────────────────── */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-1 scrollbar-hide">
