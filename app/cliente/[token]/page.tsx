@@ -1600,9 +1600,6 @@ function TrainerMonogramBg({ initials }: { initials: string }) {
 }
 
 // ── Anelli di Attività ────────────────────────────────────────────────────────
-// SVG concentric rings: piano % | sessioni sett. | streak — animati all'ingresso.
-// Nessun altro software PT ha questa visualizzazione; ispira Apple Rings ma
-// con l'identità visiva TrainerPro (gold, viola, red).
 function FitnessRingsCard({ pct, streak, logs, daysPerWeek, level, levelName }: {
   pct: number | null; streak: number; logs: ExerciseLog[];
   daysPerWeek: number; level: number; levelName: string;
@@ -1659,6 +1656,86 @@ function FitnessRingsCard({ pct, streak, logs, daysPerWeek, level, levelName }: 
   );
 }
 
+// ── Training Heatmap (10 weeks) ─────────────────────────────────────────────
+function TrainingHeatmap({ logs }: { logs: ExerciseLog[] }) {
+  const localDay = (d: Date) => d.toLocaleDateString("sv-SE");
+  const today = new Date();
+  const todayStr = localDay(today);
+  const WEEKS = 10;
+
+  const logMap = new Map<string, number>();
+  logs.forEach(l => {
+    const day = localDay(new Date(l.loggedAt));
+    logMap.set(day, (logMap.get(day) ?? 0) + 1);
+  });
+
+  const weeks: { date: string; count: number }[][] = [];
+  for (let w = 0; w < WEEKS; w++) {
+    const week: { date: string; count: number }[] = [];
+    for (let d = 0; d < 7; d++) {
+      const offset = (WEEKS - 1 - w) * 7 + (6 - d);
+      const date = new Date(today);
+      date.setDate(today.getDate() - offset);
+      const ds = localDay(date);
+      week.push({ date: ds, count: logMap.get(ds) ?? 0 });
+    }
+    weeks.push(week);
+  }
+
+  const totalDays = Array.from(logMap.keys()).filter(d => {
+    const offset = Math.floor((new Date(todayStr).getTime() - new Date(d).getTime()) / 86400000);
+    return offset >= 0 && offset < WEEKS * 7;
+  }).length;
+
+  function cellColor(count: number, isToday: boolean): string {
+    if (isToday) return count > 0 ? "var(--accent)" : "rgba(201,168,76,0.28)";
+    if (count === 0) return "rgba(255,255,255,0.045)";
+    if (count === 1) return "rgba(201,168,76,0.28)";
+    if (count === 2) return "rgba(201,168,76,0.55)";
+    return "rgba(201,168,76,0.88)";
+  }
+
+  if (logs.length === 0) return null;
+
+  return (
+    <div className="mb-4 rounded-2xl p-4" style={{ background: "var(--surface-xs)", border: "1px solid rgba(201,168,76,0.13)" }}>
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.15em]" style={{ color: "var(--text-dim)" }}>
+            Il tuo percorso — 10 settimane
+          </p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--text-faint)" }}>
+            {totalDays} {totalDays === 1 ? "giorno" : "giorni"} di allenamento
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs" style={{ color: "var(--text-faint)" }}>meno</span>
+          {[0, 1, 2, 3].map(i => (
+            <div key={i} className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: cellColor(i, false) }} />
+          ))}
+          <span className="text-xs" style={{ color: "var(--text-faint)" }}>più</span>
+        </div>
+      </div>
+      <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1">
+        {weeks.map((week, wi) => (
+          <div key={wi} className="flex flex-col gap-1 flex-shrink-0">
+            {week.map((day, di) => (
+              <div
+                key={di}
+                className="w-4 h-4 rounded-sm"
+                style={{ background: cellColor(day.count, day.date === todayStr) }}
+                title={day.count > 0 ? `${day.date}: ${day.count} registrazioni` : day.date}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+      <p className="text-xs mt-1.5 text-right" style={{ color: "rgba(201,168,76,0.35)" }}>
+        oggi →
+      </p>
+    </div>
+  );
+}
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -2080,6 +2157,9 @@ export default function ClientPortalPage() {
 
         {/* ── Stato Atleta ─────────────────────────────────────────────────── */}
         <AthleteStatusBand dayOnJourney={dayOnJourney} streak={streak} />
+
+        {/* ── Storico allenamenti (heatmap 10 settimane) ───────────────────── */}
+        <TrainingHeatmap logs={logs} />
 
         {/* ── Anelli Attività ──────────────────────────────────────────────── */}
         <FitnessRingsCard
