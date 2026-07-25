@@ -96,6 +96,25 @@ function WeightSparkline({ history }: { history: number[] }) {
   );
 }
 
+// ── Session stats (trainer intel strip) ──────────────────────────────────────
+function calcSessionStats(exercises: Exercise[], logs: ExerciseLog[], week: number) {
+  const loggedCount = exercises.filter(ex =>
+    logs.some(l => l.exerciseId === ex.id && l.weekNumber === week && (l.weight != null || l.reps))
+  ).length;
+  const weights: number[] = [];
+  const prevWeights: number[] = [];
+  for (const ex of exercises) {
+    const cur  = logs.find(l => l.exerciseId === ex.id && l.weekNumber === week);
+    const prv  = week > 1 ? logs.find(l => l.exerciseId === ex.id && l.weekNumber === week - 1) : undefined;
+    if (cur?.weight) weights.push(cur.weight);
+    if (prv?.weight) prevWeights.push(prv.weight);
+  }
+  const avgW    = weights.length    ? weights.reduce((a, b) => a + b, 0) / weights.length       : null;
+  const avgPrev = prevWeights.length ? prevWeights.reduce((a, b) => a + b, 0) / prevWeights.length : null;
+  const deltaPct = avgW !== null && avgPrev !== null ? ((avgW - avgPrev) / avgPrev) * 100 : null;
+  return { loggedCount, total: exercises.length, avgW, deltaPct };
+}
+
 // ── Superset colors ───────────────────────────────────────────────────────────
 const SS_COLORS: Record<string, string> = {
   A: "#a78bfa", B: "#38bdf8", C: "#34d399",
@@ -693,6 +712,39 @@ export default function WorkoutLogbook({
           <span style={{ color: "var(--accent)" }}>RPE</span>: 1–6 facile · 7–8 giusto · 9 al limite · 10 cedimento
         </div>
       )}
+
+      {/* Trainer session intel strip */}
+      {mode === "trainer" && dayExercises.length > 0 && (() => {
+        const { loggedCount, total, avgW, deltaPct } = calcSessionStats(dayExercises, logs, activeWeek);
+        if (loggedCount === 0) return null;
+        const allDone = loggedCount === total;
+        return (
+          <div className="flex items-center flex-wrap px-4 py-2.5 rounded-2xl"
+            style={{ background: "rgba(201,168,76,0.05)", border: "1px solid rgba(201,168,76,0.12)", gap: "0.75rem" }}>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ background: allDone ? "#22c55e" : "var(--accent)" }} />
+              <span className="text-xs font-bold" style={{ color: "var(--ivory)" }}>{loggedCount}/{total}</span>
+              <span className="text-xs" style={{ color: "var(--text-dim)" }}>esercizi loggati</span>
+            </div>
+            {avgW !== null && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs" style={{ color: "var(--text-dim)" }}>Carico medio:</span>
+                <span className="text-xs font-bold" style={{ color: "var(--accent-light)" }}>{avgW.toFixed(1)} kg</span>
+                {deltaPct !== null && (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-lg flex-shrink-0"
+                    style={{
+                      background: deltaPct >= 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
+                      color: deltaPct >= 0 ? "#22c55e" : "#f87171",
+                    }}>
+                    {deltaPct > 0 ? "↑" : "↓"}{Math.abs(deltaPct).toFixed(1)}% vs S{activeWeek - 1}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Exercise grid */}
       {dayExercises.length === 0 ? (
