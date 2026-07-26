@@ -1,7 +1,7 @@
 ﻿"use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
-import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2, AlertTriangle, ArrowUp } from "lucide-react";
 import { showToast } from "@/components/Toast";
 
 // ── Per-set data ──────────────────────────────────────────────────────────────
@@ -245,7 +245,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
         )}
       </div>
 
-      {/* Progressive overload suggestion */}
+      {/* Progressive overload suggestion (client) */}
       {suggestion && (
         <div className="flex items-center gap-2 px-3 py-2 text-xs"
           style={{ background: "rgba(201,168,76,0.07)", borderBottom: rowBorder, color: "var(--accent-light)" }}>
@@ -257,6 +257,38 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
           </span>
         </div>
       )}
+
+      {/* Trainer intelligence: plateau alert + load suggestion */}
+      {mode === "trainer" && (() => {
+        const plateauWeight = weightHistory && weightHistory.length >= 3
+          ? (() => {
+              const l3 = weightHistory.slice(-3);
+              return Math.max(...l3) - Math.min(...l3) <= 0.5 ? l3[l3.length - 1] : null;
+            })()
+          : null;
+        const trainerSug = week > 1 ? calcSuggestion(parseSetData(lastWeekLog, sets)) : null;
+        if (plateauWeight === null && !trainerSug) return null;
+        return (
+          <div className="px-3 py-2 flex flex-col gap-1.5" style={{ background: "rgba(201,168,76,0.05)", borderBottom: rowBorder }}>
+            {plateauWeight !== null && (
+              <div className="flex items-center gap-1.5 text-xs" style={{ color: "#fb923c" }}>
+                <AlertTriangle size={10} style={{ flexShrink: 0 }} />
+                <span>Plateau: <strong>{plateauWeight} kg</strong> per 3+ settimane — valuta di aumentare il carico</span>
+              </div>
+            )}
+            {trainerSug && (
+              <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--accent-light)" }}>
+                <ArrowUp size={10} style={{ flexShrink: 0 }} />
+                <span>
+                  Suggerito: <strong>{trainerSug.weight} kg</strong>
+                  {trainerSug.delta > 0 ? ` (+${trainerSug.delta.toFixed(1)})` : trainerSug.delta < 0 ? ` (${trainerSug.delta.toFixed(1)})` : " (mantieni)"}
+                  {trainerSug.rpeAvg !== null ? ` — RPE scorso ${trainerSug.rpeAvg.toFixed(1)}` : ""}
+                </span>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* ── CLIENT mode: per-set rows ── */}
       {mode === "client" && (
