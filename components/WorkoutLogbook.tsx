@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
-import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2, AlertTriangle, ArrowUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2 } from "lucide-react";
 import { showToast } from "@/components/Toast";
 
 // ── Per-set data ──────────────────────────────────────────────────────────────
@@ -104,8 +104,8 @@ function calcSessionStats(exercises: Exercise[], logs: ExerciseLog[], week: numb
   const weights: number[] = [];
   const prevWeights: number[] = [];
   for (const ex of exercises) {
-    const cur  = logs.find(l => l.exerciseId === ex.id && l.weekNumber === week);
-    const prv  = week > 1 ? logs.find(l => l.exerciseId === ex.id && l.weekNumber === week - 1) : undefined;
+    const cur = logs.find(l => l.exerciseId === ex.id && l.weekNumber === week);
+    const prv = week > 1 ? logs.find(l => l.exerciseId === ex.id && l.weekNumber === week - 1) : undefined;
     if (cur?.weight) weights.push(cur.weight);
     if (prv?.weight) prevWeights.push(prv.weight);
   }
@@ -113,6 +113,23 @@ function calcSessionStats(exercises: Exercise[], logs: ExerciseLog[], week: numb
   const avgPrev = prevWeights.length ? prevWeights.reduce((a, b) => a + b, 0) / prevWeights.length : null;
   const deltaPct = avgW !== null && avgPrev !== null ? ((avgW - avgPrev) / avgPrev) * 100 : null;
   return { loggedCount, total: exercises.length, avgW, deltaPct };
+}
+
+// ── Session volume load (tonnellaggio) ───────────────────────────────────────
+function calcVolumeLoad(exercises: Exercise[], logs: ExerciseLog[], week: number): number {
+  let total = 0;
+  for (const ex of exercises) {
+    const log = logs.find(l => l.exerciseId === ex.id && l.weekNumber === week);
+    if (!log) continue;
+    const sets = Math.max(1, ex.sets || 3);
+    const data = parseSetData(log, sets);
+    for (const s of data) {
+      const w = parseFloat(s.weight);
+      const r = parseFloat(s.reps);
+      if (!isNaN(w) && !isNaN(r) && w > 0 && r > 0) total += w * r;
+    }
+  }
+  return Math.round(total);
 }
 
 // ── Superset colors ───────────────────────────────────────────────────────────
@@ -245,50 +262,26 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
         )}
       </div>
 
-      {/* Progressive overload suggestion (client) */}
+      {/* Progressive overload suggestion */}
       {suggestion && (
         <div className="flex items-center gap-2 px-3 py-2 text-xs"
           style={{ background: "rgba(201,168,76,0.07)", borderBottom: rowBorder, color: "var(--accent-light)" }}>
           <TrendingUp size={11} style={{ flexShrink: 0 }} />
-          <span>
-            Suggerimento settimana: <strong>{suggestion.weight} kg</strong>
+          <span className="flex-1">
+            Suggerimento: <strong>{suggestion.weight} kg</strong>
             {suggestion.delta > 0 ? ` (+${suggestion.delta.toFixed(1)})` : suggestion.delta < 0 ? ` (${suggestion.delta.toFixed(1)})` : " (mantieni)"}
             {suggestion.rpeAvg !== null ? ` — RPE scorso: ${suggestion.rpeAvg.toFixed(1)}` : ""}
           </span>
+          {!log && (
+            <button
+              onClick={() => setData(d => d.map(s => ({ ...s, weight: String(suggestion.weight) })))}
+              className="flex-shrink-0 text-xs px-2 py-0.5 rounded-lg transition-all hover:opacity-75"
+              style={{ background: "rgba(201,168,76,0.18)", color: "var(--accent)", border: "1px solid rgba(201,168,76,0.35)" }}>
+              Applica
+            </button>
+          )}
         </div>
       )}
-
-      {/* Trainer intelligence: plateau alert + load suggestion */}
-      {mode === "trainer" && (() => {
-        const plateauWeight = weightHistory && weightHistory.length >= 3
-          ? (() => {
-              const l3 = weightHistory.slice(-3);
-              return Math.max(...l3) - Math.min(...l3) <= 0.5 ? l3[l3.length - 1] : null;
-            })()
-          : null;
-        const trainerSug = week > 1 ? calcSuggestion(parseSetData(lastWeekLog, sets)) : null;
-        if (plateauWeight === null && !trainerSug) return null;
-        return (
-          <div className="px-3 py-2 flex flex-col gap-1.5" style={{ background: "rgba(201,168,76,0.05)", borderBottom: rowBorder }}>
-            {plateauWeight !== null && (
-              <div className="flex items-center gap-1.5 text-xs" style={{ color: "#fb923c" }}>
-                <AlertTriangle size={10} style={{ flexShrink: 0 }} />
-                <span>Plateau: <strong>{plateauWeight} kg</strong> per 3+ settimane — valuta di aumentare il carico</span>
-              </div>
-            )}
-            {trainerSug && (
-              <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--accent-light)" }}>
-                <ArrowUp size={10} style={{ flexShrink: 0 }} />
-                <span>
-                  Suggerito: <strong>{trainerSug.weight} kg</strong>
-                  {trainerSug.delta > 0 ? ` (+${trainerSug.delta.toFixed(1)})` : trainerSug.delta < 0 ? ` (${trainerSug.delta.toFixed(1)})` : " (mantieni)"}
-                  {trainerSug.rpeAvg !== null ? ` — RPE scorso ${trainerSug.rpeAvg.toFixed(1)}` : ""}
-                </span>
-              </div>
-            )}
-          </div>
-        );
-      })()}
 
       {/* ── CLIENT mode: per-set rows ── */}
       {mode === "client" && (
@@ -750,6 +743,9 @@ export default function WorkoutLogbook({
         const { loggedCount, total, avgW, deltaPct } = calcSessionStats(dayExercises, logs, activeWeek);
         if (loggedCount === 0) return null;
         const allDone = loggedCount === total;
+        const volCur = calcVolumeLoad(dayExercises, logs, activeWeek);
+        const volPrev = activeWeek > 1 ? calcVolumeLoad(dayExercises, logs, activeWeek - 1) : 0;
+        const volDelta = volCur > 0 && volPrev > 0 ? ((volCur - volPrev) / volPrev) * 100 : null;
         return (
           <div className="flex items-center flex-wrap px-4 py-2.5 rounded-2xl"
             style={{ background: "rgba(201,168,76,0.05)", border: "1px solid rgba(201,168,76,0.12)", gap: "0.75rem" }}>
@@ -765,11 +761,20 @@ export default function WorkoutLogbook({
                 <span className="text-xs font-bold" style={{ color: "var(--accent-light)" }}>{avgW.toFixed(1)} kg</span>
                 {deltaPct !== null && (
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-lg flex-shrink-0"
-                    style={{
-                      background: deltaPct >= 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
-                      color: deltaPct >= 0 ? "#22c55e" : "#f87171",
-                    }}>
+                    style={{ background: deltaPct >= 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: deltaPct >= 0 ? "#22c55e" : "#f87171" }}>
                     {deltaPct > 0 ? "↑" : "↓"}{Math.abs(deltaPct).toFixed(1)}% vs S{activeWeek - 1}
+                  </span>
+                )}
+              </div>
+            )}
+            {volCur > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs" style={{ color: "var(--text-dim)" }}>Tonnellaggio:</span>
+                <span className="text-xs font-bold" style={{ color: "var(--accent-light)" }}>{volCur.toLocaleString("it-IT")} kg</span>
+                {volDelta !== null && (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-lg flex-shrink-0"
+                    style={{ background: volDelta >= 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: volDelta >= 0 ? "#22c55e" : "#f87171" }}>
+                    {volDelta > 0 ? "↑" : "↓"}{Math.abs(volDelta).toFixed(0)}% vs S{activeWeek - 1}
                   </span>
                 )}
               </div>
