@@ -1736,6 +1736,68 @@ function TrainingHeatmap({ logs }: { logs: ExerciseLog[] }) {
     </div>
   );
 }
+// ── Attestato di Completamento ──────────────────────────────────────────────
+function CompletionCertificate({ trainerName, planName, totalWeeks, shareToken, weeksCompleted, totalLogs }: {
+  trainerName: string; planName: string; totalWeeks: number; shareToken: string;
+  weeksCompleted: number; totalLogs: number;
+}) {
+  const storageKey = `tp_cert_${shareToken}`;
+  const [visible, setVisible] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return weeksCompleted >= totalWeeks && totalWeeks > 0 && !localStorage.getItem(storageKey);
+  });
+  function dismiss() { localStorage.setItem(storageKey, "1"); setVisible(false); }
+  if (!visible) return null;
+  const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
+  const completionDate = new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+  const certNum = shareToken.replace(/-/g, "").toUpperCase().slice(0, 10);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.88)", backdropFilter: "blur(14px)" }}>
+      <div className="relative w-full max-w-sm rounded-3xl overflow-hidden fade-in"
+        style={{ background: "linear-gradient(160deg, rgba(28,10,2,0.99) 0%, rgba(8,8,8,0.99) 100%)", border: "1px solid rgba(201,168,76,0.42)", boxShadow: "0 0 90px rgba(201,168,76,0.18), inset 0 1px 0 rgba(201,168,76,0.12)" }}>
+        <div className="absolute inset-0 rounded-3xl pointer-events-none"
+          style={{ background: "repeating-linear-gradient(45deg, transparent, transparent 18px, rgba(201,168,76,0.018) 18px, rgba(201,168,76,0.018) 19px)" }} />
+        <div className="relative p-7 text-center">
+          <p className="text-xs font-black uppercase tracking-[0.28em] mb-5"
+            style={{ color: "rgba(201,168,76,0.55)", letterSpacing: "0.28em" }}>
+            Attestato di Completamento
+          </p>
+          <div className="w-18 h-18 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+            style={{ width: 72, height: 72, background: "linear-gradient(135deg, rgba(201,168,76,0.22), rgba(201,168,76,0.06))", border: "1px solid rgba(201,168,76,0.38)", boxShadow: "0 0 36px rgba(201,168,76,0.22)" }}>
+            <Trophy size={30} style={{ color: "var(--accent)", filter: "drop-shadow(0 0 10px rgba(201,168,76,0.55))" }} />
+          </div>
+          <p className="text-sm mb-2" style={{ color: "var(--text-muted)" }}>Piano completato con successo</p>
+          <h2 className="text-xl font-black mb-1" style={{ color: "var(--text)", letterSpacing: "-0.02em" }}>{planName}</h2>
+          <p className="text-sm mb-5" style={{ color: "var(--text-dim)" }}>
+            {totalWeeks} {totalWeeks === 1 ? "settimana" : "settimane"} · {totalLogs} sessioni
+          </p>
+          <div className="h-px mb-5" style={{ background: "linear-gradient(90deg, transparent, rgba(201,168,76,0.38), transparent)" }} />
+          <p className="text-xs mb-2" style={{ color: "var(--text-faint)", fontStyle: "italic" }}>Certificato e firmato da</p>
+          <div className="flex items-center justify-center gap-3 mb-1">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
+              style={{ background: "rgba(201,168,76,0.14)", border: "1.5px solid rgba(201,168,76,0.38)", color: "rgba(201,168,76,0.85)" }}>
+              {initials}
+            </div>
+            <p className="text-lg font-black" style={{ color: "var(--accent)", fontFamily: "Georgia,'Times New Roman',serif", fontStyle: "italic" }}>
+              {trainerName}
+            </p>
+          </div>
+          <p className="text-xs mb-5" style={{ color: "var(--text-faint)" }}>{completionDate}</p>
+          <p className="text-xs font-mono mb-6" style={{ color: "rgba(201,168,76,0.22)", letterSpacing: "0.18em" }}>{certNum}</p>
+          <button onClick={dismiss} className="w-full py-3 rounded-2xl font-bold text-sm accent-btn mb-3">
+            Ricevuto — grazie {trainerName.split(" ")[0]}
+          </button>
+          <p className="text-xs" style={{ color: "var(--text-faint)" }}>
+            Fai uno screenshot per ricordare questo traguardo
+          </p>
+        </div>
+        <div className="h-1" style={{ background: "linear-gradient(90deg, var(--accent), rgba(201,168,76,0.18), transparent)" }} />
+      </div>
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -2115,6 +2177,18 @@ export default function ClientPortalPage() {
           daysPerWeek={plan.days_per_week}
           totalWeeks={plan.total_weeks}
           onAccept={acceptWelcome}
+        />
+      )}
+
+      {/* ── Attestato di completamento ────────────────────────────────────────── */}
+      {!showWelcome && (
+        <CompletionCertificate
+          trainerName={trainerName}
+          planName={plan.name}
+          totalWeeks={plan.total_weeks}
+          shareToken={plan.share_token}
+          weeksCompleted={weeksCompleted}
+          totalLogs={totalLogs}
         />
       )}
 
