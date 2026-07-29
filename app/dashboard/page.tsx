@@ -9,7 +9,7 @@ import {
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
   Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle, Scale, TrendingDown,
   BarChart2, CreditCard, Target, Heart, ClipboardCopy, CalendarClock, ShieldAlert,
-  CalendarCheck, ListChecks,
+  CalendarCheck, ListChecks, BatteryLow,
 } from "lucide-react";
 
 function nameHash(name: string): number[] {
@@ -552,6 +552,32 @@ export default function DashboardPage() {
       })
       .sort((a, b) => (a.thisWeek / a.target) - (b.thisWeek / b.target))
       .slice(0, 6);
+  }, [clients]);
+
+  // Deload radar: clients who have hit their weekly training target for 3+ consecutive weeks
+  const deloadAlerts = useMemo(() => {
+    const now = Date.now();
+    const results: { client: typeof clients[0]; consecutiveWeeks: number; target: number }[] = [];
+    for (const c of clients.filter(cl => cl.status === "attivo")) {
+      const activePlan = c.workoutPlans.find(p => p.active);
+      if (!activePlan) continue;
+      const target = Math.max(1, activePlan.daysPerWeek ?? 3);
+      const allLogs = c.workoutPlans.flatMap(p => p.logs ?? []);
+      let consecutive = 0;
+      for (let w = 0; w < 5; w++) {
+        const from = now - (w + 1) * 7 * 86400000;
+        const to = now - w * 7 * 86400000;
+        const uniqDays = new Set(
+          allLogs
+            .filter(l => { const t = new Date(l.loggedAt).getTime(); return t > from && t <= to; })
+            .map(l => new Date(l.loggedAt).toDateString())
+        ).size;
+        if (uniqDays >= target) consecutive++;
+        else break;
+      }
+      if (consecutive >= 3) results.push({ client: c, consecutiveWeeks: consecutive, target });
+    }
+    return results.sort((a, b) => b.consecutiveWeeks - a.consecutiveWeeks).slice(0, 4);
   }, [clients]);
 
   // Traiettoria fase: clients with active bulk/cut and measurable weight progress vs target
@@ -1739,6 +1765,47 @@ export default function DashboardPage() {
                 </Link>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Deload Radar ───────────────────────────────────────────────── */}
+      {deloadAlerts.length > 0 && (
+        <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.22)" }}>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <BatteryLow size={14} style={{ color: "#a855f7" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Deload Raccomandato
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+              style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7" }}>
+              {deloadAlerts.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
+              3+ settimane consecutive al target
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            {deloadAlerts.map(({ client, consecutiveWeeks, target }) => (
+              <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
+                className="flex items-center gap-3 p-2.5 rounded-xl transition-all hover:bg-white/5"
+                style={{ background: "rgba(168,85,247,0.04)", borderLeft: "2px solid rgba(168,85,247,0.3)" }}>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                  style={{ background: "rgba(168,85,247,0.12)", color: "#a855f7" }}>
+                  {client.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{client.name}</p>
+                  <p className="text-xs" style={{ color: "var(--text-dim)" }}>
+                    {consecutiveWeeks} settimane consecutive · {target}x/sett · valuta settimana di scarico
+                  </p>
+                </div>
+                <span className="text-xs font-bold px-2 py-1 rounded-lg flex-shrink-0"
+                  style={{ background: "rgba(168,85,247,0.12)", color: "#a855f7" }}>
+                  W{consecutiveWeeks}
+                </span>
+              </Link>
+            ))}
           </div>
         </div>
       )}
