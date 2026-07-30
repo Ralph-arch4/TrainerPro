@@ -1798,6 +1798,78 @@ function CompletionCertificate({ trainerName, planName, totalWeeks, shareToken, 
   );
 }
 
+// ── Impronta Atletica ─────────────────────────────────────────────────────────
+function AthleticFingerprint({ exercises, shareToken, trainerName }: {
+  exercises: Exercise[]; shareToken: string; trainerName: string;
+}) {
+  const groups = new Map<string, number>();
+  exercises.forEach(e => {
+    const g = e.muscleGroup ?? "Vari";
+    groups.set(g, (groups.get(g) ?? 0) + 1);
+  });
+  if (groups.size === 0) return null;
+
+  const vals = Array.from(groups.values());
+  const maxV = Math.max(...vals);
+  const norm = vals.map(v => v / maxV);
+
+  const W = 300; const H = 50;
+  const padX = 10;
+  const usableW = W - padX * 2;
+  const mid = H - 10;
+  const amp = H - 18;
+
+  const points = norm.map((v, i) => ({
+    x: padX + (i / Math.max(norm.length - 1, 1)) * usableW,
+    y: mid - v * amp,
+  }));
+
+  const allPts = [{ x: 0, y: mid }, ...points, { x: W, y: mid }];
+  let path = `M ${allPts[0].x},${allPts[0].y}`;
+  for (let i = 1; i < allPts.length; i++) {
+    const p = allPts[i - 1], c = allPts[i];
+    const cx = (p.x + c.x) / 2;
+    path += ` C ${cx},${p.y} ${cx},${c.y} ${c.x},${c.y}`;
+  }
+  const area = `${path} L ${W},${H + 4} L 0,${H + 4} Z`;
+  const code = shareToken.replace(/-/g, "").toUpperCase().slice(0, 8);
+
+  return (
+    <div className="mb-4 rounded-2xl overflow-hidden"
+      style={{ border: "1px solid rgba(201,168,76,0.2)", background: "linear-gradient(135deg,rgba(6,3,1,0.97),rgba(18,8,2,0.95))" }}>
+      <div className="px-4 pt-3 pb-0 flex items-center justify-between">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: "rgba(201,168,76,0.55)" }}>Impronta Atletica</p>
+          <p className="text-xs font-mono mt-0.5" style={{ color: "var(--text-faint)", letterSpacing: "0.14em" }}>#{code}</p>
+        </div>
+        <p className="text-xs font-semibold" style={{ color: "var(--text-faint)" }}>— {trainerName}</p>
+      </div>
+      <svg width="100%" viewBox={`0 0 ${W} ${H + 4}`} preserveAspectRatio="none" style={{ display: "block", marginTop: 4 }}>
+        <defs>
+          <linearGradient id="afGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="rgba(201,168,76,0.3)" />
+            <stop offset="100%" stopColor="rgba(201,168,76,0.01)" />
+          </linearGradient>
+        </defs>
+        <path d={area} fill="url(#afGrad)" />
+        <path d={path} stroke="rgba(201,168,76,0.65)" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+        {points.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r="2.4" fill="rgba(201,168,76,0.88)"
+            style={{ filter: "drop-shadow(0 0 3px rgba(201,168,76,0.5))" }} />
+        ))}
+      </svg>
+      <div className="px-4 pb-3 flex items-center gap-1.5 flex-wrap" style={{ marginTop: 4 }}>
+        {Array.from(groups.entries()).map(([g, count]) => (
+          <span key={g} className="text-xs px-2 py-0.5 rounded-full"
+            style={{ background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.15)", color: "rgba(201,168,76,0.6)", fontWeight: 700 }}>
+            {g} ×{count}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -2231,6 +2303,13 @@ export default function ClientPortalPage() {
 
         {/* ── Stato Atleta ─────────────────────────────────────────────────── */}
         <AthleteStatusBand dayOnJourney={dayOnJourney} streak={streak} />
+
+        {/* ── Impronta Atletica ────────────────────────────────────────────── */}
+        <AthleticFingerprint
+          exercises={plan.exercises}
+          shareToken={plan.share_token}
+          trainerName={trainerName}
+        />
 
         {/* ── Storico allenamenti (heatmap 10 settimane) ───────────────────── */}
         <TrainingHeatmap logs={logs} />
