@@ -1564,6 +1564,92 @@ function TrainerVoiceMessage({ trainerName, totalLogs, streak }: {
   );
 }
 
+// ── Diario dell'Atleta ───────────────────────────────────────────────────────
+interface DiaryEntry { date: string; text: string; }
+const DIARY_KEY = (t: string) => `tp_diary_${t}`;
+const DIARY_MAX = 280;
+
+function AthleteDiaryCard({ token, trainerName }: { token: string; trainerName: string }) {
+  const [entries, setEntries] = useState<DiaryEntry[]>(() => {
+    if (typeof window === "undefined") return [];
+    try { return JSON.parse(localStorage.getItem(DIARY_KEY(token)) ?? "[]"); } catch { return []; }
+  });
+  const [text, setText] = useState("");
+  const [open, setOpen] = useState(false);
+
+  function save() {
+    if (!text.trim()) return;
+    const next = [{ date: new Date().toISOString(), text: text.trim() }, ...entries].slice(0, 12);
+    setEntries(next);
+    localStorage.setItem(DIARY_KEY(token), JSON.stringify(next));
+    setText("");
+  }
+
+  const fmt = (iso: string) => new Date(iso).toLocaleDateString("it-IT", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)", background: "var(--surface-xs)" }}>
+      <button className="w-full flex items-center justify-between px-4 py-3.5 text-left" onClick={() => setOpen(o => !o)}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.22)" }}>
+            <MessageSquare size={13} style={{ color: "var(--accent)" }} />
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.14em]" style={{ color: "var(--text-dim)" }}>Diario dell&apos;Atleta</p>
+            <p className="text-xs" style={{ color: "var(--text-faint)" }}>
+              {entries.length > 0 ? `${entries.length} note personali` : "Il tuo spazio privato di riflessione"}
+            </p>
+          </div>
+        </div>
+        {open
+          ? <ChevronUp size={14} style={{ color: "var(--text-faint)" }} />
+          : <ChevronDown size={14} style={{ color: "var(--text-faint)" }} />}
+      </button>
+      {open && (
+        <div className="px-4 pb-4" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+          <p className="text-xs pt-3 mb-3" style={{ color: "var(--text-faint)", fontStyle: "italic" }}>
+            &ldquo;Scrivi come ti sei sentito dopo la sessione — solo per te, per ricordare il percorso.&rdquo;
+            <span className="not-italic font-semibold" style={{ color: "rgba(201,168,76,0.55)" }}> — {trainerName}</span>
+          </p>
+          <div className="relative mb-2">
+            <textarea
+              className="w-full text-sm p-3 rounded-xl resize-none"
+              style={{ background: "var(--surface-sm)", border: "1px solid var(--border)", color: "var(--text)", outline: "none", minHeight: 76, lineHeight: 1.55 }}
+              placeholder="Come è andata? Come ti sei sentito?"
+              maxLength={DIARY_MAX}
+              value={text}
+              onChange={e => setText(e.target.value)}
+            />
+            <span className="absolute bottom-2.5 right-3 text-xs" style={{ color: "var(--text-faint)" }}>{text.length}/{DIARY_MAX}</span>
+          </div>
+          <button onClick={save} disabled={!text.trim()}
+            className="w-full py-2.5 rounded-xl text-sm font-bold mb-3 transition-all"
+            style={{
+              background: text.trim() ? "rgba(201,168,76,0.13)" : "var(--surface-sm)",
+              color: text.trim() ? "var(--accent)" : "var(--text-faint)",
+              border: `1px solid ${text.trim() ? "rgba(201,168,76,0.28)" : "var(--border)"}`,
+              cursor: text.trim() ? "pointer" : "default",
+            }}>
+            Salva nota
+          </button>
+          {entries.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: "var(--text-faint)" }}>Ultime note</p>
+              {entries.slice(0, 3).map((e, i) => (
+                <div key={i} className="p-3 rounded-xl" style={{ background: "var(--surface-sm)", border: "1px solid var(--border-subtle)" }}>
+                  <p className="text-xs font-bold mb-1" style={{ color: "var(--text-faint)" }}>{fmt(e.date)}</p>
+                  <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>{e.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Monogramma del Trainer (sfondo luxury ripetuto) ──────────────────────────
 // Ispira il pattern LV/Gucci: le iniziali del trainer riempiono l'intera
 // schermata come un tessuto di marca — esclusivo, non invasivo (opacità ≤0.05).
@@ -2787,6 +2873,8 @@ export default function ClientPortalPage() {
               />
             )}
             <TrainerSignalCard trainerName={trainerName} streak={streak} totalLogs={totalLogs} />
+            {/* ── Diario dell'Atleta ──────────────────────────────────────────── */}
+            <AthleteDiaryCard token={token as string} trainerName={trainerName} />
           </motion.div>
         )}
 
