@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
-import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2, Target } from "lucide-react";
 import { showToast } from "@/components/Toast";
 
 // ── Per-set data ──────────────────────────────────────────────────────────────
@@ -741,7 +741,53 @@ export default function WorkoutLogbook({
       {/* Trainer session intel strip */}
       {mode === "trainer" && dayExercises.length > 0 && (() => {
         const { loggedCount, total, avgW, deltaPct } = calcSessionStats(dayExercises, logs, activeWeek);
-        if (loggedCount === 0) return null;
+
+        // Pre-session preview: show session targets when no exercises logged yet but previous week exists
+        if (loggedCount === 0) {
+          const volPrev = activeWeek > 1 ? calcVolumeLoad(dayExercises, logs, activeWeek - 1) : 0;
+          if (!volPrev && activeWeek <= 1) return null;
+          const targets = dayExercises.slice(0, 4).map(ex => {
+            const prevLog = logs.find(l => l.exerciseId === ex.id && l.weekNumber === activeWeek - 1);
+            const prevData = parseSetData(prevLog, Math.max(1, ex.sets || 3));
+            const sugg = calcSuggestion(prevData);
+            return sugg ? { name: ex.name, weight: sugg.weight, delta: sugg.delta } : null;
+          }).filter((x): x is NonNullable<typeof x> => x !== null);
+          if (!targets.length && !volPrev) return null;
+          return (
+            <div className="px-4 py-3 rounded-2xl"
+              style={{ background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.1)" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <Target size={12} style={{ color: "var(--accent)" }} />
+                <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(201,168,76,0.55)" }}>
+                  Obiettivo sessione
+                </span>
+                {volPrev > 0 && (
+                  <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
+                    Settimana scorsa: {volPrev.toLocaleString("it-IT")} kg
+                  </span>
+                )}
+              </div>
+              {targets.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {targets.map((t, i) => (
+                    <span key={i} className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg"
+                      style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.15)", color: "var(--ivory)" }}>
+                      <span style={{ color: "var(--text-dim)" }}>{t.name}:</span>
+                      <span className="font-bold" style={{ color: "var(--accent-light)" }}>{t.weight}kg</span>
+                      {t.delta > 0.1 && (
+                        <span style={{ color: "#22c55e", fontSize: "10px" }}>+{t.delta.toFixed(1)}</span>
+                      )}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs" style={{ color: "var(--text-dim)" }}>
+                  Nessun dato dalla settimana precedente — prima sessione!
+                </p>
+              )}
+            </div>
+          );
+        }
         const allDone = loggedCount === total;
         const volCur = calcVolumeLoad(dayExercises, logs, activeWeek);
         const volPrev = activeWeek > 1 ? calcVolumeLoad(dayExercises, logs, activeWeek - 1) : 0;
