@@ -8,7 +8,7 @@ import { dbClients } from "@/lib/db";
 import {
   Users, Plus, Search, ChevronRight,
   Mail, Phone, Activity, Loader2, X, AlertCircle, Trash2, TrendingDown,
-  Gift, Heart, TrendingUp, Zap, Clock, Ruler, Dumbbell
+  Gift, Heart, TrendingUp, Zap, Clock, Ruler, Dumbbell, Flame
 } from "lucide-react";
 import type { Client } from "@/lib/store";
 
@@ -174,6 +174,24 @@ function getProgressionReady(client: Client): number {
   return readyCount;
 }
 
+function getWeekStreak(client: Client): number {
+  const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
+  if (!allLogs.length) return 0;
+  const now = Date.now();
+  const thisWeekHasLog = allLogs.some(l => new Date(l.loggedAt).getTime() > now - 7 * 86400000);
+  let streak = thisWeekHasLog ? 1 : 0;
+  for (let w = 1; w < 52; w++) {
+    const weekEnd = now - w * 7 * 86400000;
+    const weekStart = weekEnd - 7 * 86400000;
+    if (allLogs.some(l => { const t = new Date(l.loggedAt).getTime(); return t >= weekStart && t < weekEnd; })) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
 function getRiskDays(client: Client): number | null {
   if (client.status !== "attivo") return null;
   const last = getLastLogDate(client);
@@ -187,7 +205,7 @@ interface DailyPriority {
   client: Client;
   reason: string;
   urgency: number;
-  icon: "risk" | "expiry" | "progression" | "measurement";
+  icon: "risk" | "expiry" | "progression" | "measurement" | "streak";
 }
 
 function getDailyPriorities(clients: Client[]): DailyPriority[] {
@@ -211,6 +229,23 @@ function getDailyPriorities(clients: Client[]): DailyPriority[] {
         icon: "risk",
       });
       continue;
+    }
+
+    // Striscia a rischio: streak >= 3, no log questa settimana, siamo a mercoledi o oltre
+    const dayOfWeek = new Date().getDay(); // 0=Dom, 1=Lun, ..., 6=Sab
+    const isLateEnough = dayOfWeek === 0 || dayOfWeek >= 3; // Mer, Gio, Ven, Sab, Dom
+    const thisWeekHasLog = allLogs.some(l => new Date(l.loggedAt).getTime() > now - 7 * 86400000);
+    if (isLateEnough && !thisWeekHasLog) {
+      const streak = getWeekStreak(c);
+      if (streak >= 3) {
+        priorities.push({
+          client: c,
+          reason: `Striscia di ${streak} settimane a rischio`,
+          urgency: 95 + streak,
+          icon: "streak",
+        });
+        continue;
+      }
     }
 
     const activePlan = c.workoutPlans.find(p => p.active);
@@ -266,12 +301,14 @@ const priorityIconMap = {
   expiry: Clock,
   progression: Dumbbell,
   measurement: Ruler,
+  streak: Flame,
 };
 const priorityColorMap = {
   risk: "#ef4444",
   expiry: "#f59e0b",
   progression: "#22c55e",
   measurement: "#38bdf8",
+  streak: "#f97316",
 };
 
 interface ClientFormData {
@@ -495,6 +532,7 @@ function ClientiPageInner() {
           const birthdayInfo = getBirthdayStatus(client);
           const togetherLabel = getTogetherLabel(client);
           const progressionReady = getProgressionReady(client);
+          const weekStreak = getWeekStreak(client);
           const hue = clientHue(client.name);
           return (
           <Reveal key={client.id} delay={Math.min(i, 8) * 0.06}>
@@ -582,6 +620,13 @@ function ClientiPageInner() {
                 )}
                 <span className="flex items-center gap-1"><Activity size={11} /> {client.phases.length} fasi</span>
                 {client.monthlyFee != null && <span style={{ color: "var(--accent-light)" }}>€{client.monthlyFee}/m</span>}
+                {weekStreak >= 2 && (
+                  <span className="flex items-center gap-1 font-semibold"
+                    style={{ color: weekStreak >= 5 ? "#f97316" : weekStreak >= 3 ? "#fb923c" : "rgba(249,115,22,0.7)" }}>
+                    <Flame size={10} style={{ color: weekStreak >= 5 ? "#f97316" : weekStreak >= 3 ? "#fb923c" : "rgba(249,115,22,0.7)" }} />
+                    {weekStreak}w
+                  </span>
+                )}
               </div>
             </div>
             {(forma || progressionReady > 0) && (
