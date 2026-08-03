@@ -50,6 +50,47 @@ function clientHue(name: string): number {
   return Math.abs(hash) % 360;
 }
 
+function TrainingSignature({ client }: { client: Client }) {
+  const DAYS = 28;
+  const now = Date.now();
+  const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
+  const counts = Array.from({ length: DAYS }, (_, i) => {
+    const dayStart = now - (DAYS - 1 - i) * 86400000;
+    return allLogs.filter(l => {
+      const t = new Date(l.loggedAt).getTime();
+      return t >= dayStart && t < dayStart + 86400000;
+    }).length;
+  });
+  if (counts.every(c => c === 0)) return null;
+  const max = Math.max(...counts, 1);
+  const W = 200, H = 14;
+  const step = W / (DAYS - 1);
+  const pts = counts.map((c, i) => ({
+    x: i * step,
+    y: c > 0 ? H - 2 - ((c / max) * (H - 6)) : H - 3,
+  }));
+  const path = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const last = pts[DAYS - 1];
+  const isActive = counts[DAYS - 1] > 0 || counts[DAYS - 2] > 0;
+  return (
+    <div className="mt-3 pt-2" style={{ borderTop: "1px solid rgba(201,168,76,0.07)" }}>
+      <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block" }}>
+        <defs>
+          <linearGradient id={`sig-${client.id}`} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="rgba(201,168,76,0)" />
+            <stop offset="30%" stopColor="rgba(201,168,76,0.5)" />
+            <stop offset="100%" stopColor={isActive ? "rgba(201,168,76,0.85)" : "rgba(201,168,76,0.4)"} />
+          </linearGradient>
+        </defs>
+        <path d={path} stroke={`url(#sig-${client.id})`} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        {isActive && (
+          <circle cx={last.x.toFixed(1)} cy={last.y.toFixed(1)} r="2.5" fill="rgba(201,168,76,0.9)" />
+        )}
+      </svg>
+    </div>
+  );
+}
+
 function AthleticFingerprint({ name, size = 44 }: { name: string; size?: number }) {
   const hue = clientHue(name);
   const src = name.length ? name : "X";
@@ -668,6 +709,7 @@ function ClientiPageInner() {
                 )}
               </div>
             )}
+            <TrainingSignature client={client} />
           </Link>
           </Reveal>
           );
