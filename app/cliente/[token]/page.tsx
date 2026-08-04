@@ -616,6 +616,96 @@ function MonthlyLetterCard({ trainerName, streak, totalLogs }: { trainerName: st
   );
 }
 
+// ── Pagella Mensile del Trainer ──────────────────────────────────────────────
+function MonthlyReportCard({ logs, daysPerWeek, trainerName }: {
+  logs: ExerciseLog[]; daysPerWeek: number; trainerName: string;
+}) {
+  const now = new Date();
+  if (now.getDate() > 10) return null;
+
+  const storageKey = `tp_pagella_${now.getFullYear()}_${now.getMonth()}`;
+  const [visible, setVisible] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return !localStorage.getItem(storageKey);
+  });
+  function dismiss() { localStorage.setItem(storageKey, "1"); setVisible(false); }
+  if (!visible) return null;
+
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthEnd   = new Date(now.getFullYear(), now.getMonth(), 0);
+  const lastMonthName  = lastMonthStart.toLocaleDateString("it-IT", { month: "long" });
+  const daysInMonth    = lastMonthEnd.getDate();
+  const targetSessions = Math.round((daysInMonth / 7) * daysPerWeek);
+
+  const lastMonthLogs = logs.filter(l => {
+    const d = new Date(l.loggedAt);
+    return d >= lastMonthStart && d <= lastMonthEnd;
+  });
+  const sessionDays = new Set(lastMonthLogs.map(l => new Date(l.loggedAt).toLocaleDateString("sv-SE"))).size;
+  const pct = targetSessions > 0 ? Math.min(100, Math.round((sessionDays / targetSessions) * 100)) : 0;
+
+  let grade: string, gradeColor: string, comment: string;
+  if (sessionDays === 0)  { grade = "-"; gradeColor = "var(--text-dim)";   comment = "Non ci siamo ancora. Il piano ti aspetta — ripartiamo insieme."; }
+  else if (pct >= 90)     { grade = "10"; gradeColor = "#22c55e";           comment = "Eccezionale. Costanza fuori dal comune — sono orgoglioso di te."; }
+  else if (pct >= 75)     { grade = "8";  gradeColor = "#38bdf8";           comment = "Ottimo risultato. Hai tenuto il ritmo come ti avevo chiesto."; }
+  else if (pct >= 55)     { grade = "7";  gradeColor = "var(--accent)";     comment = "Buon lavoro. Possiamo spingere ancora un po’ — sei pronto."; }
+  else if (pct >= 35)     { grade = "6";  gradeColor = "#fbbf24";           comment = "Mese difficile, ma sei qui. Questo conta più di quanto pensi."; }
+  else                    { grade = "5";  gradeColor = "#f87171";            comment = "Dobbiamo parlarne. Sono qui per capire cosa è successo."; }
+
+  const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
+
+  return (
+    <div className="mb-4 rounded-2xl overflow-hidden fade-in"
+      style={{ background: "linear-gradient(150deg, rgba(201,168,76,0.09) 0%, rgba(8,8,8,0.85) 100%)", border: "1px solid rgba(201,168,76,0.32)", position: "relative" }}>
+      <button onClick={dismiss}
+        className="absolute top-3 right-3 w-5 h-5 flex items-center justify-center rounded-full text-xs font-black z-10"
+        style={{ background: "var(--surface-md)", color: "var(--text-dim)" }}>&times;</button>
+      <div className="p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, transparent, rgba(201,168,76,0.3))" }} />
+          <p className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: "rgba(201,168,76,0.6)" }}>
+            Pagella del mese
+          </p>
+          <div className="h-px flex-1" style={{ background: "linear-gradient(90deg, rgba(201,168,76,0.3), transparent)" }} />
+        </div>
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-20 h-20 rounded-2xl flex flex-col items-center justify-center flex-shrink-0"
+            style={{ background: `${gradeColor}14`, border: `2px solid ${gradeColor}45`, boxShadow: `0 0 24px ${gradeColor}22` }}>
+            <span className="text-3xl font-black leading-none" style={{ color: gradeColor }}>{grade}</span>
+            <span className="text-xs font-bold mt-0.5 uppercase tracking-wider" style={{ color: gradeColor, opacity: 0.6 }}>/10</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs mb-0.5 capitalize font-medium" style={{ color: "var(--text-faint)" }}>
+              {lastMonthName} {lastMonthStart.getFullYear()}
+            </p>
+            <p className="text-sm font-black mb-1" style={{ color: "var(--text)" }}>
+              {sessionDays} {sessionDays === 1 ? "sessione" : "sessioni"} / {targetSessions} obiettivo
+            </p>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+              &ldquo;{comment}&rdquo;
+            </p>
+          </div>
+        </div>
+        <div className="h-1.5 rounded-full overflow-hidden mb-3" style={{ background: "var(--surface-md)" }}>
+          <div className="h-full rounded-full transition-all duration-1000"
+            style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${gradeColor}99, ${gradeColor})` }} />
+        </div>
+        <div className="flex items-center gap-3 pt-2" style={{ borderTop: "1px solid rgba(201,168,76,0.1)" }}>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center font-black text-xs flex-shrink-0"
+            style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.28)", color: "rgba(201,168,76,0.8)" }}>
+            {initials}
+          </div>
+          <p className="text-xs font-bold flex-1" style={{ color: "rgba(201,168,76,0.65)" }}>&mdash; {trainerName}</p>
+          <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+            style={{ background: `${gradeColor}12`, color: gradeColor, border: `1px solid ${gradeColor}22` }}>
+            {pct}% obiettivo
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function WeeklyPrincipleCard({ trainerName }: { trainerName: string }) {
   const now = new Date();
   const startOfYear = new Date(now.getFullYear(), 0, 1);
@@ -2429,6 +2519,9 @@ export default function ClientPortalPage() {
 
         {/* ── Lettera mensile dal trainer ──────────────────────────────────── */}
         <MonthlyLetterCard trainerName={trainerName} streak={streak} totalLogs={totalLogs} />
+
+        {/* ── Pagella mensile del trainer ───────────────────────────────────── */}
+        <MonthlyReportCard logs={logs} daysPerWeek={plan.days_per_week} trainerName={trainerName} />
 
         {/* ── Principio della settimana ────────────────────────────────────── */}
         <WeeklyPrincipleCard trainerName={trainerName} />
