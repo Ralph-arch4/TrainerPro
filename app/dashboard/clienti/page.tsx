@@ -8,7 +8,7 @@ import { dbClients } from "@/lib/db";
 import {
   Users, Plus, Search, ChevronRight,
   Mail, Phone, Activity, Loader2, X, AlertCircle, Trash2, TrendingDown,
-  Gift, Heart, TrendingUp, Zap, Clock, Ruler, Dumbbell, Flame
+  Gift, Heart, TrendingUp, Zap, Clock, Ruler, Dumbbell, Flame, Euro, BarChart3
 } from "lucide-react";
 import type { Client } from "@/lib/store";
 
@@ -352,6 +352,98 @@ const priorityColorMap = {
   streak: "#f97316",
 };
 
+function WeeklyPulse({ clients }: { clients: Client[] }) {
+  const now = Date.now();
+  const weekStart = now - 7 * 86400000;
+  const activeClients = clients.filter(c => c.status === "attivo");
+  if (activeClients.length === 0) return null;
+
+  const trainedThisWeek = activeClients.filter(c =>
+    c.workoutPlans.flatMap(p => p.logs ?? []).some(l => new Date(l.loggedAt).getTime() > weekStart)
+  );
+  const totalSessions = activeClients.reduce((sum, c) => {
+    const days = new Set(
+      c.workoutPlans.flatMap(p => p.logs ?? [])
+        .filter(l => new Date(l.loggedAt).getTime() > weekStart)
+        .map(l => new Date(l.loggedAt).toDateString())
+    );
+    return sum + days.size;
+  }, 0);
+  const monthlyRevenue = activeClients
+    .filter(c => c.monthlyFee != null)
+    .reduce((sum, c) => sum + (c.monthlyFee ?? 0), 0);
+
+  const pct = Math.round((trainedThisWeek.length / activeClients.length) * 100);
+  const ringColor = pct >= 70 ? "#22c55e" : pct >= 40 ? "#fbbf24" : "#ef4444";
+  const pulseLabel = pct >= 70 ? "Ottima settimana" : pct >= 40 ? "Settimana nella norma" : "Settimana critica";
+  const r = 20, circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+
+  return (
+    <div className="mb-5 card-luxury rounded-2xl p-4 fade-in"
+      style={{ borderLeft: "3px solid rgba(255,255,255,0.06)" }}>
+      <div className="flex items-center gap-2 mb-3">
+        <BarChart3 size={13} style={{ color: "var(--text-dim)" }} />
+        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-dim)" }}>
+          Pulse Settimanale
+        </span>
+        <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full"
+          style={{ background: `${ringColor}15`, color: ringColor }}>
+          {pulseLabel}
+        </span>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        {/* Ring: % allenati */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex-shrink-0" style={{ width: 48, height: 48 }}>
+            <svg width="48" height="48" viewBox="0 0 48 48" style={{ transform: "rotate(-90deg)" }}>
+              <circle cx="24" cy="24" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
+              <circle cx="24" cy="24" r={r} fill="none" stroke={ringColor} strokeWidth="4"
+                strokeDasharray={`${dash.toFixed(1)} ${circ.toFixed(1)}`}
+                strokeLinecap="round" />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xs font-bold" style={{ color: ringColor }}>{pct}%</span>
+            </div>
+          </div>
+          <div>
+            <p className="text-sm font-bold" style={{ color: "var(--text)" }}>
+              {trainedThisWeek.length}<span className="text-xs font-normal" style={{ color: "var(--text-dim)" }}>/{activeClients.length}</span>
+            </p>
+            <p className="text-xs" style={{ color: "var(--text-dim)" }}>allenati</p>
+          </div>
+        </div>
+        {/* Sessioni */}
+        <div className="flex items-center gap-2.5 px-3" style={{ borderLeft: "1px solid rgba(255,255,255,0.06)", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+          <Dumbbell size={15} style={{ color: "var(--accent)", flexShrink: 0 }} />
+          <div>
+            <p className="text-lg font-bold leading-none mb-0.5" style={{ color: "var(--text)" }}>{totalSessions}</p>
+            <p className="text-xs" style={{ color: "var(--text-dim)" }}>sessioni</p>
+          </div>
+        </div>
+        {/* Entrate */}
+        {monthlyRevenue > 0 ? (
+          <div className="flex items-center gap-2.5 pl-3">
+            <Euro size={15} style={{ color: "#22c55e", flexShrink: 0 }} />
+            <div>
+              <p className="text-lg font-bold leading-none mb-0.5" style={{ color: "var(--text)" }}>€{monthlyRevenue}</p>
+              <p className="text-xs" style={{ color: "var(--text-dim)" }}>mensili</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2.5 pl-3">
+            <Activity size={15} style={{ color: "var(--text-dim)", flexShrink: 0 }} />
+            <div>
+              <p className="text-lg font-bold leading-none mb-0.5" style={{ color: "var(--text)" }}>{activeClients.length}</p>
+              <p className="text-xs" style={{ color: "var(--text-dim)" }}>attivi</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 interface ClientFormData {
   name: string;
   email: string;
@@ -494,6 +586,9 @@ function ClientiPageInner() {
           <option value="performance">Performance</option>
         </select>
       </div>
+
+      {/* Pulse Settimanale */}
+      <WeeklyPulse clients={clients} />
 
       {/* Priorita del Giorno */}
       {(() => {
