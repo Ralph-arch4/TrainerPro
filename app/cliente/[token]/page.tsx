@@ -2046,6 +2046,64 @@ function AthleticFingerprint({ exercises, shareToken, trainerName }: {
   );
 }
 
+// ── Colore Personale del Percorso ────────────────────────────────────────────
+function clientHue(token: string): number {
+  let hash = 0;
+  for (let i = 0; i < token.length; i++) {
+    hash = (hash * 31 + token.charCodeAt(i)) & 0x7fffffff;
+  }
+  const raw = hash % 300;
+  // Skip gold range (38-68°) reserved for the trainer's brand accent
+  return raw >= 38 ? raw + 30 : raw;
+}
+
+function italianColorName(hue: number): string {
+  if (hue < 15 || hue >= 345) return "Rosso Fuoco";
+  if (hue < 38) return "Arancio Intenso";
+  if (hue < 98) return "Verde Energia";
+  if (hue < 155) return "Verde Forza";
+  if (hue < 200) return "Acqua Marina";
+  if (hue < 255) return "Blu Campione";
+  if (hue < 290) return "Viola Potere";
+  return "Porpora Elite";
+}
+
+function ClientColorStripe({ shareToken, level, levelName }: {
+  shareToken: string; level: number; levelName: string;
+}) {
+  const hue = clientHue(shareToken);
+  const color    = `hsl(${hue},70%,55%)`;
+  const colorDim = `hsla(${hue},70%,55%,0.15)`;
+  const colorBrd = `hsla(${hue},70%,55%,0.28)`;
+  const name     = italianColorName(hue);
+  return (
+    <div className="mb-4 rounded-2xl overflow-hidden"
+      style={{ border: `1px solid ${colorBrd}`, background: colorDim }}>
+      <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
+      <div className="px-4 py-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <div style={{
+            width: 13, height: 13, borderRadius: "50%", flexShrink: 0,
+            background: color,
+            boxShadow: `0 0 10px ${color}, 0 0 22px ${colorDim}`,
+            animation: "pulse-glow 2.2s ease-in-out infinite",
+          }} />
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-[0.18em] truncate" style={{ color }}>{name}</p>
+            <p className="text-xs" style={{ color: "var(--text-faint)" }}>Colore unico del tuo percorso</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full flex-shrink-0"
+          style={{ background: colorDim, border: `1px solid ${colorBrd}` }}>
+          <span className="text-xs font-black" style={{ color }}>Lv.{level}</span>
+          <span className="text-xs font-semibold" style={{ color, opacity: 0.65 }}>{levelName}</span>
+        </div>
+      </div>
+      <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${colorDim}, transparent)` }} />
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -2479,6 +2537,9 @@ export default function ClientPortalPage() {
 
         {/* ── Stato Atleta ─────────────────────────────────────────────────── */}
         <AthleteStatusBand dayOnJourney={dayOnJourney} streak={streak} />
+
+        {/* ── Colore Personale del Percorso ────────────────────────────────── */}
+        <ClientColorStripe shareToken={plan.share_token} level={level} levelName={levelName} />
 
         {/* ── Impronta Atletica ────────────────────────────────────────────── */}
         <AthleticFingerprint
