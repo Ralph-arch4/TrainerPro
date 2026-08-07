@@ -165,6 +165,76 @@ function PlanCoverArt({ seed }: { seed: string }) {
   );
 }
 
+function QuickConnectionMessages({ name, phone }: { name: string; phone?: string }) {
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const fn = name.split(" ")[0];
+  const dow = new Date().getDay();
+  const weekTag =
+    dow === 1 ? "Inizio settimana" :
+    dow === 5 ? "Venerdì" :
+    dow === 6 || dow === 0 ? "Weekend" : "Ciao";
+
+  const messages = [
+    {
+      label: "Check-in",
+      color: "#22c55e",
+      text: `${weekTag} ${fn}! Come stai? Scrivimi se hai bisogno di chiarimenti sul piano o vuoi fare qualche modifica — sono qui.`,
+    },
+    {
+      label: "Motivazione",
+      color: "#C9A84C",
+      text: `${fn}, volevo ricordarti che ogni sessione che completi fa la differenza — anche quelle in cui non ti senti al 100%. Continua così, sei sulla strada giusta!`,
+    },
+    {
+      label: "Aggiornamento piano",
+      color: "#38bdf8",
+      text: `Ciao ${fn}! Stavo guardando i tuoi progressi e ho qualche idea per ottimizzare il piano. Quando hai 5 minuti fammi sapere — voglio che tu ottenga il massimo.`,
+    },
+  ];
+
+  function copyMsg(text: string, idx: number) {
+    navigator.clipboard.writeText(text).catch(() => {});
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 2000);
+  }
+
+  return (
+    <div className="sm:col-span-2 card-luxury rounded-2xl p-5">
+      <div className="flex items-center gap-2 mb-3">
+        <MessageCircle size={13} style={{ color: "var(--accent)" }} />
+        <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Messaggi Rapidi</h3>
+        <span className="text-xs ml-1" style={{ color: "var(--text-dim)" }}>· pronti da inviare</span>
+      </div>
+      <div className="space-y-2">
+        {messages.map((msg, i) => (
+          <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl transition-colors"
+            style={{ background: "var(--surface-sm)", border: `1px solid ${copiedIdx === i ? msg.color + "35" : "rgba(255,255,255,0.04)"}` }}>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: msg.color, letterSpacing: "0.1em" }}>{msg.label}</p>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{msg.text.slice(0, 90)}{msg.text.length > 90 ? "…" : ""}</p>
+            </div>
+            <div className="flex gap-1.5 flex-shrink-0">
+              {phone && (
+                <a href={`https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(msg.text)}`}
+                  target="_blank" rel="noopener noreferrer" title="Invia su WhatsApp"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
+                  style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                  <MessageCircle size={12} />
+                </a>
+              )}
+              <button onClick={() => copyMsg(msg.text, i)} title="Copia testo"
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
+                style={{ background: "var(--surface-md)", color: copiedIdx === i ? "#22c55e" : "var(--text-dim)" }}>
+                {copiedIdx === i ? <Check size={12} /> : <Copy size={12} />}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -1474,6 +1544,9 @@ export default function ClientDetailPage() {
               ))}
             </div>
           </div>
+
+          {/* ── Messaggi Rapidi ── */}
+          <QuickConnectionMessages name={client.name} phone={client.phone ?? undefined} />
 
           {/* ── Ritmo di Allenamento ── */}
           <div className="sm:col-span-2 card-luxury rounded-2xl p-5">
