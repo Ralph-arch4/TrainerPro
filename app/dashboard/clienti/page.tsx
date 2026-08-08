@@ -8,7 +8,8 @@ import { dbClients } from "@/lib/db";
 import {
   Users, Plus, Search, ChevronRight,
   Mail, Phone, Activity, Loader2, X, AlertCircle, Trash2, TrendingDown,
-  Gift, Heart, TrendingUp, Zap, Clock, Ruler, Dumbbell, Flame, Euro, BarChart3
+  Gift, Heart, TrendingUp, Zap, Clock, Ruler, Dumbbell, Flame, Euro, BarChart3,
+  FileText, Copy, Check
 } from "lucide-react";
 import type { Client } from "@/lib/store";
 
@@ -444,6 +445,44 @@ function WeeklyPulse({ clients }: { clients: Client[] }) {
   );
 }
 
+function generateWeeklyBrief(clients: Client[]): string {
+  const now = Date.now();
+  const weekStart = now - 7 * 86400000;
+  const activeClients = clients.filter(c => c.status === "attivo");
+  const today = new Date().toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+  const lines: string[] = [
+    `BRIEF SETTIMANALE — ${today}`,
+    "─".repeat(36),
+    `Clienti attivi: ${activeClients.length}`,
+  ];
+  const trained: string[] = [];
+  const notTrained: string[] = [];
+  const progSuggestions: string[] = [];
+  for (const c of activeClients) {
+    const allLogs = c.workoutPlans.flatMap(p => p.logs ?? []);
+    const sessionsThisWeek = new Set(
+      allLogs.filter(l => new Date(l.loggedAt).getTime() > weekStart)
+        .map(l => new Date(l.loggedAt).toDateString())
+    ).size;
+    const progReady = getProgressionReady(c);
+    if (sessionsThisWeek > 0) {
+      trained.push(`  ✓ ${c.name} (${sessionsThisWeek} sess.${progReady > 0 ? ` · +carico ${progReady} esercizi` : ""})`);
+    } else {
+      const lastLog = getLastLogDate(c);
+      const daysSince = lastLog ? Math.floor((now - lastLog.getTime()) / 86400000) : null;
+      notTrained.push(`  ✗ ${c.name}${daysSince ? ` (${daysSince}gg fa)` : ""}`);
+    }
+    if (sessionsThisWeek === 0 && progReady >= 3) {
+      progSuggestions.push(`  → ${c.name}: ${progReady} esercizi pronti`);
+    }
+  }
+  if (trained.length) lines.push("", "ALLENATI:", ...trained);
+  if (notTrained.length) lines.push("", "DA CONTATTARE:", ...notTrained);
+  if (progSuggestions.length) lines.push("", "PROGRESSIONI SUGGERITE:", ...progSuggestions);
+  lines.push("", "─── TrainerPro ───");
+  return lines.join("\n");
+}
+
 interface ClientFormData {
   name: string;
   email: string;
@@ -472,6 +511,8 @@ function ClientiPageInner() {
   const [filterStatus, setFilterStatus] = useState<Status>("tutti");
   const [filterGoal, setFilterGoal] = useState<Goal>("tutti");
   const [showModal, setShowModal] = useState(false);
+  const [showBrief, setShowBrief] = useState(false);
+  const [briefCopied, setBriefCopied] = useState(false);
 
   // Auto-open modal when navigating with ?new=1 (e.g. from dashboard quick actions)
   useEffect(() => {
@@ -554,9 +595,16 @@ function ClientiPageInner() {
             {clients.length} {clients.length === 1 ? "cliente" : "clienti"} totali
           </p>
         </div>
-        <button onClick={openModal} className="accent-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm">
-          <Plus size={16} /> Nuovo cliente
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowBrief(true)}
+            className="outline-btn flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm"
+            title="Brief settimanale">
+            <FileText size={15} /> Brief
+          </button>
+          <button onClick={openModal} className="accent-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm">
+            <Plus size={16} /> Nuovo cliente
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -810,6 +858,38 @@ function ClientiPageInner() {
           );
         })}
       </div>
+
+      {/* Brief Settimanale modal */}
+      {showBrief && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowBrief(false)}>
+          <div className="absolute inset-0" style={{ background: "var(--surface-modal)" }} />
+          <div className="relative w-full max-w-lg glass-dark rounded-2xl p-6 fade-in max-h-[80vh] flex flex-col"
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <FileText size={15} style={{ color: "var(--accent)" }} />
+                <h2 className="text-sm font-bold" style={{ color: "var(--text)" }}>Brief Settimanale</h2>
+              </div>
+              <button onClick={() => setShowBrief(false)} className="p-1.5 rounded-lg hover:bg-white/5">
+                <X size={15} style={{ color: "var(--text-muted)" }} />
+              </button>
+            </div>
+            <pre className="text-xs rounded-xl p-4 whitespace-pre-wrap font-mono leading-relaxed overflow-y-auto flex-1 mb-4"
+              style={{ background: "rgba(0,0,0,0.35)", color: "var(--text)", border: "1px solid rgba(255,255,255,0.07)" }}>
+              {generateWeeklyBrief(clients)}
+            </pre>
+            <button
+              onClick={async () => {
+                await navigator.clipboard.writeText(generateWeeklyBrief(clients));
+                setBriefCopied(true);
+                setTimeout(() => setBriefCopied(false), 2200);
+              }}
+              className="w-full accent-btn py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 flex-shrink-0">
+              {briefCopied ? <><Check size={14} /> Copiato!</> : <><Copy size={14} /> Copia testo</>}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Add client modal */}
       {showModal && (
