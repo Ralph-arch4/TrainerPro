@@ -528,6 +528,30 @@ export default function DashboardPage() {
     return results.slice(0, 4);
   }, [clients]);
 
+  // Misurazioni attese: clienti attivi senza pesata da 14+ giorni
+  const measurementOverdueAlerts = useMemo(() => {
+    const now = Date.now();
+    const results: { client: typeof clients[0]; daysSince: number; inActivePhase: boolean; lastDate: string | null }[] = [];
+    for (const c of clients.filter(cl => cl.status === "attivo")) {
+      const sortedM = [...c.measurements]
+        .filter(m => m.weight != null)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const lastM = sortedM[0];
+      const daysSince = lastM
+        ? Math.floor((now - new Date(lastM.date).getTime()) / 86400000)
+        : (c.startDate ? Math.floor((now - new Date(c.startDate).getTime()) / 86400000) : 999);
+      if (daysSince < 14) continue;
+      const inActivePhase = c.phases.some(p => !p.completed && (p.type === "bulk" || p.type === "cut"));
+      results.push({ client: c, daysSince, inActivePhase, lastDate: lastM?.date ?? null });
+    }
+    return results
+      .sort((a, b) => {
+        if (a.inActivePhase !== b.inActivePhase) return a.inActivePhase ? -1 : 1;
+        return b.daysSince - a.daysSince;
+      })
+      .slice(0, 6);
+  }, [clients]);
+
   // Aderenza piano: sessioni reali vs target (ultimi 4 settimane)
   const weeklyAdherence = useMemo(() => {
     const now = Date.now();
@@ -1619,6 +1643,55 @@ export default function DashboardPage() {
                 </div>
               </Link>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Misurazioni Attese ──────────────────────────────────────────── */}
+      {measurementOverdueAlerts.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(249,115,22,0.04)", border: "1px solid rgba(249,115,22,0.18)" }}>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <TrendingUp size={14} style={{ color: "#fb923c" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Misurazioni Attese
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+              style={{ background: "rgba(249,115,22,0.15)", color: "#fb923c" }}>
+              {measurementOverdueAlerts.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
+              nessuna pesata da 14+ giorni
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {measurementOverdueAlerts.map(({ client, daysSince, inActivePhase, lastDate }) => {
+              const urgColor = daysSince >= 30 ? "#f87171" : daysSince >= 21 ? "#fb923c" : "#fbbf24";
+              return (
+                <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
+                  className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                    style={{ background: `${urgColor}18`, color: urgColor }}>
+                    {client.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{client.name}</p>
+                      {inActivePhase && (
+                        <span className="text-xs px-1 py-0.5 rounded font-bold flex-shrink-0"
+                          style={{ background: "rgba(249,115,22,0.12)", color: "#fb923c" }}>fase</span>
+                      )}
+                    </div>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                      {lastDate ? `Ultima: ${new Date(lastDate).toLocaleDateString("it-IT", { day: "2-digit", month: "short" })}` : "Nessuna misurazione"}
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-bold" style={{ color: urgColor }}>{daysSince >= 999 ? "Mai" : `${daysSince}gg`}</p>
+                    <p className="text-xs" style={{ color: `${urgColor}80` }}>senza pesata</p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}
