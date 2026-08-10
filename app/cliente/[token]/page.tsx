@@ -398,6 +398,23 @@ function TrainerSeal({ initials, level }: { initials: string; level: number }) {
   );
 }
 
+function LuxuryBrandTicker({ trainerName, planName }: { trainerName: string; planName: string }) {
+  const unit = `${trainerName.toUpperCase()} · TRAINERPRO · ${planName.toUpperCase()} · PERSONAL TRAINING · `;
+  return (
+    <div className="mb-5 relative overflow-hidden" style={{
+      borderTop: "1px solid rgba(201,168,76,0.18)",
+      borderBottom: "1px solid rgba(201,168,76,0.18)",
+    }}>
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, var(--bg) 0%, transparent 12%, transparent 88%, var(--bg) 100%)", zIndex: 1, pointerEvents: "none" }} />
+      <div style={{ display: "flex", animation: "marqueeScroll 30s linear infinite", whiteSpace: "nowrap", padding: "7px 0" }}>
+        {Array.from({ length: 8 }, (_, i) => (
+          <span key={i} style={{ fontSize: "0.58rem", fontWeight: 900, letterSpacing: "0.26em", color: "rgba(201,168,76,0.38)", flexShrink: 0, paddingRight: "1.5rem", fontFamily: "DM Sans, sans-serif" }}>{unit}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SignatureStroke({ name }: { name: string }) {
   // Path length is fixed at ~148; varies slightly by name length but animation still works
   const pathLen = 148;
@@ -2534,6 +2551,9 @@ export default function ClientPortalPage() {
           level={level}
           levelName={levelName}
         />
+
+        {/* ── Nastro brand trainer (luxury ticker) ─────────────────────────── */}
+        <LuxuryBrandTicker trainerName={trainerName} planName={plan.name} />
 
         {/* ── Stato Atleta ─────────────────────────────────────────────────── */}
         <AthleteStatusBand dayOnJourney={dayOnJourney} streak={streak} />
