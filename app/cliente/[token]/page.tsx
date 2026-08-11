@@ -2121,6 +2121,123 @@ function ClientColorStripe({ shareToken, level, levelName }: {
   );
 }
 
+// ── Busta Giornaliera dal Trainer ────────────────────────────────────────────
+const DAILY_TRAINER_NOTES = [
+  "Oggi non cercare la perfezione. Cerca il progresso.",
+  "Ogni serie completata è un investimento nel te stesso di domani.",
+  "La testa cede prima dei muscoli. Ricordatelo quando diventa difficile.",
+  "Un piano senza azione è solo un sogno. Tu stai agendo — e questo fa tutta la differenza.",
+  "Anche solo presentarsi è già una vittoria. Fallo ogni giorno.",
+  "Non confrontarti con nessuno. Il tuo punto di partenza era diverso dal loro.",
+  "Il fastidio muscolare dopo l'allenamento? È il tuo corpo che si adatta. Fidati.",
+  "Oggi concentrati sulla tecnica, non sul peso. La forma costruisce il fondamento.",
+  "Il riposo fa parte del programma quanto l'allenamento. Non sentirti in colpa.",
+  "Ogni giorno che ti alleni mi ricorda perché faccio questo lavoro.",
+  "Più sei costante nelle piccole cose, più grandi saranno i risultati.",
+  "Hai iniziato. Per molti è già il passo più difficile — e tu l'hai già fatto.",
+  "Oggi fai almeno una serie in più del minimo. Quell'extra è dove avviene la magia.",
+  "Il tuo corpo sa già come migliorare. Dagli il lavoro e il riposo giusti.",
+  "Concentrati sul processo, non sull'obiettivo finale. Il risultato arriva da solo.",
+  "Se sei stanco, rallenta. Non fermarti — rallenta.",
+  "La disciplina è quello che fai quando non ne hai voglia.",
+  "Nessun progresso va sprecato, anche se non lo vedi ancora allo specchio.",
+  "Allenati come se qualcuno ti guardasse. Perché ti sto guardando.",
+  "Un passo alla volta, una sessione alla volta. È così che si costruisce qualcosa di grande.",
+  "Pensa a dove eri 30 giorni fa. Guarda quanto hai già fatto.",
+  "Non ho clienti — ho atleti. E tu sei uno di loro.",
+  "Ogni peso che sollevi oggi è un peso in meno sulle tue spalle domani.",
+  "La pazienza è la parte più difficile del fitness. E la più importante.",
+  "Allenati per la persona che vuoi diventare, non per quella che sei oggi.",
+  "Il progresso non è lineare. I dati che stai raccogliendo serviranno.",
+  "Oggi conta doppio se non ne hai voglia.",
+  "Sei più forte di quanto pensi. Te lo dico io che guardo i tuoi dati.",
+  "Il tuo corpo non mente mai. I numeri che stai costruendo sono reali.",
+  "Grazie per fidarti del percorso che abbiamo costruito insieme.",
+  "Oggi, qualunque cosa succeda: fai almeno una serie. Solo una — e poi vedi.",
+];
+
+function DailyEnvelopeCard({ trainerName, shareToken }: { trainerName: string; shareToken: string }) {
+  const now = new Date();
+  const dayKey = `tp_envelope_${now.getFullYear()}_${now.getMonth()}_${now.getDate()}`;
+  const [opened, setOpened] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(dayKey) === "1";
+  });
+  const [animating, setAnimating] = useState(false);
+
+  const tokenShift = shareToken.replace(/[^a-f0-9]/gi, "").split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000);
+  const note = DAILY_TRAINER_NOTES[(dayOfYear + tokenShift) % DAILY_TRAINER_NOTES.length];
+  const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
+
+  function open() {
+    if (opened || animating) return;
+    setAnimating(true);
+    setTimeout(() => { localStorage.setItem(dayKey, "1"); setOpened(true); setAnimating(false); }, 650);
+  }
+
+  if (opened) {
+    return (
+      <div className="mb-4 rounded-2xl p-4 fade-in"
+        style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.06), rgba(8,8,8,0.7))", border: "1px solid rgba(201,168,76,0.18)" }}>
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
+            style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", color: "rgba(201,168,76,0.8)" }}>
+            {initials}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1.5">
+              <p className="text-xs font-black" style={{ color: "rgba(201,168,76,0.8)" }}>{trainerName}</p>
+              <span className="text-xs px-1.5 py-0.5 rounded-full font-bold"
+                style={{ background: "rgba(201,168,76,0.1)", color: "rgba(201,168,76,0.5)", fontSize: "0.58rem", border: "1px solid rgba(201,168,76,0.15)" }}>
+                oggi · aperto
+              </span>
+            </div>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+              &ldquo;{note}&rdquo;
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <button onClick={open} disabled={animating}
+      className="w-full mb-4 rounded-2xl text-left transition-all active:scale-[0.98]"
+      style={{
+        background: "linear-gradient(135deg, rgba(201,168,76,0.08), rgba(8,8,8,0.65))",
+        border: "1px solid rgba(201,168,76,0.28)",
+        opacity: animating ? 0.7 : 1,
+        transition: "all 0.3s ease",
+      }}>
+      <div className="h-1 rounded-t-2xl"
+        style={{ background: "linear-gradient(90deg, rgba(201,168,76,0.45), rgba(201,168,76,0.12), rgba(201,168,76,0.45))" }} />
+      <div className="p-4 flex items-center gap-4">
+        <div style={{ width: 46, height: 34, flexShrink: 0, position: "relative", borderRadius: 3,
+          background: "linear-gradient(160deg, rgba(201,168,76,0.16), rgba(201,168,76,0.04))",
+          border: "1px solid rgba(201,168,76,0.38)", display: "flex", alignItems: "center",
+          justifyContent: "center", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 16,
+            background: "rgba(201,168,76,0.12)", clipPath: "polygon(0 0, 50% 70%, 100% 0)",
+            borderBottom: "1px solid rgba(201,168,76,0.22)" }} />
+          <p style={{ fontSize: "0.6rem", fontWeight: 900, color: "rgba(201,168,76,0.7)", zIndex: 1, marginTop: 6 }}>{initials}</p>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-black uppercase tracking-[0.14em] mb-0.5"
+            style={{ color: "rgba(201,168,76,0.72)" }}>
+            Pensiero di oggi da {trainerName}
+          </p>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            {animating ? "Aprendo il messaggio..." : "Il tuo trainer ti ha lasciato un pensiero"}
+          </p>
+        </div>
+        <Sparkles size={16} style={{ color: "rgba(201,168,76,0.45)", flexShrink: 0 }} />
+      </div>
+    </button>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -2594,6 +2711,9 @@ export default function ClientPortalPage() {
 
         {/* ── Notifica settimanale dal trainer ─────────────────────────────── */}
         <TrainerNotificationBanner trainerName={trainerName} />
+
+        {/* ── Busta giornaliera dal trainer ─────────────────────────────────── */}
+        <DailyEnvelopeCard trainerName={trainerName} shareToken={plan.share_token} />
 
         {/* ── Messaggio vocale dal trainer ──────────────────────────────────── */}
         <TrainerVoiceMessage trainerName={trainerName} totalLogs={totalLogs} streak={streak} />
