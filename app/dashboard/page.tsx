@@ -9,7 +9,7 @@ import {
   CheckCircle2, Circle, Dumbbell, Share2, ClipboardList, Euro,
   Flame, AlertTriangle, Trophy, Zap, Gift, MessageCircle, Scale, TrendingDown,
   BarChart2, CreditCard, Target, Heart, ClipboardCopy, CalendarClock, ShieldAlert,
-  CalendarCheck, ListChecks, BatteryLow,
+  CalendarCheck, ListChecks, BatteryLow, Timer,
 } from "lucide-react";
 
 function nameHash(name: string): number[] {
@@ -604,6 +604,30 @@ export default function DashboardPage() {
     return results.sort((a, b) => b.consecutiveWeeks - a.consecutiveWeeks).slice(0, 4);
   }, [clients]);
 
+  // Cadenza Personale: clients overdue relative to their own average training interval (not a fixed cutoff)
+  const cadenceMissedAlerts = useMemo(() => {
+    const now = Date.now();
+    const results: { client: typeof clients[0]; avgDays: number; daysSinceLast: number; overdue: number }[] = [];
+    for (const c of clients.filter(cl => cl.status === "attivo")) {
+      const allLogs = c.workoutPlans.flatMap(p => p.logs ?? []);
+      const uniqueDays = [...new Set(allLogs.map(l => new Date(l.loggedAt).toDateString()))]
+        .map(d => new Date(d).getTime())
+        .sort((a, b) => b - a);
+      if (uniqueDays.length < 4) continue;
+      const sample = uniqueDays.slice(0, Math.min(12, uniqueDays.length));
+      let totalInterval = 0;
+      for (let i = 0; i < sample.length - 1; i++) totalInterval += sample[i] - sample[i + 1];
+      const avgIntervalMs = totalInterval / (sample.length - 1);
+      const avgDays = avgIntervalMs / 86400000;
+      if (avgDays < 0.8) continue;
+      const daysSinceLast = (now - sample[0]) / 86400000;
+      if (daysSinceLast < avgDays * 2) continue;
+      const overdue = Math.floor(daysSinceLast - avgDays);
+      results.push({ client: c, avgDays: Math.round(avgDays * 10) / 10, daysSinceLast: Math.floor(daysSinceLast), overdue });
+    }
+    return results.sort((a, b) => b.overdue - a.overdue).slice(0, 5);
+  }, [clients]);
+
   // Traiettoria fase: clients with active bulk/cut and measurable weight progress vs target
   const phaseTrajectoryAlerts = useMemo(() => {
     const now = Date.now();
@@ -948,6 +972,52 @@ export default function DashboardPage() {
                     style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
                     <MessageCircle size={11} />
                     WA
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Cadenza Personale ───────────────────────────────────────────── */}
+      {cadenceMissedAlerts.length > 0 && (
+        <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(250,204,21,0.04)", border: "1px solid rgba(250,204,21,0.22)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <Timer size={14} style={{ color: "#facc15" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Cadenza Personale
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full font-bold ml-1"
+              style={{ background: "rgba(250,204,21,0.15)", color: "#facc15" }}>
+              {cadenceMissedAlerts.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>fuori dal loro ritmo personale</span>
+          </div>
+          <div className="space-y-1.5">
+            {cadenceMissedAlerts.map(({ client, avgDays, daysSinceLast, overdue }) => (
+              <div key={client.id} className="flex items-center gap-3 p-2.5 rounded-xl"
+                style={{ background: "rgba(250,204,21,0.04)", borderLeft: "2px solid rgba(250,204,21,0.3)" }}>
+                <Link href={`/dashboard/clienti/${client.id}`} className="flex items-center gap-3 flex-1 min-w-0 group">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                    style={{ background: "rgba(250,204,21,0.12)", color: "#facc15" }}>
+                    {client.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold truncate group-hover:underline" style={{ color: "var(--text)" }}>{client.name}</p>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>Ritmo: ogni {avgDays}gg · ultima sessione {daysSinceLast}gg fa</p>
+                  </div>
+                  <span className="text-xs font-bold flex-shrink-0 px-2 py-0.5 rounded-full"
+                    style={{ background: "rgba(250,204,21,0.15)", color: "#facc15" }}>
+                    +{overdue}gg
+                  </span>
+                </Link>
+                {client.phone && (
+                  <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}! Di solito alleni ogni ${Math.round(avgDays)} giorni, ma sono passati ${daysSinceLast}gg dall'ultima sessione. Tutto bene? Quando torniamo in pista?`)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
+                    style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                    <MessageCircle size={11} />WA
                   </a>
                 )}
               </div>
