@@ -1162,36 +1162,56 @@ export default function DashboardPage() {
       {/* ── Radar Attività ───────────────────────────────────────────────── */}
       {(topClients.length > 0 || atRiskClients.length > 0) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-          {/* Top performers */}
+          {/* Top performers — Podio Atleti */}
           {topClients.length > 0 && (
-            <div className="rounded-2xl p-4" style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.15)" }}>
-              <div className="flex items-center gap-2 mb-3">
+            <div className="rounded-2xl p-4 relative overflow-hidden"
+              style={{ background: "linear-gradient(160deg,rgba(201,168,76,0.06),rgba(8,8,8,0.7))", border: "1px solid rgba(201,168,76,0.22)" }}>
+              <div className="flex items-center gap-2 mb-4">
                 <Trophy size={14} style={{ color: "#fbbf24" }} />
                 <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
-                  In forma questa settimana
+                  Podio atleti · questa settimana
                 </p>
               </div>
-              <div className="space-y-2">
-                {topClients.map(({ client, weekLogs }, idx) => (
-                  <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
-                    className="flex items-center gap-3 group">
-                    <span className="text-sm font-black w-4 flex-shrink-0"
-                      style={{ color: idx === 0 ? "#fbbf24" : idx === 1 ? "#d1d5db" : "#cd7f32" }}>
-                      {idx + 1}
-                    </span>
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                      style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
-                      {client.name.charAt(0).toUpperCase()}
-                    </div>
-                    <p className="flex-1 text-sm font-semibold truncate group-hover:underline"
-                      style={{ color: "var(--text)" }}>{client.name}</p>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <Flame size={11} style={{ color: "#f97316" }} />
-                      <span className="text-xs font-bold" style={{ color: "#f97316" }}>{weekLogs}</span>
-                    </div>
-                  </Link>
-                ))}
+              {/* Visual podium: 2nd (left) · 1st (center) · 3rd (right) */}
+              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 8 }}>
+                {[
+                  topClients[1] ? { client: topClients[1].client, weekLogs: topClients[1].weekLogs, color: "#9ca3af", h: 38, rank: "2°", glow: "rgba(156,163,175,0.3)", gold: false } : null,
+                  topClients[0] ? { client: topClients[0].client, weekLogs: topClients[0].weekLogs, color: "#C9A84C", h: 56, rank: "1°", glow: "rgba(201,168,76,0.4)", gold: true  } : null,
+                  topClients[2] ? { client: topClients[2].client, weekLogs: topClients[2].weekLogs, color: "#cd7f32", h: 28, rank: "3°", glow: "rgba(205,127,50,0.2)", gold: false } : null,
+                ].map((slot, i) => {
+                  if (!slot) return null;
+                  const { client, weekLogs, color, h, rank, glow, gold } = slot;
+                  return (
+                    <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
+                      style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, maxWidth: 88, minWidth: 0 }}>
+                      <div style={{
+                        width: gold ? 44 : 36, height: gold ? 44 : 36, borderRadius: "50%", marginBottom: 4, flexShrink: 0,
+                        background: `radial-gradient(circle at 35% 30%, ${color}40, rgba(8,8,8,0.9))`,
+                        border: `2px solid ${color}`, display: "flex", alignItems: "center", justifyContent: "center",
+                        boxShadow: `0 0 ${gold ? 20 : 8}px ${glow}`,
+                        animation: gold ? "pulse-glow 2.5s ease-in-out infinite" : "none",
+                      }}>
+                        <span style={{ fontSize: gold ? "1rem" : "0.8rem", fontWeight: 900, color }}>
+                          {client.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text)", textAlign: "center", width: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2 }}>
+                        {client.name.split(" ")[0]}
+                      </p>
+                      <p style={{ fontSize: "0.58rem", color, fontWeight: 600, marginBottom: 4 }}>{weekLogs} sess.</p>
+                      <div style={{
+                        width: "100%", height: h, borderRadius: "6px 6px 0 0",
+                        background: `linear-gradient(180deg, ${color}18 0%, transparent 100%)`,
+                        border: `1px solid ${color}35`, borderBottom: "none",
+                        display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 5,
+                      }}>
+                        <span style={{ fontSize: "0.6rem", fontWeight: 900, color: `${color}80`, letterSpacing: "0.1em" }}>{rank}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
+              <div style={{ height: 1, background: "linear-gradient(90deg,transparent,rgba(201,168,76,0.4),transparent)" }} />
             </div>
           )}
           {/* At risk */}
