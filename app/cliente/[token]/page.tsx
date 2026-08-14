@@ -1671,6 +1671,91 @@ function TrainerVoiceMessage({ trainerName, totalLogs, streak }: {
   );
 }
 
+// ── La Mia Motivazione ───────────────────────────────────────────────────────
+const WHY_KEY = (t: string) => `tp_why_${t}`;
+const WHY_MAX = 180;
+
+function MyWhyCard({ token, trainerName }: { token: string; trainerName: string }) {
+  const [why, setWhy] = useState<{ text: string; date: string } | null>(() => {
+    if (typeof window === "undefined") return null;
+    try { return JSON.parse(localStorage.getItem(WHY_KEY(token)) ?? "null"); } catch { return null; }
+  });
+  const [draft, setDraft] = useState("");
+  const [editing, setEditing] = useState(false);
+
+  function save() {
+    if (!draft.trim()) return;
+    const val = { text: draft.trim(), date: new Date().toISOString() };
+    localStorage.setItem(WHY_KEY(token), JSON.stringify(val));
+    setWhy(val);
+    setDraft("");
+    setEditing(false);
+  }
+
+  const dateLabel = (iso: string) => new Date(iso).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+
+  if (why && !editing) {
+    return (
+      <div className="mb-4 rounded-2xl p-5 relative overflow-hidden"
+        style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.07) 0%, rgba(8,8,8,0.7) 100%)", border: "1px solid rgba(201,168,76,0.3)" }}>
+        <div className="absolute -right-4 -top-4 w-28 h-28 rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(201,168,76,0.1), transparent)" }} />
+        <p className="text-xs font-black uppercase tracking-[0.18em] mb-3" style={{ color: "rgba(201,168,76,0.6)" }}>
+          Perché lo faccio
+        </p>
+        <p className="text-base font-black leading-snug mb-3"
+          style={{ color: "var(--text)", fontStyle: "italic", fontFamily: "Georgia,'Times New Roman',serif" }}>
+          &ldquo;{why.text}&rdquo;
+        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs" style={{ color: "var(--text-faint)" }}>
+              Scritto il {dateLabel(why.date)} · testimone: {trainerName}
+            </p>
+          </div>
+          <button onClick={() => { setDraft(why.text); setEditing(true); }}
+            className="text-xs font-semibold px-2.5 py-1 rounded-lg transition-all"
+            style={{ background: "rgba(201,168,76,0.08)", color: "rgba(201,168,76,0.55)", border: "1px solid rgba(201,168,76,0.15)" }}>
+            Modifica
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-4 rounded-2xl p-5" style={{ border: "1px solid rgba(201,168,76,0.2)", background: "var(--surface-xs)" }}>
+      <p className="text-xs font-black uppercase tracking-[0.16em] mb-1" style={{ color: "rgba(201,168,76,0.65)" }}>
+        Perché lo fai?
+      </p>
+      <p className="text-xs mb-3" style={{ color: "var(--text-faint)", fontStyle: "italic" }}>
+        Scrivi la tua motivazione più profonda — rimarrà qui ogni volta che apri la scheda.
+      </p>
+      <div className="relative mb-2">
+        <textarea
+          className="w-full text-sm p-3 rounded-xl resize-none"
+          style={{ background: "var(--surface-sm)", border: "1px solid rgba(201,168,76,0.22)", color: "var(--text)", outline: "none", minHeight: 68, lineHeight: 1.55 }}
+          placeholder="Es. Voglio giocare con miei figli senza affaticarmi, o semplicemente sentirmi bene nella mia pelle..."
+          maxLength={WHY_MAX}
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+        />
+        <span className="absolute bottom-2.5 right-3 text-xs" style={{ color: "var(--text-faint)" }}>{draft.length}/{WHY_MAX}</span>
+      </div>
+      <button onClick={save} disabled={!draft.trim()}
+        className="w-full py-2.5 rounded-xl text-sm font-bold transition-all"
+        style={{
+          background: draft.trim() ? "rgba(201,168,76,0.13)" : "var(--surface-sm)",
+          color: draft.trim() ? "var(--accent)" : "var(--text-faint)",
+          border: `1px solid ${draft.trim() ? "rgba(201,168,76,0.28)" : "var(--border)"}`,
+          cursor: draft.trim() ? "pointer" : "default",
+        }}>
+        Salva la mia motivazione
+      </button>
+    </div>
+  );
+}
+
 // ── Diario dell'Atleta ───────────────────────────────────────────────────────
 interface DiaryEntry { date: string; text: string; }
 const DIARY_KEY = (t: string) => `tp_diary_${t}`;
@@ -3167,6 +3252,8 @@ export default function ClientPortalPage() {
               />
             )}
             <TrainerSignalCard trainerName={trainerName} streak={streak} totalLogs={totalLogs} />
+            {/* ── La Mia Motivazione ──────────────────────────────────────────── */}
+            <MyWhyCard token={token as string} trainerName={trainerName} />
             {/* ── Diario dell'Atleta ──────────────────────────────────────────── */}
             <AthleteDiaryCard token={token as string} trainerName={trainerName} />
           </motion.div>
