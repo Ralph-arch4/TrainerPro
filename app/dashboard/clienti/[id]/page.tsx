@@ -1155,6 +1155,27 @@ export default function ClientDetailPage() {
     return null;
   }, [client]);
 
+  const loadSuggestions = useMemo(() => {
+    const activePlan = client.workoutPlans.find(p => p.active);
+    if (!activePlan || !activePlan.logs?.length) return [];
+    const byEx: Record<string, typeof activePlan.logs> = {};
+    for (const log of activePlan.logs) {
+      if (log.weight == null || log.weight <= 0) continue;
+      (byEx[log.exerciseId] ??= []).push(log);
+    }
+    return Object.entries(byEx).flatMap(([exId, logs]) => {
+      const sorted = [...logs].sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
+      if (sorted.length < 3) return [];
+      const last3 = sorted.slice(0, 3);
+      if (!last3.every(l => l.weight === last3[0].weight)) return [];
+      const ex = activePlan.exercises.find(e => e.id === exId);
+      if (!ex) return [];
+      const current = last3[0].weight!;
+      const increment = current >= 80 ? 5 : 2.5;
+      return [{ exName: ex.name, current, suggested: current + increment, lastLog: last3[0].loggedAt }];
+    });
+  }, [client]);
+
   const trainingDNA = useMemo(() => {
     const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
     if (allLogs.length < 5) return null;
@@ -1676,6 +1697,44 @@ export default function ClientDetailPage() {
                   </button>
                 </div>
               )}
+            </div>
+          )}
+
+          {loadSuggestions.length > 0 && (
+            <div className="card-luxury rounded-2xl p-5 sm:col-span-2">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp size={14} style={{ color: "#22c55e" }} />
+                <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Consigli Aumento Carico</h3>
+                <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-bold"
+                  style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.2)" }}>
+                  {loadSuggestions.length} {loadSuggestions.length === 1 ? "esercizio" : "esercizi"}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {loadSuggestions.map((s, i) => (
+                  <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+                    style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.12)" }}>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{ background: "rgba(34,197,94,0.12)" }}>
+                      <Dumbbell size={12} style={{ color: "#22c55e" }} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{s.exName}</p>
+                      <p className="text-xs" style={{ color: "var(--text-dim)" }}>
+                        3 sessioni confermate a {s.current}kg
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <span className="text-sm font-bold" style={{ color: "var(--text-muted)" }}>{s.current}kg</span>
+                      <TrendingUp size={11} style={{ color: "#22c55e" }} />
+                      <span className="text-sm font-bold" style={{ color: "#22c55e" }}>{s.suggested}kg</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] mt-3" style={{ color: "var(--text-dim)" }}>
+                Progressione automatica: 3 sessioni allo stesso carico = pronto per il salto
+              </p>
             </div>
           )}
 
