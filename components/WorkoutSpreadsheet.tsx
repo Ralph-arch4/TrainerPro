@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import type { Exercise, ExerciseLog } from "@/lib/store";
 import {
   Plus, Trash2, ChevronUp, ChevronDown, CheckCircle2, Copy, ExternalLink,
-  Pencil, Check, ChevronLeft, ChevronRight, Link as LinkIcon, X, Upload,
+  Pencil, Check, ChevronLeft, ChevronRight, Link as LinkIcon, X, Upload, TrendingUp,
 } from "lucide-react";
 import { showToast } from "@/components/Toast";
 import { searchExercises, type LibraryExercise } from "@/lib/exerciseLibrary";
@@ -118,6 +118,34 @@ const SUPERSET_COLORS: Record<string, string> = {
   E: "#f472b6", F: "#fb923c", G: "#60a5fa", H: "#a3e635",
 };
 function ssColor(g?: string) { return g ? (SUPERSET_COLORS[g.toUpperCase()] ?? "var(--accent)") : null; }
+
+function getLogWeight(log: ExerciseLog): number | null {
+  if (log.weight != null && log.weight > 0) return log.weight;
+  if (log.reps) {
+    try {
+      const p = JSON.parse(log.reps);
+      if (Array.isArray(p) && p[0]?.w) {
+        const ws = (p as Array<{ w?: string }>).map(s => parseFloat(s.w ?? "")).filter(n => !isNaN(n) && n > 0);
+        if (ws.length > 0) return ws[ws.length - 1];
+      }
+    } catch { /* ignore */ }
+  }
+  return null;
+}
+
+function getLoadSuggestion(exerciseId: string, logs: ExerciseLog[]): { weight: number; increment: number } | null {
+  const candidates = logs
+    .filter(l => l.exerciseId === exerciseId)
+    .map(l => ({ week: l.weekNumber, w: getLogWeight(l) }))
+    .filter(l => l.w != null && l.w > 0)
+    .sort((a, b) => b.week - a.week)
+    .slice(0, 3);
+  if (candidates.length < 3) return null;
+  const w = candidates[0].w!;
+  if (candidates.some(l => l.w !== w)) return null;
+  const increment = w >= 100 ? 5 : w >= 40 ? 2.5 : 1.25;
+  return { weight: w, increment };
+}
 
 // Render rep targets for a given exercise
 function renderRepTargets(ex: Exercise): React.ReactNode {
@@ -671,6 +699,20 @@ export default function WorkoutSpreadsheet({
                         </div>
                         {ex.muscleGroup && <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{ex.muscleGroup}</p>}
                         <div className="mt-1">{renderRepTargets(ex)}</div>
+                        {(() => {
+                          if (mode !== "trainer") return null;
+                          const sugg = getLoadSuggestion(ex.id, logs);
+                          if (!sugg) return null;
+                          return (
+                            <div className="flex items-center gap-1 mt-1.5">
+                              <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
+                                style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.22)" }}>
+                                <TrendingUp size={9} />
+                                {sugg.weight}→{sugg.weight + sugg.increment}kg
+                              </span>
+                            </div>
+                          );
+                        })()}
                         {ex.restSeconds && <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.35)" }}>Recupero: {ex.restSeconds}s</p>}
                         {ex.notes && (
                           <p className="text-xs mt-1 italic" style={{ color: "rgba(245,240,232,0.5)", borderLeft: "2px solid rgba(255,107,43,0.2)", paddingLeft: "6px" }}>
@@ -952,6 +994,20 @@ export default function WorkoutSpreadsheet({
                               <p className="text-xs mb-1" style={{ color: "rgba(245,240,232,0.35)" }}>{ex.muscleGroup}</p>
                             )}
                             {renderRepTargets(ex)}
+                            {(() => {
+                              if (mode !== "trainer") return null;
+                              const sugg = getLoadSuggestion(ex.id, logs);
+                              if (!sugg) return null;
+                              return (
+                                <div className="flex items-center gap-1 mt-1.5">
+                                  <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
+                                    style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.22)" }}>
+                                    <TrendingUp size={9} />
+                                    {sugg.weight}→{sugg.weight + sugg.increment}kg
+                                  </span>
+                                </div>
+                              );
+                            })()}
                             {ex.restSeconds && (
                               <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.35)" }}>
                                 Recupero: {ex.restSeconds}s
