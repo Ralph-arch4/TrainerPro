@@ -99,6 +99,90 @@ const phaseTypeColor: Record<string, string> = { bulk: "#a78bfa", cut: "#38bdf8"
 const statusColor: Record<string, string> = { attivo: "#22c55e", in_pausa: "#f59e0b", inattivo: "#6b7280" };
 const statusLabel: Record<string, string> = { attivo: "Attivo", in_pausa: "In pausa", inattivo: "Inattivo" };
 
+function clientHue(name: string): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  return Math.abs(hash) % 360;
+}
+function athleteNumber(id: string): string {
+  const n = id.replace(/-/g, "").split("").reduce((a, c) => ((a * 31 + c.charCodeAt(0)) | 0), 0);
+  return String(Math.abs(n) % 9000 + 1000);
+}
+function daysTogether(startDate?: string): number {
+  if (!startDate) return 0;
+  return Math.max(0, Math.floor((Date.now() - new Date(startDate).getTime()) / 86400000));
+}
+
+function AthleteCredsCard({ client, onEdit }: { client: { id: string; name: string; status: string; goal?: string; level?: string; monthlyFee?: number; startDate?: string }; onEdit: () => void }) {
+  const hue = clientHue(client.name);
+  const initials = client.name.split(" ").filter(Boolean).slice(0, 2).map((w: string) => w[0].toUpperCase()).join("").slice(0, 2);
+  const num = athleteNumber(client.id);
+  const days = daysTogether(client.startDate);
+  const cgId = `cg${client.id.replace(/-/g, "").slice(0, 6)}`;
+  return (
+    <div className="mb-6 rounded-3xl overflow-hidden relative"
+      style={{ background: "linear-gradient(135deg, rgba(10,8,4,0.98) 0%, rgba(22,16,8,0.95) 60%, rgba(10,8,4,0.98) 100%)", border: "1px solid rgba(201,168,76,0.2)", boxShadow: "0 4px 28px rgba(201,168,76,0.06)" }}>
+      <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at 12% 50%, hsla(${hue},45%,50%,0.05) 0%, transparent 55%), radial-gradient(ellipse at 88% 50%, rgba(201,168,76,0.04) 0%, transparent 55%)` }} />
+      <div className="relative flex items-center gap-5 px-5 py-4">
+        {/* Heraldic crest */}
+        <div className="flex-shrink-0">
+          <svg width="68" height="68" viewBox="0 0 68 68">
+            <defs>
+              <linearGradient id={cgId} x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor={`hsl(${hue},60%,62%)`} stopOpacity="0.85" />
+                <stop offset="100%" stopColor="rgba(201,168,76,0.95)" />
+              </linearGradient>
+            </defs>
+            <circle cx="34" cy="34" r="32" fill="none" stroke="rgba(201,168,76,0.12)" strokeWidth="0.8" />
+            {[45, 135, 225, 315].map(a => { const r = a * Math.PI / 180; return <circle key={a} cx={34 + Math.cos(r) * 30} cy={34 + Math.sin(r) * 30} r="1.4" fill="rgba(201,168,76,0.32)" />; })}
+            <circle cx="34" cy="34" r="22" fill={`hsla(${hue},50%,50%,0.08)`} stroke={`url(#${cgId})`} strokeWidth="1.6" />
+            <circle cx="34" cy="34" r="19" fill="none" stroke={`hsla(${hue},40%,55%,0.12)`} strokeWidth="0.6" />
+            <text x="34" y="34" textAnchor="middle" dominantBaseline="middle"
+              fontSize={initials.length > 1 ? "17" : "22"} fontWeight="900"
+              fill={`url(#${cgId})`} fontFamily="Georgia,'Times New Roman',serif" fontStyle="italic"
+              style={{ filter: `drop-shadow(0 0 5px hsla(${hue},60%,55%,0.35))` }}>
+              {initials}
+            </text>
+          </svg>
+        </div>
+        {/* Name + badges */}
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-black tracking-[0.22em] uppercase mb-0.5" style={{ color: "rgba(201,168,76,0.42)" }}>Atleta #{num}</p>
+          <h1 className="text-2xl font-black tracking-tight mb-1.5 truncate" style={{ color: "var(--text)", fontFamily: "Georgia,'Times New Roman',serif", fontStyle: "italic" }}>{client.name}</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor[client.status] }} />
+              <span className="text-xs" style={{ color: "var(--text-muted)" }}>{statusLabel[client.status]}</span>
+            </div>
+            {client.goal && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.1)", color: "var(--accent-light)" }}>{goalLabel[client.goal]}</span>}
+            {client.level && <span className="text-xs" style={{ color: "var(--text-dim)" }}>{levelLabel[client.level]}</span>}
+          </div>
+        </div>
+        {/* Right: fee + days + edit */}
+        <div className="flex flex-col items-end gap-2 flex-shrink-0">
+          {client.monthlyFee != null && (
+            <div className="text-right">
+              <p className="text-xs" style={{ color: "var(--text-dim)" }}>Quota mensile</p>
+              <p className="text-xl font-bold" style={{ color: "var(--accent)" }}>€{client.monthlyFee}</p>
+            </div>
+          )}
+          {days > 0 && (
+            <p className="text-xs text-right leading-tight" style={{ color: "var(--text-dim)" }}>
+              <span className="font-bold" style={{ color: "var(--accent-light)" }}>{days}</span> giorni insieme
+            </p>
+          )}
+          <button onClick={onEdit} title="Modifica cliente"
+            className="p-2 rounded-xl transition-all hover:opacity-80"
+            style={{ background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
+            <Pencil size={13} style={{ color: "var(--text-muted)" }} />
+          </button>
+        </div>
+      </div>
+      <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, hsla(${hue},45%,55%,0.28), rgba(201,168,76,0.42), hsla(${hue},45%,55%,0.28), transparent)` }} />
+    </div>
+  );
+}
+
 function formatDate(d: string) { return new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" }); }
 function phaseDurationWeeks(startDate: string, endDate?: string) {
   const start = new Date(startDate).getTime();
@@ -1267,48 +1351,16 @@ export default function ClientDetailPage() {
         <ArrowLeft size={15} /> Tutti i clienti
       </button>
 
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl accent-btn flex items-center justify-center text-xl font-bold flex-shrink-0">
-            {client.name.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>{client.name}</h1>
-            <div className="flex items-center gap-3 mt-1">
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor[client.status] }} />
-                <span className="text-xs" style={{ color: "var(--text-muted)" }}>{statusLabel[client.status]}</span>
-              </div>
-              {client.goal && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.1)", color: "var(--accent-light)" }}>{goalLabel[client.goal]}</span>}
-              {client.level && <span className="text-xs" style={{ color: "var(--text-dim)" }}>{levelLabel[client.level]}</span>}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-start gap-3">
-          {client.monthlyFee != null && (
-            <div className="text-right">
-              <p className="text-xs" style={{ color: "var(--text-dim)" }}>Quota mensile</p>
-              <p className="text-xl font-bold" style={{ color: "var(--accent)" }}>€{client.monthlyFee}</p>
-            </div>
-          )}
-          <button
-            onClick={() => setEditingClient({
-              name: client.name,
-              email: client.email ?? "",
-              phone: client.phone ?? "",
-              birthDate: client.birthDate ?? "",
-              goal: client.goal ?? "",
-              level: client.level ?? "",
-              status: client.status,
-              monthlyFee: client.monthlyFee != null ? String(client.monthlyFee) : "",
-            })}
-            title="Modifica cliente"
-            className="p-2 rounded-xl transition-all hover:opacity-80 flex-shrink-0"
-            style={{ background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
-            <Pencil size={13} style={{ color: "var(--text-muted)" }} />
-          </button>
-        </div>
-      </div>
+      <AthleteCredsCard client={client} onEdit={() => setEditingClient({
+        name: client.name,
+        email: client.email ?? "",
+        phone: client.phone ?? "",
+        birthDate: client.birthDate ?? "",
+        goal: client.goal ?? "",
+        level: client.level ?? "",
+        status: client.status,
+        monthlyFee: client.monthlyFee != null ? String(client.monthlyFee) : "",
+      })} />
 
       {/* Save error banner */}
       {saveError && (
