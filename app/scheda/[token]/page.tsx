@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { dbExerciseLogs } from "@/lib/db";
 import WorkoutLogbook from "@/components/WorkoutLogbook";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
-import { Dumbbell, UtensilsCrossed, ShoppingBag, Loader2, AlertCircle, Copy, Check } from "lucide-react";
+import { Dumbbell, UtensilsCrossed, ShoppingBag, Loader2, AlertCircle, Copy, Check, MessageCircle } from "lucide-react";
 
 interface PlanData {
   id: string;
@@ -37,6 +37,75 @@ interface DietData {
 }
 
 type Tab = "allenamento" | "dieta" | "integratori";
+
+// ── Trainer reaction toast (simulates real-time PT feedback) ─────────────────
+const TRAINER_REACTIONS = [
+  "Ottima sessione! Sento la tua dedizione da qui.",
+  "Bravissimo! Ogni rep registrata è un mattone sul tuo progresso.",
+  "Ecco la costanza che fa la differenza. Continua così.",
+  "Sei in forma! Stai costruendo qualcosa di cui essere orgoglioso.",
+  "Perfetto! I risultati arrivano a chi non molla mai.",
+  "Registro ricevuto — sto seguendo ogni tuo progresso.",
+  "Questo è l'atteggiamento giusto. Sono fiero di te.",
+  "Sessione completata! Il tuo futuro-io ti ringrazierà.",
+];
+
+function TrainerReactionToast({ message, trainerName, onDismiss }: {
+  message: string; trainerName: string; onDismiss: () => void;
+}) {
+  const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
+  useEffect(() => {
+    const t = setTimeout(onDismiss, 5000);
+    return () => clearTimeout(t);
+  }, [onDismiss]);
+  return (
+    <div
+      className="fixed bottom-6 left-4 right-4 max-w-sm mx-auto z-50 fade-in"
+      style={{
+        background: "linear-gradient(135deg, rgba(12,4,4,0.97) 0%, rgba(28,10,6,0.95) 100%)",
+        border: "1px solid rgba(201,168,76,0.38)",
+        borderRadius: "1.25rem",
+        boxShadow: "0 8px 32px rgba(201,168,76,0.18), 0 2px 8px rgba(0,0,0,0.6)",
+        padding: "1rem",
+      }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+        <div style={{
+          width: 42, height: 42, borderRadius: "50%", flexShrink: 0,
+          background: "radial-gradient(circle at 38% 32%, rgba(201,168,76,0.35), rgba(8,8,8,0.9))",
+          border: "1.5px solid rgba(201,168,76,0.55)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          position: "relative",
+        }}>
+          <span style={{ color: "rgba(201,168,76,0.9)", fontWeight: 900, fontSize: "0.9rem" }}>{initials}</span>
+          <span style={{
+            position: "absolute", bottom: 0, right: 0, width: 10, height: 10, borderRadius: "50%",
+            background: "#22c55e", border: "2px solid rgba(8,8,8,0.95)",
+            boxShadow: "0 0 6px #22c55e",
+          }} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
+            <p style={{ fontSize: "0.75rem", fontWeight: 700, color: "rgba(201,168,76,0.85)" }}>{trainerName}</p>
+            <span style={{ fontSize: "0.6rem", padding: "1px 6px", borderRadius: 999, background: "rgba(34,197,94,0.15)", color: "#22c55e", fontWeight: 700 }}>ora</span>
+            <MessageCircle size={11} style={{ color: "rgba(201,168,76,0.4)", marginLeft: "auto" }} />
+          </div>
+          <p style={{ fontSize: "0.8rem", lineHeight: 1.5, color: "rgba(245,240,232,0.75)", fontStyle: "italic" }}>
+            &ldquo;{message}&rdquo;
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={onDismiss}
+        style={{
+          position: "absolute", top: 8, right: 8, width: 18, height: 18, borderRadius: "50%",
+          background: "rgba(255,255,255,0.06)", color: "rgba(245,240,232,0.4)", fontSize: "0.65rem",
+          display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900,
+        }}>
+        ×
+      </button>
+    </div>
+  );
+}
 
 function SupplementCard({ item }: { item: SupplementItem }) {
   const [copied, setCopied] = useState(false);
@@ -172,6 +241,7 @@ export default function PublicSchedaPage() {
   const [trainerName, setTrainerName] = useState("Trainer");
   const [tab, setTab] = useState<Tab>("allenamento");
   const [saveError, setSaveError] = useState(false);
+  const [trainerReaction, setTrainerReaction] = useState<string | null>(null);
 
   const prefersReduced = useReducedMotion();
   const tabVariants = {
@@ -264,6 +334,7 @@ export default function PublicSchedaPage() {
             ? { ...l, id: saved.id } : l
         )
       );
+      setTrainerReaction(TRAINER_REACTIONS[Math.floor(Math.random() * TRAINER_REACTIONS.length)]);
     } catch {
       setLogs(snapshot);
       setSaveError(true);
@@ -553,6 +624,14 @@ export default function PublicSchedaPage() {
           Powered by <span className="accent-text font-semibold">REC Studio</span>
         </p>
       </div>
+
+      {trainerReaction && (
+        <TrainerReactionToast
+          message={trainerReaction}
+          trainerName={trainerName}
+          onDismiss={() => setTrainerReaction(null)}
+        />
+      )}
     </div>
   );
 }
