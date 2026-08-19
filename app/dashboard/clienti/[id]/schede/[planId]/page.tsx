@@ -7,7 +7,26 @@ import WorkoutSpreadsheet from "@/components/WorkoutSpreadsheet";
 import WorkoutLogbook from "@/components/WorkoutLogbook";
 import { showToast } from "@/components/Toast";
 import type { Exercise, SupplementItem } from "@/lib/store";
-import { ArrowLeft, Dumbbell, LayoutGrid, Table2, MessageSquare, Check, Pencil, TrendingUp } from "lucide-react";
+import { ArrowLeft, Dumbbell, LayoutGrid, Table2, MessageSquare, Check, Pencil, TrendingUp, Timer } from "lucide-react";
+
+function estimateSessionMinutes(exercises: Exercise[], planRestSec?: number): number | null {
+  if (!exercises.length) return null;
+  const byDay = new Map<number, Exercise[]>();
+  for (const ex of exercises) {
+    if (!byDay.has(ex.day)) byDay.set(ex.day, []);
+    byDay.get(ex.day)!.push(ex);
+  }
+  const defaultRest = planRestSec ?? 90;
+  const dayDurations = Array.from(byDay.values()).map(exs => {
+    const secs = exs.reduce((tot, ex) => {
+      const sets = ex.sets || 3;
+      const rest = ex.restSeconds ? parseInt(String(ex.restSeconds)) || defaultRest : defaultRest;
+      return tot + sets * 50 + (sets - 1) * rest;
+    }, 300);
+    return Math.round(secs / 60);
+  });
+  return Math.round(dayDurations.reduce((a, b) => a + b, 0) / dayDurations.length);
+}
 
 type ViewMode = "logbook" | "spreadsheet";
 
@@ -164,8 +183,19 @@ export default function WorkoutPlanPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold" style={{ color: "var(--text)" }}>{plan.name}</h1>
-            <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>
-              {plan.daysPerWeek} giorni/sett · {plan.totalWeeks ? `${plan.totalWeeks} settimane` : "durata libera"} · {plan.exercises.length} esercizi
+            <p className="text-xs mt-0.5 flex items-center gap-1.5 flex-wrap" style={{ color: "var(--text-dim)" }}>
+              <span>{plan.daysPerWeek} giorni/sett · {plan.totalWeeks ? `${plan.totalWeeks} settimane` : "durata libera"} · {plan.exercises.length} esercizi</span>
+              {(() => {
+                const mins = estimateSessionMinutes(plan.exercises, plan.restSeconds);
+                if (!mins) return null;
+                return (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md font-medium"
+                    style={{ background: "rgba(255,107,43,0.1)", color: "var(--accent-light)", border: "1px solid rgba(255,107,43,0.18)", fontSize: "10px" }}>
+                    <Timer size={9} />
+                    ~{mins} min/sessione
+                  </span>
+                );
+              })()}
             </p>
           </div>
         </div>
