@@ -8,6 +8,7 @@ import WorkoutLogbook from "@/components/WorkoutLogbook";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
 import { Dumbbell, UtensilsCrossed, ShoppingBag, Loader2, AlertCircle, Copy, Check, Zap, Trophy, Flame, ChevronDown, ChevronUp, Calendar, MessageSquare, Scan, ShieldCheck, Brain, Sparkles, Trash2, Upload } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import TiltCard from "@/components/TiltCard";
 import type { FitnessScanAnalysis } from "@/lib/db";
 import { EASE } from "@/components/motion";
 
@@ -462,8 +463,10 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
   const initials = trainerName.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "PT";
   const cardNum  = shareToken.replace(/-/g, "").toUpperCase().slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
   return (
-    <div className="mb-5 rounded-3xl overflow-hidden relative select-none holo-card"
+    <TiltCard maxTilt={5} className="mb-5 rounded-3xl overflow-hidden relative select-none holo-card"
       style={{ background: "linear-gradient(135deg, rgba(12,4,4,0.98) 0%, rgba(45,8,8,0.92) 55%, rgba(18,6,6,0.98) 100%)", border: "1px solid rgba(201,168,76,0.22)", boxShadow: "0 8px 32px rgba(201,168,76,0.1), inset 0 1px 0 var(--border-subtle)" }}>
+      {/* Gold laser scan on first load — card activation effect */}
+      <div className="scan-activate" />
       {/* Holographic shimmer overlay */}
       <div className="holo-shimmer" />
       <div className="absolute top-0 right-0 w-56 h-56 pointer-events-none rounded-full"
@@ -526,7 +529,7 @@ function ProgramCard({ planName, trainerName, daysPerWeek, totalWeeks, shareToke
         <p className="text-xs mt-3 font-mono" style={{ color: "var(--text-faint)", letterSpacing: "0.16em" }}>{cardNum}</p>
       </div>
       <div className="h-1" style={{ background: "linear-gradient(90deg, var(--accent), rgba(201,168,76,0.15), transparent)" }} />
-    </div>
+    </TiltCard>
   );
 }
 
