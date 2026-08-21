@@ -798,6 +798,55 @@ function MilestoneBanner({ dayOnJourney, trainerName }: { dayOnJourney: number |
   );
 }
 
+// ── Prossimo Traguardo Countdown ─────────────────────────────────────────────
+function NextMilestoneCountdown({ dayOnJourney, trainerName }: {
+  dayOnJourney: number | null; trainerName: string;
+}) {
+  if (dayOnJourney === null) return null;
+  const next = JOURNEY_MILESTONES.find(m => m.days > dayOnJourney);
+  if (!next) return null;
+  const prev = [...JOURNEY_MILESTONES].reverse().find(m => m.days <= dayOnJourney);
+  const from = prev?.days ?? 0;
+  const pct  = Math.min(99, Math.round(((dayOnJourney - from) / (next.days - from)) * 100));
+  const daysLeft = next.days - dayOnJourney;
+
+  const encouragements = [
+    "Ogni sessione che completi ti avvicina. Tienitelo a mente.",
+    "Ci sei quasi — non mollare proprio adesso.",
+    "Il traguardo è più vicino di quanto pensi.",
+    "Stai costruendo qualcosa di reale, un giorno alla volta.",
+  ];
+  const msg = encouragements[next.days % encouragements.length];
+
+  return (
+    <div className="mb-4 rounded-2xl p-4 relative overflow-hidden"
+      style={{ background: "var(--surface-xs)", border: "1px solid rgba(201,168,76,0.22)" }}>
+      <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(201,168,76,0.07), transparent)" }} />
+      <div className="flex items-center gap-2 mb-3">
+        <Trophy size={13} style={{ color: "var(--accent)", flexShrink: 0 }} />
+        <p className="text-xs font-black uppercase tracking-[0.14em]" style={{ color: "var(--text-dim)" }}>
+          Prossimo traguardo
+        </p>
+      </div>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-sm font-black" style={{ color: "var(--text)" }}>{next.label} insieme</p>
+        <span className="text-xs font-bold px-2.5 py-0.5 rounded-full flex-shrink-0"
+          style={{ background: "rgba(201,168,76,0.1)", color: "rgba(201,168,76,0.85)", border: "1px solid rgba(201,168,76,0.22)" }}>
+          {daysLeft === 1 ? "domani!" : `${daysLeft} giorni`}
+        </span>
+      </div>
+      <div className="h-1.5 rounded-full overflow-hidden mb-3" style={{ background: "var(--surface-md)" }}>
+        <div className="h-full rounded-full"
+          style={{ width: `${pct}%`, background: "linear-gradient(90deg,rgba(201,168,76,0.45),rgba(201,168,76,0.95))", transition: "width 1.2s ease" }} />
+      </div>
+      <p className="text-xs" style={{ color: "var(--text-faint)", fontStyle: "italic" }}>
+        {pct}% del percorso &mdash; &ldquo;{msg}&rdquo; &mdash; {trainerName}
+      </p>
+    </div>
+  );
+}
+
 function TrainerVoiceCard({ trainerName, daysSinceLastLog, streak, totalLogs }: {
   trainerName: string; daysSinceLastLog: number | null; streak: number; totalLogs: number;
 }) {
@@ -2817,6 +2866,9 @@ export default function ClientPortalPage() {
 
         {/* ── Banner milestone percorso ─────────────────────────────────────── */}
         <MilestoneBanner dayOnJourney={dayOnJourney} trainerName={trainerName} />
+
+        {/* ── Countdown prossimo traguardo ──────────────────────────────────── */}
+        <NextMilestoneCountdown dayOnJourney={dayOnJourney} trainerName={trainerName} />
 
         {/* ── Storia dell'Atleta ────────────────────────────────────────────── */}
         <StoryChapterCard dayOnJourney={dayOnJourney} trainerName={trainerName} totalLogs={totalLogs} />
