@@ -339,6 +339,64 @@ export default function WorkoutPlanPage() {
         );
       })()}
 
+      {/* ── Suggerimento Carico Prossima Sessione ─── */}
+      {(() => {
+        const suggestions = plan.exercises
+          .map(ex => {
+            const logs = plan.logs
+              .filter(l => l.exerciseId === ex.id && l.weight != null && (l.weight as number) > 0)
+              .sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime())
+              .slice(0, 3);
+            if (logs.length < 3) return null;
+            if (!logs.every(l => l.weight === logs[0].weight)) return null;
+            const currentW = logs[0].weight as number;
+            const step = currentW >= 80 ? 5 : 2.5;
+            return { ex, currentW, suggestedW: Math.round((currentW + step) * 10) / 10, step };
+          })
+          .filter((x): x is NonNullable<typeof x> => x !== null);
+        if (!suggestions.length) return null;
+        return (
+          <div className="mb-5 rounded-2xl overflow-hidden fade-in"
+            style={{ border: "1px solid rgba(34,197,94,0.2)", background: "rgba(34,197,94,0.03)" }}>
+            <div className="flex items-center gap-2 px-4 py-3"
+              style={{ borderBottom: "1px solid rgba(34,197,94,0.1)" }}>
+              <TrendingUp size={13} style={{ color: "#22c55e" }} />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#22c55e" }}>
+                Suggerimento Carico
+              </span>
+              <span className="ml-1 text-xs" style={{ color: "rgba(34,197,94,0.55)" }}>
+                — prossima sessione
+              </span>
+              <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium"
+                style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>
+                {suggestions.length} {suggestions.length === 1 ? "esercizio" : "esercizi"}
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <div className="min-w-[300px]">
+                {suggestions.map(({ ex, currentW, suggestedW, step }, i) => (
+                  <div key={ex.id} className="flex items-center gap-3 px-4 py-2.5"
+                    style={{ borderBottom: i < suggestions.length - 1 ? "1px solid rgba(34,197,94,0.06)" : "none" }}>
+                    <span className="text-xs flex-1 truncate" style={{ color: "var(--text)" }}>{ex.name}</span>
+                    <span className="text-xs flex-shrink-0" style={{ color: "var(--text-dim)" }}>{currentW}kg</span>
+                    <span className="text-xs flex-shrink-0" style={{ color: "var(--text-dim)" }}>→</span>
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full flex-shrink-0"
+                      style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.2)" }}>
+                      {suggestedW}kg <span style={{ opacity: 0.6, fontSize: "9px" }}>+{step}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="px-4 py-2.5" style={{ borderTop: "1px solid rgba(34,197,94,0.06)" }}>
+              <p className="text-xs" style={{ color: "rgba(34,197,94,0.5)" }}>
+                3 sessioni consecutive allo stesso carico — il momento ideale per progredire
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── Logbook view (Google Sheets style) ── */}
       {viewMode === "logbook" && (
         <WorkoutLogbook
