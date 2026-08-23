@@ -248,6 +248,7 @@ interface DailyPriority {
   reason: string;
   urgency: number;
   icon: "risk" | "expiry" | "progression" | "measurement" | "streak";
+  details?: string[];
 }
 
 function getDailyPriorities(clients: Client[]): DailyPriority[] {
@@ -308,15 +309,42 @@ function getDailyPriorities(clients: Client[]): DailyPriority[] {
       }
     }
 
-    const progReady = getProgressionReady(c);
-    if (progReady >= 3) {
-      priorities.push({
-        client: c,
-        reason: `${progReady} esercizi pronti per +carico`,
-        urgency: 60 + progReady,
-        icon: "progression",
-      });
-      continue;
+    if (activePlan) {
+      const progDetails: string[] = [];
+      const exerciseIds2 = [...new Set(activePlan.exercises.map(e => e.id))];
+      for (const exId of exerciseIds2) {
+        const logs = (activePlan.logs ?? [])
+          .filter(l => l.exerciseId === exId && l.weight != null && l.weight > 0)
+          .sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime())
+          .slice(0, 3);
+        if (logs.length >= 3 && logs.every(l => l.weight === logs[0].weight)) {
+          const ex = activePlan.exercises.find(e => e.id === exId);
+          const cur = logs[0].weight!;
+          const sug = Math.round(cur * 1.025 * 2) / 2;
+          if (ex) progDetails.push(`${ex.name}: ${cur}kg → ${sug}kg`);
+        }
+      }
+      if (progDetails.length >= 3) {
+        priorities.push({
+          client: c,
+          reason: `${progDetails.length} esercizi pronti per +carico`,
+          urgency: 60 + progDetails.length,
+          icon: "progression",
+          details: progDetails.slice(0, 3),
+        });
+        continue;
+      }
+    } else {
+      const progReady = getProgressionReady(c);
+      if (progReady >= 3) {
+        priorities.push({
+          client: c,
+          reason: `${progReady} esercizi pronti per +carico`,
+          urgency: 60 + progReady,
+          icon: "progression",
+        });
+        continue;
+      }
     }
 
     const lastMeasurement = c.measurements?.length
@@ -664,24 +692,36 @@ function ClientiPageInner() {
                 return (
                   <Link key={p.client.id}
                     href={`/dashboard/clienti/${p.client.id}`}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:brightness-125"
+                    className="flex flex-col gap-1.5 px-3 py-2.5 rounded-xl transition-all hover:brightness-125"
                     style={{ background: `${color}08`, border: `1px solid ${color}20` }}>
-                    <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ background: `${color}15` }}>
-                      <Icon size={12} style={{ color }} />
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ background: `${color}15` }}>
+                        <Icon size={12} style={{ color }} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>
+                          {p.client.name}
+                        </p>
+                        <p className="text-xs truncate" style={{ color }}>
+                          {p.reason}
+                        </p>
+                      </div>
+                      <span className="text-xs font-bold flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
+                        style={{ background: `${color}18`, color, fontSize: "9px" }}>
+                        {i + 1}
+                      </span>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>
-                        {p.client.name}
-                      </p>
-                      <p className="text-xs truncate" style={{ color }}>
-                        {p.reason}
-                      </p>
-                    </div>
-                    <span className="text-xs font-bold flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
-                      style={{ background: `${color}18`, color, fontSize: "9px" }}>
-                      {i + 1}
-                    </span>
+                    {p.details && p.details.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pl-9">
+                        {p.details.map((d, di) => (
+                          <span key={di} className="font-mono rounded px-1.5 py-0.5"
+                            style={{ background: `${color}12`, color, fontSize: "9px", letterSpacing: "0.02em" }}>
+                            {d}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </Link>
                 );
               })}
