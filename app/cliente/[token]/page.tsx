@@ -2773,12 +2773,27 @@ export default function ClientPortalPage() {
       <div className="sticky top-0 z-40 border-b glass-dark" style={{ borderColor: "rgba(201,168,76,0.14)" }}>
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg accent-btn flex items-center justify-center flex-shrink-0">
-              <Dumbbell size={14} />
+            {/* Monogramma Trainer — brand identity nella sticky bar */}
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 select-none"
+              style={{
+                background: "linear-gradient(135deg,rgba(201,168,76,0.22) 0%,rgba(201,168,76,0.07) 100%)",
+                border: "1.5px solid rgba(201,168,76,0.42)",
+                boxShadow: "0 0 12px rgba(201,168,76,0.14)",
+                fontFamily: "Georgia,'Times New Roman',serif",
+                fontWeight: 900,
+                fontSize: "0.72rem",
+                color: "var(--accent)",
+                letterSpacing: "0.04em",
+                fontStyle: "italic",
+              }}>
+              {trainerInitials}
             </div>
             <div className="min-w-0">
               <p className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>{plan.name}</p>
-              <p className="text-xs" style={{ color: "var(--text-dim)" }}>Il tuo piano personale</p>
+              <p className="text-xs" style={{ color: "var(--text-dim)" }}>
+                Firmato da{" "}
+                <span className="font-semibold" style={{ color: "rgba(201,168,76,0.7)" }}>{trainerName}</span>
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
