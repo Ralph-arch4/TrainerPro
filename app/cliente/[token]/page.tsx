@@ -1009,6 +1009,96 @@ function MoodCheckIn({ trainerName }: { trainerName: string }) {
   );
 }
 
+// ── Intenzione della Settimana ───────────────────────────────────────────────
+const INTENTION_PROMPTS = [
+  "Completerò tutte le sessioni previste",
+  "Batterò almeno un mio record",
+  "Mi allenerò anche se sono stanco",
+  "Curerò la tecnica più del carico",
+  "Seguirò il piano senza modifiche",
+  "Darò il 100% in ogni serie",
+];
+
+function WeeklyIntentionCard({ shareToken }: { shareToken: string }) {
+  const now = new Date();
+  const weekKey = `tp_intention_${shareToken}_${now.getFullYear()}_${Math.floor(now.getTime() / 604800000)}`;
+  const [intention, setIntention] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem(weekKey) ?? "";
+  });
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(intention);
+
+  function save() {
+    const val = draft.trim().slice(0, 120);
+    localStorage.setItem(weekKey, val);
+    setIntention(val);
+    setEditing(false);
+  }
+
+  if (intention && !editing) {
+    return (
+      <div className="mb-4 rounded-2xl p-4 relative overflow-hidden"
+        style={{ background: "linear-gradient(135deg, rgba(201,168,76,0.07), rgba(8,8,8,0.6))", border: "1px solid rgba(201,168,76,0.28)" }}>
+        <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(circle, rgba(201,168,76,0.09), transparent)" }} />
+        <p className="text-xs font-black uppercase tracking-[0.14em] mb-2" style={{ color: "rgba(201,168,76,0.65)" }}>
+          La tua intenzione di questa settimana
+        </p>
+        <p className="text-sm font-bold leading-snug mb-3" style={{ color: "var(--text)", fontStyle: "italic" }}>
+          &ldquo;{intention}&rdquo;
+        </p>
+        <button onClick={() => { setDraft(intention); setEditing(true); }}
+          className="text-xs font-semibold underline" style={{ color: "var(--text-faint)" }}>
+          Modifica
+        </button>
+      </div>
+    );
+  }
+
+  if (editing) {
+    return (
+      <div className="mb-4 rounded-2xl p-4" style={{ border: "1px solid rgba(201,168,76,0.35)", background: "var(--surface-xs)" }}>
+        <p className="text-xs font-black uppercase tracking-[0.14em] mb-3" style={{ color: "rgba(201,168,76,0.65)" }}>
+          Modifica la tua intenzione
+        </p>
+        <textarea value={draft} onChange={e => setDraft(e.target.value)} maxLength={120} rows={2}
+          className="w-full rounded-xl p-3 text-sm resize-none mb-3"
+          style={{ background: "var(--surface-sm)", border: "1px solid rgba(201,168,76,0.25)", color: "var(--text)", outline: "none" }} />
+        <div className="flex gap-2">
+          <button onClick={save} className="flex-1 py-2 rounded-xl text-xs font-bold accent-btn">Salva</button>
+          <button onClick={() => setEditing(false)} className="px-4 py-2 rounded-xl text-xs font-bold outline-btn">Annulla</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-4 rounded-2xl p-4" style={{ border: "1px solid rgba(201,168,76,0.2)", background: "var(--surface-xs)" }}>
+      <p className="text-xs font-black uppercase tracking-[0.14em] mb-1" style={{ color: "rgba(201,168,76,0.6)" }}>
+        Intenzione della settimana
+      </p>
+      <p className="text-xs mb-3" style={{ color: "var(--text-dim)" }}>
+        Scrivi un impegno personale per questa settimana di allenamento
+      </p>
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {INTENTION_PROMPTS.map((p) => (
+          <button key={p} onClick={() => { setDraft(p); setEditing(true); }}
+            className="text-xs px-2.5 py-1.5 rounded-xl font-medium transition-all active:scale-95"
+            style={{ background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.18)", color: "var(--text-muted)" }}>
+            {p}
+          </button>
+        ))}
+      </div>
+      <button onClick={() => { setDraft(""); setEditing(true); }}
+        className="w-full py-2 rounded-xl text-xs font-bold transition-all"
+        style={{ background: "rgba(201,168,76,0.06)", border: "1px dashed rgba(201,168,76,0.28)", color: "rgba(201,168,76,0.6)" }}>
+        + Scrivi la tua intenzione
+      </button>
+    </div>
+  );
+}
+
 // ── Radar Atletico ───────────────────────────────────────────────────────────
 const RADAR_AXES = [
   { label: "Costanza",  color: "var(--accent)" },
@@ -3295,6 +3385,7 @@ export default function ClientPortalPage() {
               </div>
             )}
             <MoodCheckIn trainerName={trainerName} />
+            <WeeklyIntentionCard shareToken={plan.share_token} />
             <div className="mb-4 p-3 rounded-xl text-sm flex items-start gap-2"
               style={{ background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.14)", color: "var(--text-muted)" }}>
               <span className="text-base leading-none mt-0.5">💡</span>
