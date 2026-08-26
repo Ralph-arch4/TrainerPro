@@ -238,6 +238,48 @@ export default function DashboardPage() {
     return results.slice(0, 4);
   }, [clients]);
 
+  // Traguardi in Arrivo: exercises where linear progression puts client at a round-number milestone in 1-4 weeks
+  const prForecastAlerts = useMemo(() => {
+    const results: { clientName: string; clientId: string; exerciseName: string; currentMax: number; milestone: number; weeksOut: number }[] = [];
+    for (const client of clients.filter(c => c.status === "attivo")) {
+      for (const plan of client.workoutPlans) {
+        const byEx: Record<string, typeof plan.logs> = {};
+        for (const log of plan.logs) {
+          if (!byEx[log.exerciseId]) byEx[log.exerciseId] = [];
+          byEx[log.exerciseId].push(log);
+        }
+        for (const [exId, logs] of Object.entries(byEx)) {
+          const pts = logs.filter(l => l.weight != null && l.weight > 0)
+            .sort((a, b) => a.weekNumber - b.weekNumber);
+          if (pts.length < 3) continue;
+          const n = pts.length;
+          const sumX = pts.reduce((s, l) => s + l.weekNumber, 0);
+          const sumY = pts.reduce((s, l) => s + l.weight!, 0);
+          const sumXY = pts.reduce((s, l) => s + l.weekNumber * l.weight!, 0);
+          const sumX2 = pts.reduce((s, l) => s + l.weekNumber * l.weekNumber, 0);
+          const denom = n * sumX2 - sumX * sumX;
+          if (Math.abs(denom) < 1e-9) continue;
+          const slope = (n * sumXY - sumX * sumY) / denom;
+          if (slope < 0.3) continue;
+          const currentMax = Math.max(...pts.map(l => l.weight!));
+          const MILESTONES = [20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 180, 200];
+          const milestone = MILESTONES.find(m => m > currentMax);
+          if (!milestone) continue;
+          const weeksToTarget = (milestone - currentMax) / slope;
+          if (weeksToTarget < 0.5 || weeksToTarget > 4) continue;
+          const ex = plan.exercises.find(e => e.id === exId);
+          if (!ex) continue;
+          results.push({ clientName: client.name, clientId: client.id, exerciseName: ex.name, currentMax, milestone, weeksOut: Math.ceil(weeksToTarget) });
+        }
+      }
+    }
+    const seen = new Set<string>();
+    return results
+      .filter(r => { const k = `${r.clientId}-${r.exerciseName}`; if (seen.has(k)) return false; seen.add(k); return true; })
+      .sort((a, b) => a.weeksOut - b.weeksOut)
+      .slice(0, 5);
+  }, [clients]);
+
   // Radar Equilibrio Muscolare: gruppi primari non allenati da 14+ giorni nonostante siano in scheda
   const muscleGapAlerts = useMemo(() => {
     const PRIMARY_GROUPS = ["Petto", "Schiena", "Spalle", "Quadricipiti", "Femorali", "Glutei"];
@@ -1283,6 +1325,44 @@ export default function DashboardPage() {
                 <div className="text-right flex-shrink-0">
                   <p className="text-xs font-bold" style={{ color: "#fbbf24" }}>{s.weight}kg → {s.suggested}kg</p>
                   <p className="text-xs" style={{ color: "rgba(251,191,36,0.6)" }}>3 sett. stabile</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Radar Traguardi in Arrivo ────────────────────────────────────── */}
+      {prForecastAlerts.length > 0 && (
+        <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(74,222,128,0.04)", border: "1px solid rgba(74,222,128,0.18)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <Target size={14} style={{ color: "#4ade80" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Traguardi in arrivo
+            </p>
+            <span className="text-xs px-2 py-0.5 rounded-full ml-1 font-bold"
+              style={{ background: "rgba(74,222,128,0.15)", color: "#4ade80" }}>
+              {prForecastAlerts.length}
+            </span>
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>prossime 1–4 settimane</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {prForecastAlerts.map((s, i) => (
+              <Link key={i} href={`/dashboard/clienti/${s.clientId}`}
+                className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                  style={{ background: "rgba(74,222,128,0.12)", color: "#4ade80" }}>
+                  {s.clientName.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{s.clientName}</p>
+                  <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{s.exerciseName}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xs font-bold" style={{ color: "#4ade80" }}>{s.currentMax}kg → {s.milestone}kg</p>
+                  <p className="text-xs" style={{ color: "rgba(74,222,128,0.6)" }}>
+                    {s.weeksOut === 1 ? "entro 1 settimana" : `~${s.weeksOut} settimane`}
+                  </p>
                 </div>
               </Link>
             ))}
