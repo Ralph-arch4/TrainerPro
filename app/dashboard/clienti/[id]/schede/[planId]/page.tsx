@@ -281,6 +281,60 @@ export default function WorkoutPlanPage() {
         )}
       </div>
 
+      {/* ── Piano DNA ───────────────────────────────────────────────────────── */}
+      {plan.exercises.length > 0 && (() => {
+        const GROUP_COLORS: Record<string, string> = {
+          "Petto": "#ef4444", "Schiena": "#3b82f6", "Spalle": "#f59e0b",
+          "Bicipiti": "#8b5cf6", "Tricipiti": "#ec4899", "Gambe": "#22c55e",
+          "Glutei": "#14b8a6", "Core": "#f97316", "Addominali": "#f97316",
+          "Full Body": "#6366f1", "Cardio": "#a3e635",
+        };
+        const counts = new Map<string, number>();
+        for (const ex of plan.exercises) {
+          const g = ex.muscleGroup ?? "Altro";
+          counts.set(g, (counts.get(g) ?? 0) + 1);
+        }
+        const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+        const max = sorted[0]?.[1] ?? 1;
+        const total = plan.exercises.length;
+        const dominant = sorted[0]?.[0] ?? "";
+        const dominantPct = Math.round(((sorted[0]?.[1] ?? 0) / total) * 100);
+        const isBalanced = sorted.length >= 4 && dominantPct <= 40;
+        return (
+          <div className="mb-5 rounded-2xl overflow-hidden"
+            style={{ border: "1px solid rgba(201,168,76,0.18)", background: "rgba(201,168,76,0.03)" }}>
+            <div className="flex items-center justify-between px-4 py-3"
+              style={{ borderBottom: "1px solid rgba(201,168,76,0.1)" }}>
+              <div className="flex items-center gap-2">
+                <span style={{ fontSize: "0.7rem", color: "rgba(201,168,76,0.65)", fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>Piano DNA</span>
+                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.1)", color: "rgba(201,168,76,0.55)", fontSize: "0.6rem", border: "1px solid rgba(201,168,76,0.15)" }}>
+                  {sorted.length} gruppi · {total} esercizi
+                </span>
+              </div>
+              <span className="text-xs font-bold" style={{ color: isBalanced ? "#22c55e" : "#f59e0b" }}>
+                {isBalanced ? "Piano bilanciato" : `Focus: ${dominant} (${dominantPct}%)`}
+              </span>
+            </div>
+            <div className="px-4 py-3 space-y-2">
+              {sorted.map(([group, count]) => {
+                const color = GROUP_COLORS[group] ?? "rgba(201,168,76,0.7)";
+                const pct = Math.round((count / max) * 100);
+                return (
+                  <div key={group} className="flex items-center gap-3">
+                    <span className="text-xs font-medium w-20 flex-shrink-0 text-right" style={{ color: "var(--text-muted)" }}>{group}</span>
+                    <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--surface-sm)" }}>
+                      <div className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${color}99, ${color})`, boxShadow: `0 0 6px ${color}44` }} />
+                    </div>
+                    <span className="text-xs font-black w-5 text-center flex-shrink-0" style={{ color }}>{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── Progressi Piano ─────────────────────────────────────────────────── */}
       {(() => {
         const progress = plan.exercises
