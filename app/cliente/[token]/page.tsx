@@ -953,6 +953,79 @@ function AthleteStatusBand({ dayOnJourney, streak }: {
   );
 }
 
+// ── Allenamento di Oggi ──────────────────────────────────────────────────────
+const DAY_NAMES_FULL = ["Domenica","Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato"];
+const DAY_NAMES_SHORT = ["Dom","Lun","Mar","Mer","Gio","Ven","Sab"];
+
+function TodayWorkoutCard({ dayLabels, daysPerWeek, trainerName }: {
+  dayLabels: Record<number, string> | null; daysPerWeek: number; trainerName: string;
+}) {
+  if (!dayLabels || Object.keys(dayLabels).length === 0) return null;
+
+  const now = new Date();
+  const todayJs = now.getDay(); // 0=Dom..6=Sab
+  const mondayAligned = ((todayJs + 6) % 7); // Lun=0..Dom=6
+  const todaySlot = mondayAligned < daysPerWeek ? mondayAligned : null;
+  const todayLabel = todaySlot !== null ? (dayLabels[todaySlot] ?? null) : null;
+  const isRestDay = todaySlot === null;
+
+  const firstSlotDay = [1,2,3,4,5,6,0].findIndex((_, i) => i === 0); // always Lun=slot 0
+  const slotDayNames = Array.from({ length: daysPerWeek }, (_, i) => DAY_NAMES_SHORT[(1 + i) % 7]);
+
+  const accent = "rgba(201,168,76,0.9)";
+  const restColor = "#38bdf8";
+  const mainColor = isRestDay ? restColor : accent;
+
+  return (
+    <div className="mb-4 rounded-2xl overflow-hidden relative"
+      style={{ border: `1px solid ${isRestDay ? "rgba(56,189,248,0.22)" : "rgba(201,168,76,0.28)"}`, background: isRestDay ? "rgba(56,189,248,0.04)" : "rgba(201,168,76,0.05)" }}>
+      <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, ${mainColor}55, transparent)` }} />
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs font-black uppercase tracking-[0.14em]" style={{ color: `${mainColor}` }}>
+            {isRestDay ? "Recupero attivo" : "Il tuo allenamento oggi"}
+          </p>
+          <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+            style={{ background: `${mainColor}14`, color: mainColor, border: `1px solid ${mainColor}28` }}>
+            {DAY_NAMES_FULL[todayJs]}
+          </span>
+        </div>
+
+        {isRestDay ? (
+          <p className="text-sm leading-relaxed mb-3"
+            style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+            &ldquo;Oggi è il tuo giorno di recupero — non è ozio, è parte del piano. Dai al muscolo il tempo di crescere.&rdquo;
+          </p>
+        ) : (
+          <p className="text-xl font-black mb-3" style={{ color: "var(--text)" }}>
+            {todayLabel ?? `Sessione ${(todaySlot ?? 0) + 1}`}
+          </p>
+        )}
+
+        <div className="flex gap-1.5">
+          {Array.from({ length: daysPerWeek }, (_, i) => (
+            <div key={i} className="flex-1 rounded-lg py-1.5 px-1 text-center"
+              style={{
+                background: i === todaySlot ? `${mainColor}18` : "var(--surface-sm)",
+                border: `1px solid ${i === todaySlot ? `${mainColor}45` : "var(--border)"}`,
+              }}>
+              <p className="text-xs font-bold truncate" style={{ color: i === todaySlot ? mainColor : "var(--text-faint)" }}>
+                {slotDayNames[i]}
+              </p>
+              {dayLabels[i] && (
+                <p className="text-xs truncate mt-0.5" style={{ color: i === todaySlot ? mainColor : "var(--text-dim)", fontSize: "0.6rem" }}>
+                  {dayLabels[i].split(" ").slice(0, 2).join(" ")}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="text-xs mt-3 text-right font-semibold" style={{ color: "var(--text-faint)" }}>— {trainerName}</p>
+      </div>
+    </div>
+  );
+}
+
 // ── Pre-Session Mood Check-In ────────────────────────────────────────────────
 const MOODS = [
   { id: "energy", emoji: "⚡", label: "Carico",  color: "#22c55e",      msg: "Ottimo! Canalizziamo questa energia — oggi spingi sui carichi e non aver paura di osare." },
@@ -2916,6 +2989,13 @@ export default function ClientPortalPage() {
 
         {/* ── Stato Atleta ─────────────────────────────────────────────────── */}
         <AthleteStatusBand dayOnJourney={dayOnJourney} streak={streak} />
+
+        {/* ── Allenamento di Oggi ───────────────────────────────────────────── */}
+        <TodayWorkoutCard
+          dayLabels={plan.day_labels}
+          daysPerWeek={plan.days_per_week}
+          trainerName={trainerName}
+        />
 
         {/* ── Colore Personale del Percorso ────────────────────────────────── */}
         <ClientColorStripe shareToken={plan.share_token} level={level} levelName={levelName} />
