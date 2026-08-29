@@ -132,6 +132,28 @@ function calcVolumeLoad(exercises: Exercise[], logs: ExerciseLog[], week: number
   return Math.round(total);
 }
 
+// ── Post-session coaching brief ───────────────────────────────────────────────
+function buildSessionBrief(exs: Exercise[], allLogs: ExerciseLog[], week: number): string {
+  const today = new Date().toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" });
+  const lines: string[] = [`Sessione del ${today}:`];
+  let hasData = false;
+  for (const ex of exs) {
+    const cur = allLogs.find(l => l.exerciseId === ex.id && l.weekNumber === week);
+    if (!cur?.weight) continue;
+    hasData = true;
+    const prev = week > 1 ? allLogs.find(l => l.exerciseId === ex.id && l.weekNumber === week - 1) : undefined;
+    const prevW = allLogs.filter(l => l.exerciseId === ex.id && l.weight != null && l.weekNumber !== week).map(l => l.weight!);
+    const isPR = prevW.length > 0 && cur.weight > Math.max(...prevW);
+    const trend = !prev?.weight ? "•" : cur.weight > prev.weight ? "↑" : cur.weight < prev.weight ? "↓" : "=";
+    lines.push(`${trend} ${ex.name}: ${cur.weight}kg${isPR ? " (record)" : ""}`);
+  }
+  if (!hasData) return "";
+  const vol = calcVolumeLoad(exs, allLogs, week);
+  if (vol > 0) lines.push(`\nTonnellaggio: ${vol.toLocaleString("it-IT")} kg`);
+  lines.push("— TrainerPro");
+  return lines.join("\n");
+}
+
 // ── Superset colors ───────────────────────────────────────────────────────────
 const SS_COLORS: Record<string, string> = {
   A: "#a78bfa", B: "#38bdf8", C: "#34d399",
@@ -530,6 +552,7 @@ export default function WorkoutLogbook({
   // ── Rest timer (timestamp-based for background accuracy) ─────────────────
   const [restTimer,    setRestTimer]    = useState<RestTimer | null>(null);
   const [timerExpanded, setTimerExpanded] = useState(false);
+  const [briefCopied, setBriefCopied] = useState(false);
   const tickRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wakeLock  = useRef<{ release: () => Promise<void> } | null>(null);
 
@@ -825,6 +848,19 @@ export default function WorkoutLogbook({
                 )}
               </div>
             )}
+            {allDone && (() => {
+              const brief = buildSessionBrief(dayExercises, logs, activeWeek);
+              if (!brief) return null;
+              return (
+                <button
+                  onClick={() => navigator.clipboard.writeText(brief).then(() => { setBriefCopied(true); setTimeout(() => setBriefCopied(false), 2500); })}
+                  className="ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl transition-all hover:opacity-80"
+                  style={{ background: briefCopied ? "rgba(34,197,94,0.12)" : "rgba(201,168,76,0.08)", color: briefCopied ? "#22c55e" : "var(--accent-light)", border: `1px solid ${briefCopied ? "rgba(34,197,94,0.25)" : "rgba(201,168,76,0.18)"}` }}>
+                  {briefCopied ? <Check size={11} /> : <Copy size={11} />}
+                  {briefCopied ? "Copiato!" : "Copia riepilogo"}
+                </button>
+              );
+            })()}
           </div>
         );
       })()}
