@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Reveal from "@/components/motion/Reveal";
 import { useAppStore } from "@/lib/store";
@@ -832,6 +832,37 @@ export default function DashboardPage() {
     return { rows, todayIndex };
   }, [clients]);
 
+  // Weekly goals: trainer personal accountability, auto-resets each Monday, stored in localStorage
+  const weekKey = useMemo(() => {
+    const d = new Date();
+    const jan1 = new Date(d.getFullYear(), 0, 1);
+    const week = Math.ceil(((d.getTime() - jan1.getTime()) / 86400000 + jan1.getDay() + 1) / 7);
+    return `tp-weekly-goals-${d.getFullYear()}-W${week}`;
+  }, []);
+  const [weeklyGoals, setWeeklyGoals] = useState<{ id: string; text: string; done: boolean }[]>([]);
+  const [goalInput, setGoalInput] = useState("");
+  const [goalsLoaded, setGoalsLoaded] = useState(false);
+  useEffect(() => {
+    try { const s = localStorage.getItem(weekKey); if (s) setWeeklyGoals(JSON.parse(s)); } catch {}
+    setGoalsLoaded(true);
+  }, [weekKey]);
+  const saveGoals = useCallback((goals: { id: string; text: string; done: boolean }[]) => {
+    setWeeklyGoals(goals);
+    try { localStorage.setItem(weekKey, JSON.stringify(goals)); } catch {}
+  }, [weekKey]);
+  const addGoal = useCallback(() => {
+    const text = goalInput.trim();
+    if (!text || weeklyGoals.length >= 3) return;
+    saveGoals([...weeklyGoals, { id: Date.now().toString(), text, done: false }]);
+    setGoalInput("");
+  }, [goalInput, weeklyGoals, saveGoals]);
+  const toggleGoal = useCallback((id: string) =>
+    saveGoals(weeklyGoals.map(g => g.id === id ? { ...g, done: !g.done } : g)),
+    [weeklyGoals, saveGoals]);
+  const removeGoal = useCallback((id: string) =>
+    saveGoals(weeklyGoals.filter(g => g.id !== id)),
+    [weeklyGoals, saveGoals]);
+
   // Smart onboarding: check what's actually done
   const hasClients     = clients.length > 0;
   const hasScheda      = clients.some((c) => c.workoutPlans.length > 0);
@@ -1019,6 +1050,69 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── Obiettivi della Settimana ───────────────────────────────────── */}
+      {goalsLoaded && (
+        <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(99,102,241,0.05)", border: "1px solid rgba(99,102,241,0.22)" }}>
+          <div className="flex items-center gap-2 mb-3">
+            <Target size={14} style={{ color: "#818cf8" }} />
+            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+              Obiettivi della Settimana
+            </p>
+            {weeklyGoals.length > 0 && (
+              <span className="text-xs px-2 py-0.5 rounded-full font-bold ml-1"
+                style={{ background: "rgba(99,102,241,0.15)", color: "#818cf8" }}>
+                {weeklyGoals.filter(g => g.done).length}/{weeklyGoals.length}
+              </span>
+            )}
+            <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>si resettano ogni lunedì</span>
+          </div>
+          <div className="space-y-1.5 mb-2.5">
+            {weeklyGoals.map(goal => (
+              <div key={goal.id} className="flex items-center gap-2.5 p-2.5 rounded-xl transition-all"
+                style={{ background: goal.done ? "rgba(99,102,241,0.08)" : "rgba(99,102,241,0.04)", borderLeft: `2px solid ${goal.done ? "rgba(129,140,248,0.6)" : "rgba(99,102,241,0.2)"}` }}>
+                <button onClick={() => toggleGoal(goal.id)} className="flex-shrink-0 transition-all hover:scale-110">
+                  {goal.done
+                    ? <CheckCircle2 size={16} style={{ color: "#818cf8" }} />
+                    : <Circle size={16} style={{ color: "rgba(129,140,248,0.4)" }} />}
+                </button>
+                <span className="flex-1 text-xs font-medium"
+                  style={{ color: goal.done ? "var(--text-muted)" : "var(--text)", textDecoration: goal.done ? "line-through" : "none" }}>
+                  {goal.text}
+                </span>
+                <button onClick={() => removeGoal(goal.id)}
+                  className="text-lg leading-none flex-shrink-0 opacity-25 hover:opacity-60 transition-opacity"
+                  style={{ color: "var(--text-muted)" }}>
+                  ×
+                </button>
+              </div>
+            ))}
+            {weeklyGoals.length === 0 && (
+              <p className="text-xs italic" style={{ color: "var(--text-dim)" }}>
+                Nessun obiettivo impostato — cosa vuoi realizzare questa settimana?
+              </p>
+            )}
+          </div>
+          {weeklyGoals.length < 3 && (
+            <div className="flex gap-2">
+              <input
+                value={goalInput}
+                onChange={e => setGoalInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && addGoal()}
+                placeholder={weeklyGoals.length === 0 ? "Es. Contattare i clienti inattivi..." : "Aggiungi obiettivo..."}
+                className="flex-1 text-xs px-3 py-2 rounded-lg outline-none"
+                style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)", color: "var(--text)" }}
+              />
+              <button onClick={addGoal} disabled={!goalInput.trim()}
+                className="px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 transition-all hover:opacity-80 disabled:opacity-30"
+                style={{ background: "rgba(99,102,241,0.18)", color: "#818cf8" }}>
+                <Plus size={12} />
+                Aggiungi
+              </button>
+            </div>
+          )}
         </div>
       )}
 
