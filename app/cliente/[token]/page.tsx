@@ -2538,6 +2538,82 @@ function DailyEnvelopeCard({ trainerName, shareToken }: { trainerName: string; s
   );
 }
 
+// ── Profilo Muscolare Radar ──────────────────────────────────────────────────
+function MuscleRadarChart({ exercises, logs }: { exercises: Exercise[]; logs: ExerciseLog[] }) {
+  const AXES = ["Petto", "Schiena", "Gambe", "Braccia", "Spalle", "Core"];
+  const MUSCLE_MAP: Record<string, string> = {
+    petto: "Petto", chest: "Petto",
+    schiena: "Schiena", back: "Schiena", dorso: "Schiena", dorsali: "Schiena",
+    gambe: "Gambe", quadricipiti: "Gambe", femorali: "Gambe", glutei: "Gambe",
+    bicipiti: "Braccia", tricipiti: "Braccia", braccia: "Braccia",
+    spalle: "Spalle", deltoidi: "Spalle",
+    core: "Core", addome: "Core", addominali: "Core", lombari: "Core",
+  };
+  const volumes: Record<string, number> = Object.fromEntries(AXES.map(k => [k, 0]));
+  exercises.forEach(ex => {
+    const axis = MUSCLE_MAP[(ex.muscleGroup ?? "").toLowerCase()];
+    if (!axis) return;
+    logs.filter(l => l.exerciseId === ex.id).forEach(log => {
+      const w = log.weight ?? 0;
+      if (w === 0) return;
+      let reps = ex.sets * 10;
+      try {
+        const sets = JSON.parse(log.reps ?? "");
+        if (Array.isArray(sets) && sets[0] && "r" in sets[0])
+          reps = sets.reduce((s: number, r: { r: string }) => s + (parseInt(r.r) || 10), 0);
+      } catch {}
+      volumes[axis] += w * reps;
+    });
+  });
+  const maxVol = Math.max(1, ...Object.values(volumes));
+  const CX = 90; const CY = 88; const R = 60;
+  const n = AXES.length;
+  function pt(i: number, t: number) {
+    const a = ((i * 360) / n - 90) * (Math.PI / 180);
+    return { x: CX + Math.cos(a) * R * t, y: CY + Math.sin(a) * R * t };
+  }
+  const dataPoints = AXES.map((ax, i) => pt(i, Math.max(0.06, Math.sqrt(volumes[ax] / maxVol))));
+  const polygon = dataPoints.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const hasData = Object.values(volumes).some(v => v > 0);
+  return (
+    <div className="rounded-2xl p-4" style={{ border: "1px solid rgba(201,168,76,0.18)", background: "var(--surface-xs)" }}>
+      <div className="flex items-center justify-between mb-1">
+        <p className="text-sm font-bold" style={{ color: "var(--text)" }}>Profilo Muscolare</p>
+        <span className="text-xs" style={{ color: "var(--text-dim)" }}>volume allenato</span>
+      </div>
+      {!hasData ? (
+        <p className="text-xs text-center py-6" style={{ color: "var(--text-dim)" }}>Allenati per vedere il tuo profilo muscolare.</p>
+      ) : (
+        <div className="flex justify-center">
+          <svg width="180" height="180" viewBox="0 0 180 180" aria-hidden="true">
+            {[0.33, 0.67, 1].map(t => {
+              const pts = AXES.map((_, i) => pt(i, t)).map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+              return <polygon key={t} points={pts} fill="none" stroke="rgba(201,168,76,0.12)" strokeWidth="0.8" />;
+            })}
+            {AXES.map((_, i) => {
+              const p = pt(i, 1);
+              return <line key={i} x1={CX} y1={CY} x2={p.x.toFixed(1)} y2={p.y.toFixed(1)} stroke="rgba(201,168,76,0.14)" strokeWidth="0.6" />;
+            })}
+            <polygon points={polygon} fill="rgba(201,168,76,0.16)" stroke="rgba(201,168,76,0.85)" strokeWidth="1.6" strokeLinejoin="round" />
+            {dataPoints.map((p, i) => (
+              <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="3.2" fill="#c8a84b" style={{ filter: "drop-shadow(0 0 4px rgba(201,168,76,0.6))" }} />
+            ))}
+            {AXES.map((label, i) => {
+              const p = pt(i, 1.32);
+              return (
+                <text key={label} x={p.x.toFixed(1)} y={p.y.toFixed(1)} textAnchor="middle" dominantBaseline="middle"
+                  fontSize="8.5" fontWeight="700" fill="rgba(201,168,76,0.72)" fontFamily="DM Sans, sans-serif">
+                  {label}
+                </text>
+              );
+            })}
+          </svg>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ClientPortalPage() {
   const { token } = useParams<{ token: string }>();
   const [plan, setPlan] = useState<PlanData | null>(null);
@@ -3338,6 +3414,8 @@ export default function ClientPortalPage() {
 
           return (
             <motion.div key="record" className="space-y-5" variants={tabVariants} initial="initial" animate="animate" exit="exit" transition={tabTransition}>
+              {/* Profilo Muscolare Radar */}
+              <MuscleRadarChart exercises={plan.exercises} logs={logs} />
               {/* Heatmap */}
               <div className="rounded-2xl p-4" style={{ border: "1px solid var(--border)", background: "var(--surface-xs)" }}>
                 <div className="flex items-center justify-between mb-3">
