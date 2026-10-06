@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
 import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2, Target, HeartPulse, Flame } from "lucide-react";
 import { showToast } from "@/components/Toast";
+import ExerciseGuide from "@/components/ExerciseGuide";
 
 // ── Per-set data ──────────────────────────────────────────────────────────────
 interface SetData { reps: string; weight: string; rpe: string; }
@@ -209,20 +210,13 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
   function updateReps(i: number, val: string)   { setData(p => { const n = [...p]; n[i] = { ...n[i], reps: val };   return n; }); }
   function updateRpe(i: number, val: string)    { setData(p => { const n = [...p]; n[i] = { ...n[i], rpe: val };    return n; }); }
 
-  const MOTIVATIONAL = [
-    "Sessione salvata. Ogni rep conta.",
-    "Fatto. La costanza batte il talento.",
-    "Salvato. Stai costruendo qualcosa di solido.",
-    "Un'altra sessione archiviata. Avanti così.",
-    "Registrato. Il tuo futuro io ti ringrazierà.",
-  ];
 
   function handleSave() {
     if (isCardio) {
       const mins = minutes.trim();
       onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps: mins || undefined, weight: undefined, note: log?.note });
       origMinutes.current = minutes;
-      showToast(mode === "client" ? "Cardio registrato. Ottimo lavoro." : "Salvato ✓");
+      showToast(mode === "client" ? "Cardio registrato · +10 XP" : "Salvato ✓");
       return;
     }
     const { reps, weight } = serializeSetData(data);
@@ -230,10 +224,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
     // the upsert writes null for missing fields, so omitting it would wipe it.
     onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps, weight, note: log?.note });
     orig.current = [...data];
-    const msg = mode === "client"
-      ? MOTIVATIONAL[Math.floor(Math.random() * MOTIVATIONAL.length)]
-      : "Salvato ✓";
-    showToast(msg);
+    showToast(mode === "client" ? "Salvato · +10 XP" : "Salvato ✓");
   }
   function handleClear() {
     if (isCardio) {
@@ -278,6 +269,9 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
         style={{ background: "rgba(201,168,76,0.75)", color: "#fff", letterSpacing: "0.04em", borderBottom: rowBorder }}>
         {sessionDate}
       </div>
+
+      {/* Visual guide (start/end position) */}
+      <ExerciseGuide name={exercise.name} />
 
       {/* Exercise name */}
       <div className="flex items-center justify-between px-3 py-2.5 gap-2"

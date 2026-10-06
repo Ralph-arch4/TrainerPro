@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { showToast } from "@/components/Toast";
 import { searchExercises, type LibraryExercise } from "@/lib/exerciseLibrary";
+import { getExerciseImages } from "@/lib/exerciseImages";
 import { parseWorkoutCSV, generateCSVTemplate } from "@/lib/parseWorkoutCSV";
 
 const MUSCLE_GROUPS = [
@@ -264,6 +265,33 @@ function SupersetLinkButton({ linked, onClick, compact }: { linked: boolean; onC
   );
 }
 
+const SUPERSET_STEPS = [
+  "Aggiungi gli esercizi della superserie uno dopo l'altro, nello stesso giorno.",
+  "Sul secondo esercizio premi l'icona catena: viene collegato a quello sopra e prendono la stessa lettera (SS-A).",
+  "Per una triserie o una serie gigante premi la catena anche sul terzo, quarto esercizio, e così via.",
+  "Per separarli premi di nuovo la catena (diventa \"spezzata\"). In alternativa scegli la lettera dal menu \"Superserie\" nel form dell'esercizio.",
+  "Il cliente vede gli esercizi collegati con lo stesso colore e il badge SS-A: li esegue di seguito, recuperando solo alla fine del giro.",
+];
+
+function SupersetHelp() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="w-full">
+      <button type="button" onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 text-xs transition-opacity hover:opacity-90"
+        style={{ color: "#c4b5fd" }}>
+        <Link2 size={12} /> {open ? "Chiudi guida superserie" : "Come creare una superserie?"}
+      </button>
+      {open && (
+        <ol className="mt-2 p-3 rounded-xl space-y-1.5 text-xs list-decimal list-inside"
+          style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)", color: "rgba(245,240,232,0.7)" }}>
+          {SUPERSET_STEPS.map((t) => <li key={t}>{t}</li>)}
+        </ol>
+      )}
+    </div>
+  );
+}
+
 function AddBlockButtons({ onPick, dayLabel, compact }: { onPick: (k: ExerciseKind) => void; dayLabel: string; compact?: boolean }) {
   const btn = "flex items-center gap-2 rounded-xl transition-all";
   const pad = compact ? "px-3 py-2.5 text-sm" : "px-4 py-2 text-sm";
@@ -284,6 +312,26 @@ function AddBlockButtons({ onPick, dayLabel, compact }: { onPick: (k: ExerciseKi
         <Flame size={14} /> Addome
       </button>
     </>
+  );
+}
+
+// Shows which guide photo the client will see for the typed name
+function ImagePreview({ name }: { name: string }) {
+  const images = name.trim().length >= 3 ? getExerciseImages(name) : null;
+  return (
+    <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
+      {images ? (
+        <>
+          {images.map((src) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={src} src={src} alt="" className="rounded-md object-cover" style={{ width: 48, height: 32 }} />
+          ))}
+          <span>Immagine guida che vedrà il cliente</span>
+        </>
+      ) : name.trim().length >= 3 ? (
+        <span>Nessuna immagine guida per questo nome — scegli un esercizio dai suggerimenti per averla</span>
+      ) : null}
+    </div>
   );
 }
 
@@ -534,6 +582,8 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
       </div>
       </>
       )}
+
+      <ImagePreview name={form.name} />
 
       {/* Row: notes + video */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -898,6 +948,7 @@ export default function WorkoutSpreadsheet({
               <Upload size={14} /> CSV
             </button>
             <input ref={importInputRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleImportCSV} />
+            {dayExercises.length >= 2 && <SupersetHelp />}
           </div>
         )}
 
@@ -1157,6 +1208,7 @@ export default function WorkoutSpreadsheet({
             title="Importa esercizi da CSV">
             <Upload size={14} /> Importa CSV
           </button>
+          {dayExercises.length >= 2 && <SupersetHelp />}
         </div>
       )}
 
@@ -1295,10 +1347,13 @@ export default function WorkoutSpreadsheet({
                             )}
                           </div>
                           {mode === "trainer" && (
-                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                              {canLinkWithPrev(ex, prevEx) && (
+                            <>
+                            {canLinkWithPrev(ex, prevEx) && (
+                              <div className="flex-shrink-0">
                                 <SupersetLinkButton compact linked={!!isSupersetContinue} onClick={() => toggleSupersetWithPrev(ex, prevEx)} />
-                              )}
+                              </div>
+                            )}
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                               <button onClick={() => startEdit(ex)} className="p-1 rounded hover:bg-white/10" title="Modifica">
                                 <Pencil size={11} style={{ color: "rgba(245,240,232,0.4)" }} />
                               </button>
@@ -1306,6 +1361,7 @@ export default function WorkoutSpreadsheet({
                                 <Trash2 size={11} style={{ color: "rgba(239,68,68,0.5)" }} />
                               </button>
                             </div>
+                            </>
                           )}
                         </div>
                       )}
