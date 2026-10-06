@@ -1,9 +1,10 @@
 ﻿"use client";
 import { useState, useEffect, useRef } from "react";
-import type { Exercise, ExerciseLog } from "@/lib/store";
+import type { Exercise, ExerciseLog, ExerciseKind } from "@/lib/store";
 import {
   Plus, Trash2, ChevronUp, ChevronDown, CheckCircle2, Copy, ExternalLink,
   Pencil, Check, ChevronLeft, ChevronRight, Link as LinkIcon, X, Upload, TrendingUp,
+  Link2, Unlink, HeartPulse, Dumbbell, Flame,
 } from "lucide-react";
 import { showToast } from "@/components/Toast";
 import { searchExercises, type LibraryExercise } from "@/lib/exerciseLibrary";
@@ -29,12 +30,14 @@ interface Props {
   onRemoveExercise?: (exerciseId: string) => void;
   onUpdateExercise?: (exerciseId: string, data: Partial<Exercise>) => void;
   onMoveExercise?: (exerciseId: string, dir: "up" | "down") => void;
+  onUpdateExercises?: (updates: Array<{ id: string; data: Partial<Exercise> }>) => void;
   onUpsertLog: (log: Omit<ExerciseLog, "id" | "loggedAt">) => void;
 }
 
 interface ActiveCell { exerciseId: string; week: number; weight: string; reps: string; note: string; }
 
 type ExerciseFormData = {
+  kind: ExerciseKind;
   name: string;
   muscleGroup: string;
   sets: string;
@@ -45,20 +48,64 @@ type ExerciseFormData = {
   notes: string;
   supersetGroup: string;
   videoUrl: string;
+  duration: string;
+  intensity: string;
 };
+
+const KIND_OPTIONS: Array<{ value: ExerciseKind; label: string; icon: typeof Dumbbell }> = [
+  { value: "strength", label: "Esercizio", icon: Dumbbell },
+  { value: "cardio", label: "Cardio", icon: HeartPulse },
+  { value: "core", label: "Addome", icon: Flame },
+];
+
+const CARDIO_PRESETS = [
+  "Tapis roulant", "Camminata inclinata", "Cyclette", "Ellittica", "Vogatore",
+  "Stair climber", "Corsa all'aperto", "Assault bike", "Corda", "HIIT",
+];
+
+const SUPERSET_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+const KIND_COLORS: Record<ExerciseKind, string> = { strength: "", cardio: "#f87171", core: "#facc15" };
+
+function kindOf(ex: Pick<Exercise, "kind">): ExerciseKind { return ex.kind ?? "strength"; }
 
 const inputStyle = { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" };
 const selectStyle = { background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" };
 
-function emptyForm(sets = 3): ExerciseFormData {
+function emptyForm(sets = 3, kind: ExerciseKind = "strength"): ExerciseFormData {
   return {
+    kind,
     name: "", muscleGroup: "", sets: String(sets), targetReps: "8-10",
     usePerSetReps: false, perSetReps: Array(sets).fill(""),
     restSeconds: "", notes: "", supersetGroup: "", videoUrl: "",
+    duration: "", intensity: "",
   };
 }
 
+function emptyFormFor(kind: ExerciseKind, sets = 3): ExerciseFormData {
+  if (kind === "cardio") return { ...emptyForm(1, "cardio"), targetReps: "", duration: "20", muscleGroup: "Cardio" };
+  if (kind === "core") return { ...emptyForm(3, "core"), targetReps: "15", muscleGroup: "Addominali" };
+  return emptyForm(sets);
+}
+
 function formToExercise(f: ExerciseFormData, day: number): Omit<Exercise, "id" | "order"> {
+  if (f.kind === "cardio") {
+    return {
+      kind: "cardio",
+      name: f.name.trim(),
+      muscleGroup: "Cardio",
+      sets: Math.max(1, parseInt(f.sets) || 1),
+      targetReps: "—",
+      duration: f.duration.trim() || undefined,
+      intensity: f.intensity.trim() || undefined,
+      perSetReps: undefined,
+      restSeconds: f.restSeconds.trim() || undefined,
+      notes: f.notes.trim() || undefined,
+      supersetGroup: undefined,
+      videoUrl: f.videoUrl.trim() || undefined,
+      day,
+    };
+  }
   const sets = Math.max(1, parseInt(f.sets) || 3);
   const perSet = f.usePerSetReps ? f.perSetReps.slice(0, sets) : undefined;
   return {
@@ -71,6 +118,9 @@ function formToExercise(f: ExerciseFormData, day: number): Omit<Exercise, "id" |
     notes: f.notes.trim() || undefined,
     supersetGroup: f.supersetGroup.trim().toUpperCase() || undefined,
     videoUrl: f.videoUrl.trim() || undefined,
+    kind: f.kind === "core" ? "core" : undefined,
+    duration: undefined,
+    intensity: undefined,
     day,
   };
 }
@@ -82,10 +132,12 @@ function exerciseToForm(ex: Exercise): ExerciseFormData {
     ? [...(ex.perSetReps ?? []), ...Array(Math.max(0, sets - (ex.perSetReps?.length ?? 0))).fill("")]
     : Array(sets).fill("");
   return {
+    kind: kindOf(ex),
     name: ex.name, muscleGroup: ex.muscleGroup ?? "", sets: String(sets),
     targetReps: ex.targetReps, usePerSetReps, perSetReps,
     restSeconds: ex.restSeconds ?? "", notes: ex.notes ?? "",
     supersetGroup: ex.supersetGroup ?? "", videoUrl: ex.videoUrl ?? "",
+    duration: ex.duration ?? "", intensity: ex.intensity ?? "",
   };
 }
 
@@ -149,6 +201,18 @@ function getLoadSuggestion(exerciseId: string, logs: ExerciseLog[]): { weight: n
 
 // Render rep targets for a given exercise
 function renderRepTargets(ex: Exercise): React.ReactNode {
+  if (kindOf(ex) === "cardio") {
+    const parts = [
+      ex.duration ? `${ex.duration} min` : null,
+      ex.sets > 1 ? `${ex.sets} blocchi` : null,
+      ex.intensity || null,
+    ].filter(Boolean);
+    return (
+      <span className="text-xs" style={{ color: "rgba(245,240,232,0.55)" }}>
+        {parts.length > 0 ? parts.join(" · ") : "Cardio"}
+      </span>
+    );
+  }
   if (ex.perSetReps && ex.perSetReps.some(Boolean)) {
     return (
       <div className="space-y-0.5">
@@ -172,6 +236,57 @@ function renderRepTargets(ex: Exercise): React.ReactNode {
   );
 }
 
+function KindBadge({ ex }: { ex: Exercise }) {
+  const kind = kindOf(ex);
+  if (kind === "strength") return null;
+  const color = KIND_COLORS[kind];
+  const Icon = kind === "cardio" ? HeartPulse : Flame;
+  return (
+    <span className="flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded"
+      style={{ background: `${color}1a`, color, border: `1px solid ${color}40` }}>
+      <Icon size={10} /> {kind === "cardio" ? "CARDIO" : "ADDOME"}
+    </span>
+  );
+}
+
+// Toggle between an exercise and the one above it: link/unlink superset
+function SupersetLinkButton({ linked, onClick, compact }: { linked: boolean; onClick: () => void; compact?: boolean }) {
+  return (
+    <button type="button" onClick={onClick}
+      className={`flex items-center gap-1 rounded-lg transition-all hover:opacity-90 ${compact ? "p-1" : "px-2.5 py-1 text-xs"}`}
+      style={linked
+        ? { background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.35)", color: "#c4b5fd" }
+        : { background: "rgba(255,255,255,0.04)", border: "1px dashed rgba(255,255,255,0.15)", color: "rgba(245,240,232,0.45)" }}
+      title={linked ? "Separa dalla superserie con l'esercizio sopra" : "Metti in superserie con l'esercizio sopra"}>
+      {linked ? <Unlink size={11} /> : <Link2 size={11} />}
+      {!compact && (linked ? "Separa superserie" : "Superserie con il precedente")}
+    </button>
+  );
+}
+
+function AddBlockButtons({ onPick, dayLabel, compact }: { onPick: (k: ExerciseKind) => void; dayLabel: string; compact?: boolean }) {
+  const btn = "flex items-center gap-2 rounded-xl transition-all";
+  const pad = compact ? "px-3 py-2.5 text-sm" : "px-4 py-2 text-sm";
+  return (
+    <>
+      <button onClick={() => onPick("strength")} className={`${btn} ${pad} ${compact ? "flex-1" : ""}`}
+        style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
+        <Plus size={14} /> {compact ? "Esercizio" : `Aggiungi esercizio — ${dayLabel}`}
+      </button>
+      <button onClick={() => onPick("cardio")} className={`${btn} ${pad}`}
+        style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: "#fca5a5" }}
+        title="Aggiungi un blocco cardio a questo giorno">
+        <HeartPulse size={14} /> Cardio
+      </button>
+      <button onClick={() => onPick("core")} className={`${btn} ${pad}`}
+        style={{ background: "rgba(250,204,21,0.07)", border: "1px solid rgba(250,204,21,0.25)", color: "#fde047" }}
+        title="Aggiungi un esercizio per l'addome a questo giorno">
+        <Flame size={14} /> Addome
+      </button>
+    </>
+  );
+}
+
 // ── ExerciseFormPanel ─────────────────────────────────────────────────────────
 interface FormPanelProps {
   form: ExerciseFormData;
@@ -189,10 +304,13 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
   const [activeSugg, setActiveSugg] = useState(-1);
   const suggRef = useRef<HTMLDivElement>(null);
 
+  const isCardio = form.kind === "cardio";
+
   function handleNameChange(val: string) {
     onChange({ ...form, name: val });
+    if (isCardio) return;
     if (val.trim().length >= 2) {
-      const results = searchExercises(val, form.muscleGroup || undefined);
+      const results = searchExercises(val, form.kind === "core" ? "Addominali" : form.muscleGroup || undefined);
       setSuggestions(results);
       setShowSugg(results.length > 0);
     } else {
@@ -229,8 +347,80 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
     onChange({ ...form, perSetReps });
   }
 
+  function switchKind(kind: ExerciseKind) {
+    if (kind === form.kind) return;
+    const base = emptyFormFor(kind, parseInt(form.sets) || 3);
+    // Keep what the trainer already typed that still makes sense for the new type
+    onChange({ ...base, name: form.name, notes: form.notes, videoUrl: form.videoUrl, restSeconds: form.restSeconds });
+    setSuggestions([]);
+    setShowSugg(false);
+  }
+
   return (
     <div className={`space-y-3 ${compact ? "text-xs" : "text-sm"}`}>
+      {/* Block type */}
+      <div className="flex gap-1.5">
+        {KIND_OPTIONS.map(({ value, label, icon: Icon }) => {
+          const active = form.kind === value;
+          return (
+            <button key={value} type="button" onClick={() => switchKind(value)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all"
+              style={active
+                ? { background: "rgba(255,107,43,0.14)", border: "1px solid rgba(255,107,43,0.35)", color: "var(--accent-light)" }
+                : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>
+              <Icon size={12} /> {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {isCardio ? (
+        <>
+          <div>
+            {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Attività cardio *</label>}
+            <input value={form.name} onChange={(e) => handleNameChange(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); }}
+              placeholder="es. Tapis roulant, Cyclette, HIIT…" autoFocus
+              className={`w-full px-3 rounded-xl outline-none ${compact ? "py-2 text-xs" : "py-2.5 text-sm"}`}
+              style={inputStyle} />
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {CARDIO_PRESETS.map((p) => (
+                <button key={p} type="button" onClick={() => onChange({ ...form, name: p })}
+                  className="px-2 py-1 rounded-lg text-xs transition-all"
+                  style={form.name === p
+                    ? { background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.4)", color: "#fca5a5" }
+                    : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(245,240,232,0.5)" }}>
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Durata (min)</label>}
+              <input value={form.duration} onChange={(e) => onChange({ ...form, duration: e.target.value })}
+                placeholder="es. 20 / 15-20" className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
+            </div>
+            <div>
+              {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Blocchi / round</label>}
+              <input type="number" min="1" max="20" value={form.sets} onChange={(e) => onChange({ ...form, sets: e.target.value })}
+                placeholder="1" className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
+            </div>
+            <div>
+              {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Recupero (sec)</label>}
+              <input value={form.restSeconds} onChange={(e) => onChange({ ...form, restSeconds: e.target.value })}
+                placeholder="es. 60" className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
+            </div>
+          </div>
+          <div>
+            {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Intensità</label>}
+            <input value={form.intensity} onChange={(e) => onChange({ ...form, intensity: e.target.value })}
+              placeholder="es. Zona 2, 130-140 bpm, pendenza 10% a 5 km/h, 30s on / 30s off"
+              className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
+          </div>
+        </>
+      ) : (
+      <>
       {/* Row 1: name + muscle */}
       <div className={`grid gap-2 ${compact ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-3"}`}>
         <div className={`relative ${compact ? "" : "sm:col-span-2"}`}>
@@ -328,18 +518,26 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
         <div>
           {!compact && (
             <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>
-              Superset <span style={{ color: "rgba(245,240,232,0.35)" }}>(A, B, C…)</span>
+              Superserie <span style={{ color: "rgba(245,240,232,0.35)" }}>(stessa lettera = in sequenza)</span>
             </label>
           )}
-          <input value={form.supersetGroup} onChange={(e) => onChange({ ...form, supersetGroup: e.target.value.slice(0, 2) })}
-            placeholder="Superset A/B…" className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle}
-            title="Assegna la stessa lettera a più esercizi per raggrupparli in superset" />
+          <select value={form.supersetGroup.toUpperCase()} onChange={(e) => onChange({ ...form, supersetGroup: e.target.value })}
+            className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={selectStyle}
+            title="Assegna la stessa lettera a più esercizi per eseguirli in superserie">
+            <option value="">Nessuna superserie</option>
+            {SUPERSET_LETTERS.map((l) => <option key={l} value={l}>Superserie {l}</option>)}
+            {form.supersetGroup && !SUPERSET_LETTERS.includes(form.supersetGroup.toUpperCase()) && (
+              <option value={form.supersetGroup.toUpperCase()}>Superserie {form.supersetGroup.toUpperCase()}</option>
+            )}
+          </select>
         </div>
       </div>
+      </>
+      )}
 
       {/* Row: notes + video */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className={compact ? "" : ""}>
+        <div>
           {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Note tecniche</label>}
           <input value={form.notes} onChange={(e) => onChange({ ...form, notes: e.target.value })}
             placeholder="es. busto inclinato 30°, pausa in basso…" className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
@@ -371,7 +569,7 @@ export default function WorkoutSpreadsheet({
   planName, exercises, logs, totalWeeks = 12, daysPerWeek = 3,
   mode, shareToken, dayLabels = {}, onUpdateDayLabel,
   onAddExercise, onRemoveExercise, onUpdateExercise,
-  onMoveExercise, onUpsertLog,
+  onMoveExercise, onUpdateExercises, onUpsertLog,
 }: Props) {
   // totalWeeks === 0 means an open-ended plan: show logged weeks + the next one
   const maxLoggedWeek = logs.length > 0 ? Math.max(...logs.map((l) => l.weekNumber)) : 0;
@@ -506,6 +704,72 @@ export default function WorkoutSpreadsheet({
     showToast("Esercizio aggiornato");
   }
 
+  function openAddForm(kind: ExerciseKind) {
+    setAddForm(emptyFormFor(kind, parseInt(addForm.sets) || 3));
+    setShowAddRow(true);
+    setEditId(null);
+  }
+
+  function applyExerciseUpdates(updates: Array<{ id: string; data: Partial<Exercise> }>) {
+    if (updates.length === 0) return;
+    if (onUpdateExercises) onUpdateExercises(updates);
+    else updates.forEach((u) => onUpdateExercise?.(u.id, u.data));
+  }
+
+  // Cardio blocks are never part of a superset
+  function canLinkWithPrev(ex: Exercise, prev: Exercise | null): prev is Exercise {
+    return !!prev && kindOf(ex) !== "cardio" && kindOf(prev) !== "cardio";
+  }
+
+  // Links `ex` to the exercise right above it (same superset letter), or breaks
+  // the link if they are already grouped.
+  function toggleSupersetWithPrev(ex: Exercise, prev: Exercise) {
+    const linked = !!ex.supersetGroup && prev.supersetGroup?.toUpperCase() === ex.supersetGroup.toUpperCase();
+    if (linked) {
+      const group = ex.supersetGroup!.toUpperCase();
+      const idx = dayExercises.findIndex((e) => e.id === ex.id);
+      // Everything from `ex` down that is contiguous in the same group moves to a new chain
+      const tail: Exercise[] = [];
+      for (let i = idx; i < dayExercises.length && dayExercises[i].supersetGroup?.toUpperCase() === group; i++) tail.push(dayExercises[i]);
+      const head: Exercise[] = [];
+      for (let i = idx - 1; i >= 0 && dayExercises[i].supersetGroup?.toUpperCase() === group; i--) head.push(dayExercises[i]);
+      const updates: Array<{ id: string; data: Partial<Exercise> }> = [];
+      if (head.length === 1) updates.push({ id: head[0].id, data: { supersetGroup: undefined } });
+      if (tail.length === 1) {
+        updates.push({ id: tail[0].id, data: { supersetGroup: undefined } });
+      } else {
+        const used = new Set(dayExercises.map((e) => e.supersetGroup?.toUpperCase()).filter(Boolean));
+        const fresh = SUPERSET_LETTERS.find((l) => !used.has(l)) ?? group;
+        tail.forEach((e) => updates.push({ id: e.id, data: { supersetGroup: fresh } }));
+      }
+      applyExerciseUpdates(updates);
+      showToast("Superserie separata");
+      return;
+    }
+    const used = new Set(
+      dayExercises
+        .filter((e) => e.id !== ex.id && e.id !== prev.id)
+        .map((e) => e.supersetGroup?.toUpperCase())
+        .filter(Boolean),
+    );
+    const group = prev.supersetGroup?.toUpperCase()
+      ?? ex.supersetGroup?.toUpperCase()
+      ?? SUPERSET_LETTERS.find((l) => !used.has(l))
+      ?? "A";
+    // If `ex` already leads a chain with the exercises below it, the whole chain joins
+    const chain: Exercise[] = [ex];
+    const exGroup = ex.supersetGroup?.toUpperCase();
+    if (exGroup) {
+      const idx = dayExercises.findIndex((e) => e.id === ex.id);
+      for (let i = idx + 1; i < dayExercises.length && dayExercises[i].supersetGroup?.toUpperCase() === exGroup; i++) chain.push(dayExercises[i]);
+    }
+    const updates: Array<{ id: string; data: Partial<Exercise> }> = [];
+    if (prev.supersetGroup?.toUpperCase() !== group) updates.push({ id: prev.id, data: { supersetGroup: group } });
+    chain.forEach((e) => { if (e.supersetGroup?.toUpperCase() !== group) updates.push({ id: e.id, data: { supersetGroup: group } }); });
+    applyExerciseUpdates(updates);
+    showToast(`Superserie ${group} creata`);
+  }
+
   function copyLink() {
     if (!shareUrl) return;
     navigator.clipboard.writeText(shareUrl).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
@@ -542,6 +806,10 @@ export default function WorkoutSpreadsheet({
             ["Ripetizioni", "Target reps — es. 8-10 o 12 (default: 10)"],
             ["Recupero", "Secondi di recupero — es. 90 (opzionale)"],
             ["Gruppo", "Gruppo muscolare (opzionale)"],
+            ["Superserie", "Lettera A, B, C… — stessa lettera = in superserie (opzionale)"],
+            ["Tipo", "esercizio, cardio o addome (default: esercizio)"],
+            ["Durata", "Solo cardio: minuti, es. 20 (opzionale)"],
+            ["Intensita", "Solo cardio: es. Zona 2, 130-140 bpm (opzionale)"],
           ] as [string, string][]).map(([col, desc]) => (
             <div key={col} className="flex items-baseline gap-2 text-xs">
               <span className="font-mono font-semibold w-24 flex-shrink-0" style={{ color: "var(--accent-light)" }}>{col}</span>
@@ -621,12 +889,8 @@ export default function WorkoutSpreadsheet({
 
         {/* Add exercise (trainer) */}
         {mode === "trainer" && !showAddRow && !editId && (
-          <div className="flex gap-2 mb-3">
-            <button onClick={() => setShowAddRow(true)}
-              className="flex items-center gap-2 flex-1 px-4 py-2.5 rounded-xl text-sm"
-              style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
-              <Plus size={14} /> Aggiungi esercizio
-            </button>
+          <div className="flex flex-wrap gap-2 mb-3">
+            <AddBlockButtons onPick={openAddForm} dayLabel={getDayLabel(activeDay)} compact />
             <button onClick={() => setShowImportGuide(true)}
               className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm flex-shrink-0"
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.55)" }}
@@ -640,14 +904,14 @@ export default function WorkoutSpreadsheet({
         {mode === "trainer" && showAddRow && (
           <div className="mb-4 p-4 rounded-2xl" style={{ background: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.2)" }}>
             <p className="text-xs font-bold mb-3 uppercase tracking-wider" style={{ color: "var(--accent-light)" }}>
-              Nuovo esercizio — {getDayLabel(activeDay)}
+              {addForm.kind === "cardio" ? "Nuovo blocco cardio" : addForm.kind === "core" ? "Nuovo esercizio addome" : "Nuovo esercizio"} — {getDayLabel(activeDay)}
             </p>
             <ExerciseFormPanel
               form={addForm}
               onChange={setAddForm}
               onSubmit={handleAddExercise}
               onCancel={() => setShowAddRow(false)}
-              submitLabel="Aggiungi"
+              submitLabel={addForm.kind === "cardio" ? "Aggiungi cardio" : "Aggiungi"}
               compact
             />
           </div>
@@ -669,14 +933,22 @@ export default function WorkoutSpreadsheet({
               const log = getLog(ex.id, mobileWeek);
               const cell = formatCellLog(log);
               const isEditingThis = editId === ex.id;
+              const isCardioEx = kindOf(ex) === "cardio";
+              const kindColor = KIND_COLORS[kindOf(ex)];
 
               return (
-                <div key={ex.id} className="card-luxury rounded-2xl overflow-hidden"
-                  style={color ? { borderLeft: `3px solid ${color}` } : {}}>
+                <div key={ex.id}>
+                {mode === "trainer" && canLinkWithPrev(ex, prevEx) && (
+                  <div className="flex justify-center -mt-1.5 mb-1.5">
+                    <SupersetLinkButton linked={!!isSupersetContinue} onClick={() => toggleSupersetWithPrev(ex, prevEx)} />
+                  </div>
+                )}
+                <div className="card-luxury rounded-2xl overflow-hidden"
+                  style={color ? { borderLeft: `3px solid ${color}` } : kindColor ? { borderLeft: `3px solid ${kindColor}` } : {}}>
                   {isSupersetContinue && (
                     <div className="px-4 py-1 text-xs flex items-center gap-2" style={{ background: `${color}10`, color }}>
                       <span style={{ fontFamily: "monospace", fontWeight: 700 }}>SS-{ex.supersetGroup}</span>
-                      <span className="opacity-50">↑ superset con {prevEx?.name}</span>
+                      <span className="opacity-50">↑ superserie con {prevEx?.name}</span>
                     </div>
                   )}
                   <div className="p-4">
@@ -690,6 +962,7 @@ export default function WorkoutSpreadsheet({
                               SS-{ex.supersetGroup}
                             </span>
                           )}
+                          <KindBadge ex={ex} />
                           <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{ex.name}</p>
                           {ex.videoUrl && (
                             <a href={ex.videoUrl} target="_blank" rel="noopener noreferrer">
@@ -697,7 +970,7 @@ export default function WorkoutSpreadsheet({
                             </a>
                           )}
                         </div>
-                        {ex.muscleGroup && <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{ex.muscleGroup}</p>}
+                        {ex.muscleGroup && !isCardioEx && <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{ex.muscleGroup}</p>}
                         <div className="mt-1">{renderRepTargets(ex)}</div>
                         {(() => {
                           if (mode !== "trainer") return null;
@@ -744,15 +1017,18 @@ export default function WorkoutSpreadsheet({
                     {/* Log cell */}
                     {activeCell?.exerciseId === ex.id && activeCell?.week === mobileWeek ? (
                       <div className="p-3 rounded-xl mt-2" style={{ background: "rgba(255,107,43,0.07)", border: "1px solid rgba(255,107,43,0.2)" }}>
-                        <div className="grid grid-cols-2 gap-2 mb-2">
+                        <div className={`grid gap-2 mb-2 ${isCardioEx ? "grid-cols-1" : "grid-cols-2"}`}>
+                          {!isCardioEx && (
                           <input type="number" value={activeCell.weight}
                             onChange={(e) => setActiveCell({ ...activeCell, weight: e.target.value })}
                             placeholder="kg" autoFocus
                             className="px-3 py-2 rounded-xl text-sm outline-none"
                             style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,107,43,0.3)", color: "var(--ivory)" }} />
+                          )}
                           <input value={activeCell.reps}
                             onChange={(e) => setActiveCell({ ...activeCell, reps: e.target.value })}
-                            placeholder="rep (12/10/8)"
+                            placeholder={isCardioEx ? "minuti svolti (es. 20)" : "rep (12/10/8)"}
+                            autoFocus={isCardioEx}
                             onKeyDown={(e) => { if (e.key === "Enter") saveCell(); if (e.key === "Escape") setActiveCell(null); }}
                             className="px-3 py-2 rounded-xl text-sm outline-none"
                             style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,107,43,0.3)", color: "var(--ivory)" }} />
@@ -778,7 +1054,7 @@ export default function WorkoutSpreadsheet({
                         {cell.weight || cell.reps ? (
                           <div className="flex items-center justify-center gap-3">
                             {cell.weight && <span className="font-bold" style={{ color: "var(--accent-light)" }}>{cell.weight} kg</span>}
-                            {cell.reps && <span style={{ color: "rgba(245,240,232,0.6)" }}>{cell.reps} rep</span>}
+                            {cell.reps && <span style={{ color: "rgba(245,240,232,0.6)" }}>{cell.reps} {isCardioEx ? "min" : "rep"}</span>}
                             {log?.note && <span className="text-xs italic" style={{ color: "rgba(245,240,232,0.35)" }}>{log.note}</span>}
                             <Pencil size={11} style={{ color: "rgba(245,240,232,0.3)" }} />
                           </div>
@@ -790,6 +1066,7 @@ export default function WorkoutSpreadsheet({
                       </button>
                     )}
                   </div>
+                </div>
                 </div>
               );
             })}
@@ -872,12 +1149,8 @@ export default function WorkoutSpreadsheet({
 
       {/* Add exercise panel */}
       {mode === "trainer" && !showAddRow && (
-        <div className="flex gap-2 mb-4">
-          <button onClick={() => { setShowAddRow(true); setEditId(null); }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all"
-            style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
-            <Plus size={14} /> Aggiungi esercizio — {getDayLabel(activeDay)}
-          </button>
+        <div className="flex flex-wrap gap-2 mb-4">
+          <AddBlockButtons onPick={openAddForm} dayLabel={getDayLabel(activeDay)} />
           <button onClick={() => setShowImportGuide(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm transition-all"
             style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.55)" }}
@@ -890,14 +1163,14 @@ export default function WorkoutSpreadsheet({
       {mode === "trainer" && showAddRow && (
         <div className="mb-5 p-5 rounded-2xl" style={{ background: "rgba(255,107,43,0.05)", border: "1px solid rgba(255,107,43,0.2)" }}>
           <p className="text-xs font-bold mb-4 uppercase tracking-wider" style={{ color: "var(--accent-light)" }}>
-            Nuovo esercizio — {getDayLabel(activeDay)}
+            {addForm.kind === "cardio" ? "Nuovo blocco cardio" : addForm.kind === "core" ? "Nuovo esercizio addome" : "Nuovo esercizio"} — {getDayLabel(activeDay)}
           </p>
           <ExerciseFormPanel
             form={addForm}
             onChange={setAddForm}
             onSubmit={handleAddExercise}
             onCancel={() => setShowAddRow(false)}
-            submitLabel="Aggiungi esercizio"
+            submitLabel={addForm.kind === "cardio" ? "Aggiungi cardio" : "Aggiungi esercizio"}
           />
         </div>
       )}
@@ -931,8 +1204,9 @@ export default function WorkoutSpreadsheet({
                 const color = ssColor(ex.supersetGroup);
                 const isEditingThis = editId === ex.id;
                 const prevEx = idx > 0 ? dayExercises[idx - 1] : null;
-                const isSupersetStart = color && (!prevEx || prevEx.supersetGroup !== ex.supersetGroup);
                 const isSupersetContinue = color && prevEx?.supersetGroup === ex.supersetGroup;
+                const isCardioEx = kindOf(ex) === "cardio";
+                const kindColor = KIND_COLORS[kindOf(ex)];
 
                 return (
                   <tr key={ex.id}
@@ -940,7 +1214,7 @@ export default function WorkoutSpreadsheet({
                       borderTop: isSupersetContinue
                         ? `1px dashed ${color}30`
                         : "1px solid rgba(255,107,43,0.06)",
-                      borderLeft: color ? `3px solid ${color}` : undefined,
+                      borderLeft: color ? `3px solid ${color}` : kindColor ? `3px solid ${kindColor}` : undefined,
                     }}
                     className="group hover:bg-white/[0.015] transition-colors">
                     {/* Reorder controls */}
@@ -982,6 +1256,7 @@ export default function WorkoutSpreadsheet({
                                   SS-{ex.supersetGroup}
                                 </span>
                               )}
+                              <KindBadge ex={ex} />
                               <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{ex.name}</p>
                               {ex.videoUrl && (
                                 <a href={ex.videoUrl} target="_blank" rel="noopener noreferrer"
@@ -990,7 +1265,7 @@ export default function WorkoutSpreadsheet({
                                 </a>
                               )}
                             </div>
-                            {ex.muscleGroup && (
+                            {ex.muscleGroup && !isCardioEx && (
                               <p className="text-xs mb-1" style={{ color: "rgba(245,240,232,0.35)" }}>{ex.muscleGroup}</p>
                             )}
                             {renderRepTargets(ex)}
@@ -1021,6 +1296,9 @@ export default function WorkoutSpreadsheet({
                           </div>
                           {mode === "trainer" && (
                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                              {canLinkWithPrev(ex, prevEx) && (
+                                <SupersetLinkButton compact linked={!!isSupersetContinue} onClick={() => toggleSupersetWithPrev(ex, prevEx)} />
+                              )}
                               <button onClick={() => startEdit(ex)} className="p-1 rounded hover:bg-white/10" title="Modifica">
                                 <Pencil size={11} style={{ color: "rgba(245,240,232,0.4)" }} />
                               </button>
@@ -1043,14 +1321,17 @@ export default function WorkoutSpreadsheet({
                         <td key={w} className="p-0" style={{ borderRight: "1px solid rgba(255,107,43,0.05)", verticalAlign: "top" }}>
                           {isActive ? (
                             <div className="p-2" style={{ background: "rgba(255,107,43,0.07)", minWidth: "120px" }}>
+                              {!isCardioEx && (
                               <input type="number" value={activeCell.weight}
                                 onChange={(e) => setActiveCell({ ...activeCell, weight: e.target.value })}
                                 placeholder="kg" autoFocus
                                 className="w-full px-2 py-1 rounded-lg text-xs outline-none mb-1"
                                 style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,107,43,0.3)", color: "var(--ivory)" }} />
+                              )}
                               <input value={activeCell.reps}
                                 onChange={(e) => setActiveCell({ ...activeCell, reps: e.target.value })}
-                                placeholder="rep (12/10/8)"
+                                placeholder={isCardioEx ? "minuti svolti" : "rep (12/10/8)"}
+                                autoFocus={isCardioEx}
                                 onKeyDown={(e) => { if (e.key === "Enter") saveCell(); if (e.key === "Escape") setActiveCell(null); }}
                                 className="w-full px-2 py-1 rounded-lg text-xs outline-none mb-1"
                                 style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,107,43,0.3)", color: "var(--ivory)" }} />
@@ -1071,7 +1352,7 @@ export default function WorkoutSpreadsheet({
                               {hasData ? (
                                 <div>
                                   {cell.weight && <p className="text-sm font-bold" style={{ color: "var(--accent-light)" }}>{cell.weight} kg</p>}
-                                  {cell.reps && <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.6)" }}>{cell.reps}</p>}
+                                  {cell.reps && <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.6)" }}>{cell.reps}{isCardioEx ? " min" : ""}</p>}
                                   {log?.note && <p className="text-xs mt-0.5 italic truncate" style={{ color: "rgba(245,240,232,0.3)" }}>{log.note}</p>}
                                 </div>
                               ) : (
@@ -1092,7 +1373,7 @@ export default function WorkoutSpreadsheet({
 
       <p className="text-xs mt-3" style={{ color: "rgba(245,240,232,0.22)" }}>
         {mode === "trainer"
-          ? "Hover sul tab giorno per rinominarlo · Clicca su una cella per inserire peso/reps · SS-A/B = superset"
+          ? "Hover sul tab giorno per rinominarlo · Clicca su una cella per inserire peso/reps · Icona catena = superserie con l'esercizio sopra"
           : "Clicca su una cella per inserire il peso e le ripetizioni · Invio per salvare"}
       </p>
 

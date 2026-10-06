@@ -15,6 +15,10 @@ export interface User {
 }
 
 // ─── Workout Exercise (template set by trainer) ───────────────────────────────
+// "strength" (default) = sets × reps with load; "cardio" = duration/intensity
+// block; "core" = abs/core work (sets × reps or time, load optional).
+export type ExerciseKind = "strength" | "cardio" | "core";
+
 export interface Exercise {
   id: string;
   name: string;
@@ -28,6 +32,9 @@ export interface Exercise {
   day: number;              // 1-based day number
   supersetGroup?: string;   // e.g. "A", "B" — exercises sharing a letter are grouped
   videoUrl?: string;        // optional demo video link
+  kind?: ExerciseKind;      // missing = "strength" (legacy exercises)
+  duration?: string;        // cardio: minutes, e.g. "20", "15-20"
+  intensity?: string;       // cardio: e.g. "Zona 2", "130-140 bpm", "HIIT 30/30"
 }
 
 // ─── Meal Food Item ────────────────────────────────────────────────────────────

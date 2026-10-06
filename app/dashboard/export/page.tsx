@@ -273,12 +273,17 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
                               <tr key={ex.id} style={{ background: idx % 2 === 0 ? (forPrint ? "#f9fafb" : "var(--surface-xs)") : "transparent" }}>
                                 <td style={{ padding: "4px 0" }}>
                                   <span style={{ fontWeight: 500 }}>{ex.name}</span>
-                                  {ex.muscleGroup && <span style={{ color: mutedColor, marginLeft: "6px", fontSize: "11px" }}>({ex.muscleGroup})</span>}
+                                  {ex.muscleGroup && ex.kind !== "cardio" && <span style={{ color: mutedColor, marginLeft: "6px", fontSize: "11px" }}>({ex.muscleGroup})</span>}
                                   {ex.supersetGroup && <span style={{ color: "#a78bfa", marginLeft: "4px", fontSize: "10px", fontWeight: 700 }}>SS-{ex.supersetGroup}</span>}
+                                  {ex.kind === "cardio" && <span style={{ color: "#f87171", marginLeft: "4px", fontSize: "10px", fontWeight: 700 }}>CARDIO</span>}
+                                  {ex.kind === "core" && <span style={{ color: "#ca8a04", marginLeft: "4px", fontSize: "10px", fontWeight: 700 }}>ADDOME</span>}
+                                  {ex.kind === "cardio" && ex.intensity && <span style={{ color: mutedColor, marginLeft: "6px", fontSize: "11px" }}>{ex.intensity}</span>}
                                 </td>
                                 <td style={{ textAlign: "center", padding: "4px 0" }}>{ex.sets}</td>
                                 <td style={{ textAlign: "center", padding: "4px 0" }}>
-                                  {Array.isArray(ex.perSetReps) && ex.perSetReps.some(Boolean)
+                                  {ex.kind === "cardio"
+                                    ? (ex.duration ? `${ex.duration} min` : "—")
+                                    : Array.isArray(ex.perSetReps) && ex.perSetReps.some(Boolean)
                                     ? ex.perSetReps.join(" / ")
                                     : ex.targetReps}
                                 </td>

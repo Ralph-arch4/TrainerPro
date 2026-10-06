@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
-import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2, Target } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2, Target, HeartPulse, Flame } from "lucide-react";
 import { showToast } from "@/components/Toast";
 
 // ── Per-set data ──────────────────────────────────────────────────────────────
@@ -179,16 +179,28 @@ interface CardProps {
   weightHistory?: number[];
 }
 
+// Cardio logs store the minutes actually done in `reps` (plain text)
+function parseCardioMinutes(log: ExerciseLog | undefined): string {
+  const raw = log?.reps ?? "";
+  return raw.startsWith("[") ? "" : raw;
+}
+
 function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onStartTimer, onEdit, onDelete, weightHistory }: CardProps) {
+  const isCardio = exercise.kind === "cardio";
   const sets = Math.max(1, exercise.sets || 3);
   const [data, setData] = useState<SetData[]>(() => parseSetData(log, sets));
   const orig             = useRef<SetData[]>(parseSetData(log, sets));
-  const dirty            = areDirty(data, orig.current);
+  const [minutes, setMinutes] = useState(() => parseCardioMinutes(log));
+  const origMinutes      = useRef(parseCardioMinutes(log));
+  const dirty            = isCardio ? minutes !== origMinutes.current : areDirty(data, orig.current);
 
   useEffect(() => {
     const parsed = parseSetData(log, sets);
     setData(parsed);
     orig.current = parsed;
+    const mins = parseCardioMinutes(log);
+    setMinutes(mins);
+    origMinutes.current = mins;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [log?.loggedAt, log?.reps, sets]);
 
@@ -206,6 +218,13 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
   ];
 
   function handleSave() {
+    if (isCardio) {
+      const mins = minutes.trim();
+      onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps: mins || undefined, weight: undefined, note: log?.note });
+      origMinutes.current = minutes;
+      showToast(mode === "client" ? "Cardio registrato. Ottimo lavoro." : "Salvato ✓");
+      return;
+    }
     const { reps, weight } = serializeSetData(data);
     // Preserve any existing note (written by the trainer via spreadsheet):
     // the upsert writes null for missing fields, so omitting it would wipe it.
@@ -217,6 +236,13 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
     showToast(msg);
   }
   function handleClear() {
+    if (isCardio) {
+      setMinutes("");
+      origMinutes.current = "";
+      onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps: undefined, weight: undefined, note: log?.note });
+      showToast("Dati cancellati");
+      return;
+    }
     const blank = Array.from({ length: sets }, () => ({ reps: "", weight: "", rpe: "" }));
     setData(blank);
     onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps: undefined, weight: undefined, note: log?.note });
@@ -229,10 +255,16 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
     : "— / — / ——";
 
   const color      = ssColor(exercise.supersetGroup);
-  const cardBorder = color ? `2px solid ${color}40` : "1px solid var(--border)";
+  const kindColor  = isCardio ? "#f87171" : exercise.kind === "core" ? "#facc15" : null;
+  const cardBorder = color ? `2px solid ${color}40` : kindColor ? `2px solid ${kindColor}40` : "1px solid var(--border)";
+  const cardioTarget = [
+    exercise.duration ? `${exercise.duration} min` : null,
+    sets > 1 ? `${sets} blocchi` : null,
+    exercise.restSeconds && sets > 1 ? `rec. ${exercise.restSeconds}s` : null,
+  ].filter(Boolean).join(" · ");
   const rowBorder  = "1px solid var(--border-subtle)";
 
-  const suggestion = mode === "client" && week > 1
+  const suggestion = mode === "client" && week > 1 && !isCardio
     ? calcSuggestion(parseSetData(lastWeekLog, sets))
     : null;
 
@@ -257,10 +289,17 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
               SS-{exercise.supersetGroup}
             </span>
           )}
+          {kindColor && (
+            <span className="flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded-md shrink-0"
+              style={{ background: `${kindColor}18`, color: kindColor, border: `1px solid ${kindColor}33` }}>
+              {isCardio ? <HeartPulse size={10} /> : <Flame size={10} />}
+              {isCardio ? "Cardio" : "Addome"}
+            </span>
+          )}
           <span className="font-bold text-sm uppercase truncate" style={{ color: "var(--ivory)" }}>
             {exercise.name}
           </span>
-          {exercise.muscleGroup && (
+          {exercise.muscleGroup && !kindColor && (
             <span className="text-xs px-1.5 py-0.5 rounded-md shrink-0 hidden sm:inline"
               style={{ background: "var(--surface)", color: "var(--text-dim)" }}>
               {exercise.muscleGroup}
@@ -305,8 +344,50 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
         </div>
       )}
 
+      {/* ── CARDIO block (both modes) ── */}
+      {isCardio && (
+        <div className="px-3 py-3 space-y-2.5">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+            <span style={{ color: "var(--text-faint)" }}>
+              Target: <span style={{ color: "var(--accent-light)", fontWeight: 700 }}>{cardioTarget || "—"}</span>
+            </span>
+            {exercise.intensity && (
+              <span style={{ color: "var(--text-faint)" }}>
+                Intensità: <span style={{ color: "var(--ivory)", fontWeight: 600 }}>{exercise.intensity}</span>
+              </span>
+            )}
+          </div>
+          {exercise.notes && (
+            <p className="text-xs italic" style={{ color: "var(--text-dim)" }}>{exercise.notes}</p>
+          )}
+          {mode === "client" ? (
+            <div className="rounded-xl overflow-hidden"
+              style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)" }}>
+              <p className="text-center pt-1.5 text-xs font-bold" style={{ color: "#fca5a5", fontSize: "0.62rem" }}>MINUTI SVOLTI</p>
+              <input
+                type="text" inputMode="decimal"
+                value={minutes}
+                onChange={e => setMinutes(e.target.value.replace(/[^0-9.,]/g, "").replace(",", "."))}
+                onKeyDown={e => { if (e.key === "Enter") handleSave(); }}
+                placeholder={exercise.duration ?? "0"}
+                className="w-full text-center py-2 pb-2.5 text-lg font-black outline-none"
+                style={{ background: "transparent", color: "var(--ivory)", border: "none" }}
+              />
+            </div>
+          ) : (
+            <div className="flex items-center justify-between rounded-xl px-3 py-2.5"
+              style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
+              <span className="text-xs" style={{ color: "var(--text-dim)" }}>Svolto</span>
+              <span className="text-sm font-bold" style={{ color: minutes ? "var(--ivory)" : "var(--text-faint)" }}>
+                {minutes ? `${minutes} min` : "—"}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── CLIENT mode: per-set rows ── */}
-      {mode === "client" && (
+      {mode === "client" && !isCardio && (
         <div className="px-3 pt-2 pb-1 space-y-2">
           {Array.from({ length: sets }, (_, i) => (
             <div key={i}>
@@ -383,7 +464,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
       )}
 
       {/* ── TRAINER mode ── */}
-      {mode === "trainer" && (
+      {mode === "trainer" && !isCardio && (
         <>
           <div style={{ display: "grid", gridTemplateColumns: trainerCols, borderBottom: rowBorder, background: "var(--surface-xs)" }}>
             <div className="px-3 py-1.5 text-xs" style={{ color: "transparent", borderRight: rowBorder }}>·</div>

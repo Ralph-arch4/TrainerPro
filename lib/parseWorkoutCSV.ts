@@ -13,6 +13,9 @@ export type ImportedExercise = Omit<Exercise, "id" | "order">;
  *   recupero / rest                   → rest in seconds e.g. "90" or "90'" (default: none)
  *   gruppo / muscleGroup / muscle     → muscle group (default: none)
  *   superset                          → superset group letter e.g. "A" (default: none)
+ *   tipo / type                       → "esercizio" | "cardio" | "addome" (default: esercizio)
+ *   durata / duration                 → cardio minutes e.g. "20" (cardio only)
+ *   intensita / intensity             → cardio intensity e.g. "Zona 2" (cardio only)
  *
  * The first row is always treated as a header row.
  * Empty rows and rows where the name cell is blank are skipped.
@@ -70,6 +73,9 @@ export function parseWorkoutCSV(csvText: string): ImportedExercise[] {
   const restIdx    = col("recupero", "rest", "riposo", "recupero (s)", "rest (s)");
   const groupIdx   = col("gruppo", "musclegroup", "muscle", "gruppo muscolare", "gruppo_muscolare");
   const superIdx   = col("superset", "superserie", "superset group");
+  const typeIdx    = col("tipo", "type", "kind");
+  const durIdx     = col("durata", "duration", "minuti", "durata (min)");
+  const intIdx     = col("intensita", "intensità", "intensity");
 
   // Require at least an exercise name column
   if (nameIdx === -1) return [];
@@ -89,12 +95,34 @@ export function parseWorkoutCSV(csvText: string): ImportedExercise[] {
     const group     = groupIdx !== -1 ? (cells[groupIdx] ?? "").trim() || undefined : undefined;
     const superset  = superIdx !== -1 ? (cells[superIdx] ?? "").trim().toUpperCase().slice(0, 2) || undefined : undefined;
 
+    const typeRaw   = typeIdx !== -1 ? (cells[typeIdx] ?? "").trim().toLowerCase() : "";
+    const kind      = typeRaw.startsWith("cardio") ? "cardio" as const
+      : (typeRaw.startsWith("add") || typeRaw === "core" || typeRaw === "abs") ? "core" as const
+      : undefined;
+
+    if (kind === "cardio") {
+      results.push({
+        kind,
+        name,
+        day,
+        sets: setsIdx !== -1 ? (parseInt(cells[setsIdx] ?? "1") || 1) : 1,
+        targetReps: "—",
+        muscleGroup: "Cardio",
+        restSeconds: rest,
+        duration: durIdx !== -1 ? (cells[durIdx] ?? "").trim() || undefined : undefined,
+        intensity: intIdx !== -1 ? (cells[intIdx] ?? "").trim() || undefined : undefined,
+        perSetReps: undefined,
+      });
+      continue;
+    }
+
     results.push({
+      kind,
       name,
       day,
       sets,
       targetReps: reps,
-      muscleGroup: group,
+      muscleGroup: group ?? (kind === "core" ? "Addominali" : undefined),
       restSeconds: rest,
       supersetGroup: superset,
       perSetReps: undefined,
