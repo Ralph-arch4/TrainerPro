@@ -209,7 +209,7 @@ function renderRepTargets(ex: Exercise): React.ReactNode {
       ex.intensity || null,
     ].filter(Boolean);
     return (
-      <span className="text-xs" style={{ color: "rgba(245,240,232,0.55)" }}>
+      <span className="text-xs break-words" style={{ color: "rgba(245,240,232,0.55)", overflowWrap: "anywhere" }}>
         {parts.length > 0 ? parts.join(" · ") : "Cardio"}
       </span>
     );
@@ -218,11 +218,11 @@ function renderRepTargets(ex: Exercise): React.ReactNode {
     return (
       <div className="space-y-0.5">
         {ex.perSetReps.map((r, i) => (
-          <div key={i} className="flex items-center gap-1.5">
-            <span className="text-xs w-12 font-medium" style={{ color: "rgba(245,240,232,0.35)" }}>
+          <div key={i} className="flex items-baseline gap-1.5">
+            <span className="text-xs w-12 flex-shrink-0 font-medium" style={{ color: "rgba(245,240,232,0.35)" }}>
               Serie {i + 1}
             </span>
-            <span className="text-xs font-semibold" style={{ color: "var(--accent-light)" }}>
+            <span className="text-xs font-semibold break-words min-w-0" style={{ color: "var(--accent-light)", overflowWrap: "anywhere" }}>
               {r || "—"} rep
             </span>
           </div>
@@ -231,7 +231,7 @@ function renderRepTargets(ex: Exercise): React.ReactNode {
     );
   }
   return (
-    <span className="text-xs" style={{ color: "rgba(245,240,232,0.55)" }}>
+    <span className="text-xs break-words" style={{ color: "rgba(245,240,232,0.55)", overflowWrap: "anywhere" }}>
       {ex.sets} × {ex.targetReps} rep
     </span>
   );
@@ -491,7 +491,7 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
                     background: i === activeSugg ? "rgba(255,107,43,0.12)" : "transparent",
                     borderBottom: i < suggestions.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
                   }}>
-                  <span className="text-xs font-medium truncate" style={{ color: "var(--ivory)" }}>{ex.name}</span>
+                  <span className="text-xs font-medium break-words min-w-0" style={{ color: "var(--ivory)" }}>{ex.name}</span>
                   <span className="text-xs shrink-0 px-1.5 py-0.5 rounded-md" style={{ background: "rgba(255,107,43,0.1)", color: "var(--accent-light)" }}>
                     {ex.muscleGroup}
                   </span>
@@ -1014,7 +1014,7 @@ export default function WorkoutSpreadsheet({
                             </span>
                           )}
                           <KindBadge ex={ex} />
-                          <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{ex.name}</p>
+                          <p className="text-sm font-semibold break-words min-w-0" style={{ color: "var(--ivory)", overflowWrap: "anywhere" }}>{ex.name}</p>
                           {ex.videoUrl && (
                             <a href={ex.videoUrl} target="_blank" rel="noopener noreferrer">
                               <LinkIcon size={11} style={{ color: "var(--accent)" }} />
@@ -1309,7 +1309,7 @@ export default function WorkoutSpreadsheet({
                                 </span>
                               )}
                               <KindBadge ex={ex} />
-                              <p className="text-sm font-semibold" style={{ color: "var(--ivory)" }}>{ex.name}</p>
+                              <p className="text-sm font-semibold break-words min-w-0" style={{ color: "var(--ivory)", overflowWrap: "anywhere" }}>{ex.name}</p>
                               {ex.videoUrl && (
                                 <a href={ex.videoUrl} target="_blank" rel="noopener noreferrer"
                                   className="hover:opacity-80" title="Guarda video">
@@ -1409,7 +1409,7 @@ export default function WorkoutSpreadsheet({
                                 <div>
                                   {cell.weight && <p className="text-sm font-bold" style={{ color: "var(--accent-light)" }}>{cell.weight} kg</p>}
                                   {cell.reps && <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.6)" }}>{cell.reps}{isCardioEx ? " min" : ""}</p>}
-                                  {log?.note && <p className="text-xs mt-0.5 italic truncate" style={{ color: "rgba(245,240,232,0.3)" }}>{log.note}</p>}
+                                  {log?.note && <p className="text-xs mt-0.5 italic line-clamp-3 break-words" style={{ color: "rgba(245,240,232,0.55)" }} title={log.note}>{log.note}</p>}
                                 </div>
                               ) : (
                                 <span className="text-xs" style={{ color: "rgba(245,240,232,0.12)" }}>—</span>

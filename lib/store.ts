@@ -107,6 +107,7 @@ export interface WorkoutPlan {
   restSeconds?: number; // default rest between sets (seconds)
   exercises: Exercise[];
   logs: ExerciseLog[];
+  sessionLogs?: ExerciseLog[]; // client sessions (start/end/feedback), see lib/workoutSession.ts
   shareToken: string;
   createdAt: string;
   active: boolean;

@@ -5,6 +5,7 @@ import { dbExerciseLogs } from "@/lib/db";
 import WorkoutLogbook from "@/components/WorkoutLogbook";
 import ThemeToggle from "@/components/ThemeToggle";
 import type { Exercise, ExerciseLog } from "@/lib/store";
+import { splitLogs } from "@/lib/workoutSession";
 import { Dumbbell, TrendingUp, Flame, Trophy, Loader2, AlertCircle, Lock } from "lucide-react";
 
 // Minimal client portal shared by /cliente/[token] and /scheda/[token]:
@@ -174,7 +175,8 @@ export default function ClientPortal({ token }: { token: string | undefined }) {
   }
 
   // ── Progress & gamification ───────────────────────────────────────────────
-  const filledLogs = logs.filter((l) => l.weight != null || l.reps);
+  const { logs: exerciseLogs, sessionLogs } = splitLogs(logs);
+  const filledLogs = exerciseLogs.filter((l) => l.weight != null || l.reps);
   const currentWeek = filledLogs.length > 0 ? Math.max(...filledLogs.map((l) => l.weekNumber)) : 0;
   const weeksCompleted = Math.max(0, currentWeek - 1);
   const isUnlimited = plan.total_weeks === 0;
@@ -243,7 +245,7 @@ export default function ClientPortal({ token }: { token: string | undefined }) {
               {initials}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-bold truncate" style={{ color: "var(--text)" }}>{plan.name}</p>
+              <p className="text-sm font-bold leading-tight line-clamp-2 break-words" style={{ color: "var(--text)" }}>{plan.name}</p>
               <p className="text-xs truncate" style={{ color: "var(--text-dim)" }}>di {trainerName}</p>
             </div>
           </div>
@@ -328,7 +330,8 @@ export default function ClientPortal({ token }: { token: string | undefined }) {
               <WorkoutLogbook
                 planId={plan.id}
                 exercises={plan.exercises}
-                logs={logs}
+                logs={exerciseLogs}
+                sessionLogs={sessionLogs}
                 totalWeeks={plan.total_weeks}
                 daysPerWeek={plan.days_per_week}
                 mode="client"
@@ -394,7 +397,7 @@ export default function ClientPortal({ token }: { token: string | undefined }) {
                 <div key={r.ex.id} className="flex items-center gap-3 px-4 py-3"
                   style={{ borderBottom: i < records.length - 1 ? "1px solid var(--border-subtle)" : "none" }}>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate" style={{ color: "var(--text)" }}>{r.ex.name}</p>
+                    <p className="text-sm font-semibold leading-snug break-words" style={{ color: "var(--text)", overflowWrap: "anywhere" }}>{r.ex.name}</p>
                     <p className="text-xs" style={{ color: "var(--text-dim)" }}>
                       {r.history.length} {r.history.length === 1 ? "settimana" : "settimane"}
                       {r.delta !== 0 && (

@@ -462,6 +462,7 @@ export default function WorkoutPlanPage() {
           planId={planId}
           exercises={plan.exercises}
           logs={plan.logs}
+          sessionLogs={plan.sessionLogs}
           totalWeeks={plan.totalWeeks}
           daysPerWeek={plan.daysPerWeek}
           mode="trainer"
