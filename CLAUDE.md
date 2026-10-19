@@ -47,7 +47,7 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 | `components/DietPlanEditor.tsx` | Full-screen diet editor with macro ranges |
 | `app/dashboard/clienti/[id]/page.tsx` | Client detail (plans, diet, phases, measurements, notes) |
 | `app/dashboard/clienti/[id]/schede/[planId]/page.tsx` | PT plan view: toggle Logbook/Spreadsheet |
-| `components/ClientPortal.tsx` | Minimal client portal (Scheda + Progressi, light XP/badges). Used by `app/cliente/[token]` and `app/scheda/[token]` |
+| `components/ClientPortal.tsx` | Client portal: plan only (no gamification). Used by `app/cliente/[token]` and `app/scheda/[token]`. Trainer notes/links rendered via `LinkifiedText` |
 | `lib/exerciseImages.ts` | Exercise name -> guide photos in `public/exercises/<id>/{0,1}.webp` (free-exercise-db, public domain) |
 | `app/api/intake/[token]/route.ts` | Server-side API with service_role key |
 

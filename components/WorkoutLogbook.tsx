@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, 
 import { showToast } from "@/components/Toast";
 import ExerciseGuide from "@/components/ExerciseGuide";
 import SessionPanel from "@/components/SessionPanel";
+import LinkifiedText from "@/components/LinkifiedText";
 import { parseSession, sessionExerciseId, sessionToLog } from "@/lib/workoutSession";
 
 // ── Per-set data ──────────────────────────────────────────────────────────────
@@ -196,7 +197,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
   const [minutes, setMinutes] = useState(() => parseCardioMinutes(log));
   const origMinutes      = useRef(parseCardioMinutes(log));
   const [note, setNote]  = useState(log?.note ?? "");
-  const [noteOpen, setNoteOpen] = useState(!!log?.note);
+  const [noteOpen, setNoteOpen] = useState(false); // editing the note
   const noteDirty        = note.trim() !== (log?.note ?? "").trim();
   const dirty            = noteDirty || (isCardio ? minutes !== origMinutes.current : areDirty(data, orig.current));
 
@@ -208,7 +209,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
     setMinutes(mins);
     origMinutes.current = mins;
     setNote(log?.note ?? "");
-    setNoteOpen(!!log?.note);
+    setNoteOpen(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [log?.loggedAt, log?.reps, log?.note, sets]);
 
@@ -223,14 +224,14 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
       const mins = minutes.trim();
       onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps: mins || undefined, weight: undefined, note: note.trim() || undefined });
       origMinutes.current = minutes;
-      showToast(mode === "client" ? "Cardio registrato · +10 XP" : "Salvato ✓");
+      showToast(mode === "client" ? "Cardio registrato" : "Salvato ✓");
       return;
     }
     const { reps, weight } = serializeSetData(data);
     // Always send the note: the upsert writes null for missing fields.
     onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps, weight, note: note.trim() || undefined });
     orig.current = [...data];
-    showToast(mode === "client" ? "Salvato · +10 XP" : "Salvato ✓");
+    showToast("Salvato ✓");
   }
   function handleClear() {
     if (isCardio) {
@@ -323,17 +324,27 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
         )}
       </div>
 
-      {/* Trainer's technical notes + rest */}
-      {!isCardio && (exercise.notes || exercise.restSeconds) && (
-        <div className="px-3 py-2 text-xs space-y-0.5" style={{ borderBottom: rowBorder }}>
-          {exercise.restSeconds && (
-            <p style={{ color: "var(--text-dim)" }}>Recupero: <span style={{ color: "var(--ivory)", fontWeight: 600 }}>{exercise.restSeconds}s</span></p>
+      {/* Trainer's indications: rest, technical notes, demo video */}
+      {(exercise.restSeconds && !isCardio) || (exercise.notes && !isCardio) || exercise.videoUrl ? (
+        <div className="px-3 py-2.5 space-y-1.5" style={{ borderBottom: rowBorder, background: "var(--surface-xs)" }}>
+          {exercise.restSeconds && !isCardio && (
+            <p className="text-xs" style={{ color: "var(--text-dim)" }}>Recupero: <span style={{ color: "var(--ivory)", fontWeight: 600 }}>{exercise.restSeconds}s</span></p>
           )}
-          {exercise.notes && (
-            <p className="italic break-words" style={{ color: "var(--text-muted)", overflowWrap: "anywhere" }}>{exercise.notes}</p>
+          {exercise.notes && !isCardio && (
+            <div className="text-sm break-words whitespace-pre-line" style={{ color: "var(--ivory)", overflowWrap: "anywhere" }}>
+              <span className="text-xs font-bold uppercase tracking-wide block mb-0.5" style={{ color: "var(--accent-light)" }}>Indicazioni del trainer</span>
+              <LinkifiedText text={exercise.notes} />
+            </div>
+          )}
+          {exercise.videoUrl && (
+            <a href={exercise.videoUrl} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-opacity hover:opacity-80"
+              style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", color: "var(--accent-light)" }}>
+              <ExternalLink size={11} /> Guarda il video
+            </a>
           )}
         </div>
-      )}
+      ) : null}
 
       {/* Progressive overload suggestion */}
       {suggestion && (
@@ -370,7 +381,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
             )}
           </div>
           {exercise.notes && (
-            <p className="text-xs italic break-words" style={{ color: "var(--text-dim)" }}>{exercise.notes}</p>
+            <p className="text-sm break-words whitespace-pre-line" style={{ color: "var(--ivory)" }}><LinkifiedText text={exercise.notes} /></p>
           )}
           {mode === "client" ? (
             <div className="rounded-xl overflow-hidden"
@@ -507,10 +518,21 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
       {mode === "client" && (
         <div className="px-3 pb-1" style={{ borderTop: rowBorder }}>
           {noteOpen ? (
-            <textarea value={note} onChange={e => setNote(e.target.value.slice(0, 300))} rows={2}
+            <textarea value={note} onChange={e => setNote(e.target.value.slice(0, 300))} rows={2} autoFocus
               placeholder="Nota per il trainer: sensazioni, dolori, carico troppo leggero…"
               className="w-full mt-2 px-3 py-2 rounded-xl text-sm outline-none resize-none"
               style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--ivory)" }} />
+          ) : log?.note ? (
+            <div className="py-2 flex items-start gap-2">
+              <p className="flex-1 text-sm break-words whitespace-pre-line" style={{ color: "var(--ivory)", overflowWrap: "anywhere" }}>
+                <span className="text-xs font-bold uppercase tracking-wide block mb-0.5" style={{ color: "var(--accent-light)" }}>Nota della settimana</span>
+                <LinkifiedText text={log.note} />
+              </p>
+              <button onClick={() => setNoteOpen(true)} className="p-1.5 rounded-lg flex-shrink-0" title="Modifica nota"
+                style={{ background: "var(--surface-md)" }}>
+                <Pencil size={11} style={{ color: "var(--text-muted)" }} />
+              </button>
+            </div>
           ) : (
             <button onClick={() => setNoteOpen(true)} className="flex items-center gap-1.5 py-2 text-xs"
               style={{ color: "var(--text-dim)" }}>
@@ -559,17 +581,10 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
       {mode === "trainer" && log?.note && (
         <div className="px-3 py-2 text-xs break-words" style={{ borderTop: rowBorder, color: "var(--text-muted)" }}>
           <span className="font-bold not-italic" style={{ color: "var(--accent-light)" }}>Nota: </span>
-          <span className="italic">{log.note}</span>
+          <span className="italic"><LinkifiedText text={log.note} /></span>
         </div>
       )}
 
-      {exercise.videoUrl && (
-        <a href={exercise.videoUrl} target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-3 py-2 text-xs transition-opacity hover:opacity-80"
-          style={{ borderTop: rowBorder, color: "var(--accent-light)" }}>
-          <ExternalLink size={10} /> Video dimostrativo
-        </a>
-      )}
     </div>
   );
 }
