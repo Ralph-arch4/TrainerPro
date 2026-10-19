@@ -6,6 +6,7 @@ import type { DietPlan } from "@/lib/store";
 import { dbClients, dbPhases, dbWorkoutPlans, dbDietPlans, dbNotes, dbMeasurements } from "@/lib/db";
 import { showToast } from "@/components/Toast";
 import DietPlanEditor from "@/components/DietPlanEditor";
+import ClientFeedbackPanel, { collectClientFeedback } from "@/components/ClientFeedbackPanel";
 import Link from "next/link";
 import {
   ArrowLeft, Activity, UtensilsCrossed, StickyNote,
@@ -20,7 +21,7 @@ import { Scan, Sparkles, ShieldCheck, Brain, GitCompare, TrendingDown, Minus, Ke
 import type { BodyFeatures } from "@/lib/cv-analysis";
 import { computeTier, TIERS, TIER_ORDER, tierDelta, type Tier } from "@/lib/tier-system";
 
-type Tab = "overview" | "fasi" | "schede" | "dieta" | "misurazioni" | "note" | "foto" | "scan";
+type Tab = "overview" | "fasi" | "schede" | "feedback" | "dieta" | "misurazioni" | "note" | "foto" | "scan";
 
 // PIN is no longer hardcoded — verified server-side via /api/photo/pin
 // Session token stored in sessionStorage (tab-scoped, not persisted)
@@ -1019,6 +1020,7 @@ export default function ClientDetailPage() {
     { key: "overview", label: "Overview", icon: BarChart2 },
     { key: "fasi", label: "Fasi", icon: Activity, count: client.phases.length },
     { key: "schede", label: "Schede", icon: Dumbbell, count: client.workoutPlans.length },
+    { key: "feedback", label: "Feedback", icon: MessageCircle, count: collectClientFeedback(client.workoutPlans).length },
     { key: "dieta", label: "Dieta", icon: UtensilsCrossed, count: client.dietPlans.length },
     { key: "misurazioni", label: "Misurazioni", icon: TrendingUp, count: client.measurements.length },
     { key: "note", label: "Note", icon: StickyNote, count: client.notes.length },
@@ -2357,6 +2359,9 @@ export default function ClientDetailPage() {
           )}
         </div>
       )}
+
+      {/* ── FEEDBACK (client sessions + notes) ── */}
+      {tab === "feedback" && <ClientFeedbackPanel plans={client.workoutPlans} />}
 
       {/* ── NOTE ── */}
       {tab === "note" && (

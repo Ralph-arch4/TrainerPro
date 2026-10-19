@@ -1,8 +1,12 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
-import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2, Target } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2, Target, HeartPulse, Flame } from "lucide-react";
 import { showToast } from "@/components/Toast";
+import ExerciseGuide from "@/components/ExerciseGuide";
+import SessionPanel from "@/components/SessionPanel";
+import LinkifiedText from "@/components/LinkifiedText";
+import { parseSession, sessionExerciseId, sessionToLog } from "@/lib/workoutSession";
 
 // ── Per-set data ──────────────────────────────────────────────────────────────
 interface SetData { reps: string; weight: string; rpe: string; }
@@ -179,44 +183,64 @@ interface CardProps {
   weightHistory?: number[];
 }
 
+// Cardio logs store the minutes actually done in `reps` (plain text)
+function parseCardioMinutes(log: ExerciseLog | undefined): string {
+  const raw = log?.reps ?? "";
+  return raw.startsWith("[") ? "" : raw;
+}
+
 function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onStartTimer, onEdit, onDelete, weightHistory }: CardProps) {
+  const isCardio = exercise.kind === "cardio";
   const sets = Math.max(1, exercise.sets || 3);
   const [data, setData] = useState<SetData[]>(() => parseSetData(log, sets));
   const orig             = useRef<SetData[]>(parseSetData(log, sets));
-  const dirty            = areDirty(data, orig.current);
+  const [minutes, setMinutes] = useState(() => parseCardioMinutes(log));
+  const origMinutes      = useRef(parseCardioMinutes(log));
+  const [note, setNote]  = useState(log?.note ?? "");
+  const [noteOpen, setNoteOpen] = useState(false); // editing the note
+  const noteDirty        = note.trim() !== (log?.note ?? "").trim();
+  const dirty            = noteDirty || (isCardio ? minutes !== origMinutes.current : areDirty(data, orig.current));
 
   useEffect(() => {
     const parsed = parseSetData(log, sets);
     setData(parsed);
     orig.current = parsed;
+    const mins = parseCardioMinutes(log);
+    setMinutes(mins);
+    origMinutes.current = mins;
+    setNote(log?.note ?? "");
+    setNoteOpen(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [log?.loggedAt, log?.reps, sets]);
+  }, [log?.loggedAt, log?.reps, log?.note, sets]);
 
   function targetRep(i: number) { return exercise.perSetReps?.[i] ?? exercise.targetReps ?? "—"; }
   function updateWeight(i: number, val: string) { setData(p => { const n = [...p]; n[i] = { ...n[i], weight: val }; return n; }); }
   function updateReps(i: number, val: string)   { setData(p => { const n = [...p]; n[i] = { ...n[i], reps: val };   return n; }); }
   function updateRpe(i: number, val: string)    { setData(p => { const n = [...p]; n[i] = { ...n[i], rpe: val };    return n; }); }
 
-  const MOTIVATIONAL = [
-    "Sessione salvata. Ogni rep conta.",
-    "Fatto. La costanza batte il talento.",
-    "Salvato. Stai costruendo qualcosa di solido.",
-    "Un'altra sessione archiviata. Avanti così.",
-    "Registrato. Il tuo futuro io ti ringrazierà.",
-  ];
 
   function handleSave() {
+    if (isCardio) {
+      const mins = minutes.trim();
+      onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps: mins || undefined, weight: undefined, note: note.trim() || undefined });
+      origMinutes.current = minutes;
+      showToast(mode === "client" ? "Cardio registrato" : "Salvato ✓");
+      return;
+    }
     const { reps, weight } = serializeSetData(data);
-    // Preserve any existing note (written by the trainer via spreadsheet):
-    // the upsert writes null for missing fields, so omitting it would wipe it.
-    onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps, weight, note: log?.note });
+    // Always send the note: the upsert writes null for missing fields.
+    onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps, weight, note: note.trim() || undefined });
     orig.current = [...data];
-    const msg = mode === "client"
-      ? MOTIVATIONAL[Math.floor(Math.random() * MOTIVATIONAL.length)]
-      : "Salvato ✓";
-    showToast(msg);
+    showToast("Salvato ✓");
   }
   function handleClear() {
+    if (isCardio) {
+      setMinutes("");
+      origMinutes.current = "";
+      onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps: undefined, weight: undefined, note: log?.note });
+      showToast("Dati cancellati");
+      return;
+    }
     const blank = Array.from({ length: sets }, () => ({ reps: "", weight: "", rpe: "" }));
     setData(blank);
     onUpsertLog({ exerciseId: exercise.id, weekNumber: week, reps: undefined, weight: undefined, note: log?.note });
@@ -229,10 +253,16 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
     : "— / — / ——";
 
   const color      = ssColor(exercise.supersetGroup);
-  const cardBorder = color ? `2px solid ${color}40` : "1px solid var(--border)";
+  const kindColor  = isCardio ? "#f87171" : exercise.kind === "core" ? "#facc15" : null;
+  const cardBorder = color ? `2px solid ${color}40` : kindColor ? `2px solid ${kindColor}40` : "1px solid var(--border)";
+  const cardioTarget = [
+    exercise.duration ? `${exercise.duration} min` : null,
+    sets > 1 ? `${sets} blocchi` : null,
+    exercise.restSeconds && sets > 1 ? `rec. ${exercise.restSeconds}s` : null,
+  ].filter(Boolean).join(" · ");
   const rowBorder  = "1px solid var(--border-subtle)";
 
-  const suggestion = mode === "client" && week > 1
+  const suggestion = mode === "client" && week > 1 && !isCardio
     ? calcSuggestion(parseSetData(lastWeekLog, sets))
     : null;
 
@@ -247,20 +277,30 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
         {sessionDate}
       </div>
 
+      {/* Visual guide (start/end position) */}
+      <ExerciseGuide name={exercise.name} />
+
       {/* Exercise name */}
-      <div className="flex items-center justify-between px-3 py-2.5 gap-2"
+      <div className="flex items-start justify-between px-3 py-2.5 gap-2"
         style={{ background: "rgba(201,168,76,0.06)", borderBottom: rowBorder }}>
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0 flex-1">
           {color && (
             <span className="text-xs font-bold px-1.5 py-0.5 rounded-md shrink-0"
               style={{ background: `${color}18`, color, border: `1px solid ${color}33` }}>
               SS-{exercise.supersetGroup}
             </span>
           )}
-          <span className="font-bold text-sm uppercase truncate" style={{ color: "var(--ivory)" }}>
+          {kindColor && (
+            <span className="flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded-md shrink-0"
+              style={{ background: `${kindColor}18`, color: kindColor, border: `1px solid ${kindColor}33` }}>
+              {isCardio ? <HeartPulse size={10} /> : <Flame size={10} />}
+              {isCardio ? "Cardio" : "Addome"}
+            </span>
+          )}
+          <span className="font-bold text-sm uppercase break-words leading-snug min-w-0" style={{ color: "var(--ivory)", overflowWrap: "anywhere" }}>
             {exercise.name}
           </span>
-          {exercise.muscleGroup && (
+          {exercise.muscleGroup && !kindColor && (
             <span className="text-xs px-1.5 py-0.5 rounded-md shrink-0 hidden sm:inline"
               style={{ background: "var(--surface)", color: "var(--text-dim)" }}>
               {exercise.muscleGroup}
@@ -284,6 +324,28 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
         )}
       </div>
 
+      {/* Trainer's indications: rest, technical notes, demo video */}
+      {(exercise.restSeconds && !isCardio) || (exercise.notes && !isCardio) || exercise.videoUrl ? (
+        <div className="px-3 py-2.5 space-y-1.5" style={{ borderBottom: rowBorder, background: "var(--surface-xs)" }}>
+          {exercise.restSeconds && !isCardio && (
+            <p className="text-xs" style={{ color: "var(--text-dim)" }}>Recupero: <span style={{ color: "var(--ivory)", fontWeight: 600 }}>{exercise.restSeconds}s</span></p>
+          )}
+          {exercise.notes && !isCardio && (
+            <div className="text-sm break-words whitespace-pre-line" style={{ color: "var(--ivory)", overflowWrap: "anywhere" }}>
+              <span className="text-xs font-bold uppercase tracking-wide block mb-0.5" style={{ color: "var(--accent-light)" }}>Indicazioni del trainer</span>
+              <LinkifiedText text={exercise.notes} />
+            </div>
+          )}
+          {exercise.videoUrl && (
+            <a href={exercise.videoUrl} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-opacity hover:opacity-80"
+              style={{ background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", color: "var(--accent-light)" }}>
+              <ExternalLink size={11} /> Guarda il video
+            </a>
+          )}
+        </div>
+      ) : null}
+
       {/* Progressive overload suggestion */}
       {suggestion && (
         <div className="flex items-center gap-2 px-3 py-2 text-xs"
@@ -305,16 +367,58 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
         </div>
       )}
 
+      {/* ── CARDIO block (both modes) ── */}
+      {isCardio && (
+        <div className="px-3 py-3 space-y-2.5">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+            <span style={{ color: "var(--text-faint)" }}>
+              Target: <span style={{ color: "var(--accent-light)", fontWeight: 700 }}>{cardioTarget || "—"}</span>
+            </span>
+            {exercise.intensity && (
+              <span className="min-w-0 break-words" style={{ color: "var(--text-faint)", overflowWrap: "anywhere" }}>
+                Intensità: <span style={{ color: "var(--ivory)", fontWeight: 600 }}>{exercise.intensity}</span>
+              </span>
+            )}
+          </div>
+          {exercise.notes && (
+            <p className="text-sm break-words whitespace-pre-line" style={{ color: "var(--ivory)" }}><LinkifiedText text={exercise.notes} /></p>
+          )}
+          {mode === "client" ? (
+            <div className="rounded-xl overflow-hidden"
+              style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)" }}>
+              <p className="text-center pt-1.5 text-xs font-bold" style={{ color: "#fca5a5", fontSize: "0.62rem" }}>MINUTI SVOLTI</p>
+              <input
+                type="text" inputMode="decimal"
+                value={minutes}
+                onChange={e => setMinutes(e.target.value.replace(/[^0-9.,]/g, "").replace(",", "."))}
+                onKeyDown={e => { if (e.key === "Enter") handleSave(); }}
+                placeholder={exercise.duration ?? "0"}
+                className="w-full text-center py-2 pb-2.5 text-lg font-black outline-none"
+                style={{ background: "transparent", color: "var(--ivory)", border: "none" }}
+              />
+            </div>
+          ) : (
+            <div className="flex items-center justify-between rounded-xl px-3 py-2.5"
+              style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
+              <span className="text-xs" style={{ color: "var(--text-dim)" }}>Svolto</span>
+              <span className="text-sm font-bold" style={{ color: minutes ? "var(--ivory)" : "var(--text-faint)" }}>
+                {minutes ? `${minutes} min` : "—"}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── CLIENT mode: per-set rows ── */}
-      {mode === "client" && (
+      {mode === "client" && !isCardio && (
         <div className="px-3 pt-2 pb-1 space-y-2">
           {Array.from({ length: sets }, (_, i) => (
             <div key={i}>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-bold" style={{ color: "var(--text-dim)", minWidth: "3.5rem" }}>
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-xs font-bold flex-shrink-0" style={{ color: "var(--text-dim)", minWidth: "3.5rem" }}>
                   Serie {i + 1}
                 </span>
-                <span className="text-xs" style={{ color: "var(--text-faint)" }}>
+                <span className="text-xs min-w-0 break-words" style={{ color: "var(--text-faint)", overflowWrap: "anywhere" }}>
                   Target: <span style={{ color: "var(--accent-light)", fontWeight: 700 }}>{targetRep(i)}</span> rip.
                 </span>
               </div>
@@ -328,7 +432,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
                     value={data[i]?.reps ?? ""}
                     onChange={e => updateReps(i, e.target.value.replace(/[^0-9]/g, ""))}
                     onKeyDown={e => { if (e.key === "Enter") handleSave(); }}
-                    placeholder={String(targetRep(i))}
+                    placeholder={String(targetRep(i)).length > 5 ? "rep" : String(targetRep(i))}
                     className="w-full text-center py-2 pb-2.5 text-lg font-black outline-none"
                     style={{ background: "transparent", color: "var(--ivory)", border: "none" }}
                   />
@@ -383,7 +487,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
       )}
 
       {/* ── TRAINER mode ── */}
-      {mode === "trainer" && (
+      {mode === "trainer" && !isCardio && (
         <>
           <div style={{ display: "grid", gridTemplateColumns: trainerCols, borderBottom: rowBorder, background: "var(--surface-xs)" }}>
             <div className="px-3 py-1.5 text-xs" style={{ color: "transparent", borderRight: rowBorder }}>·</div>
@@ -397,17 +501,45 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
               background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.012)",
             }}>
               <div className="flex items-center px-3 py-2.5 text-xs" style={{ color: "var(--text-dim)", borderRight: rowBorder }}>serie {i + 1}</div>
-              <div className="flex items-center justify-center px-2 py-2.5 text-xs font-semibold" style={{ color: "var(--accent-light)", borderRight: rowBorder }}>
+              <div className="flex items-center justify-center px-2 py-2.5 text-xs font-semibold text-center min-w-0 break-words" style={{ color: "var(--accent-light)", borderRight: rowBorder, overflowWrap: "anywhere" }}>
                 {targetRep(i)}
               </div>
-              <div className="flex items-center justify-center px-2 py-2.5 text-sm font-bold"
+              <div className="flex flex-wrap items-center justify-center gap-x-2 px-2 py-2.5 text-sm font-bold min-w-0"
                 style={{ color: data[i]?.weight ? "var(--ivory)" : "var(--text-faint)" }}>
                 {data[i]?.weight ? `${data[i].weight} kg` : "—"}
-                {data[i]?.rpe ? <span className="ml-2 text-xs" style={{ color: "var(--accent-light)" }}>RPE {data[i].rpe}</span> : null}
+                {data[i]?.rpe ? <span className="text-xs" style={{ color: "var(--accent-light)" }}>RPE {data[i].rpe}</span> : null}
               </div>
             </div>
           ))}
         </>
+      )}
+
+      {/* Note for the trainer (client) */}
+      {mode === "client" && (
+        <div className="px-3 pb-1" style={{ borderTop: rowBorder }}>
+          {noteOpen ? (
+            <textarea value={note} onChange={e => setNote(e.target.value.slice(0, 300))} rows={2} autoFocus
+              placeholder="Nota per il trainer: sensazioni, dolori, carico troppo leggero…"
+              className="w-full mt-2 px-3 py-2 rounded-xl text-sm outline-none resize-none"
+              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--ivory)" }} />
+          ) : log?.note ? (
+            <div className="py-2 flex items-start gap-2">
+              <p className="flex-1 text-sm break-words whitespace-pre-line" style={{ color: "var(--ivory)", overflowWrap: "anywhere" }}>
+                <span className="text-xs font-bold uppercase tracking-wide block mb-0.5" style={{ color: "var(--accent-light)" }}>Nota della settimana</span>
+                <LinkifiedText text={log.note} />
+              </p>
+              <button onClick={() => setNoteOpen(true)} className="p-1.5 rounded-lg flex-shrink-0" title="Modifica nota"
+                style={{ background: "var(--surface-md)" }}>
+                <Pencil size={11} style={{ color: "var(--text-muted)" }} />
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => setNoteOpen(true)} className="flex items-center gap-1.5 py-2 text-xs"
+              style={{ color: "var(--text-dim)" }}>
+              <Pencil size={11} /> Aggiungi una nota per il trainer
+            </button>
+          )}
+        </div>
       )}
 
       {/* Save / Clear / Timer (client) */}
@@ -447,18 +579,12 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
       )}
 
       {mode === "trainer" && log?.note && (
-        <div className="px-3 py-2 text-xs italic" style={{ borderTop: rowBorder, color: "var(--text-dim)" }}>
-          📝 {log.note}
+        <div className="px-3 py-2 text-xs break-words" style={{ borderTop: rowBorder, color: "var(--text-muted)" }}>
+          <span className="font-bold not-italic" style={{ color: "var(--accent-light)" }}>Nota: </span>
+          <span className="italic"><LinkifiedText text={log.note} /></span>
         </div>
       )}
 
-      {exercise.videoUrl && (
-        <a href={exercise.videoUrl} target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-3 py-2 text-xs transition-opacity hover:opacity-80"
-          style={{ borderTop: rowBorder, color: "var(--accent-light)" }}>
-          <ExternalLink size={10} /> Video dimostrativo
-        </a>
-      )}
     </div>
   );
 }
@@ -512,6 +638,7 @@ interface Props {
   planId?: string;
   exercises: Exercise[];
   logs: ExerciseLog[];
+  sessionLogs?: ExerciseLog[];
   totalWeeks?: number;
   daysPerWeek?: number;
   mode: "trainer" | "client";
@@ -527,7 +654,7 @@ interface Props {
 function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
 
 export default function WorkoutLogbook({
-  exercises, logs, totalWeeks = 12, daysPerWeek = 3,
+  exercises, logs, sessionLogs = [], totalWeeks = 12, daysPerWeek = 3,
   mode, dayLabels = {}, supplements = [],
   onAddExercise, onUpdateExercise, onRemoveExercise,
   onUpdateSupplements, onUpsertLog,
@@ -754,6 +881,18 @@ export default function WorkoutLogbook({
         ))}
       </div>
 
+      {/* Session: timer, start/end times, feedback */}
+      {(() => {
+        const raw = sessionLogs.find(l => l.exerciseId === sessionExerciseId(activeDay) && l.weekNumber === activeWeek);
+        const session = raw ? parseSession(raw) : undefined;
+        if (mode === "trainer" && !session) return null;
+        return (
+          <SessionPanel key={`${activeDay}-${activeWeek}`} day={activeDay} week={activeWeek} dayLabel={getDayLabel(activeDay)}
+            session={session} mode={mode}
+            onSave={(sess) => onUpsertLog(sessionToLog(sess))} />
+        );
+      })()}
+
       {/* RPE legend (client mode) */}
       {mode === "client" && (
         <div className="text-xs px-1 flex items-center gap-1" style={{ color: "var(--text-dim)" }}>
@@ -947,7 +1086,7 @@ export default function WorkoutLogbook({
                 <div key={item.id} className="rounded-2xl p-3 flex items-start gap-3"
                   style={{ background: "rgba(201,168,76,0.03)", border: "1px solid rgba(201,168,76,0.1)" }}>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate" style={{ color: "var(--ivory)" }}>{item.name}</p>
+                    <p className="text-sm font-semibold break-words" style={{ color: "var(--ivory)" }}>{item.name}</p>
                     {item.brand && <p className="text-xs" style={{ color: "var(--text-dim)" }}>{item.brand}</p>}
                     {item.discountCode && <p className="text-xs mt-1 font-mono" style={{ color: "var(--accent-light)" }}>Codice: {item.discountCode}</p>}
                     {item.notes && <p className="text-xs mt-1" style={{ color: "var(--text-dim)" }}>{item.notes}</p>}
@@ -1132,7 +1271,7 @@ export default function WorkoutLogbook({
                   <p className="text-xs mb-0.5" style={{ color: "rgba(201,168,76,0.6)" }}>
                     {restTimer.secs === 0 ? "Recupero terminato" : "Recupero in corso"}
                   </p>
-                  <p className="text-sm font-bold truncate" style={{ color: "var(--ivory)" }}>
+                  <p className="text-sm font-bold line-clamp-2 break-words" style={{ color: "var(--ivory)" }}>
                     {restTimer.label}
                   </p>
                 </div>

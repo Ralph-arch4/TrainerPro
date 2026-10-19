@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/lib/store";
 import { showToast } from "@/components/Toast";
 import type { PlanTier, Exercise, SupplementItem } from "@/lib/store";
+import { splitLogs } from "@/lib/workoutSession";
 
 function parseJsonb<T>(value: unknown, fallback: T): T {
   if (!value) return fallback;
@@ -120,7 +121,7 @@ export default function SupabaseDataLoader() {
                 daysPerWeek: p.days_per_week,
                 totalWeeks: p.total_weeks,
                 exercises: parseJsonb<Exercise[]>(p.exercises, []),
-                logs: exerciseLogs
+                ...splitLogs(exerciseLogs
                   .filter((l) => l.workout_plan_id === p.id)
                   .map((l) => ({
                     id: l.id,
@@ -130,7 +131,7 @@ export default function SupabaseDataLoader() {
                     reps: l.reps ?? undefined,
                     note: l.note ?? undefined,
                     loggedAt: l.logged_at,
-                  })),
+                  }))),
                 shareToken: p.share_token,
                 createdAt: p.created_at,
                 active: p.active,

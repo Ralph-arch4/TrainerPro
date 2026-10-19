@@ -111,6 +111,11 @@ export default function WorkoutPlanPage() {
     syncExercisesToDb(getExercises());
   }
 
+  function handleUpdateExercises(updates: Array<{ id: string; data: Partial<Exercise> }>) {
+    updates.forEach((u) => updateExercise(id, planId, u.id, u.data));
+    syncExercisesToDb(getExercises());
+  }
+
   function handleRemoveExercise(exerciseId: string) {
     removeExercise(id, planId, exerciseId);
     syncExercisesToDb(getExercises());
@@ -457,6 +462,7 @@ export default function WorkoutPlanPage() {
           planId={planId}
           exercises={plan.exercises}
           logs={plan.logs}
+          sessionLogs={plan.sessionLogs}
           totalWeeks={plan.totalWeeks}
           daysPerWeek={plan.daysPerWeek}
           mode="trainer"
@@ -486,6 +492,7 @@ export default function WorkoutPlanPage() {
           onUpdateExercise={handleUpdateExercise}
           onRemoveExercise={handleRemoveExercise}
           onMoveExercise={handleMoveExercise}
+          onUpdateExercises={handleUpdateExercises}
           onUpsertLog={handleUpsertLog}
         />
       )}

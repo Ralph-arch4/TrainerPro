@@ -47,15 +47,15 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 | `components/DietPlanEditor.tsx` | Full-screen diet editor with macro ranges |
 | `app/dashboard/clienti/[id]/page.tsx` | Client detail (plans, diet, phases, measurements, notes) |
 | `app/dashboard/clienti/[id]/schede/[planId]/page.tsx` | PT plan view: toggle Logbook/Spreadsheet |
-| `app/cliente/[token]/page.tsx` | Client portal: Workout + Diet + Supplements tabs |
-| `app/scheda/[token]/page.tsx` | Public shared plan link (WorkoutLogbook client mode) |
+| `components/ClientPortal.tsx` | Client portal: plan only (no gamification). Used by `app/cliente/[token]` and `app/scheda/[token]`. Trainer notes/links rendered via `LinkifiedText` |
+| `lib/exerciseImages.ts` | Exercise name -> guide photos in `public/exercises/<id>/{0,1}.webp` (free-exercise-db, public domain) |
 | `app/api/intake/[token]/route.ts` | Server-side API with service_role key |
 
 ### store.ts type summary (avoid loading 360-line file)
 | Type | Key fields |
 |------|-----------|
 | `User` | id, name, email, plan: PlanTier |
-| `Exercise` | id, name, muscleGroup?, sets, targetReps, perSetReps?, restSeconds?, day, order, supersetGroup?, videoUrl? |
+| `Exercise` | id, name, muscleGroup?, sets, targetReps, perSetReps?, restSeconds?, day, order, supersetGroup?, videoUrl?, kind? (strength/cardio/core), duration?, intensity? |
 | `MealItem` | id, name, grams, gramsMax?, protein/carbs/fat/calories? |
 | `Meal` | id, name, time?, items: MealItem[] |
 | `ExerciseLog` | id, exerciseId, weekNumber, weight?, reps?, note?, loggedAt |
@@ -164,6 +164,7 @@ Fan-out only when genuinely multi-perspective; use Glob/Grep directly for single
 - CLAUDE.md length directly reduces context cache advantage -- keep dense
 
 ### Confirmed patterns
+- Client sessions (start/end/duration/feedback) = exercise_logs rows with `exercise_id = "session:<day>"` (lib/workoutSession.ts); SupabaseDataLoader splits them into `plan.sessionLogs`. Client per-exercise feedback = `log.note`. PT reads both in client detail tab "Feedback"
 - Per-set log in `reps` TEXT as JSON `[{r,w}]` -- no DB migration needed
 - `parseJsonb<T>(value, fallback)` in SupabaseDataLoader for string-or-object JSONB
 - `run_in_background: true` for `next build` -- non-blocking
