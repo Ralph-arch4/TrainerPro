@@ -266,7 +266,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
     ? calcSuggestion(parseSetData(lastWeekLog, sets))
     : null;
 
-  const trainerCols = "4.5rem 1fr 1fr";
+  const trainerCols = "3.6rem 1fr 1fr 1.2fr";
 
   return (
     <div className="rounded-2xl overflow-hidden flex flex-col" style={{ border: cardBorder, background: "var(--surface-card)" }}>
@@ -491,8 +491,9 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
         <>
           <div style={{ display: "grid", gridTemplateColumns: trainerCols, borderBottom: rowBorder, background: "var(--surface-xs)" }}>
             <div className="px-3 py-1.5 text-xs" style={{ color: "transparent", borderRight: rowBorder }}>·</div>
-            <div className="px-3 py-1.5 text-xs font-semibold text-center" style={{ color: "var(--text-dim)", borderRight: rowBorder }}>ripetizioni</div>
-            <div className="px-3 py-1.5 text-xs font-semibold text-center" style={{ color: "var(--text-dim)" }}>carico (kg)</div>
+            <div className="px-2 py-1.5 text-xs font-semibold text-center" style={{ color: "var(--text-dim)", borderRight: rowBorder }}>target</div>
+            <div className="px-2 py-1.5 text-xs font-semibold text-center" style={{ color: "var(--text-dim)", borderRight: rowBorder }}>rip. fatte</div>
+            <div className="px-2 py-1.5 text-xs font-semibold text-center" style={{ color: "var(--text-dim)" }}>carico (kg)</div>
           </div>
           {Array.from({ length: sets }, (_, i) => (
             <div key={i} style={{
@@ -500,9 +501,13 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
               borderBottom: i < sets - 1 ? rowBorder : undefined,
               background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.012)",
             }}>
-              <div className="flex items-center px-3 py-2.5 text-xs" style={{ color: "var(--text-dim)", borderRight: rowBorder }}>serie {i + 1}</div>
-              <div className="flex items-center justify-center px-2 py-2.5 text-xs font-semibold text-center min-w-0 break-words" style={{ color: "var(--accent-light)", borderRight: rowBorder, overflowWrap: "anywhere" }}>
+              <div className="flex items-center px-2 py-2.5 text-xs" style={{ color: "var(--text-dim)", borderRight: rowBorder }}>serie {i + 1}</div>
+              <div className="flex items-center justify-center px-2 py-2.5 text-xs text-center min-w-0 break-words" style={{ color: "var(--text-muted)", borderRight: rowBorder, overflowWrap: "anywhere" }}>
                 {targetRep(i)}
+              </div>
+              <div className="flex items-center justify-center px-2 py-2.5 text-sm font-bold text-center min-w-0"
+                style={{ color: data[i]?.reps ? "var(--accent-light)" : "var(--text-faint)", borderRight: rowBorder }}>
+                {data[i]?.reps || "—"}
               </div>
               <div className="flex flex-wrap items-center justify-center gap-x-2 px-2 py-2.5 text-sm font-bold min-w-0"
                 style={{ color: data[i]?.weight ? "var(--ivory)" : "var(--text-faint)" }}>

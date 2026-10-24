@@ -6,7 +6,7 @@ import type { DietPlan } from "@/lib/store";
 import { dbClients, dbPhases, dbWorkoutPlans, dbDietPlans, dbNotes, dbMeasurements } from "@/lib/db";
 import { showToast } from "@/components/Toast";
 import DietPlanEditor from "@/components/DietPlanEditor";
-import ClientFeedbackPanel, { collectClientFeedback } from "@/components/ClientFeedbackPanel";
+import ClientFeedbackPanel, { collectWorkoutDiary } from "@/components/ClientFeedbackPanel";
 import Link from "next/link";
 import {
   ArrowLeft, Activity, UtensilsCrossed, StickyNote,
@@ -1020,7 +1020,7 @@ export default function ClientDetailPage() {
     { key: "overview", label: "Overview", icon: BarChart2 },
     { key: "fasi", label: "Fasi", icon: Activity, count: client.phases.length },
     { key: "schede", label: "Schede", icon: Dumbbell, count: client.workoutPlans.length },
-    { key: "feedback", label: "Feedback", icon: MessageCircle, count: collectClientFeedback(client.workoutPlans).length },
+    { key: "feedback", label: "Allenamenti", icon: MessageCircle, count: collectWorkoutDiary(client.workoutPlans).length },
     { key: "dieta", label: "Dieta", icon: UtensilsCrossed, count: client.dietPlans.length },
     { key: "misurazioni", label: "Misurazioni", icon: TrendingUp, count: client.measurements.length },
     { key: "note", label: "Note", icon: StickyNote, count: client.notes.length },
@@ -2360,7 +2360,7 @@ export default function ClientDetailPage() {
         </div>
       )}
 
-      {/* ── FEEDBACK (client sessions + notes) ── */}
+      {/* ── ALLENAMENTI (client workout diary: sets, reps, sessions, notes) ── */}
       {tab === "feedback" && <ClientFeedbackPanel plans={client.workoutPlans} />}
 
       {/* ── NOTE ── */}
