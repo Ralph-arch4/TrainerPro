@@ -1,9 +1,10 @@
 "use client";
 import { useEffect } from "react";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/lib/store";
 import { showToast } from "@/components/Toast";
-import type { PlanTier, Exercise, SupplementItem } from "@/lib/store";
+import type { PlanTier, Exercise, SupplementItem, ExerciseLog } from "@/lib/store";
 import { splitLogs } from "@/lib/workoutSession";
 
 function parseJsonb<T>(value: unknown, fallback: T): T {
@@ -29,6 +30,59 @@ async function fetchAll(buildQuery: (from: number, to: number) => PromiseLike<{ 
     rows.push(...(data ?? []));
     if (!data || data.length < PAGE_SIZE) return rows;
   }
+}
+
+function mapLog(l: Row): ExerciseLog {
+  return {
+    id: l.id,
+    exerciseId: l.exercise_id,
+    weekNumber: l.week_number,
+    weight: l.weight ?? undefined,
+    reps: l.reps ?? undefined,
+    note: l.note ?? undefined,
+    loggedAt: l.logged_at,
+  };
+}
+
+const LOG_POLL_MS = 20_000;
+let lastLogsSignature = "";
+
+// Re-fetch exercise logs (client sets/reps, sessions, notes) for every plan in
+// the store, so what the client saves from the portal shows up for the trainer
+// without a page reload.
+export async function refreshLogs(supabase: SupabaseClient) {
+  const state = useAppStore.getState();
+  if (!state.dataLoaded || !state.user) return;
+  const planIds = state.clients.flatMap((c) => c.workoutPlans.map((p) => p.id));
+  if (planIds.length === 0) return;
+  const startedAt = Date.now();
+  const rows = await fetchAll((from, to) =>
+    supabase.from("exercise_logs").select("*").in("workout_plan_id", planIds)
+      .order("logged_at", { ascending: true }).range(from, to));
+  const signature = rows.map((r) => `${r.id}|${r.logged_at}|${r.reps}|${r.weight}|${r.note}`).join("~");
+  if (signature === lastLogsSignature) return;
+  lastLogsSignature = signature;
+
+  const byPlan = new Map<string, ExerciseLog[]>();
+  for (const r of rows) {
+    const list = byPlan.get(r.workout_plan_id) ?? [];
+    list.push(mapLog(r));
+    byPlan.set(r.workout_plan_id, list);
+  }
+  useAppStore.setState((s) => ({
+    clients: s.clients.map((c) => ({
+      ...c,
+      workoutPlans: c.workoutPlans.map((p) => {
+        const remote = byPlan.get(p.id) ?? [];
+        // Keep the trainer's own edits made while this fetch was in flight
+        const key = (l: ExerciseLog) => `${l.exerciseId}#${l.weekNumber}`;
+        const fresh = p.logs.filter((l) => new Date(l.loggedAt).getTime() > startedAt);
+        const freshKeys = new Set(fresh.map(key));
+        const merged = [...remote.filter((l) => !freshKeys.has(key(l))), ...fresh];
+        return { ...p, ...splitLogs(merged) };
+      }),
+    })),
+  }));
 }
 
 export default function SupabaseDataLoader() {
@@ -123,15 +177,7 @@ export default function SupabaseDataLoader() {
                 exercises: parseJsonb<Exercise[]>(p.exercises, []),
                 ...splitLogs(exerciseLogs
                   .filter((l) => l.workout_plan_id === p.id)
-                  .map((l) => ({
-                    id: l.id,
-                    exerciseId: l.exercise_id,
-                    weekNumber: l.week_number,
-                    weight: l.weight ?? undefined,
-                    reps: l.reps ?? undefined,
-                    note: l.note ?? undefined,
-                    loggedAt: l.logged_at,
-                  }))),
+                  .map(mapLog)),
                 shareToken: p.share_token,
                 createdAt: p.created_at,
                 active: p.active,
@@ -229,6 +275,32 @@ export default function SupabaseDataLoader() {
     }
 
     load();
+
+    // Live updates: realtime push (needs exercise_logs in the supabase_realtime
+    // publication, see migration 025) plus polling as a fallback.
+    let debounce: ReturnType<typeof setTimeout> | null = null;
+    const scheduleRefresh = (delay = 400) => {
+      if (debounce) clearTimeout(debounce);
+      debounce = setTimeout(() => { refreshLogs(supabase).catch(() => {}); }, delay);
+    };
+    const channel = supabase
+      .channel("trainer-exercise-logs")
+      .on("postgres_changes", { event: "*", schema: "public", table: "exercise_logs" }, () => scheduleRefresh())
+      .subscribe();
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") scheduleRefresh(0);
+    }, LOG_POLL_MS);
+    const onVisible = () => { if (document.visibilityState === "visible") scheduleRefresh(0); };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+
+    return () => {
+      if (debounce) clearTimeout(debounce);
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return null;

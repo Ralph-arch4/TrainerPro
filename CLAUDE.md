@@ -164,7 +164,8 @@ Fan-out only when genuinely multi-perspective; use Glob/Grep directly for single
 - CLAUDE.md length directly reduces context cache advantage -- keep dense
 
 ### Confirmed patterns
-- Client sessions (start/end/duration/feedback) = exercise_logs rows with `exercise_id = "session:<day>"` (lib/workoutSession.ts); SupabaseDataLoader splits them into `plan.sessionLogs`. Client per-exercise feedback = `log.note`. PT reads both in client detail tab "Feedback"
+- Client sessions (start/end/duration/feedback) = exercise_logs rows with `exercise_id = "session:<day>"` (lib/workoutSession.ts); SupabaseDataLoader splits them into `plan.sessionLogs`. Client per-exercise feedback = `log.note`. PT reads them in client detail tab "Allenamenti" (ClientFeedbackPanel = workout diary)
+- Trainer sees client saves live: SupabaseDataLoader `refreshLogs()` via realtime on exercise_logs (migration 025) + 20s poll + on focus; keeps trainer edits newer than the fetch
 - Per-set log in `reps` TEXT as JSON `[{r,w}]` -- no DB migration needed
 - `parseJsonb<T>(value, fallback)` in SupabaseDataLoader for string-or-object JSONB
 - `run_in_background: true` for `next build` -- non-blocking
