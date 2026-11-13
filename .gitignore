@@ -44,3 +44,11 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# e2e test output
+/tests/e2e/screenshots/
+
+# Android signing keys (never commit)
+*.keystore
+*.jks
+/android/app-release*

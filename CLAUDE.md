@@ -50,6 +50,10 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 | `components/ClientPortal.tsx` | Client portal: plan only (no gamification). Used by `app/cliente/[token]` and `app/scheda/[token]`. Trainer notes/links rendered via `LinkifiedText` |
 | `lib/exerciseImages.ts` | Exercise name -> guide photos in `public/exercises/<id>/{0,1}.webp` (free-exercise-db, public domain) |
 | `app/api/intake/[token]/route.ts` | Server-side API with service_role key |
+| `lib/progressions.ts` | Pre-planned progressions: `applyProgression(ex, week)`, `normalizeProgressions`, `moveWithinDay`. Stored in `exercise.progressions[]` (JSONB, no migration). Edited via `components/ProgressionEditor.tsx` |
+| `lib/billing.ts` + `components/PaymentNotice.tsx` | Payment reminder pop-up for `plan === "free"`; due date = user metadata `payment_due_at` or `PAYMENT_NOTICE_START` + 30 days |
+| `lib/brand.ts`, `app/manifest.ts`, `public/sw.js`, `android/twa-manifest.json` | PWA / Play Store (TWA). Steps in `docs/PLAY_STORE.md` |
+| `app/dashboard/account/page.tsx` + `app/api/account/delete/route.ts` | Account page + self-service account deletion (service_role) |
 
 ### store.ts type summary (avoid loading 360-line file)
 | Type | Key fields |
@@ -163,6 +167,15 @@ Fan-out only when genuinely multi-perspective; use Glob/Grep directly for single
 - No Agent for simple searches (Glob/Grep are 10x faster)
 - CLAUDE.md length directly reduces context cache advantage -- keep dense
 
+- Never `overflow-x: hidden` on both html and body (iOS scroll lock): body uses `overflow-x: clip`
+- `.card-luxury` has no backdrop blur on touch/mobile (scroll performance); hover effects only under `@media (hover: hover)`
+- Components that call hooks after an early return must be mounted behind a guard (see `ClientDetailPage` -> `ClientDetail`)
+- Reorder exercises with `moveWithinDay` (per-day swap), never by global `order` index
+
+### Testing
+- `npm test` -- unit tests (node:test, no deps): progressions, billing, exercise image matching
+- `npm run test:e2e` -- Playwright against `next start` with mocked Supabase; build first with `NEXT_PUBLIC_SUPABASE_URL=https://e2e-test.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=test-anon-key`
+
 ### Confirmed patterns
 - Client sessions (start/end/duration/feedback) = exercise_logs rows with `exercise_id = "session:<day>"` (lib/workoutSession.ts); SupabaseDataLoader splits them into `plan.sessionLogs`. Client per-exercise feedback = `log.note`. PT reads both in client detail tab "Feedback"
 - Per-set log in `reps` TEXT as JSON `[{r,w}]` -- no DB migration needed
@@ -172,4 +185,4 @@ Fan-out only when genuinely multi-perspective; use Glob/Grep directly for single
 
 ---
 
-*Last updated: 2026-06-16 -- Session: Phase 1 motion toolkit + mobile touch-target fixes + palette correction*
+*Last updated: 2026-11-13 -- Session: progressions, ticket fixes (mobile rename/reorder/scroll, image matching), payment notice, PWA/Play Store, tests*

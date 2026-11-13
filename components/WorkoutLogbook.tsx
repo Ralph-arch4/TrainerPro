@@ -1,12 +1,14 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
-import { ChevronLeft, ChevronRight, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2, Target, HeartPulse, Flame } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2, Target, HeartPulse, Flame } from "lucide-react";
 import { showToast } from "@/components/Toast";
 import ExerciseGuide from "@/components/ExerciseGuide";
 import SessionPanel from "@/components/SessionPanel";
 import LinkifiedText from "@/components/LinkifiedText";
 import { parseSession, sessionExerciseId, sessionToLog } from "@/lib/workoutSession";
+import { applyProgression, activeProgression, describeProgression } from "@/lib/progressions";
+import { ProgressionChips } from "@/components/ProgressionEditor";
 
 // ── Per-set data ──────────────────────────────────────────────────────────────
 interface SetData { reps: string; weight: string; rpe: string; }
@@ -180,6 +182,9 @@ interface CardProps {
   onStartTimer?: (secs: number, label: string) => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onMove?: (dir: "up" | "down") => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
   weightHistory?: number[];
 }
 
@@ -189,7 +194,8 @@ function parseCardioMinutes(log: ExerciseLog | undefined): string {
   return raw.startsWith("[") ? "" : raw;
 }
 
-function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onStartTimer, onEdit, onDelete, weightHistory }: CardProps) {
+function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onStartTimer, onEdit, onDelete, onMove, canMoveUp, canMoveDown, weightHistory }: CardProps) {
+  const step = activeProgression(exercise, week); // exercise is already resolved for `week`
   const isCardio = exercise.kind === "cardio";
   const sets = Math.max(1, exercise.sets || 3);
   const [data, setData] = useState<SetData[]>(() => parseSetData(log, sets));
@@ -211,7 +217,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
     setNote(log?.note ?? "");
     setNoteOpen(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [log?.loggedAt, log?.reps, log?.note, sets]);
+  }, [log?.loggedAt, log?.reps, log?.note, sets, week]);
 
   function targetRep(i: number) { return exercise.perSetReps?.[i] ?? exercise.targetReps ?? "—"; }
   function updateWeight(i: number, val: string) { setData(p => { const n = [...p]; n[i] = { ...n[i], weight: val }; return n; }); }
@@ -311,18 +317,47 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
           <WeightSparkline history={weightHistory} />
         )}
         {mode === "trainer" && (
-          <div className="flex gap-1.5 shrink-0">
-            <button onClick={onEdit} className="p-1.5 rounded-lg hover:opacity-80 transition-opacity"
+          <div className="flex gap-1 shrink-0">
+            {onMove && (
+              <>
+                <button onClick={() => onMove("up")} disabled={!canMoveUp} aria-label="Sposta su"
+                  className="w-9 h-9 flex items-center justify-center rounded-lg disabled:opacity-25"
+                  style={{ background: "var(--surface-md)" }}>
+                  <ChevronUp size={15} style={{ color: "var(--text-muted)" }} />
+                </button>
+                <button onClick={() => onMove("down")} disabled={!canMoveDown} aria-label="Sposta giu"
+                  className="w-9 h-9 flex items-center justify-center rounded-lg disabled:opacity-25"
+                  style={{ background: "var(--surface-md)" }}>
+                  <ChevronDown size={15} style={{ color: "var(--text-muted)" }} />
+                </button>
+              </>
+            )}
+            <button onClick={onEdit} aria-label="Rinomina esercizio" className="w-9 h-9 flex items-center justify-center rounded-lg hover:opacity-80 transition-opacity"
               style={{ background: "var(--surface-md)" }}>
-              <Pencil size={11} style={{ color: "var(--text-muted)" }} />
+              <Pencil size={13} style={{ color: "var(--text-muted)" }} />
             </button>
-            <button onClick={onDelete} className="p-1.5 rounded-lg hover:opacity-80 transition-opacity"
+            <button onClick={onDelete} aria-label="Elimina esercizio" className="w-9 h-9 flex items-center justify-center rounded-lg hover:opacity-80 transition-opacity"
               style={{ background: "rgba(239,68,68,0.07)" }}>
-              <Trash2 size={11} style={{ color: "rgba(239,68,68,0.45)" }} />
+              <Trash2 size={13} style={{ color: "rgba(239,68,68,0.55)" }} />
             </button>
           </div>
         )}
       </div>
+
+      {/* Planned progression: what changes from this week / what is coming */}
+      {mode === "trainer" && exercise.progressions?.length ? (
+        <div className="px-3 pb-2" style={{ background: "rgba(201,168,76,0.06)", borderBottom: rowBorder }}>
+          <ProgressionChips progressions={exercise.progressions} currentWeek={week} />
+        </div>
+      ) : step ? (
+        <div className="px-3 py-2 flex items-start gap-1.5 text-xs" data-testid="progression-active"
+          style={{ background: "rgba(201,168,76,0.1)", borderBottom: rowBorder, color: "var(--accent-light)" }}>
+          <TrendingUp size={12} className="shrink-0 mt-0.5" />
+          <span className="break-words min-w-0" style={{ overflowWrap: "anywhere" }}>
+            Progressione dalla settimana {step.fromWeek}: {describeProgression(step)}
+          </span>
+        </div>
+      ) : null}
 
       {/* Trainer's indications: rest, technical notes, demo video */}
       {(exercise.restSeconds && !isCardio) || (exercise.notes && !isCardio) || exercise.videoUrl ? (
@@ -652,6 +687,8 @@ interface Props {
   onAddExercise?: (data: Omit<Exercise, "id" | "order">) => void;
   onUpdateExercise?: (exerciseId: string, data: Partial<Exercise>) => void;
   onRemoveExercise?: (exerciseId: string) => void;
+  onMoveExercise?: (exerciseId: string, dir: "up" | "down") => void;
+  onUpdateDayLabel?: (day: number, label: string) => void;
   onUpdateSupplements?: (items: SupplementItem[]) => void;
   onUpsertLog: (log: Omit<ExerciseLog, "id" | "loggedAt">) => void;
 }
@@ -661,7 +698,7 @@ function uid() { return Math.random().toString(36).slice(2) + Date.now().toStrin
 export default function WorkoutLogbook({
   exercises, logs, sessionLogs = [], totalWeeks = 12, daysPerWeek = 3,
   mode, dayLabels = {}, supplements = [],
-  onAddExercise, onUpdateExercise, onRemoveExercise,
+  onAddExercise, onUpdateExercise, onRemoveExercise, onMoveExercise, onUpdateDayLabel,
   onUpdateSupplements, onUpsertLog,
 }: Props) {
   const isUnlimited   = totalWeeks === 0;
@@ -792,9 +829,18 @@ export default function WorkoutLogbook({
     return logs.find(l => l.exerciseId === exerciseId && l.weekNumber === week);
   }
 
+  // Each exercise resolved for the selected week (pre-planned progressions applied)
   const dayExercises = [...exercises]
     .filter(e => (e.day ?? 1) === activeDay)
-    .sort((a, b) => a.order - b.order);
+    .sort((a, b) => a.order - b.order)
+    .map(e => applyProgression(e, activeWeek));
+
+  const [dayLabelDraft, setDayLabelDraft] = useState<string | null>(null); // null = not editing
+  function saveDayLabel() {
+    if (dayLabelDraft == null) return;
+    onUpdateDayLabel?.(activeDay, dayLabelDraft.trim());
+    setDayLabelDraft(null);
+  }
 
   function saveSupplements(items: SupplementItem[]) {
     setSuppDraft(items); onUpdateSupplements?.(items); showToast("Integratori salvati ✓");
@@ -877,7 +923,7 @@ export default function WorkoutLogbook({
       {/* Day tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {days.map(d => (
-          <button key={d} onClick={() => setActiveDay(d)}
+          <button key={d} onClick={() => { setActiveDay(d); setDayLabelDraft(null); }}
             className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap"
             style={{
               background: activeDay === d ? "rgba(201,168,76,0.14)" : "var(--surface-sm)",
@@ -888,6 +934,33 @@ export default function WorkoutLogbook({
           </button>
         ))}
       </div>
+
+      {/* Rename the selected day (trainer) */}
+      {mode === "trainer" && onUpdateDayLabel && (
+        dayLabelDraft != null ? (
+          <div className="flex items-center gap-2 p-2 rounded-xl"
+            style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.3)" }}>
+            <input autoFocus value={dayLabelDraft} onChange={e => setDayLabelDraft(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") saveDayLabel(); if (e.key === "Escape") setDayLabelDraft(null); }}
+              placeholder={`Giorno ${activeDay} (es. Push)`} maxLength={30} aria-label="Nome del giorno"
+              className="flex-1 min-w-0 px-3 py-2.5 rounded-lg text-base outline-none"
+              style={{ background: "var(--surface-sm)", border: "1px solid var(--border)", color: "var(--text)" }} />
+            <button onClick={saveDayLabel} className="accent-btn px-3 py-2.5 rounded-lg text-sm flex items-center gap-1">
+              <Check size={14} /> Salva
+            </button>
+            <button onClick={() => setDayLabelDraft(null)} aria-label="Annulla" className="p-2.5 rounded-lg"
+              style={{ background: "var(--surface-md)", color: "var(--text-muted)" }}>
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => setDayLabelDraft(dayLabels[activeDay] || "")}
+            className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs"
+            style={{ background: "var(--surface-sm)", border: "1px solid var(--surface-md)", color: "var(--text-muted)" }}>
+            <Pencil size={12} /> Rinomina &quot;{getDayLabel(activeDay)}&quot;
+          </button>
+        )
+      )}
 
       {/* Session: timer, start/end times, feedback */}
       {(() => {
@@ -1025,8 +1098,11 @@ export default function WorkoutLogbook({
         </div>
       ) : (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-          {dayExercises.map(ex => (
+          {dayExercises.map((ex, idx) => (
             <ExerciseCard
+              onMove={onMoveExercise ? (dir) => onMoveExercise(ex.id, dir) : undefined}
+              canMoveUp={idx > 0}
+              canMoveDown={idx < dayExercises.length - 1}
               key={ex.id}
               exercise={ex}
               log={getLog(ex.id, activeWeek)}

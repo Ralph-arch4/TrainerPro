@@ -52,6 +52,7 @@ export default function SupabaseDataLoader() {
           name: user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "Trainer",
           email: user.email ?? "",
           plan: (user.user_metadata?.plan as PlanTier) ?? "free",
+          paymentDueAt: (user.user_metadata?.payment_due_at as string | undefined) ?? undefined,
         },
       });
 

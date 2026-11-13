@@ -1,6 +1,7 @@
 import AppNav from "@/components/AppNav";
 import SupabaseDataLoader from "@/components/SupabaseDataLoader";
 import ToastProvider from "@/components/Toast";
+import PaymentNotice from "@/components/PaymentNotice";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {children}
       </main>
       <ToastProvider />
+      <PaymentNotice />
     </div>
   );
 }

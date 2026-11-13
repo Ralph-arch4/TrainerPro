@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/lib/store";
 import {
   Dumbbell, LayoutDashboard, Users, Activity, UtensilsCrossed,
-  TrendingUp, Calculator, FileDown, LogOut, Menu, X, ClipboardList, MessageSquare,
+  TrendingUp, Calculator, FileDown, LogOut, Menu, X, ClipboardList, MessageSquare, UserRound,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -80,6 +80,7 @@ const navItems = [
   { href: "/dashboard/preventivi",      icon: Calculator,      label: "Preventivi" },
   { href: "/dashboard/export",          icon: FileDown,        label: "Esporta PDF" },
   { href: "/dashboard/talk-with-ralph", icon: MessageSquare,   label: "Talk with Ralph" },
+  { href: "/dashboard/account",         icon: UserRound,       label: "Account" },
 ];
 
 export default function AppNav() {
