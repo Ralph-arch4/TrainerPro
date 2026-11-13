@@ -107,7 +107,7 @@ const IMAGE_IDS: Record<string, string> = {
   "Wrist Curl con bilanciere": "Seated_Palm-Up_Barbell_Wrist_Curl",
   "Reverse Curl con bilanciere": "Reverse_Barbell_Curl",
   "Reverse Curl con manubri": "Standing_Dumbbell_Reverse_Curl",
-  "Zottman Curl": "Zottman_Curl",
+  "Zottman Curl": "Dumbbell_Bicep_Curl",
   "Farmer's Walk": "Farmers_Walk",
   "Plate Pinch": "Plate_Pinch",
   "Crunch classico": "Crunches",
@@ -142,18 +142,61 @@ const IMAGE_IDS: Record<string, string> = {
   "Corda": "Rope_Jumping",
 };
 
+// Common Italian gym names that are not in the library (same image folders).
+const ALIAS_IDS: Record<string, string> = {
+  "Croci con manubri": "Dumbbell_Flyes",
+  "Croci manubri panca piana": "Dumbbell_Flyes",
+  "Croci manubri panca inclinata": "Incline_Dumbbell_Flyes",
+  "Croci ai cavi dal basso": "Low_Cable_Crossover",
+  "Distensioni manubri panca piana": "Dumbbell_Bench_Press",
+  "Distensioni manubri panca inclinata": "Incline_Dumbbell_Press",
+  "Distensioni bilanciere panca piana": "Barbell_Bench_Press_-_Medium_Grip",
+  "Distensioni bilanciere panca inclinata": "Barbell_Incline_Bench_Press_-_Medium_Grip",
+  "Panca piana presa stretta": "Close-Grip_Barbell_Bench_Press",
+  "Lento avanti con bilanciere": "Standing_Military_Press",
+  "Lento avanti con manubri": "Dumbbell_Shoulder_Press",
+  "Military Press con manubri": "Dumbbell_Shoulder_Press",
+  "Shoulder Press con manubri": "Dumbbell_Shoulder_Press",
+  "Spinte sopra la testa con manubri": "Dumbbell_Shoulder_Press",
+  "Tirate al mento con bilanciere": "Upright_Barbell_Row",
+  "Rematore con manubrio": "One-Arm_Dumbbell_Row",
+  "Rematore con manubri": "One-Arm_Dumbbell_Row",
+  "Pulley basso": "Seated_Cable_Rows",
+  "Lat Machine avanti": "Wide-Grip_Lat_Pulldown",
+  "Trazioni alla sbarra": "Pullups",
+  "Trazioni presa supina": "Chin-Up",
+  "Trazioni presa inversa": "Chin-Up",
+  "Stacco a gambe tese con manubri": "Stiff-Legged_Dumbbell_Deadlift",
+  "Stacco a gambe tese": "Romanian_Deadlift",
+  "Stacco sumo": "Sumo_Deadlift",
+  "Goblet Squat": "Dumbbell_Squat",
+  "Squat bulgaro": "Split_Squat_with_Dumbbells",
+  "Affondi camminati con manubri": "Dumbbell_Lunges",
+  "Ponte glutei": "Barbell_Glute_Bridge",
+  "Slanci al cavo": "One-Legged_Cable_Kickback",
+  "Curl con manubri": "Dumbbell_Bicep_Curl",
+  "Curl manubri panca inclinata": "Dumbbell_Bicep_Curl",
+  "Curl al cavo": "Standing_Biceps_Cable_Curl",
+  "Hammer Curl al cavo": "Cable_Hammer_Curls_-_Rope_Attachment",
+  "Push down con corda": "Triceps_Pushdown_-_Rope_Attachment",
+  "Push down con barra": "Triceps_Pushdown",
+  "Estensioni tricipiti sopra la testa con manubrio": "Standing_Dumbbell_Triceps_Extension",
+  "Estensioni tricipiti al cavo con corda": "Triceps_Pushdown_-_Rope_Attachment",
+  "Piegamenti sulle braccia": "Pushups",
+  "Piegamenti presa stretta": "Push-Ups_-_Close_Triceps_Position",
+  "Sollevamento gambe alla sbarra": "Hanging_Leg_Raise",
+  "Sollevamento gambe a terra": "Flat_Bench_Lying_Leg_Raise",
+  "Plank laterale": "Side_Bridge",
+  "Salto con la corda": "Rope_Jumping",
+};
+
 // Keyword fallbacks for free-text names typed by the trainer (checked in order,
-// first match wins — keep more specific keywords first).
+// first match wins). Movement words come first; bench/position words last, so
+// "Curl su panca inclinata" is a curl, not an incline press.
 const KEYWORD_IDS: Array<[string, string]> = [
-  ["panca inclinata", "Incline_Dumbbell_Press"],
-  ["panca declinata", "Decline_Barbell_Bench_Press"],
-  ["panca piana", "Barbell_Bench_Press_-_Medium_Grip"],
-  ["bench press", "Barbell_Bench_Press_-_Medium_Grip"],
-  ["distensioni", "Barbell_Bench_Press_-_Medium_Grip"],
-  ["croci", "Dumbbell_Flyes"],
-  ["piegamenti", "Pushups"],
   ["stacco rumeno", "Romanian_Deadlift"],
   ["stacco sumo", "Sumo_Deadlift"],
+  ["sumo", "Sumo_Deadlift"],
   ["stacco", "Barbell_Deadlift"],
   ["deadlift", "Barbell_Deadlift"],
   ["rematore", "Bent_Over_Barbell_Row"],
@@ -161,8 +204,12 @@ const KEYWORD_IDS: Array<[string, string]> = [
   ["lat machine", "Wide-Grip_Lat_Pulldown"],
   ["lat pulldown", "Wide-Grip_Lat_Pulldown"],
   ["trazioni", "Pullups"],
+  ["pull up", "Pullups"],
+  ["chin up", "Chin-Up"],
+  ["face pull", "Face_Pull"],
   ["front squat", "Front_Barbell_Squat"],
-  ["goblet", "Goblet_Squat"],
+  ["hack squat", "Hack_Squat"],
+  ["goblet", "Dumbbell_Squat"],
   ["bulgar", "Split_Squat_with_Dumbbells"],
   ["affondi", "Dumbbell_Lunges"],
   ["lunge", "Dumbbell_Lunges"],
@@ -173,26 +220,49 @@ const KEYWORD_IDS: Array<[string, string]> = [
   ["squat", "Barbell_Squat"],
   ["hip thrust", "Barbell_Hip_Thrust"],
   ["ponte glutei", "Barbell_Glute_Bridge"],
+  ["glute bridge", "Barbell_Glute_Bridge"],
+  ["abductor", "Thigh_Abductor"],
+  ["abduttori", "Thigh_Abductor"],
+  ["adductor", "Thigh_Adductor"],
+  ["adduttori", "Thigh_Adductor"],
   ["calf", "Standing_Calf_Raises"],
   ["polpacci", "Standing_Calf_Raises"],
   ["military", "Standing_Military_Press"],
   ["lento avanti", "Standing_Military_Press"],
   ["shoulder press", "Dumbbell_Shoulder_Press"],
+  ["arnold", "Arnold_Dumbbell_Press"],
   ["alzate laterali", "Side_Lateral_Raise"],
   ["alzate frontali", "Front_Dumbbell_Raise"],
   ["alzate posteriori", "Reverse_Flyes"],
   ["tirate al mento", "Upright_Barbell_Row"],
-  ["hammer", "Hammer_Curls"],
+  ["pullover", "Bent-Arm_Dumbbell_Pullover"],
+  ["pull over", "Bent-Arm_Dumbbell_Pullover"],
+  ["croci", "Dumbbell_Flyes"],
+  ["chest fly", "Dumbbell_Flyes"],
+  ["pec deck", "Butterfly"],
+  ["chest press", "Leverage_Chest_Press"],
+  ["hammer curl", "Hammer_Curls"],
+  ["curl hammer", "Hammer_Curls"],
   ["martello", "Hammer_Curls"],
   ["scott", "Preacher_Curl"],
+  ["wrist curl", "Seated_Palm-Up_Barbell_Wrist_Curl"],
   ["curl", "Barbell_Curl"],
   ["push down", "Triceps_Pushdown"],
   ["pushdown", "Triceps_Pushdown"],
   ["french press", "Lying_Triceps_Press"],
+  ["skull", "EZ-Bar_Skullcrusher"],
+  ["kick back", "Tricep_Dumbbell_Kickback"],
   ["dips", "Dips_-_Triceps_Version"],
+  ["piegamenti", "Pushups"],
+  ["push up", "Pushups"],
   ["crunch", "Crunches"],
   ["plank", "Plank"],
   ["sit up", "Crunches"],
+  ["panca inclinata", "Incline_Dumbbell_Press"],
+  ["panca declinata", "Decline_Barbell_Bench_Press"],
+  ["panca piana", "Barbell_Bench_Press_-_Medium_Grip"],
+  ["bench press", "Barbell_Bench_Press_-_Medium_Grip"],
+  ["distensioni", "Barbell_Bench_Press_-_Medium_Grip"],
   ["tapis", "Jogging_Treadmill"],
   ["treadmill", "Jogging_Treadmill"],
   ["bike", "Bicycling_Stationary"],
@@ -210,20 +280,58 @@ function normalize(s: string): string {
     .replace(/[^a-z0-9]+/g, " ").trim();
 }
 
-const NORMALIZED = Object.entries(IMAGE_IDS).map(([k, v]) => [normalize(k), v] as const);
+// Words that carry no meaning for matching, and singular/plural equivalents.
+const STOPWORDS = new Set(["con", "al", "alla", "alle", "allo", "ai", "agli", "a", "di", "del", "della", "su", "sul", "sulla", "in", "il", "la", "le", "lo", "i", "da", "dal", "e", "per"]);
+const SYNONYMS: Record<string, string> = {
+  manubrio: "manubri", cavo: "cavi", cavetto: "cavi", corde: "corda", parallele: "paralleli",
+  seduta: "seduto", sdraiata: "sdraiato", bilancere: "bilanciere", multipower: "multipower", smith: "multipower",
+};
+
+function tokens(normalized: string): string[] {
+  return normalized.split(" ").filter((t) => t && !STOPWORDS.has(t)).map((t) => SYNONYMS[t] ?? t);
+}
+
+const NORMALIZED = Object.entries({ ...IMAGE_IDS, ...ALIAS_IDS }).map(([k, v]) => {
+  const n = normalize(k);
+  return { name: n, id: v, tokens: tokens(n) };
+});
+
+/** Every image folder referenced by the mappings (used by tests). */
+export const ALL_IMAGE_IDS: string[] = [...new Set([
+  ...Object.values(IMAGE_IDS), ...Object.values(ALIAS_IDS), ...KEYWORD_IDS.map(([, id]) => id),
+])];
 
 /** Image folder id for an exercise name, or null when no reliable match exists. */
 export function getExerciseImageId(name: string): string | null {
   const n = normalize(name);
   if (!n) return null;
-  const exact = NORMALIZED.find(([k]) => k === n);
-  if (exact) return exact[1];
-  // Longest library name contained in the typed one ("Panca Piana con bilanciere - fermo al petto")
-  const contained = NORMALIZED
-    .filter(([k]) => k.length >= 8 && n.includes(k))
-    .sort((a, b) => b[0].length - a[0].length)[0];
-  if (contained) return contained[1];
-  const kw = KEYWORD_IDS.find(([k]) => n.includes(k));
+  const exact = NORMALIZED.find((e) => e.name === n);
+  if (exact) return exact.id;
+  // Longest library name the typed one starts with ("Panca Piana con bilanciere - fermo al petto")
+  const padded = ` ${n} `;
+  const byLength = [...NORMALIZED].sort((a, b) => b.name.length - a.name.length);
+  const prefix = byLength.find((e) => e.name.length >= 8 && padded.startsWith(` ${e.name} `));
+  if (prefix) return prefix.id;
+  // Same words in a different order or without prepositions ("Panca piana
+  // manubri", "Rematore manubrio"): the movement (first word) must match and at
+  // least two words must be shared; fewer unmatched library words wins.
+  const typed = tokens(n);
+  if (typed.length >= 2) {
+    let best: { id: string; shared: number; extra: number } | null = null;
+    for (const e of NORMALIZED) {
+      if (!e.tokens.includes(typed[0])) continue;
+      const shared = e.tokens.filter((t) => typed.includes(t)).length;
+      if (shared < 2) continue;
+      const extra = e.tokens.length - shared;
+      if (!best || shared > best.shared || (shared === best.shared && extra < best.extra)) best = { id: e.id, shared, extra };
+    }
+    if (best) return best.id;
+  }
+  // Library name appearing later in the typed one ("Superset: hack squat lento")
+  const contained = byLength.find((e) => e.name.length >= 8 && padded.includes(` ${e.name} `));
+  if (contained) return contained.id;
+  // Keywords match on word starts only ("croci" must not match "incrociati")
+  const kw = KEYWORD_IDS.find(([k]) => padded.includes(` ${k}`));
   return kw ? kw[1] : null;
 }
 

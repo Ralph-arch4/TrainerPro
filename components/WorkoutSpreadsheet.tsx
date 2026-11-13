@@ -9,6 +9,8 @@ import {
 import { showToast } from "@/components/Toast";
 import { searchExercises, type LibraryExercise } from "@/lib/exerciseLibrary";
 import { getExerciseImages } from "@/lib/exerciseImages";
+import { applyProgression, normalizeProgressions, type ExerciseProgression } from "@/lib/progressions";
+import ProgressionEditor, { ProgressionChips } from "@/components/ProgressionEditor";
 import { parseWorkoutCSV, generateCSVTemplate } from "@/lib/parseWorkoutCSV";
 
 const MUSCLE_GROUPS = [
@@ -51,6 +53,7 @@ type ExerciseFormData = {
   videoUrl: string;
   duration: string;
   intensity: string;
+  progressions: ExerciseProgression[];
 };
 
 const KIND_OPTIONS: Array<{ value: ExerciseKind; label: string; icon: typeof Dumbbell }> = [
@@ -79,7 +82,7 @@ function emptyForm(sets = 3, kind: ExerciseKind = "strength"): ExerciseFormData 
     name: "", muscleGroup: "", sets: String(sets), targetReps: "8-10",
     usePerSetReps: false, perSetReps: Array(sets).fill(""),
     restSeconds: "", notes: "", supersetGroup: "", videoUrl: "",
-    duration: "", intensity: "",
+    duration: "", intensity: "", progressions: [],
   };
 }
 
@@ -90,6 +93,8 @@ function emptyFormFor(kind: ExerciseKind, sets = 3): ExerciseFormData {
 }
 
 function formToExercise(f: ExerciseFormData, day: number): Omit<Exercise, "id" | "order"> {
+  const steps = normalizeProgressions(f.progressions);
+  const progressions = steps.length > 0 ? steps : undefined;
   if (f.kind === "cardio") {
     return {
       kind: "cardio",
@@ -104,6 +109,7 @@ function formToExercise(f: ExerciseFormData, day: number): Omit<Exercise, "id" |
       notes: f.notes.trim() || undefined,
       supersetGroup: undefined,
       videoUrl: f.videoUrl.trim() || undefined,
+      progressions,
       day,
     };
   }
@@ -122,6 +128,7 @@ function formToExercise(f: ExerciseFormData, day: number): Omit<Exercise, "id" |
     kind: f.kind === "core" ? "core" : undefined,
     duration: undefined,
     intensity: undefined,
+    progressions,
     day,
   };
 }
@@ -139,6 +146,7 @@ function exerciseToForm(ex: Exercise): ExerciseFormData {
     restSeconds: ex.restSeconds ?? "", notes: ex.notes ?? "",
     supersetGroup: ex.supersetGroup ?? "", videoUrl: ex.videoUrl ?? "",
     duration: ex.duration ?? "", intensity: ex.intensity ?? "",
+    progressions: normalizeProgressions(ex.progressions),
   };
 }
 
@@ -343,9 +351,10 @@ interface FormPanelProps {
   onCancel: () => void;
   submitLabel: string;
   compact?: boolean;
+  totalWeeks?: number;
 }
 
-function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, compact }: FormPanelProps) {
+function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, compact, totalWeeks }: FormPanelProps) {
   const sets = Math.max(1, parseInt(form.sets) || 3);
   const [suggestions, setSuggestions] = useState<LibraryExercise[]>([]);
   const [showSugg, setShowSugg] = useState(false);
@@ -584,6 +593,14 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
       )}
 
       <ImagePreview name={form.name} />
+
+      <ProgressionEditor
+        value={form.progressions}
+        onChange={(progressions) => onChange({ ...form, progressions })}
+        totalWeeks={totalWeeks}
+        isCardio={isCardio}
+        baseSets={sets}
+      />
 
       {/* Row: notes + video */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -921,6 +938,32 @@ export default function WorkoutSpreadsheet({
           })}
         </div>
 
+        {/* Rename day (trainer) */}
+        {mode === "trainer" && onUpdateDayLabel && (
+          editingDayLabel === activeDay ? (
+            <div className="flex items-center gap-2 mb-4 p-2 rounded-xl"
+              style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.3)" }}>
+              <input autoFocus value={dayLabelDraft} onChange={(e) => setDayLabelDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") saveDayLabel(activeDay); if (e.key === "Escape") setEditingDayLabel(null); }}
+                placeholder={`Giorno ${activeDay} (es. Push)`} maxLength={30} aria-label="Nome del giorno"
+                className="flex-1 min-w-0 px-3 py-2.5 rounded-lg text-base outline-none" style={inputStyle} />
+              <button onClick={() => saveDayLabel(activeDay)} className="accent-btn px-3 py-2.5 rounded-lg text-sm flex items-center gap-1">
+                <Check size={14} /> Salva
+              </button>
+              <button onClick={() => setEditingDayLabel(null)} aria-label="Annulla" className="p-2.5 rounded-lg"
+                style={{ background: "rgba(255,255,255,0.06)", color: "rgba(245,240,232,0.6)" }}>
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => startEditDayLabel(activeDay)}
+              className="flex items-center gap-1.5 mb-4 px-3 py-2.5 rounded-xl text-xs"
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.6)" }}>
+              <Pencil size={12} /> Rinomina &quot;{getDayLabel(activeDay)}&quot;
+            </button>
+          )
+        )}
+
         {/* Week navigator */}
         <div className="flex items-center justify-between mb-4 px-1">
           <button onClick={() => setMobileWeek((w) => Math.max(1, w - 1))} disabled={mobileWeek === 1}
@@ -957,7 +1000,7 @@ export default function WorkoutSpreadsheet({
             <p className="text-xs font-bold mb-3 uppercase tracking-wider" style={{ color: "var(--accent-light)" }}>
               {addForm.kind === "cardio" ? "Nuovo blocco cardio" : addForm.kind === "core" ? "Nuovo esercizio addome" : "Nuovo esercizio"} — {getDayLabel(activeDay)}
             </p>
-            <ExerciseFormPanel
+            <ExerciseFormPanel totalWeeks={totalWeeks}
               form={addForm}
               onChange={setAddForm}
               onSubmit={handleAddExercise}
@@ -981,6 +1024,7 @@ export default function WorkoutSpreadsheet({
               const color = ssColor(ex.supersetGroup);
               const prevEx = idx > 0 ? dayExercises[idx - 1] : null;
               const isSupersetContinue = color && prevEx?.supersetGroup === ex.supersetGroup;
+              const exW = applyProgression(ex, mobileWeek); // targets valid in the selected week
               const log = getLog(ex.id, mobileWeek);
               const cell = formatCellLog(log);
               const isEditingThis = editId === ex.id;
@@ -1022,7 +1066,8 @@ export default function WorkoutSpreadsheet({
                           )}
                         </div>
                         {ex.muscleGroup && !isCardioEx && <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{ex.muscleGroup}</p>}
-                        <div className="mt-1">{renderRepTargets(ex)}</div>
+                        <div className="mt-1">{renderRepTargets(exW)}</div>
+                        <ProgressionChips progressions={ex.progressions} currentWeek={mobileWeek} />
                         {(() => {
                           if (mode !== "trainer") return null;
                           const sugg = getLoadSuggestion(ex.id, logs);
@@ -1037,20 +1082,32 @@ export default function WorkoutSpreadsheet({
                             </div>
                           );
                         })()}
-                        {ex.restSeconds && <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.35)" }}>Recupero: {ex.restSeconds}s</p>}
-                        {ex.notes && (
-                          <p className="text-xs mt-1 italic" style={{ color: "rgba(245,240,232,0.5)", borderLeft: "2px solid rgba(255,107,43,0.2)", paddingLeft: "6px" }}>
-                            {ex.notes}
+                        {exW.restSeconds && <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.35)" }}>Recupero: {exW.restSeconds}s</p>}
+                        {exW.notes && (
+                          <p className="text-xs mt-1 italic whitespace-pre-line" style={{ color: "rgba(245,240,232,0.5)", borderLeft: "2px solid rgba(255,107,43,0.2)", paddingLeft: "6px" }}>
+                            {exW.notes}
                           </p>
                         )}
                       </div>
                       {mode === "trainer" && (
-                        <div className="flex gap-1 flex-shrink-0 ml-2">
-                          <button onClick={() => startEdit(ex)} className="p-1.5 rounded-lg hover:bg-white/5">
-                            <Pencil size={12} style={{ color: "rgba(245,240,232,0.4)" }} />
+                        <div className="grid grid-cols-2 gap-1 flex-shrink-0 ml-2">
+                          <button onClick={() => onMoveExercise?.(ex.id, "up")} disabled={idx === 0}
+                            aria-label="Sposta su" className="w-10 h-10 flex items-center justify-center rounded-lg disabled:opacity-25"
+                            style={{ background: "rgba(255,255,255,0.05)" }}>
+                            <ChevronUp size={16} style={{ color: "rgba(245,240,232,0.7)" }} />
                           </button>
-                          <button onClick={() => onRemoveExercise?.(ex.id)} className="p-1.5 rounded-lg hover:bg-red-500/10">
-                            <Trash2 size={12} style={{ color: "rgba(239,68,68,0.5)" }} />
+                          <button onClick={() => startEdit(ex)} aria-label="Modifica esercizio"
+                            className="w-10 h-10 flex items-center justify-center rounded-lg" style={{ background: "rgba(255,255,255,0.05)" }}>
+                            <Pencil size={14} style={{ color: "rgba(245,240,232,0.6)" }} />
+                          </button>
+                          <button onClick={() => onMoveExercise?.(ex.id, "down")} disabled={idx === dayExercises.length - 1}
+                            aria-label="Sposta giu" className="w-10 h-10 flex items-center justify-center rounded-lg disabled:opacity-25"
+                            style={{ background: "rgba(255,255,255,0.05)" }}>
+                            <ChevronDown size={16} style={{ color: "rgba(245,240,232,0.7)" }} />
+                          </button>
+                          <button onClick={() => { if (confirm(`Eliminare "${ex.name}"?`)) onRemoveExercise?.(ex.id); }} aria-label="Elimina esercizio"
+                            className="w-10 h-10 flex items-center justify-center rounded-lg" style={{ background: "rgba(239,68,68,0.08)" }}>
+                            <Trash2 size={14} style={{ color: "rgba(239,68,68,0.7)" }} />
                           </button>
                         </div>
                       )}
@@ -1059,7 +1116,7 @@ export default function WorkoutSpreadsheet({
                     {/* Inline edit */}
                     {mode === "trainer" && isEditingThis && (
                       <div className="mb-3 p-3 rounded-xl" style={{ background: "rgba(255,107,43,0.05)", border: "1px solid rgba(255,107,43,0.2)" }}>
-                        <ExerciseFormPanel form={editForm} onChange={setEditForm}
+                        <ExerciseFormPanel totalWeeks={totalWeeks} form={editForm} onChange={setEditForm}
                           onSubmit={saveEdit} onCancel={() => setEditId(null)}
                           submitLabel="Salva" compact />
                       </div>
@@ -1187,7 +1244,7 @@ export default function WorkoutSpreadsheet({
                   )}
                   {mode === "trainer" && isActive && (
                     <span role="button" onClick={(e) => { e.stopPropagation(); startEditDayLabel(d); }}
-                      className="opacity-0 group-hover/tab:opacity-60 hover:!opacity-100 transition-opacity ml-0.5" title="Rinomina">
+                      className="opacity-50 group-hover/tab:opacity-80 hover:!opacity-100 transition-opacity ml-0.5 p-1 -m-1" title="Rinomina">
                       <Pencil size={10} />
                     </span>
                   )}
@@ -1217,7 +1274,7 @@ export default function WorkoutSpreadsheet({
           <p className="text-xs font-bold mb-4 uppercase tracking-wider" style={{ color: "var(--accent-light)" }}>
             {addForm.kind === "cardio" ? "Nuovo blocco cardio" : addForm.kind === "core" ? "Nuovo esercizio addome" : "Nuovo esercizio"} — {getDayLabel(activeDay)}
           </p>
-          <ExerciseFormPanel
+          <ExerciseFormPanel totalWeeks={totalWeeks}
             form={addForm}
             onChange={setAddForm}
             onSubmit={handleAddExercise}
@@ -1272,7 +1329,7 @@ export default function WorkoutSpreadsheet({
                     {/* Reorder controls */}
                     {mode === "trainer" && (
                       <td className="w-8 p-1 text-center" style={{ borderRight: "1px solid rgba(255,107,43,0.07)" }}>
-                        <div className="flex flex-col items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex flex-col items-center gap-0.5 opacity-50 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => onMoveExercise?.(ex.id, "up")} disabled={idx === 0}
                             className="p-0.5 rounded hover:bg-white/10 disabled:opacity-20">
                             <ChevronUp size={11} style={{ color: "rgba(245,240,232,0.4)" }} />
@@ -1289,7 +1346,7 @@ export default function WorkoutSpreadsheet({
                     <td className="p-3" style={{ borderRight: "2px solid rgba(255,107,43,0.12)", position: "sticky", left: 0, background: "rgba(10,10,10,0.98)", zIndex: 5, minWidth: "240px" }}>
                       {isEditingThis ? (
                         <div className="py-1">
-                          <ExerciseFormPanel
+                          <ExerciseFormPanel totalWeeks={totalWeeks}
                             form={editForm}
                             onChange={setEditForm}
                             onSubmit={saveEdit}
@@ -1321,6 +1378,7 @@ export default function WorkoutSpreadsheet({
                               <p className="text-xs mb-1" style={{ color: "rgba(245,240,232,0.35)" }}>{ex.muscleGroup}</p>
                             )}
                             {renderRepTargets(ex)}
+                            <ProgressionChips progressions={ex.progressions} />
                             {(() => {
                               if (mode !== "trainer") return null;
                               const sugg = getLoadSuggestion(ex.id, logs);

@@ -320,7 +320,29 @@ function QuickConnectionMessages({ name, phone }: { name: string; phone?: string
   );
 }
 
+// Guard component: ClientDetail calls hooks after its own "client missing"
+// branch, so it must only ever be mounted when the client exists. Rendering it
+// before the data arrived (deep link, fresh device) crashed the page with
+// "Rendered more hooks than during the previous render".
 export default function ClientDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const exists = useAppStore((s) => s.clients.some((c) => c.id === id));
+  const dataLoaded = useAppStore((s) => s.dataLoaded);
+  if (exists) return <ClientDetail key={id} />;
+  return (
+    <div className="p-8 text-center">
+      <p style={{ color: "var(--text-muted)" }}>{dataLoaded ? "Cliente non trovato." : "Caricamento del cliente…"}</p>
+      {dataLoaded && (
+        <button onClick={() => router.push("/dashboard/clienti")} className="mt-4 text-sm hover:underline" style={{ color: "var(--accent-light)" }}>
+          Torna alla lista
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ClientDetail() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();

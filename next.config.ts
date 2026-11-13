@@ -57,12 +57,27 @@ const nextConfig: NextConfig = {
     },
   },
 
+  async rewrites() {
+    return [
+      // Android app verification (see app/api/assetlinks/route.ts)
+      { source: "/.well-known/assetlinks.json", destination: "/api/assetlinks" },
+    ];
+  },
+
   async headers() {
     return [
       {
         // Apply to all routes
         source: "/(.*)",
         headers: securityHeaders,
+      },
+      {
+        // The service worker must always be revalidated so updates roll out
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
       },
     ];
   },

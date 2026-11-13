@@ -6,6 +6,7 @@ import { dbWorkoutPlans, dbExerciseLogs } from "@/lib/db";
 import WorkoutSpreadsheet from "@/components/WorkoutSpreadsheet";
 import WorkoutLogbook from "@/components/WorkoutLogbook";
 import { showToast } from "@/components/Toast";
+import { moveWithinDay } from "@/lib/progressions";
 import type { Exercise, SupplementItem } from "@/lib/store";
 import { ArrowLeft, Dumbbell, LayoutGrid, Table2, MessageSquare, Check, Pencil, TrendingUp, Timer } from "lucide-react";
 
@@ -122,15 +123,10 @@ export default function WorkoutPlanPage() {
   }
 
   function handleMoveExercise(exerciseId: string, dir: "up" | "down") {
-    if (!plan) return;
-    const exercises = [...plan.exercises].sort((a, b) => a.order - b.order);
-    const idx = exercises.findIndex((e) => e.id === exerciseId);
-    if (dir === "up" && idx === 0) return;
-    if (dir === "down" && idx === exercises.length - 1) return;
-    const swapIdx = dir === "up" ? idx - 1 : idx + 1;
-    const reordered = [...exercises];
-    [reordered[idx], reordered[swapIdx]] = [reordered[swapIdx], reordered[idx]];
-    const withOrder = reordered.map((e, i) => ({ ...e, order: i }));
+    // Read fresh state: rapid taps must not reorder a stale snapshot.
+    const current = getExercises();
+    const withOrder = moveWithinDay(current, exerciseId, dir);
+    if (withOrder === current) return;
     reorderExercises(id, planId, withOrder);
     syncExercisesToDb(withOrder);
   }
@@ -470,6 +466,8 @@ export default function WorkoutPlanPage() {
           supplements={plan.supplements ?? []}
           onUpdateExercise={handleUpdateExercise}
           onRemoveExercise={handleRemoveExercise}
+          onMoveExercise={handleMoveExercise}
+          onUpdateDayLabel={handleUpdateDayLabel}
           onUpdateSupplements={handleUpdateSupplements}
           onUpsertLog={handleUpsertLog}
         />

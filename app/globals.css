@@ -38,6 +38,7 @@
   --glass-bg:      rgba(15,12,8,0.80);
   --glass-dark-bg: rgba(8,6,4,0.92);
   --card-luxury-bg:rgba(18,14,8,0.70);
+  --card-luxury-solid:rgb(19,16,11);
 
   /* Scrollbar */
   --scroll-track: var(--charcoal);
@@ -82,6 +83,7 @@
   --glass-bg:      rgba(255,255,255,0.80);
   --glass-dark-bg: rgba(255,255,255,0.92);
   --card-luxury-bg:rgba(255,255,255,0.88);
+  --card-luxury-solid:#ffffff;
 
   /* Scrollbar */
   --scroll-track: #EDE8E2;
@@ -99,8 +101,16 @@
 html, body {
   background-color: var(--bg);
   color: var(--text);
-  overflow-x: hidden;
   transition: background-color 0.25s ease, color 0.25s ease;
+}
+/* Horizontal overflow is clipped on body only. `overflow-x: hidden` on both
+   html and body turns body into a second scroll container and iOS Safari
+   intermittently refuses to scroll the page (stuck lists on mobile). `clip`
+   hides the overflow without creating a scroll container. */
+body {
+  overflow-x: hidden;
+  overflow-x: clip;
+  -webkit-tap-highlight-color: transparent;
 }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -161,17 +171,29 @@ html, body {
   backdrop-filter: blur(16px);
   transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, background 0.25s ease;
 }
-.card-luxury:hover {
-  border-color: rgba(201,168,76,0.30);
-  box-shadow: 0 0 40px rgba(201,168,76,0.10), 0 20px 40px rgba(0,0,0,0.4);
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .card-luxury:hover {
+    border-color: rgba(201,168,76,0.30);
+    box-shadow: 0 0 40px rgba(201,168,76,0.10), 0 20px 40px rgba(0,0,0,0.4);
+    transform: translateY(-2px);
+  }
+}
+/* Touch devices: a blurred backdrop on every card of a long list makes iOS
+   drop frames and freeze scrolling. Use a solid card instead. */
+@media (hover: none), (max-width: 767px) {
+  .card-luxury {
+    backdrop-filter: none; /* prefix is added by the CSS compiler */
+    background: var(--card-luxury-solid);
+  }
 }
 
 [data-theme="light"] .card-luxury {
   box-shadow: 0 1px 8px rgba(0,0,0,0.07);
 }
+@media (hover: hover) {
 [data-theme="light"] .card-luxury:hover {
   box-shadow: 0 0 20px rgba(154,118,32,0.10), 0 8px 24px rgba(0,0,0,0.1);
+}
 }
 
 /* ── LIGHT MODE: input + form visibility fixes ───────────────────────────────── */

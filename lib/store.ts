@@ -1,6 +1,7 @@
 "use client";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { ExerciseProgression } from "./progressions";
 
 function uid() { return crypto.randomUUID(); }
 function genToken() { return crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, ""); }
@@ -12,6 +13,7 @@ export interface User {
   name: string;
   email: string;
   plan: PlanTier;
+  paymentDueAt?: string; // ISO date from user metadata `payment_due_at` (see lib/billing.ts)
 }
 
 // ─── Workout Exercise (template set by trainer) ───────────────────────────────
@@ -35,6 +37,7 @@ export interface Exercise {
   kind?: ExerciseKind;      // missing = "strength" (legacy exercises)
   duration?: string;        // cardio: minutes, e.g. "20", "15-20"
   intensity?: string;       // cardio: e.g. "Zona 2", "130-140 bpm", "HIIT 30/30"
+  progressions?: ExerciseProgression[]; // pre-planned changes from a given week (lib/progressions.ts)
 }
 
 // ─── Meal Food Item ────────────────────────────────────────────────────────────
