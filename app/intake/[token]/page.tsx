@@ -73,6 +73,7 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
   const [stepError, setStepError] = useState("");
+  const [consent, setConsent] = useState(false);
   const [label, setLabel] = useState("");
   const [form, setForm] = useState<Partial<IntakeResponse>>({ trainingTypePreference: [] });
 
@@ -91,8 +92,9 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
   const v = form as IntakeResponse;
 
   async function submit() {
+    if (!consent) { setError("Per inviare il questionario serve il consenso al trattamento dei dati."); return; }
     setError(""); setStatus("submitting");
-    const res = await fetch(`/api/intake/${token}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    const res = await fetch(`/api/intake/${token}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, privacyConsentAt: new Date().toISOString() }) });
     if (res.ok) { setStatus("success"); } else { setError("Errore durante l'invio. Riprova."); setStatus("open"); }
   }
 
@@ -205,6 +207,12 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
         <div><Lbl n={47}>Quanta acqua bevi in media al giorno?</Lbl><Sel value={v.waterIntake ?? ""} onChange={(e) => s("waterIntake", e.target.value)}><option value="">— Seleziona —</option><option>Meno di 1 litro</option><option>1–1.5 litri</option><option>1.5–2 litri</option><option>2–2.5 litri</option><option>Più di 2.5 litri</option></Sel></div>
         <div><Lbl n={48}>Consumi alcolici?</Lbl><Radio options={["No", "Raramente", "1–2 volte/sett.", "Quasi ogni giorno"]} value={v.alcoholConsumption ?? ""} onChange={(x) => s("alcoholConsumption", x)} /></div>
         <div><Lbl n={49}>Elenca ciò che mangi in una giornata tipo</Lbl><Txt value={v.typicalDayMeals ?? ""} onChange={(e) => s("typicalDayMeals", e.target.value)} rows={5} placeholder={"Colazione: ...\nSpuntino: ...\nPranzo: ...\nSpuntino: ...\nCena: ..."} /></div>
+        <label className="flex items-start gap-3 p-3 rounded-xl text-sm cursor-pointer" style={{ background: "var(--surface-xs)", border: "1px solid var(--border)", color: "var(--text-muted)" }}>
+          <input type="checkbox" checked={consent} onChange={(e) => { setConsent(e.target.checked); setError(""); }} className="mt-0.5 w-5 h-5 flex-shrink-0" />
+          <span>
+            Acconsento al trattamento dei miei dati personali, compresi quelli relativi alla salute (patologie, infortuni, farmaci, allergie), da parte del mio personal trainer per la preparazione del programma. Ho letto l&apos;<a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: "var(--accent-light)" }}>informativa sulla privacy</a>.
+          </span>
+        </label>
         {error && <div className="p-3 rounded-xl text-sm flex items-center gap-2" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}><AlertCircle size={15} />{error}</div>}
       </div>}
 

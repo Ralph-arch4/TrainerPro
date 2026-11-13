@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { APP_NAME } from "@/lib/brand";
 import HamburgerNav from "@/components/HamburgerNav";
 import TiltCard from "@/components/TiltCard";
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
@@ -179,7 +180,7 @@ function Hero() {
                   <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full"
                     style={{ background: "rgba(5,5,5,0.6)", border: "1px solid rgba(201,168,76,0.3)", backdropFilter: "blur(8px)" }}>
                     <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--accent)", boxShadow: "0 0 8px var(--accent)" }} />
-                    <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "var(--accent-light, #E8CC7A)" }}>TrainerPro</span>
+                    <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "var(--accent-light, #E8CC7A)" }}>{APP_NAME}</span>
                   </div>
                 </div>
               </motion.div>
@@ -665,7 +666,7 @@ export default function LandingPage() {
       <section className="relative py-40 lg:py-56 px-6 lg:px-14 text-center overflow-hidden">
         {/* Echo of hero image — bottom portion */}
         <div className="absolute inset-0" aria-hidden style={{
-          backgroundImage: "url(/hero-athlete.jpg)",
+          backgroundImage: "url(/hero-still.jpg)",
           backgroundSize: "cover",
           backgroundPosition: "center 70%",
           filter: "contrast(1.0) brightness(0.25) saturate(0.6)",

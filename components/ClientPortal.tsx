@@ -172,6 +172,10 @@ export default function ClientPortal({ token }: { token: string | undefined }) {
             onUpsertLog={handleUpsertLog}
           />
         )}
+        <p className="text-center text-xs pt-4 pb-2" style={{ color: "var(--text-dim)" }}>
+          I dati che inserisci sono visibili solo al tuo trainer ·{" "}
+          <a href="/privacy" className="underline">Privacy</a>
+        </p>
       </div>
     </div>
   );

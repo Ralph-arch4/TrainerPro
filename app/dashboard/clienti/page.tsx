@@ -2,6 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Reveal from "@/components/motion/Reveal";
+import { APP_NAME } from "@/lib/brand";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { dbClients } from "@/lib/db";
@@ -507,7 +508,7 @@ function generateWeeklyBrief(clients: Client[]): string {
   if (trained.length) lines.push("", "ALLENATI:", ...trained);
   if (notTrained.length) lines.push("", "DA CONTATTARE:", ...notTrained);
   if (progSuggestions.length) lines.push("", "PROGRESSIONI SUGGERITE:", ...progSuggestions);
-  lines.push("", "─── TrainerPro ───");
+  lines.push("", `─── ${APP_NAME} ───`);
   return lines.join("\n");
 }
 

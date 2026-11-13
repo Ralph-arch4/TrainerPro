@@ -42,7 +42,9 @@ export default function PrivacyPage() {
 
         <Section title="Quali dati raccogliamo">
           <p><strong>Personal trainer:</strong> nome, email, password (conservata in forma cifrata dal fornitore di autenticazione), piano di abbonamento.</p>
-          <p><strong>Clienti del trainer:</strong> nome, contatti, data di nascita, obiettivo, livello, schede di allenamento, carichi e ripetizioni registrati, feedback sugli allenamenti, piani alimentari, misurazioni corporee, note e, se il trainer usa la funzione, foto dei progressi.</p>
+          <p><strong>Clienti del trainer:</strong> nome, contatti, data di nascita, obiettivo, livello, schede di allenamento, carichi e ripetizioni registrati, feedback sugli allenamenti, indicazioni alimentari, misurazioni corporee e note.</p>
+          <p><strong>Questionario iniziale:</strong> se il trainer lo invia, il cliente può indicare abitudini, infortuni, patologie, farmaci e allergie. Queste informazioni sulla salute sono raccolte solo con il consenso esplicito del cliente, dato al momento dell&apos;invio.</p>
+          <p><strong>Cosa non raccogliamo:</strong> non conserviamo foto dei clienti, non usiamo sistemi di intelligenza artificiale per analizzare le persone e non creiamo profili automatizzati.</p>
           <p><strong>Dati tecnici:</strong> cookie di sessione necessari all&apos;accesso e preferenze salvate sul dispositivo (tema, dati in cache). Non usiamo cookie di profilazione né pubblicità.</p>
         </Section>
 
