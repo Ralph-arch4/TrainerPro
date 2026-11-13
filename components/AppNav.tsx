@@ -75,7 +75,7 @@ const navItems = [
   { href: "/dashboard/clienti",         icon: Users,           label: "Clienti" },
   { href: "/dashboard/intake",          icon: ClipboardList,   label: "Form Intake" },
   { href: "/dashboard/fasi",            icon: Activity,        label: "Fasi & Piani" },
-  { href: "/dashboard/diete",           icon: UtensilsCrossed, label: "Diete" },
+  { href: "/dashboard/diete",           icon: UtensilsCrossed, label: "Alimentazione" },
   { href: "/dashboard/misurazioni",     icon: TrendingUp,      label: "Misurazioni" },
   { href: "/dashboard/preventivi",      icon: Calculator,      label: "Preventivi" },
   { href: "/dashboard/export",          icon: FileDown,        label: "Esporta PDF" },

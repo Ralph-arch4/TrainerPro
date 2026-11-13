@@ -40,11 +40,10 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 | `lib/exerciseLibrary.ts` | 110+ Italian exercises. `searchExercises(q, muscleGroup?)` |
 | `lib/plan-limits.ts` | `checkLimit(plan, "clients", count)` -- tier gating |
 | `lib/foodDatabase.ts` | 75 Italian foods, per-100g macros. `searchFoods(q)`, `getFood(id)`, `macrosFor(food, g)` |
-| `lib/nutritionGenerator.ts` | `generateNutritionPlan({protein,carbs,fat,mealsCount,preference,seed})` -> Meal[] with exact grams (Gauss-Seidel solver + fine-tune) |
 | `components/SupabaseDataLoader.tsx` | Loads all data at mount (logs, supplements). Has `dataLoaded` flag. |
 | `components/WorkoutLogbook.tsx` | Card grid view, per-set logging, supplements |
 | `components/WorkoutSpreadsheet.tsx` | Table view: add/edit/reorder exercises + autocomplete |
-| `components/DietPlanEditor.tsx` | Full-screen diet editor with macro ranges |
+| `components/DietPlanEditor.tsx` | "Indicazioni alimentari" editor: foods + free-text `portion`, optional orientative macro ranges, exports `DIET_DISCLAIMER` |
 | `app/dashboard/clienti/[id]/page.tsx` | Client detail (plans, diet, phases, measurements, notes) |
 | `app/dashboard/clienti/[id]/schede/[planId]/page.tsx` | PT plan view: toggle Logbook/Spreadsheet |
 | `components/ClientPortal.tsx` | Client portal: plan only (no gamification). Used by `app/cliente/[token]` and `app/scheda/[token]`. Trainer notes/links rendered via `LinkifiedText` |
@@ -60,7 +59,7 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 |------|-----------|
 | `User` | id, name, email, plan: PlanTier |
 | `Exercise` | id, name, muscleGroup?, sets, targetReps, perSetReps?, restSeconds?, day, order, supersetGroup?, videoUrl?, kind? (strength/cardio/core), duration?, intensity? |
-| `MealItem` | id, name, grams, gramsMax?, protein/carbs/fat/calories? |
+| `MealItem` | id, name, portion? (free text), notes?; grams/gramsMax/macros = legacy, never shown or saved |
 | `Meal` | id, name, time?, items: MealItem[] |
 | `ExerciseLog` | id, exerciseId, weekNumber, weight?, reps?, note?, loggedAt |
 | `Phase` | id, clientId, name, type: bulk/cut/maintenance/custom, startDate, endDate, targetCalories?, completed |
@@ -178,6 +177,7 @@ Fan-out only when genuinely multi-perspective; use Glob/Grep directly for single
 
 - REMOVED for compliance (do not re-add without legal review): client progress photos, AI Fitness Scan (Anthropic/TensorFlow), `lib/cv-analysis`, `lib/physique-analyzer`, `lib/tier-system`, `/api/fitness-scan/*`, `/api/photo/*`. Cleanup SQL: migration 025
 - Intake form collects health data: submit requires the explicit consent checkbox (`privacyConsentAt` stored in the response)
+- Diets are "Indicazioni alimentari" (legal: no gram prescriptions, no auto-generator, never call them "dieta"/"piano alimentare"); show `DIET_DISCLAIMER` wherever they are edited or displayed
 - App name only via `lib/brand.ts` (`APP_NAME`); never hardcode it in UI strings
 - No credentials in scripts; hosting/DB production checklist in `docs/INFRASTRUTTURA.md`
 
