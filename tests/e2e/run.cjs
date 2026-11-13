@@ -321,6 +321,20 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
         await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
       }
     });
+    await check("indicazioni alimentari: avviso, porzioni a testo libero, niente grammi ne generatore", async () => {
+      await page.goto(`${BASE}/dashboard/clienti/c1`);
+      await page.getByRole("button", { name: /Alimentazione/ }).first().click();
+      await page.getByRole("button", { name: /Crea le prime indicazioni/ }).click();
+      const text = await page.getByTestId("diet-disclaimer").innerText();
+      assert(/non sono una dieta né una prescrizione di grammature/.test(text), "avviso mancante");
+      await page.getByRole("button", { name: "Aggiungi pasto" }).click();
+      await page.getByRole("button", { name: "Aggiungi alimento" }).click();
+      assert(await page.getByLabel("Porzione indicativa").count() === 1, "campo porzione mancante");
+      const body = await page.locator("body").innerText();
+      assert(!/Generatore automatico|Grammi \(range\)/.test(body), "grammature o generatore ancora presenti");
+      assert(await page.getByPlaceholder("g min").count() === 0, "campo grammi ancora presente");
+      await shot(page, "09-indicazioni-alimentari-desktop");
+    });
     await check("pagina Account: eliminazione bloccata finche non si scrive ELIMINA", async () => {
       await page.goto(`${BASE}/dashboard/account`);
       const btn = page.getByRole("button", { name: /Elimina definitivamente/ });

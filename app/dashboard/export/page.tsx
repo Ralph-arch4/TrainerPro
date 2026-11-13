@@ -1,6 +1,7 @@
 ﻿"use client";
 import { useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
+import { DIET_DISCLAIMER } from "@/components/DietPlanEditor";
 import { FileDown, Printer, CheckCircle2, Dumbbell, UtensilsCrossed, TrendingUp, Activity, User, Users } from "lucide-react";
 
 const phaseTypeLabel: Record<string, string> = { bulk: "Bulk", cut: "Cut", maintenance: "Mantenimento", custom: "Personalizzata" };
@@ -41,7 +42,7 @@ export default function ExportPage() {
     { key: "anagrafica", label: "Dati anagrafici", icon: User },
     { key: "fasi", label: "Fasi di allenamento", icon: Activity, count: client?.phases.length },
     { key: "schede", label: "Schede allenamento", icon: Dumbbell, count: client?.workoutPlans.length },
-    { key: "dieta", label: "Piani alimentari", icon: UtensilsCrossed, count: client?.dietPlans.length },
+    { key: "dieta", label: "Indicazioni alimentari", icon: UtensilsCrossed, count: client?.dietPlans.length },
     { key: "misurazioni", label: "Misurazioni corporee", icon: TrendingUp, count: client?.measurements.length },
   ];
 
@@ -59,7 +60,7 @@ export default function ExportPage() {
           </div>
           <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>Nessun cliente da esportare</h2>
           <p className="text-sm mb-1 max-w-sm mx-auto" style={{ color: "var(--text-muted)" }}>
-            Aggiungi almeno un cliente per poter generare schede, piani alimentari e report in PDF.
+            Aggiungi almeno un cliente per poter generare schede, indicazioni alimentari e report in PDF.
           </p>
           <p className="text-xs mb-6 max-w-sm mx-auto" style={{ color: "var(--text-dim)" }}>
             I PDF includono: anagrafica, fasi di allenamento, schede, diete e misurazioni.
@@ -307,10 +308,11 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
       {/* Dieta */}
       {sections.dieta && client.dietPlans.length > 0 && (
         <section className="mb-6">
-          <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#C9A84C" : "var(--accent)" }}>Piani Alimentari</h2>
+          <h2 className="text-sm font-bold mb-3 uppercase tracking-wide" style={{ color: forPrint ? "#C9A84C" : "var(--accent)" }}>Indicazioni alimentari</h2>
+          <p style={{ fontSize: "11px", marginBottom: "10px", color: mutedColor }}>{DIET_DISCLAIMER}</p>
           <div className="space-y-4">
             {client.dietPlans.map((d) => {
-              const meals: Array<{ id: string; name: string; time?: string; notes?: string; items: Array<{ id: string; name: string; grams: number; gramsMax?: number; }> }> = (() => {
+              const meals: Array<{ id: string; name: string; time?: string; notes?: string; items: Array<{ id: string; name: string; portion?: string; }> }> = (() => {
                 try { const p = JSON.parse(d.meals ?? "[]"); return Array.isArray(p) ? p : []; } catch { return []; }
               })();
               const fmt = (min: number, max?: number, unit = "g") => max && max > min ? `${min}–${max}${unit}` : `${min}${unit}`;
@@ -339,9 +341,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
                             {meal.items.map((item, ii) => (
                               <tr key={item.id} style={{ background: ii % 2 === 0 ? (forPrint ? "#f9fafb" : "var(--surface-xs)") : "transparent" }}>
                                 <td style={{ padding: "3px 0" }}>{item.name || "—"}</td>
-                                <td style={{ textAlign: "right", padding: "3px 0", color: mutedColor, paddingLeft: "12px", whiteSpace: "nowrap" }}>
-                                  {item.gramsMax && item.gramsMax > item.grams ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
-                                </td>
+<td style={{ textAlign: "right", padding: "3px 0", color: mutedColor, paddingLeft: "12px" }}>{item.portion ?? ""}</td>
                               </tr>
                             ))}
                           </tbody>

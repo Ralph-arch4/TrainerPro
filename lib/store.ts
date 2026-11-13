@@ -45,8 +45,9 @@ export interface MealItem {
   id: string;
   name: string;
   foodId?: string; // link to lib/foodDatabase entry (enables gram->macro recalc)
-  grams: number;
-  gramsMax?: number; // if set, show as range
+  portion?: string; // free-text indicative portion ("1 porzione", "a piacere"): never a gram prescription
+  grams: number;     // legacy (old gram-based plans): no longer edited nor shown
+  gramsMax?: number; // legacy
   protein?: number;
   carbs?: number;
   fat?: number;

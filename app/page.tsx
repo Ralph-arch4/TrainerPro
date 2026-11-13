@@ -15,7 +15,7 @@ const EASE: [number,number,number,number] = [0.16, 1, 0.3, 1];
 const features = [
   { icon: Users,           title: "Clienti",          desc: "Anagrafica completa, obiettivi, livello e storico in un unico posto." },
   { icon: Activity,        title: "Fasi Training",    desc: "Bulk, Cut e Mantenimento con durata, calorie target e progressi." },
-  { icon: UtensilsCrossed, title: "Piani Alimentari", desc: "Diete personalizzate con macro collegate a ogni fase." },
+  { icon: UtensilsCrossed, title: "Indicazioni alimentari", desc: "Linee guida generali sull'alimentazione, collegate a ogni fase." },
   { icon: TrendingUp,      title: "Misurazioni",      desc: "Traccia peso, % grasso, circonferenze e visualizza i progressi." },
   { icon: Calculator,      title: "Preventivi",       desc: "Genera preventivi professionali in pochi secondi." },
   { icon: FileDown,        title: "Export PDF",       desc: "Condividi schede e piani con i tuoi clienti in PDF." },
@@ -210,7 +210,7 @@ function Hero() {
               className="mt-4 text-base leading-relaxed"
               style={{ color: "rgba(245,240,232,0.6)" }}
             >
-              L&apos;unico CRM pensato per chi trasforma i corpi. Schede, nutrizione e progressi — tutto in un click.
+              L&apos;unico CRM pensato per chi trasforma i corpi. Schede, alimentazione e progressi — tutto in un click.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -330,7 +330,7 @@ function Hero() {
         >
           <p className="text-sm max-w-xs leading-relaxed" style={{ color: "rgba(245,240,232,0.55)" }}>
             L&apos;unico CRM pensato per chi trasforma i corpi.<br />
-            Schede, nutrizione e progressi — tutto in un click.
+            Schede, alimentazione e progressi — tutto in un click.
           </p>
           <div className="flex items-center gap-4">
             <Link href="/register" className="accent-btn inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold tracking-wide">
@@ -598,7 +598,7 @@ export default function LandingPage() {
                 {[
                   "Clienti illimitati",
                   "Schede di allenamento personalizzate",
-                  "Piani alimentari con macro",
+                  "Indicazioni alimentari generali",
                   "Fasi: Bulk, Cut, Mantenimento",
                   "Misurazioni corporee",
                   "Form di intake per i clienti",

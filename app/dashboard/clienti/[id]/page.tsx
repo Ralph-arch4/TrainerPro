@@ -5,7 +5,7 @@ import { useAppStore } from "@/lib/store";
 import type { DietPlan } from "@/lib/store";
 import { dbClients, dbPhases, dbWorkoutPlans, dbDietPlans, dbNotes, dbMeasurements } from "@/lib/db";
 import { showToast } from "@/components/Toast";
-import DietPlanEditor from "@/components/DietPlanEditor";
+import DietPlanEditor, { DIET_DISCLAIMER } from "@/components/DietPlanEditor";
 import ClientFeedbackPanel, { collectClientFeedback } from "@/components/ClientFeedbackPanel";
 import Link from "next/link";
 import {
@@ -631,7 +631,7 @@ function ClientDetail() {
       try {
         await dbDietPlans.create(d);
         setDietEditorOpen(false);
-        showToast("Piano alimentare creato");
+        showToast("Indicazioni alimentari create");
       } catch (err) {
         removeDietPlan(client!.id, d.id);
         setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
@@ -700,7 +700,7 @@ function ClientDetail() {
     { key: "fasi", label: "Fasi", icon: Activity, count: client.phases.length },
     { key: "schede", label: "Schede", icon: Dumbbell, count: client.workoutPlans.length },
     { key: "feedback", label: "Feedback", icon: MessageCircle, count: collectClientFeedback(client.workoutPlans).length },
-    { key: "dieta", label: "Dieta", icon: UtensilsCrossed, count: client.dietPlans.length },
+    { key: "dieta", label: "Alimentazione", icon: UtensilsCrossed, count: client.dietPlans.length },
     { key: "misurazioni", label: "Misurazioni", icon: TrendingUp, count: client.measurements.length },
     { key: "note", label: "Note", icon: StickyNote, count: client.notes.length },
   ];
@@ -1286,7 +1286,7 @@ function ClientDetail() {
               {[
                 { label: "Fasi", value: client.phases.length, color: "#a78bfa" },
                 { label: "Schede", value: client.workoutPlans.length, color: "var(--accent)" },
-                { label: "Diete", value: client.dietPlans.length, color: "#34d399" },
+                { label: "Alimentazione", value: client.dietPlans.length, color: "#34d399" },
                 { label: "Log recenti", value: recentLogCount, color: "#38bdf8" },
               ].map(({ label, value, color }) => (
                 <div key={label} className="rounded-xl p-3 text-center" style={{ background: "var(--surface-sm)" }}>
@@ -1909,27 +1909,28 @@ function ClientDetail() {
       {/* ── DIETA ── */}
       {tab === "dieta" && (
         <div>
+          <p className="text-xs mb-4 p-3 rounded-xl" style={{ color: "var(--text-muted)", background: "var(--surface-xs)", border: "1px solid var(--border)" }}>{DIET_DISCLAIMER}</p>
           <div className="flex justify-between items-center mb-4">
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{client.dietPlans.length} piani</p>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{client.dietPlans.length} {client.dietPlans.length === 1 ? "scheda di indicazioni" : "schede di indicazioni"}</p>
             <button onClick={() => { setEditingDietPlan(null); setDietEditorOpen(true); }} className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm">
-              <Plus size={14} /> Nuovo piano
+              <Plus size={14} /> Nuove indicazioni
             </button>
           </div>
           {client.dietPlans.length === 0 ? (
             <div className="text-center py-16 card-luxury rounded-2xl">
               <UtensilsCrossed size={40} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
-              <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessun piano alimentare</p>
-              <p className="text-xs mb-4" style={{ color: "var(--text-dim)" }}>Crea un piano con macro, range di grammi e pasti dettagliati</p>
+              <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessuna indicazione alimentare</p>
+              <p className="text-xs mb-4" style={{ color: "var(--text-dim)" }}>Linee guida generali su pasti e alimenti, senza grammature</p>
               <button onClick={() => { setEditingDietPlan(null); setDietEditorOpen(true); }}
                 className="accent-btn px-5 py-2.5 rounded-xl text-sm inline-flex items-center gap-2">
-                <Plus size={14} /> Crea il primo piano
+                <Plus size={14} /> Crea le prime indicazioni
               </button>
             </div>
           ) : (
             <div className="space-y-4">
               {client.dietPlans.map((dp) => {
                 const linkedPhase = client.phases.find((ph) => ph.id === dp.phaseId);
-                const mealsData: Array<{ id: string; name: string; time?: string; items: Array<{ id: string; name: string; grams: number; gramsMax?: number; protein?: number; carbs?: number; fat?: number }> }> = (() => {
+                const mealsData: Array<{ id: string; name: string; time?: string; items: Array<{ id: string; name: string; portion?: string; grams: number; gramsMax?: number; protein?: number; carbs?: number; fat?: number }> }> = (() => {
                   try { const p = JSON.parse(dp.meals); if (Array.isArray(p) && p[0]?.items) return p; } catch {}
                   return [];
                 })();
@@ -1992,7 +1993,7 @@ function ClientDetail() {
                           style={{ color: "var(--text-muted)" }}>
                           <span className="text-xs font-medium flex items-center gap-2">
                             <UtensilsCrossed size={12} style={{ color: "var(--accent)" }} />
-                            {mealsData.length} {mealsData.length === 1 ? "pasto" : "pasti"} nel piano
+                            {mealsData.length} {mealsData.length === 1 ? "pasto" : "pasti"}
                           </span>
                           {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                         </button>
@@ -2011,14 +2012,7 @@ function ClientDetail() {
                                     {meal.items.map((item) => (
                                       <div key={item.id} className="flex items-center gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
                                         <span className="flex-1">{item.name || "—"}</span>
-                                        <span className="font-medium" style={{ color: "var(--text)" }}>
-                                          {item.gramsMax ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
-                                        </span>
-                                        {(item.protein || item.carbs || item.fat) && (
-                                          <span className="text-xs" style={{ color: "var(--text-dim)" }}>
-                                            {item.protein ? `P:${item.protein}g` : ""}{item.carbs ? ` C:${item.carbs}g` : ""}{item.fat ? ` G:${item.fat}g` : ""}
-                                          </span>
-                                        )}
+                                        {item.portion && <span className="font-medium" style={{ color: "var(--text)" }}>{item.portion}</span>}
                                       </div>
                                     ))}
                                   </div>

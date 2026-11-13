@@ -1,12 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
 import type { DietPlan, Meal, MealItem, Phase } from "@/lib/store";
-import { searchFoods, getFood, displayName, macrosFor, type Food } from "@/lib/foodDatabase";
-import { generateNutritionPlan, type DietPreference } from "@/lib/nutritionGenerator";
+import { searchFoods, displayName, type Food } from "@/lib/foodDatabase";
 import {
   X, Plus, Trash2, ChevronDown, ChevronUp, Clock, UtensilsCrossed,
-  Check, Flame, Wheat, Droplets, Beef, Sparkles, RefreshCw,
+  Check, Flame, Wheat, Droplets, Beef, Info,
 } from "lucide-react";
+
+// Shown wherever these indications are written or read (editor, client page, PDF)
+export const DIET_DISCLAIMER = "Indicazioni alimentari generali: non sono una dieta né una prescrizione di grammature. Per un piano alimentare personalizzato rivolgiti a un medico, a un biologo nutrizionista o a un dietista.";
 
 const inputStyle = {
   background: "rgba(255,255,255,0.05)",
@@ -76,92 +78,48 @@ function MealItemRow({ item, onChange, onRemove }: MealItemRowProps) {
   const [suggestions, setSuggestions] = useState<Food[]>([]);
 
   function handleName(v: string) {
-    // Typing a custom name unlinks the item from the food database.
     onChange({ name: v, foodId: undefined });
     setSuggestions(searchFoods(v));
   }
 
+  // The food list only helps typing the name: no grams and no macros are derived.
   function selectFood(food: Food) {
-    const grams = item.grams > 0 ? item.grams : 100;
-    const m = macrosFor(food, grams);
-    onChange({ name: displayName(food), foodId: food.id, grams, ...m, notes: food.unitNote ?? item.notes });
+    onChange({ name: displayName(food), foodId: undefined });
     setSuggestions([]);
-  }
-
-  function handleGrams(v: string) {
-    const grams = parseFloat(v) || 0;
-    const food = item.foodId ? getFood(item.foodId) : undefined;
-    onChange(food ? { grams, ...macrosFor(food, grams) } : { grams });
   }
 
   return (
     <div className="p-3 rounded-xl mb-2" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
       <div className="flex items-start gap-2">
-        <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <div className="sm:col-span-2 relative">
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="relative">
             <input value={item.name} onChange={(e) => handleName(e.target.value)}
               onBlur={() => setTimeout(() => setSuggestions([]), 150)}
-              placeholder="Alimento (es. Pollo, Riso, Olio EVO…)"
+              placeholder="Alimento (es. Pollo, Riso, Olio EVO…)" aria-label="Alimento"
               className="w-full px-2.5 py-1.5 rounded-lg text-sm outline-none" style={inputStyle} />
-            {item.foodId && (
-              <span className="text-xs" style={{ color: "rgba(34,197,94,0.6)" }}>dal database · macro auto</span>
-            )}
             {suggestions.length > 0 && (
               <div className="absolute left-0 right-0 top-full mt-1 rounded-xl overflow-hidden z-20"
-                style={{ background: "rgba(26,26,26,0.98)", border: "1px solid rgba(255,107,43,0.25)", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+                style={{ background: "rgba(26,26,26,0.98)", border: "1px solid rgba(201,168,76,0.25)", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
                 {suggestions.map((f) => (
                   <button key={f.id} onMouseDown={(e) => { e.preventDefault(); selectFood(f); }}
-                    className="w-full px-3 py-2.5 text-left text-sm flex items-center justify-between gap-2 hover:bg-white/5 transition-all"
+                    className="w-full px-3 py-2.5 text-left text-sm hover:bg-white/5 transition-all truncate"
                     style={{ color: "var(--ivory)" }}>
-                    <span className="truncate">{displayName(f)}</span>
-                    <span className="text-xs flex-shrink-0" style={{ color: "rgba(245,240,232,0.4)" }}>
-                      P{f.per100.protein} C{f.per100.carbs} G{f.per100.fat} /100g
-                    </span>
+                    {displayName(f)}
                   </button>
                 ))}
               </div>
             )}
           </div>
-          <div>
-            <div className="flex items-center gap-1">
-              <input type="number" value={item.grams || ""} onChange={(e) => handleGrams(e.target.value)}
-                placeholder="g min"
-                className="flex-1 w-full px-2.5 py-1.5 rounded-lg text-sm outline-none" style={inputStyle} />
-              <span className="text-xs flex-shrink-0" style={{ color: "rgba(245,240,232,0.3)" }}>–</span>
-              <input type="number" value={item.gramsMax || ""} onChange={(e) => onChange({ gramsMax: parseFloat(e.target.value) || undefined })}
-                placeholder="g max"
-                className="flex-1 w-full px-2.5 py-1.5 rounded-lg text-sm outline-none" style={inputStyle} />
-            </div>
-            <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.3)" }}>Grammi (range)</p>
-          </div>
-          <div className="grid grid-cols-3 gap-1">
-            <div>
-              <input type="number" value={item.protein || ""} onChange={(e) => onChange({ protein: parseFloat(e.target.value) || undefined })}
-                placeholder="P g"
-                className="w-full px-2 py-1.5 rounded-lg text-xs outline-none" style={{ ...inputStyle, border: "1px solid rgba(167,139,250,0.25)" }} />
-              <p className="text-xs mt-0.5 text-center" style={{ color: "rgba(167,139,250,0.6)" }}>Prot</p>
-            </div>
-            <div>
-              <input type="number" value={item.carbs || ""} onChange={(e) => onChange({ carbs: parseFloat(e.target.value) || undefined })}
-                placeholder="C g"
-                className="w-full px-2 py-1.5 rounded-lg text-xs outline-none" style={{ ...inputStyle, border: "1px solid rgba(56,189,248,0.25)" }} />
-              <p className="text-xs mt-0.5 text-center" style={{ color: "rgba(56,189,248,0.6)" }}>Carb</p>
-            </div>
-            <div>
-              <input type="number" value={item.fat || ""} onChange={(e) => onChange({ fat: parseFloat(e.target.value) || undefined })}
-                placeholder="G g"
-                className="w-full px-2 py-1.5 rounded-lg text-xs outline-none" style={{ ...inputStyle, border: "1px solid rgba(251,191,36,0.25)" }} />
-              <p className="text-xs mt-0.5 text-center" style={{ color: "rgba(251,191,36,0.6)" }}>Gras</p>
-            </div>
-          </div>
+          <input value={item.portion ?? ""} onChange={(e) => onChange({ portion: e.target.value || undefined })}
+            placeholder="Porzione indicativa (es. 1 porzione, a piacere)" aria-label="Porzione indicativa" maxLength={60}
+            className="w-full px-2.5 py-1.5 rounded-lg text-sm outline-none" style={inputStyle} />
         </div>
-        <button onClick={onRemove} className="mt-1 p-1.5 rounded-lg flex-shrink-0 hover:bg-red-500/10 transition-all">
+        <button onClick={onRemove} aria-label="Rimuovi alimento" className="mt-1 p-1.5 rounded-lg flex-shrink-0 hover:bg-red-500/10 transition-all">
           <Trash2 size={13} style={{ color: "rgba(239,68,68,0.55)" }} />
         </button>
       </div>
-      {/* notes per item */}
       <input value={item.notes || ""} onChange={(e) => onChange({ notes: e.target.value || undefined })}
-        placeholder="Note (es. cottura a vapore, olio extra…)"
+        placeholder="Note (es. cottura a vapore, alternative…)"
         className="w-full mt-2 px-2.5 py-1.5 rounded-lg text-xs outline-none" style={inputStyle} />
     </div>
   );
@@ -176,10 +134,6 @@ interface MealBlockProps {
 
 function MealBlock({ meal, index, onUpdate, onRemove }: MealBlockProps) {
   const [expanded, setExpanded] = useState(true);
-
-  const totalCalFromItems = meal.items.reduce((acc, it) => {
-    return acc + ((it.protein ?? 0) * 4 + (it.carbs ?? 0) * 4 + (it.fat ?? 0) * 9);
-  }, 0);
 
   function addItem() {
     const item: MealItem = { id: uid(), name: "", grams: 0 };
@@ -215,12 +169,6 @@ function MealBlock({ meal, index, onUpdate, onRemove }: MealBlockProps) {
               style={{ color: "rgba(245,240,232,0.5)" }} />
           </div>
         </div>
-        {totalCalFromItems > 0 && (
-          <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
-            style={{ background: "rgba(255,107,43,0.08)", color: "var(--accent-light)" }}>
-            ~{Math.round(totalCalFromItems)} kcal
-          </span>
-        )}
         <div className="flex items-center gap-1 flex-shrink-0">
           <button onClick={() => setExpanded(!expanded)} className="p-1.5 rounded-lg hover:bg-white/5 transition-all">
             {expanded ? <ChevronUp size={14} style={{ color: "rgba(245,240,232,0.4)" }} /> : <ChevronDown size={14} style={{ color: "rgba(245,240,232,0.4)" }} />}
@@ -282,16 +230,6 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
   // Meals
   const [meals, setMeals] = useState<Meal[]>(() => parseMeals(plan?.meals ?? "[]"));
 
-  // Auto generator
-  const [genMealsCount, setGenMealsCount] = useState(() => {
-    const existing = parseMeals(plan?.meals ?? "[]").length;
-    return existing >= 2 && existing <= 6 ? existing : 4;
-  });
-  const [genPreference, setGenPreference] = useState<DietPreference>("onnivora");
-  const [genSeed, setGenSeed] = useState(0);
-  const [genTotals, setGenTotals] = useState<{ protein: number; carbs: number; fat: number; calories: number } | null>(null);
-  const [genError, setGenError] = useState<string | null>(null);
-
   // Auto-compute calories from macros if calories is empty
   const computedKcal = (parseFloat(protein) || 0) * 4 + (parseFloat(carbs) || 0) * 4 + (parseFloat(fat) || 0) * 9;
   const computedKcalMax = (parseFloat(proteinMax) || parseFloat(protein) || 0) * 4 + (parseFloat(carbsMax) || parseFloat(carbs) || 0) * 4 + (parseFloat(fatMax) || parseFloat(fat) || 0) * 9;
@@ -310,32 +248,11 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
     setMeals(meals.filter((m) => m.id !== mealId));
   }
 
-  function handleGenerate() {
-    const p = parseFloat(protein) || 0;
-    const c = parseFloat(carbs) || 0;
-    const f = parseFloat(fat) || 0;
-    if (p <= 0 || c <= 0 || f <= 0) {
-      setGenError("Inserisci prima proteine, carboidrati e grassi (valori minimi) qui sopra.");
-      setGenTotals(null);
-      return;
-    }
-    const result = generateNutritionPlan({
-      protein: p, carbs: c, fat: f,
-      mealsCount: genMealsCount,
-      preference: genPreference,
-      seed: genSeed,
-    });
-    setMeals(result.meals);
-    setGenTotals(result.totals);
-    setGenError(null);
-    setGenSeed(genSeed + 1);
-  }
-
   function handleSave() {
     const cal = parseFloat(calories) || (hasMacros ? Math.round(computedKcal) : 0);
     const calMax = parseFloat(caloriesMax) || (hasMacros && computedKcalMax > computedKcal ? Math.round(computedKcalMax) : undefined);
     onSave({
-      name: name.trim() || "Piano alimentare",
+      name: name.trim() || "Indicazioni alimentari",
       phaseId: phaseId || undefined,
       active,
       notes: notes.trim() || undefined,
@@ -347,7 +264,11 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
       carbsMax: parseFloat(carbsMax) || undefined,
       fat: parseFloat(fat) || 0,
       fatMax: parseFloat(fatMax) || undefined,
-      meals: JSON.stringify(meals),
+      // Indications only: legacy grams and per-food macros are never saved again
+      meals: JSON.stringify(meals.map((m) => ({
+        ...m,
+        items: m.items.map(({ id, name, portion, notes }) => ({ id, name, portion, notes, grams: 0 })),
+      }))),
     });
   }
 
@@ -366,7 +287,7 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
               <UtensilsCrossed size={16} style={{ color: "var(--accent)" }} />
             </div>
             <h2 className="text-lg font-bold" style={{ color: "var(--ivory)" }}>
-              {plan ? "Modifica piano alimentare" : "Nuovo piano alimentare"}
+              {plan ? "Modifica indicazioni alimentari" : "Nuove indicazioni alimentari"}
             </h2>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/5 transition-all">
@@ -402,11 +323,17 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
           </div>
         </div>
 
+        <div className="flex items-start gap-2 rounded-xl p-3 text-xs" data-testid="diet-disclaimer"
+          style={{ background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.25)", color: "rgba(245,240,232,0.7)" }}>
+          <Info size={14} className="flex-shrink-0 mt-0.5" style={{ color: "var(--accent)" }} />
+          <p>{DIET_DISCLAIMER}</p>
+        </div>
+
         {/* ── Macros with ranges ── */}
         <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,107,43,0.1)" }}>
           <h3 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--ivory)" }}>
-            <Flame size={14} style={{ color: "var(--accent)" }} /> Macronutrienti giornalieri
-            <span className="text-xs font-normal ml-1" style={{ color: "rgba(245,240,232,0.35)" }}>(range min – max)</span>
+            <Flame size={14} style={{ color: "var(--accent)" }} /> Riferimenti orientativi
+            <span className="text-xs font-normal ml-1" style={{ color: "rgba(245,240,232,0.35)" }}>(facoltativi, non prescrittivi)</span>
           </h3>
 
           <div className="space-y-3">
@@ -437,79 +364,6 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
                   ⚠ differisce dal valore inserito
                 </span>
               )}
-            </div>
-          )}
-        </div>
-
-        {/* ── Auto generator ── */}
-        <div className="rounded-2xl p-4" style={{ background: "rgba(255,107,43,0.05)", border: "1px solid rgba(255,107,43,0.2)" }}>
-          <h3 className="text-sm font-semibold mb-1 flex items-center gap-2" style={{ color: "var(--ivory)" }}>
-            <Sparkles size={14} style={{ color: "var(--accent)" }} /> Generatore automatico
-          </h3>
-          <p className="text-xs mb-4" style={{ color: "rgba(245,240,232,0.45)" }}>
-            Imposta i macro qui sopra e scegli il numero di pasti: il piano viene calcolato al grammo dal database alimenti.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 mb-4">
-            <div>
-              <label className="block text-xs mb-1.5 font-medium" style={{ color: "rgba(245,240,232,0.5)" }}>Numero pasti</label>
-              <div className="flex gap-1.5">
-                {[2, 3, 4, 5, 6].map((num) => (
-                  <button key={num} onClick={() => setGenMealsCount(num)}
-                    className="w-11 h-11 rounded-xl text-sm font-semibold transition-all"
-                    style={num === genMealsCount
-                      ? { background: "rgba(255,107,43,0.18)", border: "1px solid rgba(255,107,43,0.45)", color: "var(--accent-light)" }
-                      : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(245,240,232,0.5)" }}>
-                    {num}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="flex-1">
-              <label className="block text-xs mb-1.5 font-medium" style={{ color: "rgba(245,240,232,0.5)" }}>Preferenza alimentare</label>
-              <div className="flex flex-wrap gap-1.5">
-                {([["onnivora", "Onnivora"], ["pescetariana", "Pescetariana"], ["vegetariana", "Vegetariana"]] as Array<[DietPreference, string]>).map(([value, label]) => (
-                  <button key={value} onClick={() => setGenPreference(value)}
-                    className="px-3 h-11 rounded-xl text-xs font-medium transition-all"
-                    style={value === genPreference
-                      ? { background: "rgba(255,107,43,0.18)", border: "1px solid rgba(255,107,43,0.45)", color: "var(--accent-light)" }
-                      : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(245,240,232,0.5)" }}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <button onClick={handleGenerate} disabled={!hasMacros}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-            style={{ background: "rgba(255,107,43,0.15)", border: "1px solid rgba(255,107,43,0.35)", color: "var(--accent-light)" }}>
-            {genTotals ? <RefreshCw size={14} /> : <Sparkles size={14} />}
-            {genTotals ? "Rigenera con altri alimenti" : "Genera piano alimentare"}
-          </button>
-
-          {meals.length > 0 && !genTotals && (
-            <p className="text-xs mt-2" style={{ color: "rgba(245,158,11,0.7)" }}>
-              La generazione sostituirà i pasti attuali.
-            </p>
-          )}
-          {genError && (
-            <p className="text-xs mt-2" style={{ color: "#ef4444" }}>{genError}</p>
-          )}
-          {genTotals && (
-            <div className="mt-3 pt-3 flex items-center gap-2 flex-wrap" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Piano generato:</span>
-              {[
-                { v: `${genTotals.calories} kcal`, c: "var(--accent-light)" },
-                { v: `P ${genTotals.protein}g`, c: "#a78bfa" },
-                { v: `C ${genTotals.carbs}g`, c: "#38bdf8" },
-                { v: `G ${genTotals.fat}g`, c: "#fbbf24" },
-              ].map((chip, i) => (
-                <span key={i} className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                  style={{ background: "rgba(255,255,255,0.05)", color: chip.c }}>
-                  {chip.v}
-                </span>
-              ))}
             </div>
           )}
         </div>
@@ -565,7 +419,7 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
           </button>
           <button onClick={handleSave} disabled={!name.trim()}
             className="flex-[2] accent-btn py-2.5 rounded-xl text-sm font-semibold disabled:opacity-40 flex items-center justify-center gap-2">
-            <Check size={15} /> {plan ? "Salva modifiche" : "Crea piano alimentare"}
+            <Check size={15} /> {plan ? "Salva modifiche" : "Crea indicazioni"}
           </button>
         </div>
       </div>

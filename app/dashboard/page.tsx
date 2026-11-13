@@ -788,7 +788,7 @@ export default function DashboardPage() {
       const phaseLabel = activePhase.type === "bulk" ? "massa" : "definizione";
       const activeDiet = c.dietPlans?.find(d => d.active);
       if (!activeDiet) {
-        results.push({ client: c, reason: `Fase ${phaseLabel} senza piano alimentare`, type: "no_plan" });
+        results.push({ client: c, reason: `Fase ${phaseLabel} senza indicazioni alimentari`, type: "no_plan" });
       } else if (activePhase.targetCalories && activePhase.targetCalories > 0) {
         const diff = Math.abs(activeDiet.calories - activePhase.targetCalories);
         if (diff / activePhase.targetCalories > 0.15) {
@@ -1469,14 +1469,14 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <UtensilsCrossed size={14} style={{ color: "#f87171" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
-              Radar Nutrizione
+              Radar Alimentazione
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
               style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>
               {nutritionMisalignAlerts.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
-              piani alimentari da rivedere
+              indicazioni alimentari da rivedere
             </span>
           </div>
           <div className="space-y-2">
@@ -2240,7 +2240,7 @@ export default function DashboardPage() {
             {([
               { href: "/dashboard/clienti?new=1", icon: Users,    label: "Nuovo cliente",          desc: "Registra un nuovo cliente" },
               { href: "/dashboard/fasi",    icon: Activity,      label: "Crea una fase",           desc: "Bulk, cut o mantenimento" },
-              { href: "/dashboard/diete",   icon: UtensilsCrossed, label: "Piano alimentare",     desc: "Calcola macro e calorie" },
+              { href: "/dashboard/diete",   icon: UtensilsCrossed, label: "Alimentazione",        desc: "Indicazioni alimentari generali" },
               { href: "/dashboard/misurazioni", icon: TrendingUp, label: "Registra misurazioni",  desc: "Traccia i progressi fisici" },
               { href: "/dashboard/intake",  icon: ClipboardList,  label: "Invia form d'intake",   desc: "Raccogli dati dal cliente" },
             ] as const).map(({ href, icon: Icon, label, desc }) => (
