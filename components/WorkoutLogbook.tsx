@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import type { Exercise, ExerciseLog, SupplementItem } from "@/lib/store";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Save, X, ExternalLink, Copy, Check, Pencil, Trash2, Plus, Dumbbell, ShoppingBag, TrendingUp, Maximize2, Minimize2, Target, HeartPulse, Flame } from "lucide-react";
 import { showToast } from "@/components/Toast";
+import { APP_NAME } from "@/lib/brand";
 import ExerciseGuide from "@/components/ExerciseGuide";
 import SessionPanel from "@/components/SessionPanel";
 import LinkifiedText from "@/components/LinkifiedText";
@@ -156,7 +157,7 @@ function buildSessionBrief(exs: Exercise[], allLogs: ExerciseLog[], week: number
   if (!hasData) return "";
   const vol = calcVolumeLoad(exs, allLogs, week);
   if (vol > 0) lines.push(`\nTonnellaggio: ${vol.toLocaleString("it-IT")} kg`);
-  lines.push("— TrainerPro");
+  lines.push(`— ${APP_NAME}`);
   return lines.join("\n");
 }
 

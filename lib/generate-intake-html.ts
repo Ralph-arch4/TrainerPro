@@ -1,4 +1,7 @@
-const API_BASE = "https://trainer-pro-phi.vercel.app";
+import { APP_NAME } from "./brand";
+
+// Public origin used by the downloadable form (set NEXT_PUBLIC_APP_URL when the domain changes)
+const API_BASE = (process.env.NEXT_PUBLIC_APP_URL || "https://trainer-pro-phi.vercel.app").replace(/\/$/, "");
 
 export function generateIntakeHtml(token: string, label: string): string {
   return `<!DOCTYPE html>
@@ -6,7 +9,7 @@ export function generateIntakeHtml(token: string, label: string): string {
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Questionario Allenamento – TrainerPro</title>
+<title>Questionario Allenamento – ${APP_NAME}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#0A0A0A;color:#F5F0E8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
@@ -50,7 +53,7 @@ input::placeholder,textarea::placeholder{color:rgba(245,240,232,.25)}
 <body>
 <div class="hdr">
   <div class="logo">💪</div>
-  <span class="logo-txt">TrainerPro</span>
+  <span class="logo-txt">${APP_NAME}</span>
   <span class="badge">Questionario programmazione</span>
 </div>
 
@@ -182,6 +185,10 @@ input::placeholder,textarea::placeholder{color:rgba(245,240,232,.25)}
       <div class="radio-g" id="rg_alcol"><div class="rb" data-v="No">No</div><div class="rb" data-v="Raramente">Raramente</div><div class="rb" data-v="1–2 volte/sett.">1–2 volte/sett.</div><div class="rb" data-v="Quasi ogni giorno">Quasi ogni giorno</div></div></div>
     <div class="q"><label class="ql"><span class="qn">49.</span>Elenca ciò che mangi in una giornata tipo</label><textarea id="typicalDayMeals" placeholder="Colazione: ...&#10;Spuntino: ...&#10;Pranzo: ...&#10;Spuntino: ...&#10;Cena: ..." style="min-height:110px"></textarea></div>
 
+    <label style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;font-size:13px;line-height:1.5;cursor:pointer">
+      <input type="checkbox" id="consent" style="margin-top:3px;width:18px;height:18px;flex-shrink:0"/>
+      <span>Acconsento al trattamento dei miei dati personali, compresi quelli relativi alla salute (patologie, infortuni, farmaci, allergie), da parte del mio personal trainer per la preparazione del programma. Ho letto l'<a href="${API_BASE}/privacy" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">informativa sulla privacy</a>.</span>
+    </label>
     <div class="err" id="submitErr"></div>
   </div>
 
@@ -282,11 +289,12 @@ function nextStep(){
 function prevStep(){if(step>0){step--;ui();window.scrollTo(0,0);}}
 
 async function submit(){
+  if(!document.getElementById("consent").checked){const e=document.getElementById("submitErr");e.textContent="Per inviare il questionario serve il consenso al trattamento dei dati.";e.style.display="block";return;}
   const btn=document.getElementById("btnNext");
   btn.disabled=true;btn.textContent="Invio in corso…";
   document.getElementById("submitErr").style.display="none";
   try{
-    const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(collect())});
+    const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.assign(collect(),{privacyConsentAt:new Date().toISOString()}))});
     if(!r.ok)throw 0;
     document.getElementById("formWrap").style.display="none";
     const ok=document.getElementById("okBox");ok.style.display="block";

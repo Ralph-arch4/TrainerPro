@@ -176,6 +176,11 @@ Fan-out only when genuinely multi-perspective; use Glob/Grep directly for single
 - `npm test` -- unit tests (node:test, no deps): progressions, billing, exercise image matching
 - `npm run test:e2e` -- Playwright against `next start` with mocked Supabase; build first with `NEXT_PUBLIC_SUPABASE_URL=https://e2e-test.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=test-anon-key`
 
+- REMOVED for compliance (do not re-add without legal review): client progress photos, AI Fitness Scan (Anthropic/TensorFlow), `lib/cv-analysis`, `lib/physique-analyzer`, `lib/tier-system`, `/api/fitness-scan/*`, `/api/photo/*`. Cleanup SQL: migration 025
+- Intake form collects health data: submit requires the explicit consent checkbox (`privacyConsentAt` stored in the response)
+- App name only via `lib/brand.ts` (`APP_NAME`); never hardcode it in UI strings
+- No credentials in scripts; hosting/DB production checklist in `docs/INFRASTRUTTURA.md`
+
 ### Confirmed patterns
 - Client sessions (start/end/duration/feedback) = exercise_logs rows with `exercise_id = "session:<day>"` (lib/workoutSession.ts); SupabaseDataLoader splits them into `plan.sessionLogs`. Client per-exercise feedback = `log.note`. PT reads both in client detail tab "Feedback"
 - Per-set log in `reps` TEXT as JSON `[{r,w}]` -- no DB migration needed

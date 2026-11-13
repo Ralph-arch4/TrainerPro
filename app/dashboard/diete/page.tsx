@@ -42,6 +42,10 @@ export default function DietePage() {
         <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
           {allDiets.length} piani su {clients.length} {clients.length === 1 ? "cliente" : "clienti"}
         </p>
+        <p className="text-xs mt-3 p-3 rounded-xl" style={{ color: "var(--text-muted)", background: "var(--surface-xs)", border: "1px solid var(--border)" }}>
+          In Italia l&apos;elaborazione di diete personalizzate è riservata a medici, biologi nutrizionisti e dietisti.
+          Usa questa sezione per indicazioni alimentari generali o per riportare il piano redatto da un professionista abilitato.
+        </p>
       </div>
 
       {/* Stats */}

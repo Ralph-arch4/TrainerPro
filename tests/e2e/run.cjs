@@ -120,6 +120,9 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
 (async () => {
   mkdirSync(SHOTS, { recursive: true });
   if (!existsSync(path.join(ROOT, ".next", "BUILD_ID"))) throw new Error("Run `npm run build` first");
+  // A leftover server from an older build would make every check meaningless
+  const busy = await fetch(`${BASE}/offline.html`).then(() => true, () => false);
+  if (busy) throw new Error(`Port ${PORT} is already in use: stop the running server first`);
   const server = spawn("npx", ["next", "start", "-p", String(PORT)], { cwd: ROOT, env: ENV, stdio: "ignore", detached: true });
   // Use a pre-installed Chromium when the bundled one is not downloaded
   const chromiumPath = process.env.PW_CHROMIUM_PATH || (existsSync("/opt/pw-browsers/chromium") ? "/opt/pw-browsers/chromium" : undefined);
@@ -149,6 +152,9 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
       assert((await fetch(`${BASE}/offline.html`)).ok, "offline.html");
       const al = await fetch(`${BASE}/.well-known/assetlinks.json`);
       assert(al.ok && Array.isArray(await al.json()), "assetlinks.json");
+      for (const gone of ["/api/fitness-scan", "/api/photo/pin", "/api/photo/view-token"]) {
+        assert((await fetch(BASE + gone, { method: "POST" })).status === 404, `${gone} deve essere rimosso`);
+      }
       const pr = await fetch(`${BASE}/privacy`);
       assert(pr.ok && (await pr.text()).includes("Eliminazione dell"), "privacy");
     });
@@ -168,6 +174,9 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
     await check("link diretto al cliente con cache vuota: nessun crash", async () => {
       await page.goto(`${BASE}/dashboard/clienti/c1`);
       await page.getByText("Cliente 01").first().waitFor({ timeout: 15000 });
+      const tabs = (await page.getByRole("button").allInnerTexts()).join(" | ");
+      assert(/Schede/.test(tabs) && /Misurazioni/.test(tabs), "schede cliente mancanti");
+      assert(!/Fitness Scan|Foto/.test(tabs), "foto e scanner AI devono essere rimossi");
       assert(errors.length === 0, `errori JS: ${errors.join(" | ")}`);
     });
 
@@ -332,7 +341,7 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
     });
   } finally {
     if (browser) await browser.close();
-    try { process.kill(-server.pid); } catch { /* already stopped */ }
+    try { process.kill(-server.pid, "SIGKILL"); } catch { /* already stopped */ }
   }
   const failed = results.filter((r) => !r.ok);
   console.log(`\n${results.length - failed.length}/${results.length} controlli superati`);

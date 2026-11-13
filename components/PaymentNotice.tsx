@@ -2,6 +2,7 @@
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { AlertTriangle, X } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import { APP_NAME } from "@/lib/brand";
 import { getPaymentStatus, formatDueDate } from "@/lib/billing";
 
 const DISMISS_KEY = "payment-notice-dismissed";
@@ -63,12 +64,12 @@ export default function PaymentNotice() {
       </div>
       <p id="payment-notice-text" className="text-xs mt-3 leading-relaxed" style={{ color: "var(--text-muted)" }}>
         Se l&apos;abbonamento non viene pagato entro 30 giorni non sarà più possibile accedere alle
-        funzionalità di TrainerPro. I dati dei tuoi clienti non andranno persi: ti verranno inviati
+        funzionalità di {APP_NAME}. I dati dei tuoi clienti non andranno persi: ti verranno inviati
         via email in modo sicuro.
       </p>
       <div className="flex gap-2 mt-3">
         {BILLING_EMAIL && (
-          <a href={`mailto:${BILLING_EMAIL}?subject=${encodeURIComponent("Pagamento abbonamento TrainerPro")}`}
+          <a href={`mailto:${BILLING_EMAIL}?subject=${encodeURIComponent(`Pagamento abbonamento ${APP_NAME}`)}`}
             className="accent-btn flex-1 text-center px-3 py-2.5 rounded-xl text-xs">
             Contatta per il pagamento
           </a>

@@ -185,6 +185,11 @@ export default function RegisterPage() {
               </button>
             </form>
 
+            <p className="text-center text-xs mt-4" style={{ color: "var(--text-dim)" }}>
+              Creando l&apos;account dichiari di aver letto l&apos;
+              <Link href="/privacy" className="underline" style={{ color: "var(--accent-light)" }}>informativa sulla privacy</Link>.
+            </p>
+
             <p className="text-center text-sm mt-6" style={{ color: "var(--text-muted)" }}>
               Hai già un account?{" "}
               <Link href="/login" className="font-semibold hover:underline" style={{ color: "var(--accent-light)" }}>
