@@ -2,6 +2,7 @@ import AppNav from "@/components/AppNav";
 import SupabaseDataLoader from "@/components/SupabaseDataLoader";
 import ToastProvider from "@/components/Toast";
 import PaymentNotice from "@/components/PaymentNotice";
+import PlanBanner from "@/components/PlanBanner";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +10,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <AppNav />
       <SupabaseDataLoader />
       <main className="dashboard-main flex-1 min-w-0 lg:ml-60 min-h-dvh">
+        <PlanBanner />
         {children}
       </main>
       <ToastProvider />

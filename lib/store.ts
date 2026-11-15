@@ -6,13 +6,16 @@ import type { ExerciseProgression } from "./progressions";
 function uid() { return crypto.randomUUID(); }
 function genToken() { return crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, ""); }
 
-export type PlanTier = "free" | "personal_coach" | "fitness_master";
+import type { PlanTier, PremiumStatus } from "./plan-limits";
+export type { PlanTier, PremiumStatus };
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  plan: PlanTier;
+  plan: PlanTier;               // from profiles.plan (server-authoritative), never from user metadata
+  premiumStatus?: PremiumStatus; // state of the Premium request
+  wantsPremium?: boolean;        // chose Premium at sign-up and has not requested it yet
   paymentDueAt?: string; // ISO date from user metadata `payment_due_at` (see lib/billing.ts)
 }
 

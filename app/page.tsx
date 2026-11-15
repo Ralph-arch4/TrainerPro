@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { APP_NAME } from "@/lib/brand";
+import { PREMIUM_PRICE } from "@/lib/billing";
 import HamburgerNav from "@/components/HamburgerNav";
 import TiltCard from "@/components/TiltCard";
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
@@ -551,7 +552,7 @@ export default function LandingPage() {
               {[
                 { value: "2 min", label: "Setup iniziale" },
                 { value: "∞",    label: "Clienti gestibili" },
-                { value: "100%", label: "Gratis per sempre" },
+                { value: "€0",   label: "Per provare la demo" },
               ].map(({ value, label }) => (
                 <div key={label} className="text-center">
                   <div className="font-black mb-1" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", color: "var(--accent)" }}>{value}</div>
@@ -573,11 +574,11 @@ export default function LandingPage() {
               className="font-black tracking-tight leading-none mb-6"
               style={{ fontSize: "clamp(3rem, 6vw, 5rem)", letterSpacing: "-0.04em" }}
             >
-              Tutto incluso.<br />
-              <span className="accent-text">Per sempre gratis.</span>
+              Provalo gratis.<br />
+              <span className="accent-text">Poi Premium.</span>
             </h2>
             <p className="text-base leading-relaxed" style={{ color: "var(--text-muted)", maxWidth: "26rem" }}>
-              Nessuna carta di credito. Nessun piano a pagamento. Accesso completo a tutte le funzionalità dal primo giorno.
+              La demo gratuita ti fa lavorare con un cliente, senza carta di credito. Con Premium gestisci tutti i tuoi clienti con ogni funzionalità.
             </p>
           </RevealDiv>
 
@@ -591,8 +592,8 @@ export default function LandingPage() {
               }}
             >
               <div className="flex items-baseline gap-2 mb-8">
-                <span className="font-black" style={{ fontSize: "clamp(3rem,8vw,5rem)", color: "var(--ivory)" }}>€0</span>
-                <span style={{ color: "var(--text-dim)" }}>/ per sempre</span>
+                <span className="font-black" style={{ fontSize: "clamp(3rem,8vw,5rem)", color: "var(--ivory)" }}>€{PREMIUM_PRICE}</span>
+                <span style={{ color: "var(--text-dim)" }}>/ mese · Premium</span>
               </div>
               <ul className="space-y-3 mb-8">
                 {[
@@ -620,9 +621,12 @@ export default function LandingPage() {
                   </motion.li>
                 ))}
               </ul>
-              <Link href="/register"
+              <Link href="/register?piano=premium"
                 className="accent-btn w-full py-4 rounded-xl text-sm text-center font-bold block tracking-wide">
-                Crea account gratuito →
+                Attiva Premium →
+              </Link>
+              <Link href="/register" className="block text-center text-sm mt-4 underline" style={{ color: "var(--text-muted)" }}>
+                Oppure inizia con la demo gratuita (1 cliente)
               </Link>
             </TiltCard>
           </RevealDiv>
@@ -645,10 +649,10 @@ export default function LandingPage() {
           </RevealDiv>
           <div>
             {[
-              { q: "REC Studio è davvero gratuito?",     a: "Sì, completamente. Nessuna carta di credito, nessun piano a pagamento, nessun limite nascosto." },
-              { q: "Posso esportare i piani in PDF?",    a: "Sì, tutti i piani di allenamento e le diete possono essere esportati in PDF per essere condivisi." },
+              { q: "Posso provarlo gratis?",             a: "Sì. La demo gratuita include tutte le funzionalità con un cliente e non richiede carta di credito." },
+              { q: "Posso esportare i piani in PDF?",    a: "Sì, schede di allenamento e indicazioni alimentari si esportano in PDF per essere condivise." },
               { q: "I miei dati sono al sicuro?",        a: "I dati sono archiviati su Supabase con crittografia e accesso protetto da Row Level Security." },
-              { q: "Quanti clienti posso gestire?",      a: "Clienti illimitati. Non c'è nessun tetto massimo dal primo giorno." },
+              { q: "Quanti clienti posso gestire?",      a: "Uno con la demo gratuita, illimitati con Premium. Passando a Premium non perdi nessun dato." },
             ].map(({ q, a }, i) => (
               <RevealDiv key={q} delay={i * 0.08}>
                 <div className="py-7 border-b group" style={{ borderColor: "rgba(201,168,76,0.07)" }}>

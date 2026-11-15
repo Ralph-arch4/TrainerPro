@@ -56,10 +56,62 @@ Nome e descrizione dell'app si cambiano in un solo punto: `lib/brand.ts`
    - Accesso all'app: fornisci a Google un account di prova (email e password) per la revisione
 8. Invia in revisione.
 
-## Nota sugli abbonamenti
+## Materiale per la scheda (gia' pronto in `android/store/`)
 
-Se l'abbonamento dei trainer viene venduto **dentro** l'app Android, Google
-richiede la fatturazione di Google Play. Oggi l'app non vende nulla al suo
-interno (l'avviso di pagamento e' solo informativo e il pagamento avviene
-fuori dall'app): mantieni questa impostazione o integra Play Billing prima
-di aggiungere un pulsante di acquisto.
+- `icon-512.png` — icona dell'app
+- `feature-graphic-1024x500.png` — immagine in evidenza
+- `screenshot-1..4-*.png` — screenshot da telefono 1080x1920 con dati di esempio.
+  Si rigenerano con `STORE_SHOTS=1 npm run test:e2e`.
+
+Testi proposti:
+
+- **Titolo** (max 30): `REC Studio: schede per PT`
+- **Descrizione breve** (max 80): `Clienti, schede e progressi del personal trainer in un'unica app.`
+- **Descrizione completa**:
+
+  > REC Studio e' lo strumento di lavoro del personal trainer.
+  >
+  > - Schede di allenamento con superserie, cardio e progressioni gia' programmate settimana per settimana
+  > - Link personale per ogni cliente: vede la scheda, registra carichi e ripetizioni, lascia un feedback
+  > - Fasi, misurazioni, note e indicazioni alimentari generali
+  > - Form iniziale per i nuovi clienti, preventivi ed export in PDF
+  >
+  > Demo gratuita con un cliente, senza carta di credito. Con Premium lavori con tutti i tuoi clienti.
+  >
+  > Le indicazioni alimentari sono generali e non sostituiscono il parere di un professionista sanitario.
+
+- **Categoria**: Salute e fitness. **Pubblico**: adulti. **Annunci**: no.
+
+## Piani, pagamenti e regole di Google Play
+
+L'app ha due piani: demo gratuita (1 cliente) e Premium. Il trainer chiede
+Premium dalla pagina Abbonamento; un super user verifica il pagamento e
+approva da `/admin/premium`.
+
+Google Play impone che gli acquisti di servizi digitali fatti **dentro**
+un'app Android passino dalla fatturazione di Google Play (con commissione).
+Per questo, quando il sito gira dentro l'app Android, la pagina Abbonamento
+non mostra link di pagamento ne' IBAN: mostra solo il pulsante "Richiedi
+Premium" e il pagamento si conclude fuori dall'app (email, sito web). Sul
+sito web invece link e coordinate sono visibili.
+
+Resta un punto da confermare prima della pubblicazione: il prezzo e' visibile
+anche nell'app. Se Google dovesse contestarlo le strade sono due:
+1. togliere dall'app Android ogni riferimento al prezzo (richiesta di contatto pura);
+2. integrare Google Play Billing (o il programma di fatturazione alternativa
+   disponibile nello Spazio Economico Europeo).
+
+Dati di pagamento: si inseriscono come variabili su Vercel, senza toccare il codice.
+
+| Variabile | A cosa serve |
+|-----------|--------------|
+| `NEXT_PUBLIC_PREMIUM_PRICE` | prezzo mensile mostrato (ora `29`, valore provvisorio) |
+| `NEXT_PUBLIC_PAYMENT_LINK` | link di pagamento online (Stripe, PayPal...) |
+| `NEXT_PUBLIC_PAYMENT_IBAN`, `NEXT_PUBLIC_PAYMENT_HOLDER` | coordinate per il bonifico |
+| `SUPERUSER_EMAILS` | email (separate da virgola) degli account che possono approvare Premium |
+
+## Account di prova per la revisione di Google
+
+In Play Console > Accesso all'app indica un account demo (email e password)
+gia' con un cliente e una scheda, e un secondo account approvato Premium se
+vuoi che i revisori vedano le funzioni complete.

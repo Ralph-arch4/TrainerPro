@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import type { Client, WorkoutPlan, Phase, DietPlan, BodyMeasurement, Note, ExerciseLog, PlanTier } from "@/lib/store";
+import type { Client, WorkoutPlan, Phase, DietPlan, BodyMeasurement, Note, ExerciseLog } from "@/lib/store";
 
 // Patch type for update() functions: `undefined` = leave column untouched,
 // `null` = explicitly clear the column in the DB.
@@ -12,16 +12,6 @@ async function uid(): Promise<string> {
   if (!user) throw new Error("Not authenticated");
   return user.id;
 }
-
-// ─── Profiles ─────────────────────────────────────────────────────────────────
-export const dbProfiles = {
-  async updatePlan(userId: string, plan: PlanTier) {
-    const { error } = await db().from("profiles").update({ plan }).eq("id", userId);
-    if (error) throw error;
-    // Also update auth metadata so it persists on reload
-    await db().auth.updateUser({ data: { plan } });
-  },
-};
 
 // ─── Clients ──────────────────────────────────────────────────────────────────
 export const dbClients = {

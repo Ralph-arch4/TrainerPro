@@ -38,7 +38,7 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 | `lib/store.ts` | TS types + Zustand store (see type summary below) |
 | `lib/db.ts` | All Supabase calls (camelCase<->snake_case). NEVER raw calls in components. |
 | `lib/exerciseLibrary.ts` | 110+ Italian exercises. `searchExercises(q, muscleGroup?)` |
-| `lib/plan-limits.ts` | `checkLimit(plan, "clients", count)` -- tier gating |
+| `lib/plan-limits.ts` | `checkLimit(plan, "clients", count)`, `isPremium`, `FREE_CLIENT_LIMIT` -- tier gating |
 | `lib/foodDatabase.ts` | 75 Italian foods, per-100g macros. `searchFoods(q)`, `getFood(id)`, `macrosFor(food, g)` |
 | `components/SupabaseDataLoader.tsx` | Loads all data at mount (logs, supplements). Has `dataLoaded` flag. |
 | `components/WorkoutLogbook.tsx` | Card grid view, per-set logging, supplements |
@@ -57,7 +57,7 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 ### store.ts type summary (avoid loading 360-line file)
 | Type | Key fields |
 |------|-----------|
-| `User` | id, name, email, plan: PlanTier |
+| `User` | id, name, email, plan: PlanTier, premiumStatus?, wantsPremium? |
 | `Exercise` | id, name, muscleGroup?, sets, targetReps, perSetReps?, restSeconds?, day, order, supersetGroup?, videoUrl?, kind? (strength/cardio/core), duration?, intensity? |
 | `MealItem` | id, name, portion? (free text), notes?; grams/gramsMax/macros = legacy, never shown or saved |
 | `Meal` | id, name, time?, items: MealItem[] |
@@ -73,7 +73,11 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 **Store actions** (all on `useAppStore`): setUser, clearUser, setActiveClient, setAllClients, addClient, updateClient, removeClient, addWorkoutPlan, updateWorkoutPlan, removeWorkoutPlan, addExercise, updateExercise, removeExercise, reorderExercises, upsertLog, removeLog, addPhase, updatePhase, removePhase, addDietPlan, updateDietPlan, removeDietPlan, addMeasurement, updateMeasurement, removeMeasurement, addNote, updateNote, removeNote
 
 ### Tiering
-Free: 1 client | Personal Coach (EUR29/mo): 15 | Fitness Master: unlimited
+Demo (`plan = "free"`): 1 client | Premium (any other plan value): unlimited, full app.
+- Source of truth: `profiles.plan` + `premium_status` (migration 026). Never read/write the plan from user metadata or from the browser; DB triggers block self-upgrade and the 2nd client on demo (`DEMO_CLIENT_LIMIT`)
+- UI rules: `lib/plan-limits.ts` (`isPremium`, `checkLimit`). Price/payment details: env vars in `lib/billing.ts`
+- Flow: register (two paths, `intended_plan` metadata) -> `/dashboard/abbonamento` -> `POST /api/premium/request` (pending) -> super user approves on `/admin/premium` (`/api/admin/premium`, `SUPERUSER_EMAILS`, service_role via `lib/supabase/admin.ts`)
+- Android app (TWA): no payment links/IBAN in-app (`lib/platform.ts` `isAndroidApp`), Google Play billing policy
 
 ### Palette
 Accent: `#C9A84C` (gold) | Light: `#E8C96B` | Dark: `#8B6820` | BG: `#080808`
@@ -190,4 +194,4 @@ Fan-out only when genuinely multi-perspective; use Glob/Grep directly for single
 
 ---
 
-*Last updated: 2026-11-13 -- Session: progressions, ticket fixes (mobile rename/reorder/scroll, image matching), payment notice, PWA/Play Store, tests*
+*Last updated: 2026-11-15 -- Session: demo/Premium plans with super-user approval, Play Store listing assets*

@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/lib/store";
 import { showToast } from "@/components/Toast";
-import type { PlanTier, Exercise, SupplementItem } from "@/lib/store";
+import type { PlanTier, PremiumStatus, Exercise, SupplementItem } from "@/lib/store";
 import { splitLogs } from "@/lib/workoutSession";
 
 function parseJsonb<T>(value: unknown, fallback: T): T {
@@ -46,12 +46,24 @@ export default function SupabaseDataLoader() {
         useAppStore.getState().clearUser();
       }
 
+      // The plan comes from the profiles table, which only the server can change
+      // (migration 026). Any failure falls back to the demo plan.
+      let plan: PlanTier = "free";
+      let premiumStatus: PremiumStatus = "none";
+      try {
+        const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+        if (profile?.plan) plan = profile.plan as PlanTier;
+        if (profile?.premium_status) premiumStatus = profile.premium_status as PremiumStatus;
+      } catch { /* demo plan */ }
+
       useAppStore.setState({
         user: {
           id: user.id,
           name: user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "Trainer",
           email: user.email ?? "",
-          plan: (user.user_metadata?.plan as PlanTier) ?? "free",
+          plan,
+          premiumStatus,
+          wantsPremium: user.user_metadata?.intended_plan === "premium" && plan === "free" && premiumStatus === "none",
           paymentDueAt: (user.user_metadata?.payment_due_at as string | undefined) ?? undefined,
         },
       });
