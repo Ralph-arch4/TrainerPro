@@ -77,8 +77,8 @@ function StudioPattern({ name }: { name: string }) {
 function StudioIdentityStrip({ name, plan }: { name: string; plan: string }) {
   const initials = name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "TP";
   const h = nameHash(name);
-  const tierLabel: Record<string, string> = { free: "Starter", personal_coach: "Personal Coach", fitness_master: "Fitness Master" };
-  const tierColor: Record<string, string> = { free: "rgba(201,168,76,0.6)", personal_coach: "#C9A84C", fitness_master: "#f0d060" };
+  const tierLabel: Record<string, string> = { free: "Demo", premium: "Premium", personal_coach: "Premium", fitness_master: "Premium" };
+  const tierColor: Record<string, string> = { free: "rgba(201,168,76,0.6)", premium: "#f0d060", personal_coach: "#f0d060", fitness_master: "#f0d060" };
   const cx = 32, cy = 32;
   const petalCount = 4 + (h[0] % 3);
   const innerR = 14 + (h[1] % 5);

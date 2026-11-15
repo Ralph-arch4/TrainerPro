@@ -1,12 +1,12 @@
 "use client";
 import { useMemo, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 import { AlertTriangle, X } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { APP_NAME } from "@/lib/brand";
 import { getPaymentStatus, formatDueDate } from "@/lib/billing";
 
 const DISMISS_KEY = "payment-notice-dismissed";
-const BILLING_EMAIL = process.env.NEXT_PUBLIC_BILLING_EMAIL;
 
 function today() { return new Date().toISOString().slice(0, 10); }
 
@@ -23,7 +23,9 @@ export default function PaymentNotice() {
   // "ssr" on the server and during hydration: the notice only renders client-side
   const dismissed = useSyncExternalStore(noopSubscribe, readDismissed, () => "ssr");
   const [closed, setClosed] = useState(false);
-  const status = useMemo(() => getPaymentStatus(user), [user]);
+  const clientCount = useAppStore((s) => s.clients.length);
+  // Only accounts that already work with more clients than the demo allows
+  const status = useMemo(() => getPaymentStatus(user, new Date(), undefined, clientCount), [user, clientCount]);
 
   function dismiss() {
     try { localStorage.setItem(DISMISS_KEY, `${user?.id}:${today()}`); } catch { /* storage blocked */ }
@@ -49,7 +51,7 @@ export default function PaymentNotice() {
         </div>
         <div className="flex-1 min-w-0">
           <p id="payment-notice-title" className="text-sm font-bold" style={{ color: "var(--text)" }}>
-            {status.expired ? "Termine di pagamento scaduto" : "Abbonamento da pagare"}
+            {status.expired ? "Termine di pagamento scaduto" : "Passa a Premium"}
           </p>
           <p className="text-xs font-semibold mt-0.5" style={{ color: "var(--accent-light)" }}>
             {status.expired
@@ -63,17 +65,14 @@ export default function PaymentNotice() {
         </button>
       </div>
       <p id="payment-notice-text" className="text-xs mt-3 leading-relaxed" style={{ color: "var(--text-muted)" }}>
-        Se l&apos;abbonamento non viene pagato entro 30 giorni non sarà più possibile accedere alle
-        funzionalità di {APP_NAME}. I dati dei tuoi clienti non andranno persi: ti verranno inviati
-        via email in modo sicuro.
+        La demo gratuita prevede un solo cliente. Se entro 30 giorni non attivi Premium non sarà più
+        possibile accedere alle funzionalità di {APP_NAME}. I dati dei tuoi clienti non andranno persi:
+        ti verranno inviati via email in modo sicuro.
       </p>
       <div className="flex gap-2 mt-3">
-        {BILLING_EMAIL && (
-          <a href={`mailto:${BILLING_EMAIL}?subject=${encodeURIComponent(`Pagamento abbonamento ${APP_NAME}`)}`}
-            className="accent-btn flex-1 text-center px-3 py-2.5 rounded-xl text-xs">
-            Contatta per il pagamento
-          </a>
-        )}
+        <Link href="/dashboard/abbonamento" onClick={dismiss} className="accent-btn flex-1 text-center px-3 py-2.5 rounded-xl text-xs">
+          Attiva Premium
+        </Link>
         <button onClick={dismiss} className="outline-btn flex-1 px-3 py-2.5 rounded-xl text-xs">
           Ho capito
         </button>

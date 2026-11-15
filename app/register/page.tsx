@@ -1,8 +1,14 @@
 ﻿"use client";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Dumbbell, Mail, Lock, User, Loader2, CheckCircle2, Star, Shield, Zap } from "lucide-react";
+import { Dumbbell, Mail, Lock, User, Loader2, CheckCircle2, Star, Shield, Zap, Crown, Check } from "lucide-react";
+import { PREMIUM_PRICE } from "@/lib/billing";
+
+type Choice = "free" | "premium";
+const noopSubscribe = () => () => {};
+// ?piano=premium preselects the paid plan (links from the landing page)
+const planFromUrl = (): Choice => new URLSearchParams(window.location.search).get("piano") === "premium" ? "premium" : "free";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -11,6 +17,9 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const urlChoice = useSyncExternalStore<Choice>(noopSubscribe, planFromUrl, () => "free");
+  const [picked, setPicked] = useState<Choice | null>(null);
+  const choice: Choice = picked ?? urlChoice;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -20,7 +29,7 @@ export default function RegisterPage() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name, plan: "free" } },
+      options: { data: { full_name: name, intended_plan: choice } },
     });
     if (error) {
       if (error.message === "User already registered") {
@@ -55,6 +64,7 @@ export default function RegisterPage() {
             Abbiamo inviato un link di conferma a{" "}
             <strong style={{ color: "var(--text)" }}>{email}</strong>.<br />
             Clicca il link per attivare il tuo account REC Studio.
+            {choice === "premium" && <><br />Al primo accesso trovi la pagina per attivare Premium.</>}
           </p>
           <Link href="/login" className="inline-flex items-center gap-2 accent-btn px-6 py-2.5 rounded-xl text-sm">
             Vai al login
@@ -86,18 +96,18 @@ export default function RegisterPage() {
         <div className="relative z-10">
           {/* Left panel always dark — hardcode light text */}
           <h2 className="text-4xl font-bold leading-tight mb-4" style={{ color: "#F5F0E8" }}>
-            Tutto gratis.<br />
-            <span className="accent-text">Clienti illimitati.</span>
+            Provalo gratis.<br />
+            <span className="accent-text">Passa a Premium quando vuoi.</span>
           </h2>
           <p className="text-base mb-10" style={{ color: "rgba(245,240,232,0.55)" }}>
-            Crea il tuo account in 30 secondi. Nessuna carta di credito richiesta.
+            Crea il tuo account in 30 secondi. La demo è gratuita e non richiede carta di credito.
           </p>
 
           {/* Benefits */}
           <div className="space-y-4">
             {[
-              { icon: Star,   label: "Accesso completo gratuito", desc: "Clienti illimitati, tutte le funzionalità", color: "#fbbf24" },
-              { icon: Shield, label: "Dati al sicuro",            desc: "Crittografia end-to-end su Supabase",       color: "#34d399" },
+              { icon: Star,   label: "Demo gratuita",             desc: "Tutte le funzioni con un cliente",          color: "#fbbf24" },
+              { icon: Shield, label: "Dati al sicuro",            desc: "Connessioni cifrate, accesso solo tuo",     color: "#34d399" },
               { icon: Zap,    label: "Pronto in 2 minuti",        desc: "Setup immediato, zero configurazione",       color: "#818cf8" },
             ].map(({ icon: Icon, label, desc, color }) => (
               <div key={label} className="flex items-center gap-3">
@@ -133,7 +143,7 @@ export default function RegisterPage() {
 
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-1" style={{ color: "var(--text)" }}>Crea il tuo account</h2>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>Gratuito. Sempre. Nessuna carta richiesta.</p>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>Scegli come iniziare: puoi cambiare piano in qualsiasi momento.</p>
           </div>
 
           <div className="glass-dark rounded-2xl p-8">
@@ -143,6 +153,31 @@ export default function RegisterPage() {
                 {error}
               </div>
             )}
+
+            <div role="radiogroup" aria-label="Piano" className="grid grid-cols-2 gap-3 mb-5">
+              {([
+                { key: "free" as Choice, title: "Demo gratuita", price: "€0", lines: ["1 cliente", "Tutte le funzioni"], icon: Star },
+                { key: "premium" as Choice, title: "Premium", price: `€${PREMIUM_PRICE}/mese`, lines: ["Clienti illimitati", "Accesso completo"], icon: Crown },
+              ]).map(({ key, title, price, lines, icon: Icon }) => (
+                <button key={key} type="button" role="radio" aria-checked={choice === key} onClick={() => setPicked(key)}
+                  data-testid={`plan-${key}`}
+                  className="text-left rounded-xl p-3 transition-all"
+                  style={{
+                    background: choice === key ? "rgba(201,168,76,0.12)" : "var(--surface)",
+                    border: `1px solid ${choice === key ? "rgba(201,168,76,0.6)" : "var(--border)"}`,
+                  }}>
+                  <span className="flex items-center gap-1.5 text-sm font-bold" style={{ color: choice === key ? "var(--accent-light)" : "var(--text)" }}>
+                    <Icon size={14} /> {title}
+                  </span>
+                  <span className="block text-xs font-semibold mt-1" style={{ color: "var(--text)" }}>{price}</span>
+                  {lines.map((l) => (
+                    <span key={l} className="flex items-center gap-1 text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                      <Check size={11} className="flex-shrink-0" /> {l}
+                    </span>
+                  ))}
+                </button>
+              ))}
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -181,13 +216,15 @@ export default function RegisterPage() {
               <button type="submit" disabled={loading}
                 className="accent-btn w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 mt-2">
                 {loading ? <Loader2 size={16} className="animate-spin" /> : null}
-                {loading ? "Creazione account…" : "Crea account gratuito"}
+                {loading ? "Creazione account…" : choice === "premium" ? "Crea account e attiva Premium" : "Inizia la demo gratuita"}
               </button>
             </form>
 
             <p className="text-center text-xs mt-4" style={{ color: "var(--text-dim)" }}>
               Creando l&apos;account dichiari di aver letto l&apos;
-              <Link href="/privacy" className="underline" style={{ color: "var(--accent-light)" }}>informativa sulla privacy</Link>.
+              <Link href="/privacy" className="underline" style={{ color: "var(--accent-light)" }}>informativa sulla privacy</Link> e accetti i{" "}
+              <Link href="/termini" className="underline" style={{ color: "var(--accent-light)" }}>termini di servizio</Link>.
+              {choice === "premium" && " Il pagamento si completa dopo l'accesso: non ti viene addebitato nulla ora."}
             </p>
 
             <p className="text-center text-sm mt-6" style={{ color: "var(--text-muted)" }}>

@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Reveal from "@/components/motion/Reveal";
 import { APP_NAME } from "@/lib/brand";
+import { checkLimit, isDemoLimitError, DEMO_LIMIT_MESSAGE } from "@/lib/plan-limits";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { dbClients } from "@/lib/db";
@@ -10,7 +11,7 @@ import {
   Users, Plus, Search, ChevronRight,
   Mail, Phone, Activity, Loader2, X, AlertCircle, Trash2, TrendingDown,
   Gift, Heart, TrendingUp, Zap, Clock, Ruler, Dumbbell, Flame, Euro, BarChart3,
-  FileText, Copy, Check
+  FileText, Copy, Check, Crown
 } from "lucide-react";
 import type { Client } from "@/lib/store";
 
@@ -541,6 +542,7 @@ function ClientiPageInner() {
   const [filterGoal, setFilterGoal] = useState<Goal>("tutti");
   const [showModal, setShowModal] = useState(false);
   const [showBrief, setShowBrief] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const [briefCopied, setBriefCopied] = useState(false);
 
   // Auto-open modal when navigating with ?new=1 (e.g. from dashboard quick actions)
@@ -564,6 +566,9 @@ function ClientiPageInner() {
   });
 
   function openModal() {
+    // Demo plan: one client. The database enforces the same rule.
+    const limit = checkLimit(user?.plan, "clients", clients.length);
+    if (!limit.allowed) { setShowUpgrade(true); return; }
     setForm(emptyForm);
     setShowModal(true);
   }
@@ -594,6 +599,7 @@ function ClientiPageInner() {
       router.push(`/dashboard/clienti/${newClient.id}`);
     } catch (err) {
       removeClient(newClient.id);
+      if (isDemoLimitError(err)) { setSaving(false); setShowModal(false); setShowUpgrade(true); return; }
       setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio. Riprova.");
       setSaving(false);
     }
@@ -901,6 +907,22 @@ function ClientiPageInner() {
       </div>
 
       {/* Brief Settimanale modal */}
+      {showUpgrade && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowUpgrade(false)}>
+          <div className="absolute inset-0" style={{ background: "var(--surface-modal)" }} />
+          <div role="dialog" aria-labelledby="upgrade-title" data-testid="upgrade-dialog"
+            className="relative w-full max-w-sm glass-dark rounded-2xl p-6 fade-in text-center" onClick={(e) => e.stopPropagation()}>
+            <Crown size={30} className="mx-auto mb-3" style={{ color: "var(--accent)" }} />
+            <h2 id="upgrade-title" className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>Serve Premium</h2>
+            <p className="text-sm mb-5" style={{ color: "var(--text-muted)" }}>{DEMO_LIMIT_MESSAGE}</p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowUpgrade(false)} className="outline-btn flex-1 py-2.5 rounded-xl text-sm">Non ora</button>
+              <Link href="/dashboard/abbonamento" className="accent-btn flex-1 py-2.5 rounded-xl text-sm">Passa a Premium</Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showBrief && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setShowBrief(false)}>
           <div className="absolute inset-0" style={{ background: "var(--surface-modal)" }} />

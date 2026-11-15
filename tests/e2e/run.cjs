@@ -40,7 +40,8 @@ function freshState() {
       ex("e3", "Tricipiti al cavo con corda", 1, 4, 3),
     ],
   };
-  return { clients, plan, patches: [], logUpserts: [] };
+  const profile = { id: USER.id, full_name: "Mario Trainer", plan: "free", premium_status: "none" };
+  return { clients, plan, profile, patches: [], logUpserts: [] };
 }
 let state = freshState();
 
@@ -71,6 +72,10 @@ async function mockSupabase(context) {
     if (p.startsWith("/rest/v1/rpc/")) return json(null);
     const table = p.replace("/rest/v1/", "");
     if (req.method() === "GET") {
+      if (table === "profiles") {
+        const single = (req.headers()["accept"] || "").includes("vnd.pgrst.object");
+        return json(single ? state.profile : [state.profile]);
+      }
       if (table === "clients") return json(state.clients);
       if (table === "workout_plans") return json([state.plan]);
       return json([]);
@@ -307,6 +312,108 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
     });
     await context.close();
 
+    // ── Plans: demo vs Premium ───────────────────────────────────────────────
+    console.log("Piani: demo gratuita e Premium");
+    ({ context, page } = await newPage(browser, MOBILE, errors, { auth: false }));
+    await check("registrazione: due vie (demo gratuita o Premium)", async () => {
+      await page.goto(`${BASE}/register`);
+      const free = page.getByTestId("plan-free"), premium = page.getByTestId("plan-premium");
+      await free.waitFor();
+      assert(await free.getAttribute("aria-checked") === "true", "la demo deve essere la scelta iniziale");
+      assert(/1 cliente/.test(await free.innerText()) && /illimitati/.test(await premium.innerText()), "descrizione piani");
+      await page.getByRole("button", { name: "Inizia la demo gratuita" }).waitFor();
+      await premium.click();
+      await page.getByRole("button", { name: "Crea account e attiva Premium" }).waitFor();
+      await shot(page, "10-registrazione-piani-mobile");
+      await page.goto(`${BASE}/register?piano=premium`);
+      await page.getByRole("button", { name: "Crea account e attiva Premium" }).waitFor();
+      assert((await fetch(`${BASE}/termini`)).ok, "/termini");
+    });
+    await context.close();
+
+    await check("API piani: richieste senza login o da altri siti rifiutate", async () => {
+      const post = (url, body, headers = {}) => fetch(BASE + url, { method: "POST", headers: { "content-type": "application/json", ...headers }, body: JSON.stringify(body) });
+      assert((await post("/api/premium/request", {})).status === 401, "richiesta premium senza login");
+      assert((await post("/api/premium/request", {}, { origin: "https://evil.example" })).status === 403, "richiesta premium cross-site");
+      assert((await fetch(`${BASE}/api/admin/premium`)).status === 401, "elenco admin senza login");
+      assert((await post("/api/admin/premium", { userId: USER.id, action: "approve" })).status === 401, "approvazione senza login");
+    });
+
+    const allClients = state.clients;
+    state.clients = allClients.slice(0, 1);
+    ({ context, page } = await newPage(browser, MOBILE, errors));
+    await check("demo: con un cliente il secondo e' bloccato e propone Premium", async () => {
+      await page.goto(`${BASE}/dashboard/clienti`);
+      await page.locator('a[href="/dashboard/clienti/c1"]').waitFor({ timeout: 15000 });
+      assert(/Demo gratuita · 1\/1 cliente/.test(await page.getByTestId("plan-banner").innerText()), "banner demo");
+      assert(await page.getByTestId("payment-notice").count() === 0, "nessun avviso di scadenza entro il limite demo");
+      await page.getByRole("button", { name: "Nuovo cliente" }).click();
+      const dialog = page.getByTestId("upgrade-dialog");
+      await dialog.waitFor();
+      assert(/un solo cliente/.test(await dialog.innerText()), "messaggio limite");
+      await shot(page, "11-limite-demo-mobile");
+      await dialog.getByRole("link", { name: "Passa a Premium" }).click();
+      await page.waitForURL("**/dashboard/abbonamento");
+    });
+    await check("abbonamento: richiesta Premium inviata e mostrata in attesa", async () => {
+      assert(await page.getByTestId("current-plan").innerText() === "Demo gratuita", "piano attuale");
+      await page.getByTestId("payment-methods").waitFor();
+      await page.route("**/api/premium/request", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "pending" }) }));
+      await page.getByRole("button", { name: "Richiedi Premium" }).click();
+      await page.getByTestId("premium-pending").waitFor();
+      await shot(page, "12-abbonamento-in-attesa-mobile");
+      await page.goto(`${BASE}/dashboard`);
+    });
+    await context.close();
+
+    state.profile = { ...state.profile, plan: "premium", premium_status: "approved" };
+    ({ context, page } = await newPage(browser, MOBILE, errors));
+    await check("Premium: nessun limite, nessun banner, dati invariati", async () => {
+      await page.goto(`${BASE}/dashboard/clienti`);
+      await page.locator('a[href="/dashboard/clienti/c1"]').waitFor({ timeout: 15000 });
+      assert(await page.getByTestId("plan-banner").count() === 0, "banner demo visibile a un Premium");
+      await page.getByRole("button", { name: "Nuovo cliente" }).click();
+      await page.getByPlaceholder(/Mario Rossi|Nome/).first().waitFor();
+      assert(await page.getByTestId("upgrade-dialog").count() === 0, "Premium bloccato dal limite demo");
+      await page.goto(`${BASE}/dashboard/abbonamento`);
+      await page.getByTestId("premium-active").waitFor();
+    });
+    await context.close();
+    state.clients = allClients;
+    state.profile = { ...state.profile, plan: "free", premium_status: "none" };
+
+    ({ context, page } = await newPage(browser, DESKTOP, errors));
+    await check("super user: elenco richieste e approvazione Premium", async () => {
+      const trainers = [
+        { id: "11111111-1111-4111-8111-111111111111", name: "Davide", email: "davide@example.com", createdAt: "2026-10-01T10:00:00Z", plan: "free", premiumStatus: "pending", requestedAt: "2026-11-14T10:00:00Z", decidedAt: null, clients: 12 },
+        { id: "22222222-2222-4222-8222-222222222222", name: "Anna", email: "anna@example.com", createdAt: "2026-11-01T10:00:00Z", plan: "free", premiumStatus: "none", requestedAt: null, decidedAt: null, clients: 1 },
+      ];
+      let approved = null;
+      await page.route("**/api/admin/premium", (route) => {
+        if (route.request().method() === "GET") return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ trainers }) });
+        approved = route.request().postDataJSON();
+        return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, plan: "premium", premiumStatus: "approved" }) });
+      });
+      page.on("dialog", (d) => d.accept());
+      await page.goto(`${BASE}/admin/premium`);
+      const rows = page.getByTestId("trainer-row");
+      await rows.first().waitFor({ timeout: 15000 });
+      assert(await rows.count() === 1 && /davide@example.com/.test(await rows.first().innerText()), "solo le richieste in attesa");
+      await shot(page, "13-super-user-desktop");
+      await rows.first().getByRole("button", { name: "Approva Premium" }).click();
+      await page.getByRole("status").waitFor();
+      assert(approved && approved.action === "approve" && approved.userId === trainers[0].id, `richiesta inviata: ${JSON.stringify(approved)}`);
+      await page.getByRole("button", { name: /^Premium \(1\)/ }).click();
+      assert(/Revoca/.test(await rows.first().innerText()), "il trainer approvato risulta Premium");
+      await page.unroute("**/api/admin/premium");
+    });
+    await check("super user: senza autorizzazione il pannello resta chiuso", async () => {
+      await page.goto(`${BASE}/admin/premium`);
+      await page.getByText(/Accedi con le credenziali del super user|non è autorizzato/).waitFor({ timeout: 15000 });
+      assert(await page.getByTestId("trainer-row").count() === 0, "dati visibili senza autorizzazione");
+    });
+    await context.close();
+
     // ── Trainer, desktop ─────────────────────────────────────────────────────
     console.log("Trainer da PC (1440x900)");
     ({ context, page } = await newPage(browser, DESKTOP, errors));
@@ -315,7 +422,7 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
       await page.getByRole("button", { name: "Avanzato" }).click();
       await page.getByTestId("progression-chips").first().waitFor({ timeout: 15000 });
       await shot(page, "07-avanzato-desktop");
-      for (const p of ["/dashboard", "/dashboard/clienti", "/dashboard/fasi", "/dashboard/diete", "/dashboard/misurazioni", "/dashboard/intake", "/dashboard/preventivi", "/dashboard/export", "/dashboard/account", "/", "/login", "/register", "/privacy"]) {
+      for (const p of ["/dashboard", "/dashboard/clienti", "/dashboard/fasi", "/dashboard/diete", "/dashboard/misurazioni", "/dashboard/intake", "/dashboard/preventivi", "/dashboard/export", "/dashboard/account", "/dashboard/abbonamento", "/", "/login", "/register", "/privacy", "/termini"]) {
         const r = await page.goto(BASE + p);
         assert(r.status() < 400, `${p} -> ${r.status()}`);
         await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
@@ -349,6 +456,26 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
       assert(ok, "service worker non attivo");
     });
     await context.close();
+
+    // ── Optional: Play Store screenshots (STORE_SHOTS=1), 1080x1920 ───────────
+    if (process.env.STORE_SHOTS) {
+      const out = path.join(ROOT, "android", "store");
+      state.profile = { ...state.profile, plan: "premium", premium_status: "approved" };
+      ({ context, page } = await newPage(browser, { viewport: { width: 360, height: 640 }, deviceScaleFactor: 3, hasTouch: true, isMobile: true }, errors));
+      const snap = async (url, file, ready) => {
+        await page.goto(BASE + url);
+        await ready();
+        await page.waitForTimeout(1200);
+        await page.screenshot({ path: path.join(out, file) });
+      };
+      await snap("/dashboard/clienti", "screenshot-1-clienti.png", () => page.locator('a[href="/dashboard/clienti/c1"]').waitFor());
+      await snap("/dashboard/clienti/c1/schede/p1", "screenshot-2-scheda.png", () => page.getByRole("button", { name: "Avanzato" }).waitFor());
+      await snap(`/scheda/${TOKEN}`, "screenshot-3-portale-cliente.png", () => page.getByText("Settimana 1").first().waitFor());
+      await snap("/dashboard/abbonamento", "screenshot-4-abbonamento.png", () => page.getByTestId("premium-active").waitFor());
+      await context.close();
+      state.profile = { ...state.profile, plan: "free", premium_status: "none" };
+      console.log(`  screenshot per lo store salvati in ${out}`);
+    }
 
     await check("nessun errore JavaScript non gestito in tutto il percorso", async () => {
       assert(errors.length === 0, errors.join(" | "));

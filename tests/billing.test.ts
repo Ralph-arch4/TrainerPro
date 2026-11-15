@@ -6,8 +6,8 @@ const START = "2026-11-13";
 
 test("no user: no status", () => assert.equal(getPaymentStatus(null), null));
 
-test("free plan: 30 days from the notice start", () => {
-  const st = getPaymentStatus({ plan: "free" }, new Date("2026-11-13T10:00:00Z"), START)!;
+test("legacy free account over the demo limit: 30 days from the notice start", () => {
+  const st = getPaymentStatus({ plan: "free" }, new Date("2026-11-13T10:00:00Z"), START, 5)!;
   assert.equal(st.show, true);
   assert.equal(st.daysLeft, 30);
   assert.equal(st.dueDate.toISOString().slice(0, 10), "2026-12-13");
@@ -20,7 +20,14 @@ test("countdown decreases and expires", () => {
   assert.deepEqual([late.daysLeft, late.expired], [0, true]);
 });
 
+test("demo accounts within the limit are not warned", () => {
+  assert.equal(getPaymentStatus({ plan: "free" }, new Date("2026-11-20"), START, 0)!.show, false);
+  assert.equal(getPaymentStatus({ plan: "free" }, new Date("2026-11-20"), START, 1)!.show, false);
+  assert.equal(getPaymentStatus({ plan: "free" }, new Date("2026-11-20"), START, 2)!.show, true);
+});
+
 test("paid plans never see the notice", () => {
+  assert.equal(getPaymentStatus({ plan: "premium" }, new Date("2026-11-20"), START, 40)!.show, false);
   assert.equal(getPaymentStatus({ plan: "personal_coach" }, new Date("2026-11-20"), START)!.show, false);
   assert.equal(getPaymentStatus({ plan: "fitness_master" }, new Date("2026-11-20"), START)!.show, false);
 });

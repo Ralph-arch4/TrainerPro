@@ -51,6 +51,19 @@ ogni trainer. Non serve cambiare prodotto, serve configurarlo da produzione:
 4. **Cambia la password dell'account di test** che era scritta in chiaro nel
    file `test-scheda-flow.mjs` (ora rimosso, ma resta nella cronologia Git).
 
+## Attivare i piani demo / Premium
+
+1. Esegui `supabase/migrations/026_plans_premium.sql` nell'SQL Editor. Non
+   cancella e non modifica i dati esistenti: aggiunge lo stato Premium ai
+   profili, impedisce al trainer di cambiarsi il piano da solo e limita la
+   demo a un cliente.
+2. Su Vercel imposta `SUPERUSER_EMAILS` con l'email del tuo account e fai un
+   redeploy. Accedi all'app con quell'account e apri `/admin/premium`.
+3. Approva subito i trainer che stanno gia' lavorando: finche' non li approvi
+   restano in demo, vedono tutti i loro dati ma non possono aggiungere clienti.
+4. Quando hai i dati di pagamento, inseriscili nelle variabili elencate in
+   `docs/PLAY_STORE.md`.
+
 ## Cosa resta da valutare con un consulente
 
 - Informativa privacy (`/privacy`): e' un testo base, va completato con i
