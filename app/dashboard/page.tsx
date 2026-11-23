@@ -1,4 +1,5 @@
 "use client";
+import { APP_NAME } from "@/lib/brand";
 import { useMemo, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Reveal from "@/components/motion/Reveal";
@@ -127,7 +128,7 @@ function StudioIdentityStrip({ name, plan }: { name: string; plan: string }) {
 
         {/* Brand mark */}
         <div className="hidden sm:flex flex-col items-end gap-1 flex-shrink-0">
-          <span className="text-xs font-black tracking-[0.14em] uppercase" style={{ color: "rgba(201,168,76,0.28)" }}>REC Studio</span>
+          <span className="text-xs font-black tracking-[0.14em] uppercase" style={{ color: "rgba(201,168,76,0.28)" }}>{APP_NAME}</span>
         </div>
       </div>
       <div className="h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(201,168,76,0.25), rgba(201,168,76,0.4), rgba(201,168,76,0.25), transparent)" }} />

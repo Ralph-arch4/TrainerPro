@@ -332,6 +332,7 @@ export const dbExerciseLogs = {
     });
     if (error) throw error;
     if ((data as { error?: string })?.error === "not_found") throw new Error("Piano non trovato");
+    if ((data as { error?: string })?.error === "suspended") throw new Error("Link sospeso");
     return data as { id: string };
   },
   // NOTE: public share-token reads go through the get_portal_data RPC

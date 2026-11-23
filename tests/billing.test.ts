@@ -1,40 +1,41 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { getPaymentStatus } from "../lib/billing.ts";
+import { getTrialStatus, accountAccess, TRIAL_DAYS } from "../lib/billing.ts";
 
-const START = "2026-11-13";
+const NOW = new Date("2026-11-23T10:00:00Z");
 
-test("no user: no status", () => assert.equal(getPaymentStatus(null), null));
+test("no user: no status", () => assert.equal(getTrialStatus(null), null));
 
-test("legacy free account over the demo limit: 30 days from the notice start", () => {
-  const st = getPaymentStatus({ plan: "free" }, new Date("2026-11-13T10:00:00Z"), START, 5)!;
-  assert.equal(st.show, true);
-  assert.equal(st.daysLeft, 30);
-  assert.equal(st.dueDate.toISOString().slice(0, 10), "2026-12-13");
-  assert.equal(st.expired, false);
+test("trial counts down whole days", () => {
+  const st = getTrialStatus({ plan: "free", trialEndsAt: "2026-12-07T10:00:00Z" }, NOW)!;
+  assert.deepEqual([st.onTrial, st.daysLeft, st.suspended], [true, 14, false]);
+  assert.equal(getTrialStatus({ plan: "free", trialEndsAt: "2026-11-24T09:00:00Z" }, NOW)!.daysLeft, 1);
 });
 
-test("countdown decreases and expires", () => {
-  assert.equal(getPaymentStatus({ plan: "free" }, new Date("2026-12-12T12:00:00Z"), START)!.daysLeft, 1);
-  const late = getPaymentStatus({ plan: "free" }, new Date("2026-12-20T00:00:00Z"), START)!;
-  assert.deepEqual([late.daysLeft, late.expired], [0, true]);
+test("expired trial suspends the demo account", () => {
+  const st = getTrialStatus({ plan: "free", trialEndsAt: "2026-11-23T09:59:59Z" }, NOW)!;
+  assert.deepEqual([st.daysLeft, st.suspended], [0, true]);
 });
 
-test("demo accounts within the limit are not warned", () => {
-  assert.equal(getPaymentStatus({ plan: "free" }, new Date("2026-11-20"), START, 0)!.show, false);
-  assert.equal(getPaymentStatus({ plan: "free" }, new Date("2026-11-20"), START, 1)!.show, false);
-  assert.equal(getPaymentStatus({ plan: "free" }, new Date("2026-11-20"), START, 2)!.show, true);
+test("paid plans are never on trial nor suspended", () => {
+  for (const plan of ["premium", "personal_coach", "fitness_master"]) {
+    const st = getTrialStatus({ plan, trialEndsAt: "2020-01-01" }, NOW)!;
+    assert.deepEqual([st.onTrial, st.suspended], [false, false]);
+  }
 });
 
-test("paid plans never see the notice", () => {
-  assert.equal(getPaymentStatus({ plan: "premium" }, new Date("2026-11-20"), START, 40)!.show, false);
-  assert.equal(getPaymentStatus({ plan: "personal_coach" }, new Date("2026-11-20"), START)!.show, false);
-  assert.equal(getPaymentStatus({ plan: "fitness_master" }, new Date("2026-11-20"), START)!.show, false);
+test("unknown or invalid end date never suspends", () => {
+  for (const trialEndsAt of [undefined, null, "boh"]) {
+    const st = getTrialStatus({ plan: "free", trialEndsAt }, NOW)!;
+    assert.deepEqual([st.onTrial, st.suspended, st.endsAt, st.daysLeft], [true, false, null, TRIAL_DAYS]);
+  }
 });
 
-test("per-account due date overrides the default; invalid dates are ignored", () => {
-  const st = getPaymentStatus({ plan: "free", paymentDueAt: "2027-01-10" }, new Date("2026-12-31T00:00:00Z"), START)!;
-  assert.equal(st.daysLeft, 10);
-  const bad = getPaymentStatus({ plan: "free", paymentDueAt: "boh" }, new Date("2026-11-13T00:00:00Z"), START)!;
-  assert.equal(bad.daysLeft, 30);
+test("accountAccess: admin status wins over the trial", () => {
+  assert.equal(accountAccess(null), "ok");
+  assert.equal(accountAccess({ plan: "free", trialEndsAt: "2026-12-07" }, NOW), "ok");
+  assert.equal(accountAccess({ plan: "free", trialEndsAt: "2026-11-01" }, NOW), "trial_expired");
+  assert.equal(accountAccess({ plan: "premium", accountStatus: "suspended" }, NOW), "suspended");
+  assert.equal(accountAccess({ plan: "premium", accountStatus: "banned" }, NOW), "banned");
+  assert.equal(accountAccess({ plan: "premium", accountStatus: "active", trialEndsAt: "2020-01-01" }, NOW), "ok");
 });

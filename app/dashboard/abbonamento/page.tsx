@@ -1,11 +1,11 @@
 "use client";
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { Check, Crown, Clock, CreditCard, Landmark, Loader2, ShieldCheck, Sparkles } from "lucide-react";
+import { Check, Crown, Clock, CreditCard, Landmark, Loader2, MessageCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import { isPremium, FREE_CLIENT_LIMIT } from "@/lib/plan-limits";
-import { PREMIUM_PRICE, PAYMENT_LINK, PAYMENT_IBAN, PAYMENT_HOLDER, PREMIUM_FEATURES, DEMO_FEATURES } from "@/lib/billing";
-import { APP_NAME } from "@/lib/brand";
+import { PAYMENT_LINK, PAYMENT_IBAN, PAYMENT_HOLDER, PREMIUM_FEATURES, TRIAL_FEATURES, getTrialStatus, formatDueDate } from "@/lib/billing";
+import { APP_NAME, CONTACT_SALES_PATH } from "@/lib/brand";
 import { isAndroidApp } from "@/lib/platform";
 import { showToast } from "@/components/Toast";
 
@@ -20,6 +20,7 @@ export default function SubscriptionPage() {
 
   const premium = isPremium(user?.plan);
   const pending = user?.premiumStatus === "pending";
+  const trial = getTrialStatus(user);
 
   async function requestPremium() {
     if (!user || sending) return;
@@ -46,8 +47,15 @@ export default function SubscriptionPage() {
     <div className="p-4 pt-4 lg:pt-8 lg:p-8 fade-in max-w-4xl">
       <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Abbonamento</h1>
       <p className="text-sm mt-0.5 mb-6" style={{ color: "var(--text-muted)" }}>
-        Piano attuale: <strong data-testid="current-plan" style={{ color: "var(--accent-light)" }}>{premium ? "Premium" : "Demo gratuita"}</strong>
+        Piano attuale: <strong data-testid="current-plan" style={{ color: "var(--accent-light)" }}>{premium ? "Premium" : "Prova gratuita"}</strong>
         {!premium && <> · {clientCount} {clientCount === 1 ? "cliente" : "clienti"} su {FREE_CLIENT_LIMIT} disponibile</>}
+        {!premium && trial?.endsAt && (
+          <span data-testid="trial-ends" className="block mt-0.5" style={{ color: trial.suspended ? "#f87171" : "var(--text-muted)" }}>
+            {trial.suspended
+              ? `Prova terminata il ${formatDueDate(trial.endsAt)}: pannello e link dei clienti sono sospesi fino all'attivazione di Premium.`
+              : `Prova attiva fino al ${formatDueDate(trial.endsAt)} (${trial.daysLeft === 1 ? "ultimo giorno" : `${trial.daysLeft} giorni rimasti`}).`}
+          </span>
+        )}
       </p>
 
       {premium && (
@@ -66,10 +74,9 @@ export default function SubscriptionPage() {
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         {/* Demo */}
         <div className="card-luxury rounded-2xl p-6">
-          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "var(--text-dim)" }}>Demo gratuita</p>
-          <p className="mb-4"><span className="text-3xl font-black" style={{ color: "var(--text)" }}>€0</span></p>
+          <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "var(--text-dim)" }}>Prova gratuita</p>
           <ul className="space-y-2">
-            {DEMO_FEATURES.map((f) => (
+            {TRIAL_FEATURES.map((f) => (
               <li key={f} className="flex items-start gap-2 text-sm" style={{ color: "var(--text-muted)" }}>
                 <Check size={14} className="flex-shrink-0 mt-0.5" style={{ color: "var(--text-dim)" }} /> {f}
               </li>
@@ -83,9 +90,9 @@ export default function SubscriptionPage() {
           <p className="text-xs font-bold uppercase tracking-widest mb-2 flex items-center gap-1.5" style={{ color: "var(--accent)" }}>
             <Crown size={13} /> Premium
           </p>
-          <p className="mb-4">
-            <span className="text-3xl font-black" style={{ color: "var(--text)" }}>€{PREMIUM_PRICE}</span>
-            <span className="text-sm" style={{ color: "var(--text-dim)" }}> / mese</span>
+          <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
+            Condizioni su misura per il tuo studio.{" "}
+            <Link href={CONTACT_SALES_PATH} className="underline" style={{ color: "var(--accent-light)" }}>Parla con il team commerciale</Link>
           </p>
           <ul className="space-y-2">
             {PREMIUM_FEATURES.map((f) => (
@@ -132,7 +139,7 @@ export default function SubscriptionPage() {
                 </p>
                 {PAYMENT_LINK ? (
                   <a href={PAYMENT_LINK} target="_blank" rel="noopener noreferrer" className="accent-btn inline-block px-4 py-2.5 rounded-xl text-sm">
-                    Paga €{PREMIUM_PRICE} online
+                    Paga online
                   </a>
                 ) : (
                   <p className="text-sm" style={{ color: "var(--text-muted)" }}>
@@ -171,9 +178,13 @@ export default function SubscriptionPage() {
               Richiedi Premium
             </button>
           )}
+          <Link href={CONTACT_SALES_PATH}
+            className="outline-btn mt-3 w-full sm:w-auto sm:ml-3 px-6 py-3 rounded-xl text-sm inline-flex items-center justify-center gap-2">
+            <MessageCircle size={15} /> Parla con il team commerciale
+          </Link>
           <p className="text-xs mt-4" style={{ color: "var(--text-dim)" }}>
             Procedendo accetti i <Link href="/termini" className="underline">termini di servizio</Link>. Puoi disdire in qualsiasi momento:
-            l&apos;account torna alla demo e i dati restano conservati.
+            i dati restano conservati.
           </p>
         </div>
       )}

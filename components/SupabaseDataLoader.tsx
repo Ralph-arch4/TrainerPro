@@ -50,10 +50,14 @@ export default function SupabaseDataLoader() {
       // (migration 026). Any failure falls back to the demo plan.
       let plan: PlanTier = "free";
       let premiumStatus: PremiumStatus = "none";
+      let trialEndsAt: string | null = null;
+      let accountStatus: string | null = null;
       try {
         const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
         if (profile?.plan) plan = profile.plan as PlanTier;
         if (profile?.premium_status) premiumStatus = profile.premium_status as PremiumStatus;
+        if (profile?.trial_ends_at) trialEndsAt = profile.trial_ends_at as string;
+        if (profile?.account_status) accountStatus = profile.account_status as string;
       } catch { /* demo plan */ }
 
       useAppStore.setState({
@@ -64,7 +68,8 @@ export default function SupabaseDataLoader() {
           plan,
           premiumStatus,
           wantsPremium: user.user_metadata?.intended_plan === "premium" && plan === "free" && premiumStatus === "none",
-          paymentDueAt: (user.user_metadata?.payment_due_at as string | undefined) ?? undefined,
+          trialEndsAt,
+          accountStatus,
         },
       });
 

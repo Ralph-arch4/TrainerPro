@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { APP_NAME, LEGAL_OWNER, CONTACT_EMAIL } from "@/lib/brand";
-import { PREMIUM_PRICE } from "@/lib/billing";
+import { TRIAL_DAYS } from "@/lib/billing";
 import { FREE_CLIENT_LIMIT } from "@/lib/plan-limits";
 
 export const metadata: Metadata = {
   title: `Termini di servizio — ${APP_NAME}`,
-  description: `Condizioni d'uso di ${APP_NAME}: demo gratuita e piano Premium.`,
+  description: `Condizioni d'uso di ${APP_NAME}: prova gratuita e piano Premium.`,
 };
 
-const UPDATED = "15 novembre 2026";
+const UPDATED = "23 novembre 2026";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -38,12 +38,13 @@ export default function TermsPage() {
         </Section>
 
         <Section title="Piani">
-          <p><strong>Demo gratuita:</strong> tutte le funzionalità con un massimo di {FREE_CLIENT_LIMIT} cliente, senza limiti di tempo e senza carta di credito.</p>
-          <p><strong>Premium:</strong> clienti illimitati al prezzo di €{PREMIUM_PRICE} al mese, salvo diverso accordo scritto. L&apos;accesso Premium viene attivato dopo la verifica del pagamento.</p>
+          <p><strong>Prova gratuita:</strong> tutte le funzionalità con un massimo di {FREE_CLIENT_LIMIT} cliente per {TRIAL_DAYS} giorni dalla registrazione, senza carta di credito.</p>
+          <p><strong>Fine della prova:</strong> se allo scadere dei {TRIAL_DAYS} giorni Premium non è attivo, l&apos;account viene sospeso: il pannello del trainer e i link condivisi con i clienti (scheda, diario, questionari) smettono di funzionare. I dati non vengono cancellati e tornano disponibili con l&apos;attivazione di Premium. Puoi chiedere in qualsiasi momento l&apos;eliminazione dell&apos;account e dei dati.</p>
+          <p><strong>Premium:</strong> clienti illimitati, alle condizioni economiche concordate con il team commerciale. L&apos;accesso Premium viene attivato dopo la verifica del pagamento.</p>
         </Section>
 
         <Section title="Pagamenti, disdetta e rimborsi">
-          <p>Il pagamento avviene con i metodi indicati nella pagina Abbonamento o comunicati via email. Puoi disdire in qualsiasi momento scrivendo a {contact}: l&apos;account torna alla demo alla fine del periodo già pagato e i dati restano conservati.</p>
+          <p>Il pagamento avviene con i metodi indicati nella pagina Abbonamento o comunicati via email. Puoi disdire in qualsiasi momento scrivendo a {contact}: alla fine del periodo già pagato l&apos;account viene sospeso e i dati restano conservati.</p>
           <p>Se sei un consumatore hai diritto di recesso entro 14 giorni dall&apos;attivazione, con rimborso di quanto pagato.</p>
         </Section>
 

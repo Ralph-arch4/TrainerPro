@@ -13,7 +13,7 @@ export function isPremium(plan: string | null | undefined): boolean {
 }
 
 export function planLabel(plan: string | null | undefined): string {
-  return isPremium(plan) ? "Premium" : "Demo gratuita";
+  return isPremium(plan) ? "Premium" : "Prova gratuita";
 }
 
 export function clientLimit(plan: string | null | undefined): number {
@@ -21,12 +21,21 @@ export function clientLimit(plan: string | null | undefined): number {
 }
 
 export const DEMO_LIMIT_MESSAGE =
-  "La demo gratuita permette di lavorare con un solo cliente. Passa a Premium per aggiungerne altri.";
+  "La prova gratuita permette di lavorare con un solo cliente. Contatta il team commerciale per attivare Premium e aggiungerne altri.";
+
+export const SUSPENDED_MESSAGE =
+  "La prova gratuita è terminata. Contatta il team commerciale per riattivare l'account.";
 
 // `current` = clients the trainer already has.
 export function checkLimit(plan: string | null | undefined, _type: "clients", current: number): { allowed: boolean; message: string } {
   if (current < clientLimit(plan)) return { allowed: true, message: "" };
   return { allowed: false, message: DEMO_LIMIT_MESSAGE };
+}
+
+// Database error raised by the enforce_client_limit trigger when the trial is over (migration 027)
+export function isSuspendedError(err: unknown): boolean {
+  const msg = err && typeof err === "object" && "message" in err ? String((err as { message: unknown }).message) : String(err ?? "");
+  return msg.includes("ACCOUNT_SUSPENDED");
 }
 
 // Database error raised by the enforce_client_limit trigger

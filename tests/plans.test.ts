@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { checkLimit, isPremium, planLabel, clientLimit, isDemoLimitError, FREE_CLIENT_LIMIT } from "../lib/plan-limits.ts";
+import { checkLimit, isPremium, planLabel, clientLimit, isDemoLimitError, isSuspendedError, FREE_CLIENT_LIMIT } from "../lib/plan-limits.ts";
 
 test("demo plan: exactly one client", () => {
   assert.equal(FREE_CLIENT_LIMIT, 1);
@@ -26,7 +26,7 @@ test("premium (and legacy paid tiers): unlimited clients", () => {
     assert.equal(clientLimit(plan), Infinity);
     assert.equal(planLabel(plan), "Premium");
   }
-  assert.equal(planLabel("free"), "Demo gratuita");
+  assert.equal(planLabel("free"), "Prova gratuita");
 });
 
 test("database limit error is recognised", () => {
@@ -50,4 +50,23 @@ test("the browser never writes the plan", () => {
     assert.doesNotMatch(src, /user_metadata\?\.plan\b/, file);
     assert.doesNotMatch(src, /update\(\{\s*plan\b/, file);
   }
+});
+
+test("migration 027: trial, suspension of client links, no data loss", () => {
+  const sql = readFileSync("supabase/migrations/027_trial_and_suspension.sql", "utf-8");
+  assert.match(sql, /trial_ends_at\s+timestamptz/);
+  assert.match(sql, /now\(\) \+ interval '14 days'/);                          // new accounts: 14-day trial
+  assert.match(sql, /new\.trial_ends_at\s+:= old\.trial_ends_at/);            // browser cannot extend it
+  // both client-link RPCs check the trainer before returning or writing anything
+  for (const fn of ["get_portal_data", "upsert_exercise_log"]) {
+    const body = sql.slice(sql.indexOf(`function public.${fn}`));
+    assert.match(body.slice(0, body.indexOf("$$;")), /account_is_active\(v_(plan\.)?user_id\)/, fn);
+  }
+  assert.match(sql, /enable row level security/);                              // sales_leads not public
+  assert.doesNotMatch(sql, /\b(delete\s+from|truncate|drop\s+table)\b/i);
+});
+
+test("suspension error is recognised", () => {
+  assert.equal(isSuspendedError(new Error("ACCOUNT_SUSPENDED")), true);
+  assert.equal(isSuspendedError(new Error("DEMO_CLIENT_LIMIT")), false);
 });

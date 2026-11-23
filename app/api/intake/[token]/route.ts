@@ -19,6 +19,14 @@ function adminDb() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
+// Trainer suspended (trial over / admin switch, migrations 027-028): the form
+// link stops working. If the function is missing (migration not applied) the
+// form stays open.
+async function trainerActive(db: ReturnType<typeof adminDb>, trainerId: string): Promise<boolean> {
+  const { data, error } = await db.rpc("account_is_active", { p_user: trainerId });
+  return error ? true : data !== false;
+}
+
 // ── Simple in-memory rate limiter (best-effort; resets on cold start) ────────
 const rateMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = 8;        // max submissions per window
@@ -55,13 +63,17 @@ export async function GET(
     return NextResponse.json({ error: "invalid_token" }, { status: 400, headers: CORS });
   }
   try {
-    const { data, error } = await adminDb()
+    const db = adminDb();
+    const { data, error } = await db
       .from("intake_forms")
-      .select("token, status, label")
+      .select("token, status, label, trainer_id")
       .eq("token", token)
       .single();
     if (error || !data) {
       return NextResponse.json({ error: "not_found" }, { status: 404, headers: CORS });
+    }
+    if (!(await trainerActive(db, data.trainer_id as string))) {
+      return NextResponse.json({ error: "suspended" }, { status: 403, headers: CORS });
     }
     return NextResponse.json({ status: data.status, label: data.label }, { headers: CORS });
   } catch {
@@ -141,7 +153,13 @@ export async function POST(
   }
 
   try {
-    const { error } = await adminDb()
+    const db = adminDb();
+    const { data: form } = await db.from("intake_forms").select("trainer_id").eq("token", token).maybeSingle();
+    if (!form) return NextResponse.json({ error: "not_found" }, { status: 404, headers: CORS });
+    if (!(await trainerActive(db, form.trainer_id as string))) {
+      return NextResponse.json({ error: "suspended" }, { status: 403, headers: CORS });
+    }
+    const { error } = await db
       .from("intake_forms")
       .update({
         status:       "submitted",

@@ -1,14 +1,11 @@
 ﻿"use client";
-import { useState, useSyncExternalStore } from "react";
+import { APP_NAME, CONTACT_SALES_PATH } from "@/lib/brand";
+import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Dumbbell, Mail, Lock, User, Loader2, CheckCircle2, Star, Shield, Zap, Crown, Check } from "lucide-react";
-import { PREMIUM_PRICE } from "@/lib/billing";
+import { Dumbbell, Mail, Lock, User, Loader2, CheckCircle2, Star, Shield, Zap, Check } from "lucide-react";
+import { TRIAL_DAYS, TRIAL_FEATURES } from "@/lib/billing";
 
-type Choice = "free" | "premium";
-const noopSubscribe = () => () => {};
-// ?piano=premium preselects the paid plan (links from the landing page)
-const planFromUrl = (): Choice => new URLSearchParams(window.location.search).get("piano") === "premium" ? "premium" : "free";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -17,9 +14,6 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const urlChoice = useSyncExternalStore<Choice>(noopSubscribe, planFromUrl, () => "free");
-  const [picked, setPicked] = useState<Choice | null>(null);
-  const choice: Choice = picked ?? urlChoice;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,7 +23,7 @@ export default function RegisterPage() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name, intended_plan: choice } },
+      options: { data: { full_name: name, intended_plan: "free" } },
     });
     if (error) {
       if (error.message === "User already registered") {
@@ -63,8 +57,8 @@ export default function RegisterPage() {
           <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
             Abbiamo inviato un link di conferma a{" "}
             <strong style={{ color: "var(--text)" }}>{email}</strong>.<br />
-            Clicca il link per attivare il tuo account REC Studio.
-            {choice === "premium" && <><br />Al primo accesso trovi la pagina per attivare Premium.</>}
+            Clicca il link per attivare il tuo account {APP_NAME}.
+            <br />La tua prova gratuita di {TRIAL_DAYS} giorni è già iniziata.
           </p>
           <Link href="/login" className="inline-flex items-center gap-2 accent-btn px-6 py-2.5 rounded-xl text-sm">
             Vai al login
@@ -89,24 +83,24 @@ export default function RegisterPage() {
           <div className="w-10 h-10 rounded-xl accent-btn flex items-center justify-center">
             <Dumbbell size={20} />
           </div>
-          <span className="font-bold text-xl accent-text">REC Studio</span>
+          <span className="font-bold text-xl accent-text">{APP_NAME}</span>
         </div>
 
         {/* Center content */}
         <div className="relative z-10">
           {/* Left panel always dark — hardcode light text */}
           <h2 className="text-4xl font-bold leading-tight mb-4" style={{ color: "#F5F0E8" }}>
-            Provalo gratis.<br />
-            <span className="accent-text">Passa a Premium quando vuoi.</span>
+            {TRIAL_DAYS} giorni gratis.<br />
+            <span className="accent-text">Tutte le funzioni.</span>
           </h2>
           <p className="text-base mb-10" style={{ color: "rgba(245,240,232,0.55)" }}>
-            Crea il tuo account in 30 secondi. La demo è gratuita e non richiede carta di credito.
+            Crea il tuo account in 30 secondi. La prova è gratuita e non richiede carta di credito.
           </p>
 
           {/* Benefits */}
           <div className="space-y-4">
             {[
-              { icon: Star,   label: "Demo gratuita",             desc: "Tutte le funzioni con un cliente",          color: "#fbbf24" },
+              { icon: Star,   label: `Prova di ${TRIAL_DAYS} giorni`, desc: "Tutte le funzioni con un cliente",          color: "#fbbf24" },
               { icon: Shield, label: "Dati al sicuro",            desc: "Connessioni cifrate, accesso solo tuo",     color: "#34d399" },
               { icon: Zap,    label: "Pronto in 2 minuti",        desc: "Setup immediato, zero configurazione",       color: "#818cf8" },
             ].map(({ icon: Icon, label, desc, color }) => (
@@ -138,12 +132,12 @@ export default function RegisterPage() {
             <div className="w-14 h-14 rounded-2xl accent-btn flex items-center justify-center mb-3">
               <Dumbbell size={28} />
             </div>
-            <h1 className="text-2xl font-bold accent-text">REC Studio</h1>
+            <h1 className="text-2xl font-bold accent-text">{APP_NAME}</h1>
           </div>
 
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-1" style={{ color: "var(--text)" }}>Crea il tuo account</h2>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>Scegli come iniziare: puoi cambiare piano in qualsiasi momento.</p>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>Prova tutto gratis per {TRIAL_DAYS} giorni, senza carta di credito.</p>
           </div>
 
           <div className="glass-dark rounded-2xl p-8">
@@ -154,28 +148,15 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <div role="radiogroup" aria-label="Piano" className="grid grid-cols-2 gap-3 mb-5">
-              {([
-                { key: "free" as Choice, title: "Demo gratuita", price: "€0", lines: ["1 cliente", "Tutte le funzioni"], icon: Star },
-                { key: "premium" as Choice, title: "Premium", price: `€${PREMIUM_PRICE}/mese`, lines: ["Clienti illimitati", "Accesso completo"], icon: Crown },
-              ]).map(({ key, title, price, lines, icon: Icon }) => (
-                <button key={key} type="button" role="radio" aria-checked={choice === key} onClick={() => setPicked(key)}
-                  data-testid={`plan-${key}`}
-                  className="text-left rounded-xl p-3 transition-all"
-                  style={{
-                    background: choice === key ? "rgba(201,168,76,0.12)" : "var(--surface)",
-                    border: `1px solid ${choice === key ? "rgba(201,168,76,0.6)" : "var(--border)"}`,
-                  }}>
-                  <span className="flex items-center gap-1.5 text-sm font-bold" style={{ color: choice === key ? "var(--accent-light)" : "var(--text)" }}>
-                    <Icon size={14} /> {title}
-                  </span>
-                  <span className="block text-xs font-semibold mt-1" style={{ color: "var(--text)" }}>{price}</span>
-                  {lines.map((l) => (
-                    <span key={l} className="flex items-center gap-1 text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-                      <Check size={11} className="flex-shrink-0" /> {l}
-                    </span>
-                  ))}
-                </button>
+            <div data-testid="trial-box" className="rounded-xl p-4 mb-5"
+              style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.35)" }}>
+              <p className="flex items-center gap-1.5 text-sm font-bold" style={{ color: "var(--accent-light)" }}>
+                <Star size={14} /> Prova gratuita di {TRIAL_DAYS} giorni
+              </p>
+              {TRIAL_FEATURES.map((l) => (
+                <span key={l} className="flex items-center gap-1.5 text-xs mt-1.5" style={{ color: "var(--text-muted)" }}>
+                  <Check size={12} className="flex-shrink-0" /> {l}
+                </span>
               ))}
             </div>
 
@@ -216,7 +197,7 @@ export default function RegisterPage() {
               <button type="submit" disabled={loading}
                 className="accent-btn w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 mt-2">
                 {loading ? <Loader2 size={16} className="animate-spin" /> : null}
-                {loading ? "Creazione account…" : choice === "premium" ? "Crea account e attiva Premium" : "Inizia la demo gratuita"}
+                {loading ? "Creazione account…" : "Inizia la prova gratuita"}
               </button>
             </form>
 
@@ -224,7 +205,8 @@ export default function RegisterPage() {
               Creando l&apos;account dichiari di aver letto l&apos;
               <Link href="/privacy" className="underline" style={{ color: "var(--accent-light)" }}>informativa sulla privacy</Link> e accetti i{" "}
               <Link href="/termini" className="underline" style={{ color: "var(--accent-light)" }}>termini di servizio</Link>.
-              {choice === "premium" && " Il pagamento si completa dopo l'accesso: non ti viene addebitato nulla ora."}
+              {" "}Vuoi più clienti da subito?{" "}
+              <Link href={CONTACT_SALES_PATH} className="underline" style={{ color: "var(--accent-light)" }}>Parla con il team commerciale</Link>.
             </p>
 
             <p className="text-center text-sm mt-6" style={{ color: "var(--text-muted)" }}>

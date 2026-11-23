@@ -1,4 +1,5 @@
 'use client'
+import { APP_NAME, COMPANY_NAME } from "@/lib/brand";
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -7,8 +8,9 @@ import { X } from 'lucide-react'
 const NAV_ITEMS = [
   { num: '01', label: 'Funzionalità', href: '#features' },
   { num: '02', label: 'Come Funziona', href: '#how'      },
-  { num: '03', label: 'Pricing',       href: '#pricing'  },
-  { num: '04', label: 'Accedi',        href: '/login'    },
+  { num: '03', label: 'Prova gratis',  href: '#prova'    },
+  { num: '04', label: 'Contatti',      href: '/contatti' },
+  { num: '05', label: 'Accedi',        href: '/login'    },
 ]
 
 const EASE: [number,number,number,number] = [0.16, 1, 0.3, 1]
@@ -29,7 +31,7 @@ export default function HamburgerNav() {
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="w-8 h-8 rounded-lg accent-btn flex items-center justify-center flex-shrink-0 text-xs font-black">R</div>
           <div className="flex flex-col leading-none">
-            <span className="font-black text-sm tracking-[0.16em] uppercase accent-text">REC STUDIO</span>
+            <span className="font-black text-sm tracking-[0.16em] uppercase accent-text">{APP_NAME}</span>
             <span className="text-[10px] font-mono tracking-[0.18em] uppercase mt-0.5" style={{ color: 'var(--text-faint)' }}>CRM · Personal Trainer</span>
           </div>
         </Link>
@@ -64,7 +66,7 @@ export default function HamburgerNav() {
             {/* Top */}
             <div className="flex items-center justify-between px-6 lg:px-14 h-16 flex-shrink-0">
               <Link href="/" onClick={() => setOpen(false)}>
-                <span className="font-black text-sm tracking-[0.18em] uppercase accent-text">REC STUDIO</span>
+                <span className="font-black text-sm tracking-[0.18em] uppercase accent-text">{APP_NAME}</span>
               </Link>
               <button onClick={() => setOpen(false)} className="flex items-center gap-3 group" aria-label="Chiudi menu">
                 <span className="text-xs font-bold tracking-[0.18em] uppercase hidden sm:block"
@@ -119,11 +121,11 @@ export default function HamburgerNav() {
                 onClick={() => setOpen(false)}
                 className="accent-btn px-7 py-3.5 rounded-xl text-sm font-bold tracking-wider"
               >
-                Inizia Gratis →
+                Prova gratis →
               </Link>
               <div className="text-right">
                 <p className="text-xs font-mono tracking-widest uppercase"
-                  style={{ color: 'var(--text-faint)' }}>REC GROUP</p>
+                  style={{ color: 'var(--text-faint)' }}>{COMPANY_NAME}</p>
                 <p className="text-xs font-mono" style={{ color: 'var(--text-faint)' }}>© 2026</p>
               </div>
             </motion.div>
