@@ -96,7 +96,7 @@ export default function ResetPasswordPage() {
           <h2 className="text-xl font-semibold mb-6" style={{ color: "var(--text)" }}>Nuova password</h2>
 
           {error && (
-            <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171" }}>
+            <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "var(--c-red-400)" }}>
               {error}
             </div>
           )}
@@ -117,7 +117,7 @@ export default function ResetPasswordPage() {
                   <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                     placeholder="Minimo 6 caratteri" required minLength={6}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }} />
                 </div>
               </div>
               <button type="submit" disabled={loading} className="accent-btn w-full py-3 rounded-xl text-sm flex items-center justify-center gap-2">

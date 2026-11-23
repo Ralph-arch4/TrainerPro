@@ -39,7 +39,7 @@ export default function ToastProvider() {
           style={{
             background: t.type === "success" ? "rgba(20,25,20,0.97)" : "rgba(25,10,10,0.97)",
             border: `1px solid ${t.type === "success" ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}`,
-            color: t.type === "success" ? "#22c55e" : "#f87171",
+            color: t.type === "success" ? "var(--c-green-500)" : "var(--c-red-400)",
             backdropFilter: "blur(12px)",
             minWidth: "200px",
             maxWidth: "320px",
@@ -47,7 +47,7 @@ export default function ToastProvider() {
           {t.type === "success"
             ? <CheckCircle2 size={15} style={{ flexShrink: 0 }} />
             : <AlertCircle size={15} style={{ flexShrink: 0 }} />}
-          <span style={{ color: "rgba(245,240,232,0.9)", flex: 1 }}>{t.message}</span>
+          <span style={{ color: "rgba(var(--text-rgb), min(1, calc(0.9 + var(--fade-boost-n))))", flex: 1 }}>{t.message}</span>
           <button onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
             className="opacity-40 hover:opacity-80 transition-opacity">
             <X size={13} />

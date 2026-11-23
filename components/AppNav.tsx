@@ -132,7 +132,7 @@ export default function AppNav() {
 
       {/* Bottom: trainer identity */}
       <div className="px-3 pb-4 pt-2" style={{ borderTop: "1px solid rgba(201,168,76,0.08)" }}>
-        <div className="rounded-xl overflow-hidden relative"
+        <div className="force-dark rounded-xl overflow-hidden relative"
           style={{ background: "linear-gradient(135deg, rgba(18,12,4,0.96), rgba(28,18,6,0.88))", border: "1px solid rgba(201,168,76,0.18)" }}>
           <div className="absolute inset-0 pointer-events-none"
             style={{ background: "radial-gradient(ellipse at 20% 50%, rgba(201,168,76,0.06) 0%, transparent 70%)" }} />
@@ -144,7 +144,7 @@ export default function AppNav() {
                 {user?.name ?? "Trainer"}
               </p>
               <p className="text-[10px] mt-0.5 font-semibold uppercase tracking-[0.14em]"
-                style={{ color: "rgba(201,168,76,0.5)" }}>
+                style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(50% + var(--fade-boost))), transparent)" }}>
                 {clientCount} {clientCount === 1 ? "cliente" : "clienti"}
               </p>
             </div>

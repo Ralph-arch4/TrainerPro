@@ -7,7 +7,7 @@ import { UtensilsCrossed, ChevronRight, Search } from "lucide-react";
 type GoalFilter = "tutti" | "dimagrimento" | "massa" | "tonificazione" | "performance";
 
 const goalLabel: Record<string, string> = { dimagrimento: "Dimagrimento", massa: "Massa", tonificazione: "Tonificazione", performance: "Performance" };
-const goalColor: Record<string, string> = { dimagrimento: "#38bdf8", massa: "#a78bfa", tonificazione: "#34d399", performance: "#C9A84C" };
+const goalColor: Record<string, string> = { dimagrimento: "var(--c-sky-400)", massa: "var(--c-violet-400)", tonificazione: "var(--c-emerald-400)", performance: "var(--accent)" };
 
 export default function DietePage() {
   const clients = useAppStore((s) => s.clients);
@@ -50,7 +50,7 @@ export default function DietePage() {
           { label: "Piani attivi",     value: activeDiets,                           color: "var(--accent)"       },
           { label: "Media kcal",       value: avgCalories ? `${avgCalories}` : "0", color: "var(--accent-light)"  },
           { label: "Media proteine",   value: avgProtein  ? `${avgProtein}g`  : "0",color: "#CC5522"              },
-          { label: "Media carboidrati",value: avgCarbs    ? `${avgCarbs}g`    : "0",color: "rgba(255,107,43,0.65)"},
+          { label: "Media carboidrati",value: avgCarbs    ? `${avgCarbs}g`    : "0",color: "color-mix(in srgb, var(--accent) min(100%, calc(65% + var(--fade-boost))), transparent)"},
         ].map(({ label, value, color }) => (
           <div key={label} className="card-luxury rounded-2xl p-4 text-center">
             <p className="text-3xl font-bold" style={{ color }}>{value}</p>
@@ -66,11 +66,11 @@ export default function DietePage() {
           <input value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Cerca piano o cliente…"
             className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
-            style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }} />
+            style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--text)" }} />
         </div>
         <select value={goalFilter} onChange={(e) => setGoalFilter(e.target.value as GoalFilter)}
           className="px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
+          style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--text)" }}>
           <option value="tutti">Tutti gli obiettivi</option>
           <option value="massa">Massa</option>
           <option value="dimagrimento">Dimagrimento</option>
@@ -82,7 +82,7 @@ export default function DietePage() {
       {/* Empty state */}
       {filtered.length === 0 && (
         <div className="text-center py-20 card-luxury rounded-2xl">
-          <UtensilsCrossed size={48} className="mx-auto mb-4" style={{ color: "rgba(255,107,43,0.2)" }} />
+          <UtensilsCrossed size={48} className="mx-auto mb-4" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(20% + var(--fade-boost))), transparent)" }} />
           <p className="font-semibold mb-1" style={{ color: "var(--text)" }}>
             {allDiets.length === 0 ? "Nessun piano alimentare" : "Nessun risultato"}
           </p>
@@ -109,18 +109,18 @@ export default function DietePage() {
 
           return (
             <Link key={diet.id} href={`/dashboard/clienti/${diet.clientId}`}
-              className="card-luxury rounded-2xl p-5 hover:border-[rgba(255,107,43,0.3)] transition-all group block">
+              className="card-luxury rounded-2xl p-5 hover:border-[color-mix(in_srgb,var(--accent)_30%,transparent)] transition-all group block">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="font-semibold" style={{ color: "var(--text)" }}>{diet.name}</p>
-                    {diet.active && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>Attivo</span>}
+                    {diet.active && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.1)", color: "var(--c-green-500)" }}>Attivo</span>}
                   </div>
                   <Link href={`/dashboard/clienti/${diet.clientId}`} className="flex items-center gap-1 text-xs mt-1 hover:underline"
                     style={{ color: "var(--text-muted)" }} onClick={(e) => e.stopPropagation()}>
                     {diet.clientName}
                     {diet.clientGoal && (
-                      <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs" style={{ background: `${goalColor[diet.clientGoal]}18`, color: goalColor[diet.clientGoal] }}>
+                      <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs" style={{ background: `color-mix(in srgb, ${goalColor[diet.clientGoal]} 9.4%, transparent)`, color: goalColor[diet.clientGoal] }}>
                         {goalLabel[diet.clientGoal]}
                       </span>
                     )}
@@ -130,7 +130,7 @@ export default function DietePage() {
               </div>
 
               {/* Calorie highlight */}
-              <div className="text-center py-3 mb-4 rounded-xl" style={{ background: "rgba(255,107,43,0.06)" }}>
+              <div className="text-center py-3 mb-4 rounded-xl" style={{ background: "color-mix(in srgb, var(--accent) 6%, transparent)" }}>
                 <p className="text-3xl font-bold" style={{ color: "var(--accent)" }}>{diet.calories}</p>
                 <p className="text-xs" style={{ color: "var(--text-muted)" }}>kcal / giorno</p>
               </div>
@@ -138,9 +138,9 @@ export default function DietePage() {
               {/* Macros */}
               <div className="grid grid-cols-3 gap-2 mb-3">
                 {[
-                  { label: "Prot.", value: `${diet.protein}g`, pct: proteinPct, color: "#a78bfa" },
-                  { label: "Carb.", value: `${diet.carbs}g`, pct: carbsPct, color: "#38bdf8" },
-                  { label: "Grass.", value: `${diet.fat}g`, pct: fatPct, color: "#fbbf24" },
+                  { label: "Prot.", value: `${diet.protein}g`, pct: proteinPct, color: "var(--c-violet-400)" },
+                  { label: "Carb.", value: `${diet.carbs}g`, pct: carbsPct, color: "var(--c-sky-400)" },
+                  { label: "Grass.", value: `${diet.fat}g`, pct: fatPct, color: "var(--c-amber-400)" },
                 ].map(({ label, value, pct, color }) => (
                   <div key={label} className="text-center rounded-xl p-2" style={{ background: "var(--surface-sm)" }}>
                     <p className="text-xs font-semibold" style={{ color }}>{value}</p>
@@ -151,9 +151,9 @@ export default function DietePage() {
 
               {/* Macro bar */}
               <div className="flex h-1.5 rounded-full overflow-hidden">
-                <div style={{ width: `${proteinPct}%`, background: "#a78bfa" }} />
-                <div style={{ width: `${carbsPct}%`, background: "#38bdf8" }} />
-                <div style={{ width: `${fatPct}%`, background: "#fbbf24" }} />
+                <div style={{ width: `${proteinPct}%`, background: "var(--c-violet-400)" }} />
+                <div style={{ width: `${carbsPct}%`, background: "var(--c-sky-400)" }} />
+                <div style={{ width: `${fatPct}%`, background: "var(--c-amber-400)" }} />
               </div>
             </Link>
           );

@@ -64,7 +64,7 @@ function PhotoCard({ photo, secureUrl, onDelete }: { photo: ProgressPhoto; secur
         <img src={url} alt={photo.taken_at} className="w-full h-full object-cover" />
       ) : (
         <div className="w-full h-full flex items-center justify-center">
-          <Loader2 size={20} className="animate-spin" style={{ color: "rgba(201,168,76,0.5)" }} />
+          <Loader2 size={20} className="animate-spin" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(50% + var(--fade-boost))), transparent)" }} />
         </div>
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
@@ -72,7 +72,7 @@ function PhotoCard({ photo, secureUrl, onDelete }: { photo: ProgressPhoto; secur
         {photo.notes && <p className="text-xs text-white/70 mt-0.5 truncate">{photo.notes}</p>}
         <button onClick={() => setShowDelete(true)}
           className="mt-2 flex items-center gap-1 text-xs px-2 py-1 rounded-lg w-fit"
-          style={{ background: "rgba(239,68,68,0.2)", color: "#f87171" }}>
+          style={{ background: "rgba(239,68,68,0.2)", color: "var(--c-red-400)" }}>
           <Trash2 size={10} /> Elimina
         </button>
       </div>
@@ -81,10 +81,10 @@ function PhotoCard({ photo, secureUrl, onDelete }: { photo: ProgressPhoto; secur
           style={{ background: "var(--surface-modal)" }}>
           <div className="text-center">
             <p className="text-sm font-bold text-white mb-1">Eliminare la foto?</p>
-            <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.5)" }}>Azione irreversibile</p>
+            <p className="text-xs mb-3" style={{ color: "rgba(var(--ink-rgb),0.5)" }}>Azione irreversibile</p>
             <div className="flex gap-2">
-              <button onClick={() => setShowDelete(false)} className="flex-1 py-1.5 rounded-lg text-xs" style={{ border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.6)" }}>Annulla</button>
-              <button onClick={onDelete} className="flex-1 py-1.5 rounded-lg text-xs font-bold" style={{ background: "rgba(239,68,68,0.3)", color: "#f87171" }}>Elimina</button>
+              <button onClick={() => setShowDelete(false)} className="flex-1 py-1.5 rounded-lg text-xs" style={{ border: "1px solid rgba(var(--ink-rgb),0.2)", color: "rgba(var(--ink-rgb),0.6)" }}>Annulla</button>
+              <button onClick={onDelete} className="flex-1 py-1.5 rounded-lg text-xs font-bold" style={{ background: "rgba(239,68,68,0.3)", color: "var(--c-red-400)" }}>Elimina</button>
             </div>
           </div>
         </div>
@@ -96,8 +96,8 @@ function PhotoCard({ photo, secureUrl, onDelete }: { photo: ProgressPhoto; secur
 const goalLabel: Record<string, string> = { dimagrimento: "Dimagrimento", massa: "Massa", tonificazione: "Tonificazione", performance: "Performance" };
 const levelLabel: Record<string, string> = { principiante: "Principiante", intermedio: "Intermedio", avanzato: "Avanzato" };
 const phaseTypeLabel: Record<string, string> = { bulk: "Bulk", cut: "Cut", maintenance: "Mantenimento", custom: "Personalizzata" };
-const phaseTypeColor: Record<string, string> = { bulk: "#a78bfa", cut: "#38bdf8", maintenance: "#34d399", custom: "#fb923c" };
-const statusColor: Record<string, string> = { attivo: "#22c55e", in_pausa: "#f59e0b", inattivo: "#6b7280" };
+const phaseTypeColor: Record<string, string> = { bulk: "var(--c-violet-400)", cut: "var(--c-sky-400)", maintenance: "var(--c-emerald-400)", custom: "var(--c-orange-400)" };
+const statusColor: Record<string, string> = { attivo: "var(--c-green-500)", in_pausa: "var(--c-amber-500)", inattivo: "var(--c-gray-500)" };
 const statusLabel: Record<string, string> = { attivo: "Attivo", in_pausa: "In pausa", inattivo: "Inattivo" };
 
 function clientHue(name: string): number {
@@ -121,7 +121,7 @@ function AthleteCredsCard({ client, onEdit }: { client: { id: string; name: stri
   const days = daysTogether(client.startDate);
   const cgId = `cg${client.id.replace(/-/g, "").slice(0, 6)}`;
   return (
-    <div className="mb-6 rounded-3xl overflow-hidden relative"
+    <div className="force-dark mb-6 rounded-3xl overflow-hidden relative"
       style={{ background: "linear-gradient(135deg, rgba(10,8,4,0.98) 0%, rgba(22,16,8,0.95) 60%, rgba(10,8,4,0.98) 100%)", border: "1px solid rgba(201,168,76,0.2)", boxShadow: "0 4px 28px rgba(201,168,76,0.06)" }}>
       <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(ellipse at 12% 50%, hsla(${hue},45%,50%,0.05) 0%, transparent 55%), radial-gradient(ellipse at 88% 50%, rgba(201,168,76,0.04) 0%, transparent 55%)` }} />
       <div className="relative flex items-center gap-5 px-5 py-4">
@@ -148,7 +148,7 @@ function AthleteCredsCard({ client, onEdit }: { client: { id: string; name: stri
         </div>
         {/* Name + badges */}
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-black tracking-[0.22em] uppercase mb-0.5" style={{ color: "rgba(201,168,76,0.42)" }}>Atleta #{num}</p>
+          <p className="text-xs font-black tracking-[0.22em] uppercase mb-0.5" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(42% + var(--fade-boost))), transparent)" }}>Atleta #{num}</p>
           <h1 className="text-2xl font-black tracking-tight mb-1.5 truncate" style={{ color: "var(--text)", fontFamily: "Georgia,'Times New Roman',serif", fontStyle: "italic" }}>{client.name}</h1>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1.5">
@@ -217,8 +217,8 @@ function PlanCoverArt({ seed }: { seed: string }) {
   const c2 = `hsl(${hue2} 68% 46%)`;
   const variant = h % 4;
   return (
-    <div className="w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden relative"
-      style={{ background: `linear-gradient(135deg, hsl(${hue} 50% 13%), hsl(${hue2} 50% 8%))`, border: "1px solid rgba(255,255,255,0.06)" }}>
+    <div className="force-dark w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden relative"
+      style={{ background: `linear-gradient(135deg, hsl(${hue} 50% 13%), hsl(${hue2} 50% 8%))`, border: "1px solid rgba(var(--ink-rgb),0.06)" }}>
       <svg width="48" height="48" viewBox="0 0 48 48" className="absolute inset-0">
         {variant === 0 && (
           <>
@@ -262,17 +262,17 @@ function QuickConnectionMessages({ name, phone }: { name: string; phone?: string
   const messages = [
     {
       label: "Check-in",
-      color: "#22c55e",
+      color: "var(--c-green-500)",
       text: `${weekTag} ${fn}! Come stai? Scrivimi se hai bisogno di chiarimenti sul piano o vuoi fare qualche modifica — sono qui.`,
     },
     {
       label: "Motivazione",
-      color: "#C9A84C",
+      color: "var(--accent)",
       text: `${fn}, volevo ricordarti che ogni sessione che completi fa la differenza — anche quelle in cui non ti senti al 100%. Continua così, sei sulla strada giusta!`,
     },
     {
       label: "Aggiornamento piano",
-      color: "#38bdf8",
+      color: "var(--c-sky-400)",
       text: `Ciao ${fn}! Stavo guardando i tuoi progressi e ho qualche idea per ottimizzare il piano. Quando hai 5 minuti fammi sapere — voglio che tu ottenga il massimo.`,
     },
   ];
@@ -293,7 +293,7 @@ function QuickConnectionMessages({ name, phone }: { name: string; phone?: string
       <div className="space-y-2">
         {messages.map((msg, i) => (
           <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl transition-colors"
-            style={{ background: "var(--surface-sm)", border: `1px solid ${copiedIdx === i ? msg.color + "35" : "rgba(255,255,255,0.04)"}` }}>
+            style={{ background: "var(--surface-sm)", border: `1px solid ${copiedIdx === i ? `color-mix(in srgb, ${msg.color} 20.8%, transparent)` : "rgba(var(--ink-rgb),0.04)"}` }}>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: msg.color, letterSpacing: "0.1em" }}>{msg.label}</p>
               <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{msg.text.slice(0, 90)}{msg.text.length > 90 ? "…" : ""}</p>
@@ -303,13 +303,13 @@ function QuickConnectionMessages({ name, phone }: { name: string; phone?: string
                 <a href={`https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(msg.text)}`}
                   target="_blank" rel="noopener noreferrer" title="Invia su WhatsApp"
                   className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
-                  style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                  style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)" }}>
                   <MessageCircle size={12} />
                 </a>
               )}
               <button onClick={() => copyMsg(msg.text, i)} title="Copia testo"
                 className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
-                style={{ background: "var(--surface-md)", color: copiedIdx === i ? "#22c55e" : "var(--text-dim)" }}>
+                style={{ background: "var(--surface-md)", color: copiedIdx === i ? "var(--c-green-500)" : "var(--text-dim)" }}>
                 {copiedIdx === i ? <Check size={12} /> : <Copy size={12} />}
               </button>
             </div>
@@ -1128,7 +1128,7 @@ export default function ClientDetailPage() {
     const lastLogTime = allLogs.length > 0 ? Math.max(...allLogs.map(l => new Date(l.loggedAt).getTime())) : 0;
     const daysSinceLast = lastLogTime > 0 ? Math.floor((now - lastLogTime) / 86400000) : null;
     if (daysSinceLast !== null && daysSinceLast >= 7) {
-      return { type: "inattivo" as const, label: `Nessuna sessione da ${daysSinceLast} giorni`, detail: "Considera di contattare il cliente per motivarlo", color: "#ef4444", bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.25)", waMsg: `Ciao ${client.name.split(" ")[0]}, come stai? Sono ${daysSinceLast} giorni che non ti vedo — tutto ok?` };
+      return { type: "inattivo" as const, label: `Nessuna sessione da ${daysSinceLast} giorni`, detail: "Considera di contattare il cliente per motivarlo", color: "var(--c-red-500)", bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.25)", waMsg: `Ciao ${client.name.split(" ")[0]}, come stai? Sono ${daysSinceLast} giorni che non ti vedo — tutto ok?` };
     }
 
     // 2. Deload recommended (4+ consecutive weeks at/above target frequency)
@@ -1141,7 +1141,7 @@ export default function ClientDetailPage() {
       return uniq.size >= target;
     }).length;
     if (weeksAboveTarget >= 4) {
-      return { type: "deload" as const, label: `${weeksAboveTarget} settimane consecutive al target`, detail: "Valuta una settimana di scarico per massimizzare il recupero", color: "#fb923c", bg: "rgba(249,115,22,0.08)", border: "rgba(249,115,22,0.3)", waMsg: "" };
+      return { type: "deload" as const, label: `${weeksAboveTarget} settimane consecutive al target`, detail: "Valuta una settimana di scarico per massimizzare il recupero", color: "var(--c-orange-400)", bg: "rgba(249,115,22,0.08)", border: "rgba(249,115,22,0.3)", waMsg: "" };
     }
 
     // 3. Progression pending (3+ weeks same weight on an exercise)
@@ -1154,7 +1154,7 @@ export default function ClientDetailPage() {
         const last3 = sorted.slice(0, 3);
         if (!last3.every(l => l.weight === last3[0].weight)) continue;
         const ex = plan.exercises.find(e => e.id === exId);
-        if (ex) return { type: "progressione" as const, label: `${ex.name}: fermo a ${last3[0].weight}kg per 3 settimane`, detail: `Suggerisci ${Math.round((last3[0].weight! + 2.5) * 2) / 2}kg nella prossima sessione`, color: "#fbbf24", bg: "rgba(251,191,36,0.07)", border: "rgba(251,191,36,0.25)", waMsg: "" };
+        if (ex) return { type: "progressione" as const, label: `${ex.name}: fermo a ${last3[0].weight}kg per 3 settimane`, detail: `Suggerisci ${Math.round((last3[0].weight! + 2.5) * 2) / 2}kg nella prossima sessione`, color: "var(--c-amber-400)", bg: "rgba(251,191,36,0.07)", border: "rgba(251,191,36,0.25)", waMsg: "" };
       }
     }
 
@@ -1162,13 +1162,13 @@ export default function ClientDetailPage() {
     const sortedMeas = [...client.measurements].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     if (sortedMeas.length > 0) {
       const daysSinceMeas = Math.floor((now - new Date(sortedMeas[0].date).getTime()) / 86400000);
-      if (daysSinceMeas > 30) return { type: "misurazioni" as const, label: `Ultima misurazione: ${daysSinceMeas} giorni fa`, detail: "Registra le misurazioni aggiornate per monitorare i progressi", color: "#818cf8", bg: "rgba(99,102,241,0.07)", border: "rgba(99,102,241,0.25)", waMsg: "" };
+      if (daysSinceMeas > 30) return { type: "misurazioni" as const, label: `Ultima misurazione: ${daysSinceMeas} giorni fa`, detail: "Registra le misurazioni aggiornate per monitorare i progressi", color: "var(--c-indigo-400)", bg: "rgba(99,102,241,0.07)", border: "rgba(99,102,241,0.25)", waMsg: "" };
     }
 
     // 5. All good — target met this week
     const thisWeekDays = new Set(allLogs.filter(l => new Date(l.loggedAt).getTime() > now - 7 * 86400000).map(l => new Date(l.loggedAt).toDateString()));
     if (thisWeekDays.size >= target) {
-      return { type: "forma" as const, label: `Settimana perfetta: ${thisWeekDays.size}/${target} sessioni completate`, detail: "Ottima aderenza al piano questa settimana", color: "#22c55e", bg: "rgba(34,197,94,0.07)", border: "rgba(34,197,94,0.2)", waMsg: "" };
+      return { type: "forma" as const, label: `Settimana perfetta: ${thisWeekDays.size}/${target} sessioni completate`, detail: "Ottima aderenza al piano questa settimana", color: "var(--c-green-500)", bg: "rgba(34,197,94,0.07)", border: "rgba(34,197,94,0.2)", waMsg: "" };
     }
 
     return null;
@@ -1190,11 +1190,11 @@ export default function ClientDetailPage() {
     const lastW = [...client.measurements].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.weight;
     const msgs: { label: string; color: string; bg: string; text: string }[] = [];
     if (sessionsThisWeek >= 2)
-      msgs.push({ label: `${sessionsThisWeek} sessioni questa sett.`, color: "#fbbf24", bg: "rgba(251,191,36,0.08)", text: `Ciao ${fn}! ${sessionsThisWeek} sessioni questa settimana — sei in forma. Grande lavoro, continua così!` });
+      msgs.push({ label: `${sessionsThisWeek} sessioni questa sett.`, color: "var(--c-amber-400)", bg: "rgba(251,191,36,0.08)", text: `Ciao ${fn}! ${sessionsThisWeek} sessioni questa settimana — sei in forma. Grande lavoro, continua così!` });
     if (bestPR)
-      msgs.push({ label: `Record: ${bestPR.name}`, color: "#f97316", bg: "rgba(249,115,22,0.08)", text: `Ciao ${fn}! Ho visto che hai spinto ${bestPR.weight}kg su ${bestPR.name} questa settimana — ottimo record, stai progredendo alla grande!` });
-    msgs.push({ label: "Check-in rapido", color: "#38bdf8", bg: "rgba(56,189,248,0.08)", text: `Ciao ${fn}, come stai? Volevo fare un check-in veloce — come ti senti con gli allenamenti? Hai domande o vorresti modificare qualcosa?` });
-    if (lastW) msgs.push({ label: `Peso: ${lastW}kg`, color: "#818cf8", bg: "rgba(99,102,241,0.08)", text: `Ciao ${fn}! Sei a ${lastW}kg dall'ultima misurazione — come ti senti fisicamente? Stai seguendo le indicazioni alimentari?` });
+      msgs.push({ label: `Record: ${bestPR.name}`, color: "var(--c-orange-500)", bg: "rgba(249,115,22,0.08)", text: `Ciao ${fn}! Ho visto che hai spinto ${bestPR.weight}kg su ${bestPR.name} questa settimana — ottimo record, stai progredendo alla grande!` });
+    msgs.push({ label: "Check-in rapido", color: "var(--c-sky-400)", bg: "rgba(56,189,248,0.08)", text: `Ciao ${fn}, come stai? Volevo fare un check-in veloce — come ti senti con gli allenamenti? Hai domande o vorresti modificare qualcosa?` });
+    if (lastW) msgs.push({ label: `Peso: ${lastW}kg`, color: "var(--c-indigo-400)", bg: "rgba(99,102,241,0.08)", text: `Ciao ${fn}! Sei a ${lastW}kg dall'ultima misurazione — come ti senti fisicamente? Stai seguendo le indicazioni alimentari?` });
     return msgs.slice(0, 4);
   })();
 
@@ -1223,12 +1223,12 @@ export default function ClientDetailPage() {
     const fn = client.name.split(" ")[0];
 
     const MILESTONES: { threshold: number; type: "days" | "logs"; label: string; detail: string; waMsg: string; color: string }[] = [
-      { threshold: 365, type: "days", label: `Un anno insieme — ${daysTogether} giorni!`, detail: "Un traguardo straordinario. Celebra questo percorso con il tuo atleta.", waMsg: `${fn}! Un anno intero insieme — 365 giorni di lavoro, costanza e crescita. Sono orgoglioso del percorso che abbiamo costruito. Avanti così, sempre!`, color: "#fbbf24" },
-      { threshold: 180, type: "days", label: `6 mesi insieme — ${daysTogether} giorni`, detail: "Mezzo anno di coaching. Il legame con questo cliente è solido.", waMsg: `${fn}, 6 mesi insieme! Mezzo anno di allenamenti, sacrifici e risultati. Sei un atleta vero — il meglio deve ancora venire.`, color: "#f97316" },
-      { threshold: 90, type: "days", label: `90 giorni insieme`, detail: "Un trimestre di percorso. Il cliente sta consolidando l'abitudine.", waMsg: `${fn}, 3 mesi insieme! 90 giorni di dedizione — stai costruendo qualcosa di cui essere fiero. Continua così!`, color: "#a78bfa" },
-      { threshold: 30, type: "days", label: `Primo mese insieme`, detail: "Il primo mese è il più importante. Un messaggio adesso rinforza la fiducia.", waMsg: `${fn}, un mese insieme! Il primo mese è il più difficile e tu lo hai superato alla grande. Sei sulla strada giusta!`, color: "#38bdf8" },
-      { threshold: 100, type: "logs", label: `100 sessioni registrate!`, detail: "Centenario: il cliente ha raggiunto 100 log. Un risultato da celebrare.", waMsg: `${fn}! 100 sessioni registrate — cento volte che hai scelto di presentarti e dare il massimo. Questo è il cuore di un vero atleta!`, color: "#fbbf24" },
-      { threshold: 50, type: "logs", label: `50 sessioni registrate`, detail: "Cinquanta log salvati. La costanza sta pagando.", waMsg: `${fn}, 50 sessioni nel diario! Mezzo centinario di allenamenti — la tua costanza mi motiva. Avanti tutta!`, color: "#34d399" },
+      { threshold: 365, type: "days", label: `Un anno insieme — ${daysTogether} giorni!`, detail: "Un traguardo straordinario. Celebra questo percorso con il tuo atleta.", waMsg: `${fn}! Un anno intero insieme — 365 giorni di lavoro, costanza e crescita. Sono orgoglioso del percorso che abbiamo costruito. Avanti così, sempre!`, color: "var(--c-amber-400)" },
+      { threshold: 180, type: "days", label: `6 mesi insieme — ${daysTogether} giorni`, detail: "Mezzo anno di coaching. Il legame con questo cliente è solido.", waMsg: `${fn}, 6 mesi insieme! Mezzo anno di allenamenti, sacrifici e risultati. Sei un atleta vero — il meglio deve ancora venire.`, color: "var(--c-orange-500)" },
+      { threshold: 90, type: "days", label: `90 giorni insieme`, detail: "Un trimestre di percorso. Il cliente sta consolidando l'abitudine.", waMsg: `${fn}, 3 mesi insieme! 90 giorni di dedizione — stai costruendo qualcosa di cui essere fiero. Continua così!`, color: "var(--c-violet-400)" },
+      { threshold: 30, type: "days", label: `Primo mese insieme`, detail: "Il primo mese è il più importante. Un messaggio adesso rinforza la fiducia.", waMsg: `${fn}, un mese insieme! Il primo mese è il più difficile e tu lo hai superato alla grande. Sei sulla strada giusta!`, color: "var(--c-sky-400)" },
+      { threshold: 100, type: "logs", label: `100 sessioni registrate!`, detail: "Centenario: il cliente ha raggiunto 100 log. Un risultato da celebrare.", waMsg: `${fn}! 100 sessioni registrate — cento volte che hai scelto di presentarti e dare il massimo. Questo è il cuore di un vero atleta!`, color: "var(--c-amber-400)" },
+      { threshold: 50, type: "logs", label: `50 sessioni registrate`, detail: "Cinquanta log salvati. La costanza sta pagando.", waMsg: `${fn}, 50 sessioni nel diario! Mezzo centinario di allenamenti — la tua costanza mi motiva. Avanti tutta!`, color: "var(--c-emerald-400)" },
     ];
 
     const WINDOW = 7;
@@ -1332,9 +1332,9 @@ export default function ClientDetailPage() {
     const totalSets = sorted.reduce((s, [, v]) => s + v, 0);
 
     const mgColors: Record<string, string> = {
-      Petto: "#ef4444", Schiena: "#3b82f6", Spalle: "#f59e0b", Quadricipiti: "#22c55e",
-      Femorali: "#10b981", Glutei: "#8b5cf6", Bicipiti: "#ec4899", Tricipiti: "#f97316",
-      Addominali: "#06b6d4", Polpacci: "#14b8a6", Gambe: "#84cc16", Avambracci: "#a855f7",
+      Petto: "var(--c-red-500)", Schiena: "var(--c-blue-500)", Spalle: "var(--c-amber-500)", Quadricipiti: "var(--c-green-500)",
+      Femorali: "#10b981", Glutei: "var(--c-violet-500)", Bicipiti: "var(--c-pink-500)", Tricipiti: "var(--c-orange-500)",
+      Addominali: "#06b6d4", Polpacci: "var(--c-teal-500)", Gambe: "#84cc16", Avambracci: "var(--c-purple-500)",
       "Full Body": "#64748b",
     };
 
@@ -1367,7 +1367,7 @@ export default function ClientDetailPage() {
       {/* Save error banner */}
       {saveError && (
         <div className="mb-4 p-3 rounded-xl flex items-center justify-between gap-2 text-xs"
-          style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}>
+          style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "var(--c-red-400)" }}>
           <span>⚠ {saveError}</span>
           <button onClick={() => setSaveError("")} className="opacity-60 hover:opacity-100">✕</button>
         </div>
@@ -1386,21 +1386,21 @@ export default function ClientDetailPage() {
             <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(priorityBrief.waMsg)}`}
               target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold flex-shrink-0 transition-all hover:opacity-80"
-              style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+              style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)" }}>
               <MessageCircle size={11} /> Contatta
             </a>
           )}
           {priorityBrief.type === "misurazioni" && (
             <button onClick={() => setTab("misurazioni")}
               className="px-3 py-1.5 rounded-lg text-xs font-bold flex-shrink-0 transition-all hover:opacity-80"
-              style={{ background: "rgba(99,102,241,0.14)", color: "#818cf8" }}>
+              style={{ background: "rgba(99,102,241,0.14)", color: "var(--c-indigo-400)" }}>
               Registra
             </button>
           )}
           {priorityBrief.type === "progressione" && (
             <button onClick={() => setTab("schede")}
               className="px-3 py-1.5 rounded-lg text-xs font-bold flex-shrink-0 transition-all hover:opacity-80"
-              style={{ background: "rgba(251,191,36,0.14)", color: "#fbbf24" }}>
+              style={{ background: "rgba(251,191,36,0.14)", color: "var(--c-amber-400)" }}>
               Vedi schede
             </button>
           )}
@@ -1423,10 +1423,10 @@ export default function ClientDetailPage() {
           <div className="flex items-center gap-3 relative">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ background: birthdayAlert.isToday ? "rgba(251,191,36,0.2)" : "rgba(251,191,36,0.1)" }}>
-              <Cake size={18} style={{ color: "#fbbf24" }} />
+              <Cake size={18} style={{ color: "var(--c-amber-400)" }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold" style={{ color: birthdayAlert.isToday ? "#fbbf24" : "var(--text)" }}>
+              <p className="text-sm font-bold" style={{ color: birthdayAlert.isToday ? "var(--c-amber-400)" : "var(--text)" }}>
                 {birthdayAlert.isToday
                   ? `Buon compleanno ${client.name.split(" ")[0]}! — ${birthdayAlert.age} anni`
                   : `Compleanno tra ${birthdayAlert.daysLeft} giorn${birthdayAlert.daysLeft === 1 ? "o" : "i"}`}
@@ -1441,7 +1441,7 @@ export default function ClientDetailPage() {
               <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(birthdayAlert.waMsg)}`}
                 target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold flex-shrink-0 transition-all hover:opacity-80"
-                style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.25)" }}>
+                style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)", border: "1px solid rgba(34,197,94,0.25)" }}>
                 <MessageCircle size={12} /> {birthdayAlert.isToday ? "Auguri" : "Messaggio"}
               </a>
             )}
@@ -1453,19 +1453,19 @@ export default function ClientDetailPage() {
       {clientMilestone && (
         <div className="mb-4 p-4 rounded-2xl relative overflow-hidden"
           style={{
-            background: `linear-gradient(135deg, ${clientMilestone.color}0F, ${clientMilestone.color}06)`,
-            border: `1px solid ${clientMilestone.color}38`,
+            background: `linear-gradient(135deg, color-mix(in srgb, ${clientMilestone.color} 5.9%, transparent), color-mix(in srgb, ${clientMilestone.color} 2.4%, transparent))`,
+            border: `1px solid color-mix(in srgb, ${clientMilestone.color} 22%, transparent)`,
           }}>
           <div className="absolute top-0 right-0 w-28 h-28 opacity-[0.06] pointer-events-none"
             style={{ background: `radial-gradient(circle, ${clientMilestone.color} 0%, transparent 70%)` }} />
           <div className="flex items-center gap-3 relative">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: `${clientMilestone.color}1A`, border: `1px solid ${clientMilestone.color}30` }}>
+              style={{ background: `color-mix(in srgb, ${clientMilestone.color} 10.2%, transparent)`, border: `1px solid color-mix(in srgb, ${clientMilestone.color} 18.8%, transparent)` }}>
               <Award size={18} style={{ color: clientMilestone.color }} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold uppercase tracking-widest mb-0.5"
-                style={{ color: `${clientMilestone.color}90`, letterSpacing: "0.1em", fontSize: "0.6rem" }}>
+                style={{ color: `color-mix(in srgb, ${clientMilestone.color} min(100%, calc(56.5% + var(--fade-boost))), transparent)`, letterSpacing: "0.1em", fontSize: "0.6rem" }}>
                 Traguardo raggiunto
               </p>
               <p className="text-sm font-bold" style={{ color: clientMilestone.color }}>{clientMilestone.label}</p>
@@ -1475,7 +1475,7 @@ export default function ClientDetailPage() {
               <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(clientMilestone.waMsg)}`}
                 target="_blank" rel="noopener noreferrer"
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold flex-shrink-0 transition-all hover:opacity-80"
-                style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.25)" }}>
+                style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)", border: "1px solid rgba(34,197,94,0.25)" }}>
                 <MessageCircle size={12} /> Festeggia
               </a>
             )}
@@ -1497,7 +1497,7 @@ export default function ClientDetailPage() {
             <Icon size={14} />
             {label}
             {beta && (
-              <span className="text-xs px-1.5 py-0.5 rounded-full font-bold" style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24", fontSize: "0.55rem", letterSpacing: "0.05em" }}>BETA</span>
+              <span className="text-xs px-1.5 py-0.5 rounded-full font-bold" style={{ background: "rgba(251,191,36,0.15)", color: "var(--c-amber-400)", fontSize: "0.55rem", letterSpacing: "0.05em" }}>BETA</span>
             )}
             {count !== undefined && count > 0 && (
               <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.16)", color: "var(--accent-light)" }}>{count}</span>
@@ -1510,7 +1510,7 @@ export default function ClientDetailPage() {
       {tab === "overview" && (
         <div className="grid sm:grid-cols-2 gap-4">
           {/* ── Tessera Atleta — luxury membership card ── */}
-          <div className="sm:col-span-2 relative overflow-hidden rounded-2xl"
+          <div className="force-dark sm:col-span-2 relative overflow-hidden rounded-2xl"
             style={{
               background: "linear-gradient(135deg, rgba(18,14,8,0.95), rgba(30,24,12,0.90), rgba(18,14,8,0.95))",
               border: "1px solid rgba(201,168,76,0.25)",
@@ -1531,11 +1531,11 @@ export default function ClientDetailPage() {
             <div className="relative p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-[10px] tracking-[0.2em] font-semibold uppercase" style={{ color: "rgba(201,168,76,0.5)" }}>
+                  <span className="text-[10px] tracking-[0.2em] font-semibold uppercase" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(50% + var(--fade-boost))), transparent)" }}>
                     Tessera Atleta
                   </span>
                   <div className="flex-1 h-px" style={{ background: "rgba(201,168,76,0.12)" }} />
-                  <span className="text-[10px] tracking-[0.15em] font-mono" style={{ color: "rgba(201,168,76,0.35)" }}>
+                  <span className="text-[10px] tracking-[0.15em] font-mono" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(35% + var(--fade-boost))), transparent)" }}>
                     N. {client.id.slice(-6).toUpperCase()}
                   </span>
                 </div>
@@ -1558,12 +1558,12 @@ export default function ClientDetailPage() {
                 </div>
                 <div className="flex items-center gap-4 mt-3">
                   <div>
-                    <p className="text-[9px] tracking-[0.15em] uppercase" style={{ color: "rgba(201,168,76,0.4)" }}>Membro dal</p>
+                    <p className="text-[9px] tracking-[0.15em] uppercase" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(40% + var(--fade-boost))), transparent)" }}>Membro dal</p>
                     <p className="text-xs font-semibold mt-0.5" style={{ color: "var(--text-muted)" }}>{formatDate(client.startDate)}</p>
                   </div>
                   <div className="w-px h-6" style={{ background: "rgba(201,168,76,0.12)" }} />
                   <div>
-                    <p className="text-[9px] tracking-[0.15em] uppercase" style={{ color: "rgba(201,168,76,0.4)" }}>Giorni insieme</p>
+                    <p className="text-[9px] tracking-[0.15em] uppercase" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(40% + var(--fade-boost))), transparent)" }}>Giorni insieme</p>
                     <p className="text-xs font-semibold mt-0.5" style={{ color: "var(--text-muted)" }}>
                       {Math.max(1, Math.floor((Date.now() - new Date(client.startDate).getTime()) / 86400000))}
                     </p>
@@ -1572,7 +1572,7 @@ export default function ClientDetailPage() {
                     <>
                       <div className="w-px h-6" style={{ background: "rgba(201,168,76,0.12)" }} />
                       <div>
-                        <p className="text-[9px] tracking-[0.15em] uppercase" style={{ color: "rgba(201,168,76,0.4)" }}>Coach</p>
+                        <p className="text-[9px] tracking-[0.15em] uppercase" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(40% + var(--fade-boost))), transparent)" }}>Coach</p>
                         <p className="text-xs font-semibold mt-0.5" style={{ color: "var(--text-muted)" }}>{user.name}</p>
                       </div>
                     </>
@@ -1607,10 +1607,10 @@ export default function ClientDetailPage() {
             <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text)" }}>Riepilogo attività</h3>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: "Fasi", value: client.phases.length, color: "#a78bfa" },
+                { label: "Fasi", value: client.phases.length, color: "var(--c-violet-400)" },
                 { label: "Schede", value: client.workoutPlans.length, color: "var(--accent)" },
-                { label: "Diete", value: client.dietPlans.length, color: "#34d399" },
-                { label: "Log recenti", value: recentLogCount, color: "#38bdf8" },
+                { label: "Diete", value: client.dietPlans.length, color: "var(--c-emerald-400)" },
+                { label: "Log recenti", value: recentLogCount, color: "var(--c-sky-400)" },
               ].map(({ label, value, color }) => (
                 <div key={label} className="rounded-xl p-3 text-center" style={{ background: "var(--surface-sm)" }}>
                   <p className="text-2xl font-bold" style={{ color }}>{value}</p>
@@ -1633,7 +1633,7 @@ export default function ClientDetailPage() {
               </div>
               <div className="flex items-center gap-3 text-xs">
                 <span>
-                  <span className="font-bold" style={{ color: trainingCalendar.total > 0 ? "#22c55e" : "var(--text-dim)" }}>{trainingCalendar.total}</span>
+                  <span className="font-bold" style={{ color: trainingCalendar.total > 0 ? "var(--c-green-500)" : "var(--text-dim)" }}>{trainingCalendar.total}</span>
                   <span style={{ color: "var(--text-dim)" }}> sessioni</span>
                 </span>
                 {trainingCalendar.bestWeek > 0 && (
@@ -1658,12 +1658,12 @@ export default function ClientDetailPage() {
                       style={{
                         borderRadius: "2px",
                         background: d.future
-                          ? "rgba(255,255,255,0.025)"
+                          ? "rgba(var(--ink-rgb),0.025)"
                           : d.isToday
                           ? (d.trained ? "rgba(201,168,76,0.9)" : "rgba(201,168,76,0.3)")
                           : d.trained
                           ? "rgba(34,197,94,0.65)"
-                          : "rgba(255,255,255,0.05)",
+                          : "rgba(var(--ink-rgb),0.05)",
                         border: d.isToday ? "1px solid rgba(201,168,76,0.7)" : "none",
                         cursor: "default",
                       }}
@@ -1675,7 +1675,7 @@ export default function ClientDetailPage() {
             <div className="flex items-center gap-4 mt-3 flex-wrap">
               {[
                 { bg: "rgba(34,197,94,0.65)", label: "Allenato" },
-                { bg: "rgba(255,255,255,0.05)", label: "Riposo" },
+                { bg: "rgba(var(--ink-rgb),0.05)", label: "Riposo" },
                 { bg: "rgba(201,168,76,0.9)", label: "Oggi" },
               ].map(({ bg, label }) => (
                 <span key={label} className="flex items-center gap-1.5" style={{ fontSize: "10px", color: "var(--text-dim)" }}>
@@ -1697,7 +1697,7 @@ export default function ClientDetailPage() {
                     {formatDate(activePhase.startDate)} → {activePhase.endDate ? formatDate(activePhase.endDate) : "In corso"}
                   </p>
                 </div>
-                <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: `${phaseTypeColor[activePhase.type]}18`, color: phaseTypeColor[activePhase.type] }}>
+                <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: `color-mix(in srgb, ${phaseTypeColor[activePhase.type]} 9.4%, transparent)`, color: phaseTypeColor[activePhase.type] }}>
                   {phaseTypeLabel[activePhase.type]}
                 </span>
                 {activePhase.targetCalories && (
@@ -1713,12 +1713,12 @@ export default function ClientDetailPage() {
             <div className="card-luxury rounded-2xl p-5 sm:col-span-2">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Timer size={14} style={{ color: planStatus.status === "in_scadenza" ? "#fb923c" : planStatus.status === "completato" ? "#ef4444" : "var(--accent)" }} />
+                  <Timer size={14} style={{ color: planStatus.status === "in_scadenza" ? "var(--c-orange-400)" : planStatus.status === "completato" ? "var(--c-red-500)" : "var(--accent)" }} />
                   <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Stato Piano Attivo</h3>
                 </div>
                 <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{
                   background: planStatus.status === "completato" ? "rgba(239,68,68,0.1)" : planStatus.status === "in_scadenza" ? "rgba(249,115,22,0.1)" : planStatus.status === "nuovo" ? "rgba(56,189,248,0.1)" : "rgba(34,197,94,0.1)",
-                  color: planStatus.status === "completato" ? "#ef4444" : planStatus.status === "in_scadenza" ? "#fb923c" : planStatus.status === "nuovo" ? "#38bdf8" : "#22c55e",
+                  color: planStatus.status === "completato" ? "var(--c-red-500)" : planStatus.status === "in_scadenza" ? "var(--c-orange-400)" : planStatus.status === "nuovo" ? "var(--c-sky-400)" : "var(--c-green-500)",
                   border: `1px solid ${planStatus.status === "completato" ? "rgba(239,68,68,0.25)" : planStatus.status === "in_scadenza" ? "rgba(249,115,22,0.25)" : planStatus.status === "nuovo" ? "rgba(56,189,248,0.25)" : "rgba(34,197,94,0.25)"}`,
                 }}>
                   {planStatus.status === "completato" ? "Completato" : planStatus.status === "in_scadenza" ? `${planStatus.remaining} sett. rimaste` : planStatus.status === "nuovo" ? "Non iniziato" : `Settimana ${planStatus.currentWeek}`}
@@ -1728,7 +1728,7 @@ export default function ClientDetailPage() {
               <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: "var(--surface-sm)" }}>
                 <div className="h-full rounded-full transition-all" style={{
                   width: `${Math.max(2, planStatus.pct)}%`,
-                  background: planStatus.status === "completato" ? "#ef4444" : planStatus.status === "in_scadenza" ? "linear-gradient(90deg, var(--accent), #fb923c)" : "var(--accent)",
+                  background: planStatus.status === "completato" ? "var(--c-red-500)" : planStatus.status === "in_scadenza" ? "linear-gradient(90deg, var(--accent), #fb923c)" : "var(--accent)",
                 }} />
               </div>
               <div className="flex items-center justify-between mt-2">
@@ -1740,8 +1740,8 @@ export default function ClientDetailPage() {
                   background: planStatus.status === "completato" ? "rgba(239,68,68,0.06)" : "rgba(249,115,22,0.06)",
                   border: `1px solid ${planStatus.status === "completato" ? "rgba(239,68,68,0.15)" : "rgba(249,115,22,0.15)"}`,
                 }}>
-                  <AlertTriangle size={12} style={{ color: planStatus.status === "completato" ? "#ef4444" : "#fb923c", flexShrink: 0 }} />
-                  <span className="text-xs" style={{ color: planStatus.status === "completato" ? "#f87171" : "#fdba74" }}>
+                  <AlertTriangle size={12} style={{ color: planStatus.status === "completato" ? "var(--c-red-500)" : "var(--c-orange-400)", flexShrink: 0 }} />
+                  <span className="text-xs" style={{ color: planStatus.status === "completato" ? "var(--c-red-400)" : "var(--c-orange-300)" }}>
                     {planStatus.status === "completato" ? "Piano completato — prepara la prossima scheda" : "Piano in scadenza — inizia a pianificare la prossima scheda"}
                   </span>
                   <button onClick={() => setTab("schede")} className="ml-auto text-xs px-2.5 py-1 rounded-lg font-bold flex-shrink-0 transition-all hover:opacity-80" style={{
@@ -1757,10 +1757,10 @@ export default function ClientDetailPage() {
           {loadSuggestions.length > 0 && (
             <div className="card-luxury rounded-2xl p-5 sm:col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp size={14} style={{ color: "#22c55e" }} />
+                <TrendingUp size={14} style={{ color: "var(--c-green-500)" }} />
                 <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Consigli Aumento Carico</h3>
                 <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-bold"
-                  style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.2)" }}>
+                  style={{ background: "rgba(34,197,94,0.1)", color: "var(--c-green-500)", border: "1px solid rgba(34,197,94,0.2)" }}>
                   {loadSuggestions.length} {loadSuggestions.length === 1 ? "esercizio" : "esercizi"}
                 </span>
               </div>
@@ -1770,7 +1770,7 @@ export default function ClientDetailPage() {
                     style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.12)" }}>
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{ background: "rgba(34,197,94,0.12)" }}>
-                      <Dumbbell size={12} style={{ color: "#22c55e" }} />
+                      <Dumbbell size={12} style={{ color: "var(--c-green-500)" }} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{s.exName}</p>
@@ -1780,8 +1780,8 @@ export default function ClientDetailPage() {
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       <span className="text-sm font-bold" style={{ color: "var(--text-muted)" }}>{s.current}kg</span>
-                      <TrendingUp size={11} style={{ color: "#22c55e" }} />
-                      <span className="text-sm font-bold" style={{ color: "#22c55e" }}>{s.suggested}kg</span>
+                      <TrendingUp size={11} style={{ color: "var(--c-green-500)" }} />
+                      <span className="text-sm font-bold" style={{ color: "var(--c-green-500)" }}>{s.suggested}kg</span>
                     </div>
                   </div>
                 ))}
@@ -1804,7 +1804,7 @@ export default function ClientDetailPage() {
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1"
                       style={{
                         background: volumeAnalysis.trend > 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
-                        color: volumeAnalysis.trend > 0 ? "#22c55e" : "#ef4444",
+                        color: volumeAnalysis.trend > 0 ? "var(--c-green-500)" : "var(--c-red-500)",
                         border: `1px solid ${volumeAnalysis.trend > 0 ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}`,
                       }}>
                       {volumeAnalysis.trend > 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
@@ -1819,9 +1819,9 @@ export default function ClientDetailPage() {
                   const h = Math.max(4, Math.round((w.sessions / volumeAnalysis.maxSessions) * 44));
                   const isLast = i === 5;
                   const metTarget = w.sessions >= volumeAnalysis.target;
-                  const color = w.sessions === 0 ? "rgba(255,255,255,0.06)"
-                    : metTarget ? "#22c55e"
-                    : isLast ? "var(--accent)" : "rgba(255,107,43,0.4)";
+                  const color = w.sessions === 0 ? "rgba(var(--ink-rgb),0.06)"
+                    : metTarget ? "var(--c-green-500)"
+                    : isLast ? "var(--accent)" : "color-mix(in srgb, var(--accent) 40%, transparent)";
                   return (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1">
                       <div className="w-full rounded-md transition-all"
@@ -1833,7 +1833,7 @@ export default function ClientDetailPage() {
                   );
                 })}
               </div>
-              <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: "1px solid rgba(var(--ink-rgb),0.06)" }}>
                 <p className="text-xs" style={{ color: "var(--text-muted)" }}>{volumeAnalysis.insight}</p>
                 {volumeAnalysis.totalWeightMoved > 0 && (
                   <span className="text-xs font-medium" style={{ color: "var(--text-dim)" }}>
@@ -1855,7 +1855,7 @@ export default function ClientDetailPage() {
                   <span className="text-xs px-2 py-0.5 rounded-full font-bold"
                     style={{
                       background: trainingDNA.consistency >= 70 ? "rgba(34,197,94,0.1)" : trainingDNA.consistency >= 40 ? "rgba(251,191,36,0.1)" : "rgba(239,68,68,0.1)",
-                      color: trainingDNA.consistency >= 70 ? "#22c55e" : trainingDNA.consistency >= 40 ? "#fbbf24" : "#ef4444",
+                      color: trainingDNA.consistency >= 70 ? "var(--c-green-500)" : trainingDNA.consistency >= 40 ? "var(--c-amber-400)" : "var(--c-red-500)",
                       border: `1px solid ${trainingDNA.consistency >= 70 ? "rgba(34,197,94,0.25)" : trainingDNA.consistency >= 40 ? "rgba(251,191,36,0.25)" : "rgba(239,68,68,0.25)"}`,
                     }}>
                     {trainingDNA.consistency}% costanza
@@ -1872,9 +1872,9 @@ export default function ClientDetailPage() {
                       <div className="w-full rounded-lg transition-all"
                         style={{
                           height: h,
-                          background: count === 0 ? "rgba(255,255,255,0.04)"
+                          background: count === 0 ? "rgba(var(--ink-rgb),0.04)"
                             : isPreferred ? `rgba(201,168,76,${0.3 + intensity * 0.7})`
-                            : `rgba(255,255,255,${0.06 + intensity * 0.14})`,
+                            : `rgba(var(--ink-rgb),${0.06 + intensity * 0.14})`,
                           border: isPreferred && count > 0 ? "1px solid rgba(201,168,76,0.4)" : "1px solid transparent",
                         }} />
                       <span className="text-[10px] font-semibold" style={{
@@ -1886,7 +1886,7 @@ export default function ClientDetailPage() {
                   );
                 })}
               </div>
-              <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <div className="flex items-center justify-between pt-3" style={{ borderTop: "1px solid rgba(var(--ink-rgb),0.06)" }}>
                 <div className="flex items-center gap-3 flex-wrap">
                   {trainingDNA.rhythm && (
                     <span className="text-xs" style={{ color: "var(--text-muted)" }}>
@@ -1895,7 +1895,7 @@ export default function ClientDetailPage() {
                   )}
                   {trainingDNA.actualAvg < trainingDNA.target - 0.5 && (
                     <span className="text-xs px-2 py-0.5 rounded-full"
-                      style={{ background: "rgba(251,191,36,0.08)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.2)" }}>
+                      style={{ background: "rgba(251,191,36,0.08)", color: "var(--c-amber-400)", border: "1px solid rgba(251,191,36,0.2)" }}>
                       Media {trainingDNA.actualAvg}/sett vs {trainingDNA.target} pianificate
                     </span>
                   )}
@@ -1931,9 +1931,9 @@ export default function ClientDetailPage() {
           {client.phone && quickMessages.length > 0 && (
             <div className="card-luxury rounded-2xl p-5 sm:col-span-2">
               <div className="flex items-center gap-2 mb-3">
-                <MessageCircle size={14} style={{ color: "#22c55e" }} />
+                <MessageCircle size={14} style={{ color: "var(--c-green-500)" }} />
                 <h3 className="text-sm font-semibold" style={{ color: "var(--text)" }}>Messaggi Rapidi WhatsApp</h3>
-                <span className="text-xs px-2 py-0.5 rounded-full ml-1" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>
+                <span className="text-xs px-2 py-0.5 rounded-full ml-1" style={{ background: "rgba(34,197,94,0.1)", color: "var(--c-green-500)" }}>
                   {quickMessages.length}
                 </span>
               </div>
@@ -1943,7 +1943,7 @@ export default function ClientDetailPage() {
                     href={`https://wa.me/${client.phone!.replace(/\D/g, "")}?text=${encodeURIComponent(msg.text)}`}
                     target="_blank" rel="noopener noreferrer"
                     className="flex flex-col gap-1 p-3 rounded-xl transition-all hover:opacity-80"
-                    style={{ background: msg.bg, border: `1px solid ${msg.color}25` }}>
+                    style={{ background: msg.bg, border: `1px solid color-mix(in srgb, ${msg.color} 14.5%, transparent)` }}>
                     <span className="text-xs font-bold leading-tight" style={{ color: msg.color }}>{msg.label}</span>
                     <span className="text-xs mt-0.5" style={{ color: "var(--text-dim)", fontSize: "0.68rem" }}>
                       {msg.text.length > 60 ? msg.text.slice(0, 60) + "…" : msg.text}
@@ -1983,12 +1983,12 @@ export default function ClientDetailPage() {
                   <div className="flex-1 rounded-xl p-3" style={{ background: "var(--surface-sm)" }}>
                     <p className="text-xs mb-1" style={{ color: "var(--text-dim)" }}>Push / Pull</p>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold" style={{ color: muscleBalance.pushPullRatio > 1.5 ? "#f59e0b" : muscleBalance.pushPullRatio < 0.67 ? "#f59e0b" : "#22c55e" }}>
+                      <span className="text-sm font-bold" style={{ color: muscleBalance.pushPullRatio > 1.5 ? "var(--c-amber-500)" : muscleBalance.pushPullRatio < 0.67 ? "var(--c-amber-500)" : "var(--c-green-500)" }}>
                         {muscleBalance.pushSets} / {muscleBalance.pullSets}
                       </span>
                       <span className="text-xs px-1.5 py-0.5 rounded-full" style={{
                         background: muscleBalance.pushPullRatio > 1.5 || muscleBalance.pushPullRatio < 0.67 ? "rgba(245,158,11,0.12)" : "rgba(34,197,94,0.12)",
-                        color: muscleBalance.pushPullRatio > 1.5 || muscleBalance.pushPullRatio < 0.67 ? "#f59e0b" : "#22c55e",
+                        color: muscleBalance.pushPullRatio > 1.5 || muscleBalance.pushPullRatio < 0.67 ? "var(--c-amber-500)" : "var(--c-green-500)",
                       }}>
                         {muscleBalance.pushPullRatio > 1.5 ? "Push dominante" : muscleBalance.pushPullRatio < 0.67 ? "Pull dominante" : "Bilanciato"}
                       </span>
@@ -1997,12 +1997,12 @@ export default function ClientDetailPage() {
                   <div className="flex-1 rounded-xl p-3" style={{ background: "var(--surface-sm)" }}>
                     <p className="text-xs mb-1" style={{ color: "var(--text-dim)" }}>Upper / Lower</p>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold" style={{ color: muscleBalance.upperLowerRatio > 2 ? "#f59e0b" : muscleBalance.upperLowerRatio < 0.5 ? "#f59e0b" : "#22c55e" }}>
+                      <span className="text-sm font-bold" style={{ color: muscleBalance.upperLowerRatio > 2 ? "var(--c-amber-500)" : muscleBalance.upperLowerRatio < 0.5 ? "var(--c-amber-500)" : "var(--c-green-500)" }}>
                         {muscleBalance.upperSets} / {muscleBalance.lowerSets}
                       </span>
                       <span className="text-xs px-1.5 py-0.5 rounded-full" style={{
                         background: muscleBalance.upperLowerRatio > 2 || muscleBalance.upperLowerRatio < 0.5 ? "rgba(245,158,11,0.12)" : "rgba(34,197,94,0.12)",
-                        color: muscleBalance.upperLowerRatio > 2 || muscleBalance.upperLowerRatio < 0.5 ? "#f59e0b" : "#22c55e",
+                        color: muscleBalance.upperLowerRatio > 2 || muscleBalance.upperLowerRatio < 0.5 ? "var(--c-amber-500)" : "var(--c-green-500)",
                       }}>
                         {muscleBalance.upperLowerRatio > 2 ? "Upper dominante" : muscleBalance.upperLowerRatio < 0.5 ? "Lower dominante" : "Bilanciato"}
                       </span>
@@ -2026,7 +2026,7 @@ export default function ClientDetailPage() {
           </div>
           {client.phases.length === 0 ? (
             <div className="text-center py-16 card-luxury rounded-2xl">
-              <Activity size={40} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
+              <Activity size={40} className="mx-auto mb-3" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(30% + var(--fade-boost))), transparent)" }} />
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>Nessuna fase pianificata</p>
               <button onClick={() => setShowPhaseModal(true)} className="mt-3 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>Aggiungi la prima fase</button>
             </div>
@@ -2045,7 +2045,7 @@ export default function ClientDetailPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: `${phaseTypeColor[phase.type]}18`, color: phaseTypeColor[phase.type] }}>
+                      <span className="text-xs px-2.5 py-1 rounded-full" style={{ background: `color-mix(in srgb, ${phaseTypeColor[phase.type]} 9.4%, transparent)`, color: phaseTypeColor[phase.type] }}>
                         {phaseTypeLabel[phase.type]}
                       </span>
                       <button
@@ -2055,11 +2055,11 @@ export default function ClientDetailPage() {
                       </button>
                       <button onClick={() => { updatePhase(client!.id, phase.id, { completed: !phase.completed }); dbPhases.update(phase.id, { completed: !phase.completed }).catch(() => {}); }}
                         className="p-1.5 rounded-lg hover:bg-white/5 transition-all">
-                        {phase.completed ? <CheckCircle2 size={15} style={{ color: "#22c55e" }} /> : <Circle size={15} style={{ color: "var(--text-dim)" }} />}
+                        {phase.completed ? <CheckCircle2 size={15} style={{ color: "var(--c-green-500)" }} /> : <Circle size={15} style={{ color: "var(--text-dim)" }} />}
                       </button>
                       <button onClick={async () => { removePhase(client!.id, phase.id); try { await dbPhases.remove(phase.id); } catch {} }}
                         className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all">
-                        <Trash2 size={14} style={{ color: "rgba(239,68,68,0.6)" }} />
+                        <Trash2 size={14} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(60% + var(--fade-boost))), transparent)" }} />
                       </button>
                     </div>
                   </div>
@@ -2091,7 +2091,7 @@ export default function ClientDetailPage() {
                             <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(waText)}`}
                               target="_blank" rel="noopener noreferrer"
                               className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-full text-xs font-semibold transition-all hover:opacity-80"
-                              style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.25)" }}>
+                              style={{ background: "rgba(34,197,94,0.1)", color: "var(--c-green-500)", border: "1px solid rgba(34,197,94,0.25)" }}>
                               <MessageCircle size={12} /> Invia il traguardo al cliente
                             </a>
                           )}
@@ -2118,7 +2118,7 @@ export default function ClientDetailPage() {
 
           {client.workoutPlans.length === 0 ? (
             <div className="text-center py-16 card-luxury rounded-2xl">
-              <Dumbbell size={40} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
+              <Dumbbell size={40} className="mx-auto mb-3" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(30% + var(--fade-boost))), transparent)" }} />
               <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessuna scheda di allenamento</p>
               <p className="text-xs mb-4" style={{ color: "var(--text-dim)" }}>Crea la prima scheda e condividi il link col cliente</p>
               <button onClick={() => setShowWorkoutModal(true)} className="accent-btn px-5 py-2.5 rounded-xl text-sm inline-flex items-center gap-2">
@@ -2138,17 +2138,17 @@ export default function ClientDetailPage() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-semibold" style={{ color: "var(--text)" }}>{wp.name}</p>
                           {wp.active && (
-                            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Attiva</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)" }}>Attiva</span>
                           )}
                           {linkedPhase && (
-                            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `${phaseTypeColor[linkedPhase.type]}18`, color: phaseTypeColor[linkedPhase.type] }}>
+                            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `color-mix(in srgb, ${phaseTypeColor[linkedPhase.type]} 9.4%, transparent)`, color: phaseTypeColor[linkedPhase.type] }}>
                               {linkedPhase.name}
                             </span>
                           )}
                         </div>
                         {wp.description && (
                           <div className="flex items-start gap-1.5 mt-1.5">
-                            <span className="text-xs px-1.5 py-0.5 rounded-md flex-shrink-0 font-medium" style={{ background: "rgba(201,168,76,0.1)", color: "rgba(201,168,76,0.65)", border: "1px solid rgba(201,168,76,0.18)" }}>messaggio</span>
+                            <span className="text-xs px-1.5 py-0.5 rounded-md flex-shrink-0 font-medium" style={{ background: "rgba(201,168,76,0.1)", color: "color-mix(in srgb, var(--accent) min(100%, calc(65% + var(--fade-boost))), transparent)", border: "1px solid rgba(201,168,76,0.18)" }}>messaggio</span>
                             <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{wp.description}</p>
                           </div>
                         )}
@@ -2165,7 +2165,7 @@ export default function ClientDetailPage() {
                           onClick={() => duplicatePlanProgressive(wp)}
                           className="p-1.5 rounded-lg hover:bg-green-500/10 transition-all"
                           title="Crea piano progressivo (ciclo successivo con carichi aumentati)">
-                          <TrendingUp size={13} style={{ color: "rgba(34,197,94,0.75)" }} />
+                          <TrendingUp size={13} style={{ color: "color-mix(in srgb, var(--c-green-500) min(100%, calc(75% + var(--fade-boost))), transparent)" }} />
                         </button>
                         <button
                           onClick={() => setEditingPlan({ id: wp.id, name: wp.name, description: wp.description ?? "", daysPerWeek: String(wp.daysPerWeek), totalWeeks: wp.totalWeeks ? String(wp.totalWeeks) : "", restSeconds: String(wp.restSeconds ?? 90), phaseId: wp.phaseId ?? "" })}
@@ -2181,7 +2181,7 @@ export default function ClientDetailPage() {
                           }}
                           className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all"
                           title="Elimina scheda">
-                          <Trash2 size={13} style={{ color: "rgba(239,68,68,0.55)" }} />
+                          <Trash2 size={13} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(55% + var(--fade-boost))), transparent)" }} />
                         </button>
                       </div>
                     </div>
@@ -2209,7 +2209,7 @@ export default function ClientDetailPage() {
                           onClick={() => copyPortalLink(wp.shareToken, wp.id)}
                           className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all"
                           style={copiedPlanId === wp.id
-                            ? { background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", color: "#22c55e" }
+                            ? { background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)", color: "var(--c-green-500)" }
                             : { background: "var(--surface-sm)", border: "1px solid var(--border)", color: "var(--text-muted)" }}>
                           {copiedPlanId === wp.id ? <><Check size={11} /> Link copiato!</> : <><Copy size={11} /> Portale cliente</>}
                         </button>
@@ -2240,7 +2240,7 @@ export default function ClientDetailPage() {
           </div>
           {client.dietPlans.length === 0 ? (
             <div className="text-center py-16 card-luxury rounded-2xl">
-              <UtensilsCrossed size={40} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
+              <UtensilsCrossed size={40} className="mx-auto mb-3" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(30% + var(--fade-boost))), transparent)" }} />
               <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessun piano alimentare</p>
               <p className="text-xs mb-4" style={{ color: "var(--text-dim)" }}>Crea un piano con macro, range di grammi e pasti dettagliati</p>
               <button onClick={() => { setEditingDietPlan(null); setDietEditorOpen(true); }}
@@ -2265,9 +2265,9 @@ export default function ClientDetailPage() {
                         <div className="flex-1 min-w-0 pr-3">
                           <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-semibold" style={{ color: "var(--text)" }}>{dp.name}</p>
-                            {dp.active && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>Attivo</span>}
+                            {dp.active && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)" }}>Attivo</span>}
                             {linkedPhase && (
-                              <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `${phaseTypeColor[linkedPhase.type]}18`, color: phaseTypeColor[linkedPhase.type] }}>
+                              <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `color-mix(in srgb, ${phaseTypeColor[linkedPhase.type]} 9.4%, transparent)`, color: phaseTypeColor[linkedPhase.type] }}>
                                 {linkedPhase.name}
                               </span>
                             )}
@@ -2283,7 +2283,7 @@ export default function ClientDetailPage() {
                             removeDietPlan(client!.id, dp.id);
                             try { await dbDietPlans.remove(dp.id); } catch {}
                           }} className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all">
-                            <Trash2 size={13} style={{ color: "rgba(239,68,68,0.55)" }} />
+                            <Trash2 size={13} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(55% + var(--fade-boost))), transparent)" }} />
                           </button>
                         </div>
                       </div>
@@ -2291,9 +2291,9 @@ export default function ClientDetailPage() {
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                         {[
                           { label: "Calorie", value: formatCalories(dp.calories, dp.caloriesMax), color: "var(--accent)", icon: <Flame size={11} /> },
-                          { label: "Proteine", value: dp.proteinMax ? `${dp.protein}–${dp.proteinMax}g` : `${dp.protein}g`, color: "#a78bfa", icon: <Beef size={11} /> },
-                          { label: "Carboidrati", value: dp.carbsMax ? `${dp.carbs}–${dp.carbsMax}g` : `${dp.carbs}g`, color: "#38bdf8", icon: <Wheat size={11} /> },
-                          { label: "Grassi", value: dp.fatMax ? `${dp.fat}–${dp.fatMax}g` : `${dp.fat}g`, color: "#fbbf24", icon: <Droplets size={11} /> },
+                          { label: "Proteine", value: dp.proteinMax ? `${dp.protein}–${dp.proteinMax}g` : `${dp.protein}g`, color: "var(--c-violet-400)", icon: <Beef size={11} /> },
+                          { label: "Carboidrati", value: dp.carbsMax ? `${dp.carbs}–${dp.carbsMax}g` : `${dp.carbs}g`, color: "var(--c-sky-400)", icon: <Wheat size={11} /> },
+                          { label: "Grassi", value: dp.fatMax ? `${dp.fat}–${dp.fatMax}g` : `${dp.fat}g`, color: "var(--c-amber-400)", icon: <Droplets size={11} /> },
                         ].map(({ label, value, color, icon }) => (
                           <div key={label} className="rounded-xl p-3" style={{ background: "var(--surface-sm)" }}>
                             <div className="flex items-center gap-1.5 mb-1" style={{ color }}>
@@ -2387,7 +2387,7 @@ export default function ClientDetailPage() {
           </div>
           {client.notes.length === 0 ? (
             <div className="text-center py-10" style={{ color: "var(--text-dim)" }}>
-              <StickyNote size={32} className="mx-auto mb-2" style={{ color: "rgba(201,168,76,0.25)" }} />
+              <StickyNote size={32} className="mx-auto mb-2" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(25% + var(--fade-boost))), transparent)" }} />
               <p className="text-sm">Nessuna nota ancora</p>
             </div>
           ) : (
@@ -2406,7 +2406,7 @@ export default function ClientDetailPage() {
                       }
                     }}
                       className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all flex-shrink-0">
-                      <Trash2 size={13} style={{ color: "rgba(239,68,68,0.5)" }} />
+                      <Trash2 size={13} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(50% + var(--fade-boost))), transparent)" }} />
                     </button>
                   </div>
                   <p className="text-xs mt-2" style={{ color: "var(--text-dim)" }}>{formatDate(note.createdAt)}</p>
@@ -2451,7 +2451,7 @@ export default function ClientDetailPage() {
                       {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
-                  {pwError && <p className="text-xs" style={{ color: "#f87171" }}>{pwError}</p>}
+                  {pwError && <p className="text-xs" style={{ color: "var(--c-red-400)" }}>{pwError}</p>}
                   <div className="flex gap-2">
                     {settingNewPin && (
                       <button onClick={() => { setSettingNewPin(false); setPwError(""); setNewPinVal(""); }}
@@ -2479,7 +2479,7 @@ export default function ClientDetailPage() {
                       {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
-                  {pwError && <p className="text-xs" style={{ color: "#f87171" }}>{pwError}</p>}
+                  {pwError && <p className="text-xs" style={{ color: "var(--c-red-400)" }}>{pwError}</p>}
                   <button onClick={unlockPhotos} disabled={pinVerifying}
                     className="w-full accent-btn py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
                     {pinVerifying ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
@@ -2499,12 +2499,12 @@ export default function ClientDetailPage() {
             /* Photo gallery + upload */
             <div>
               <div className="flex items-center justify-between mb-4">
-                <p className="text-xs flex items-center gap-1.5" style={{ color: "#22c55e" }}>
+                <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--c-green-500)" }}>
                   <ShieldCheck size={12} /> Sessione sicura attiva · link usa-e-getta · scade in 30 min
                 </p>
                 <button onClick={() => { setPhotoUnlocked(false); setPhotos([]); setPhotosLoaded(false); setPhotoUrls({}); sessionStorage.removeItem("photo_session"); }}
                   className="text-xs px-2.5 py-1 rounded-lg transition-all"
-                  style={{ background: "rgba(239,68,68,0.07)", color: "rgba(239,68,68,0.7)" }}>
+                  style={{ background: "rgba(239,68,68,0.07)", color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(70% + var(--fade-boost))), transparent)" }}>
                   Blocca
                 </button>
               </div>
@@ -2542,7 +2542,7 @@ export default function ClientDetailPage() {
               {/* Gallery — use view-token secured URLs */}
               {photos.length === 0 ? (
                 <div className="text-center py-16 card-luxury rounded-2xl">
-                  <Camera size={40} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
+                  <Camera size={40} className="mx-auto mb-3" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(30% + var(--fade-boost))), transparent)" }} />
                   <p className="text-sm" style={{ color: "var(--text-muted)" }}>Nessuna foto ancora</p>
                 </div>
               ) : (
@@ -2595,7 +2595,7 @@ export default function ClientDetailPage() {
                   {chartData.length > 1 && (() => {
                     const diff = chartData[chartData.length - 1].weight - chartData[0].weight;
                     return (
-                      <span className="text-xs ml-1 font-semibold" style={{ color: diff < 0 ? "#22c55e" : diff > 0 ? "#f87171" : "var(--text-dim)" }}>
+                      <span className="text-xs ml-1 font-semibold" style={{ color: diff < 0 ? "var(--c-green-500)" : diff > 0 ? "var(--c-red-400)" : "var(--text-dim)" }}>
                         {diff > 0 ? "+" : ""}{diff.toFixed(1)} kg
                       </span>
                     );
@@ -2605,17 +2605,17 @@ export default function ClientDetailPage() {
               <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height: "90px", display: "block" }}>
                 <defs>
                   <linearGradient id="wgc" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#C9A84C" stopOpacity="0.28" />
-                    <stop offset="100%" stopColor="#C9A84C" stopOpacity="0" />
+                    <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.28" />
+                    <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
                   </linearGradient>
                 </defs>
                 <path d={areaPath} fill="url(#wgc)" />
-                <polyline points={pts} fill="none" stroke="#C9A84C" strokeWidth="1.5"
+                <polyline points={pts} fill="none" stroke="var(--accent)" strokeWidth="1.5"
                   strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
                 {chartData.map((m, i) => {
                   const x = (i / (chartData.length - 1)) * W;
                   const y = H - ((m.weight - minW) / rangeW) * (H - 10) - 5;
-                  return <circle key={i} cx={x.toFixed(2)} cy={y.toFixed(2)} r="1.8" fill="#C9A84C" vectorEffect="non-scaling-stroke" />;
+                  return <circle key={i} cx={x.toFixed(2)} cy={y.toFixed(2)} r="1.8" fill="var(--accent)" vectorEffect="non-scaling-stroke" />;
                 })}
               </svg>
               <div className="flex justify-between text-xs mt-1" style={{ color: "var(--text-dim)" }}>
@@ -2677,7 +2677,7 @@ export default function ClientDetailPage() {
             {/* History */}
             {sortedM.length === 0 ? (
               <div className="text-center py-12 card-luxury rounded-2xl">
-                <TrendingUp size={32} className="mx-auto mb-2" style={{ color: "rgba(201,168,76,0.3)" }} />
+                <TrendingUp size={32} className="mx-auto mb-2" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(30% + var(--fade-boost))), transparent)" }} />
                 <p className="text-sm" style={{ color: "var(--text-dim)" }}>Nessuna misurazione ancora</p>
               </div>
             ) : (
@@ -2688,7 +2688,7 @@ export default function ClientDetailPage() {
                       <div className="flex items-baseline gap-3 mb-1.5 flex-wrap">
                         <span className="text-xs" style={{ color: "var(--text-dim)" }}>{formatDate(m.date)}</span>
                         <span className="font-bold text-base" style={{ color: "var(--text)" }}>{m.weight} kg</span>
-                        {m.bodyFat && <span className="text-sm" style={{ color: "#a78bfa" }}>{m.bodyFat}% grasso</span>}
+                        {m.bodyFat && <span className="text-sm" style={{ color: "var(--c-violet-400)" }}>{m.bodyFat}% grasso</span>}
                       </div>
                       {(m.chest || m.waist || m.hips || m.arms || m.legs) && (
                         <div className="flex flex-wrap gap-3">
@@ -2710,7 +2710,7 @@ export default function ClientDetailPage() {
                       }
                     }}
                       className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all flex-shrink-0">
-                      <Trash2 size={13} style={{ color: "rgba(239,68,68,0.5)" }} />
+                      <Trash2 size={13} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(50% + var(--fade-boost))), transparent)" }} />
                     </button>
                   </div>
                 ))}
@@ -2757,7 +2757,7 @@ export default function ClientDetailPage() {
             {/* ── SOLO LEVELING RANK HEADER ── */}
             {cfg && (
               <div className="rounded-2xl p-5 mb-5 relative overflow-hidden"
-                style={{ background: cfg.bg, border: `1px solid ${cfg.color}30`, boxShadow: `0 0 30px ${cfg.glow}` }}>
+                style={{ background: cfg.bg, border: `1px solid color-mix(in srgb, ${cfg.color} 18.8%, transparent)`, boxShadow: `0 0 30px ${cfg.glow}` }}>
                 {/* Ambient glow */}
                 <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full pointer-events-none"
                   style={{ background: `radial-gradient(circle, ${cfg.glow} 0%, transparent 70%)`, opacity: 0.5 }} />
@@ -2771,7 +2771,7 @@ export default function ClientDetailPage() {
                     <span className="text-xs font-bold uppercase tracking-widest mt-0.5" style={{ color: cfg.color, opacity: 0.7, fontSize: "0.5rem" }}>RANK</span>
                     {delta > 0 && (
                       <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-white font-black animate-bounce"
-                        style={{ background: "#22c55e", fontSize: "0.55rem", boxShadow: "0 0 8px rgba(34,197,94,0.6)" }}>↑{delta}</div>
+                        style={{ background: "var(--c-green-500)", fontSize: "0.55rem", boxShadow: "0 0 8px rgba(34,197,94,0.6)" }}>↑{delta}</div>
                     )}
                   </div>
                   {/* Info */}
@@ -2785,7 +2785,7 @@ export default function ClientDetailPage() {
                       </span>
                     </div>
                     {delta > 0 && prevTier && (
-                      <p className="text-xs font-bold mb-1" style={{ color: "#22c55e" }}>
+                      <p className="text-xs font-bold mb-1" style={{ color: "var(--c-green-500)" }}>
                         ↑ RANK UP: {prevTier} → {currentTier} · {cfg.rank_up_msg}
                       </p>
                     )}
@@ -2829,9 +2829,9 @@ export default function ClientDetailPage() {
             {/* Security notice (compact) */}
             <div className="rounded-xl px-3 py-2 mb-4 flex items-center gap-2"
               style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.14)" }}>
-              <ShieldCheck size={12} style={{ color: "#fbbf24", flexShrink: 0 }} />
+              <ShieldCheck size={12} style={{ color: "var(--c-amber-400)", flexShrink: 0 }} />
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                <span className="font-bold" style={{ color: "#fbbf24" }}>BETA · Enterprise security</span>
+                <span className="font-bold" style={{ color: "var(--c-amber-400)" }}>BETA · Enterprise security</span>
                 {" "}· Bucket privato · Link 5 min TTL · Rate limiting · Audit SHA-256 · AI server-side
               </p>
             </div>
@@ -2850,7 +2850,7 @@ export default function ClientDetailPage() {
                   style={{
                     background: compareMode ? "rgba(99,102,241,0.18)" : "var(--surface-sm)",
                     border: `1px solid ${compareMode ? "rgba(99,102,241,0.4)" : "var(--border)"}`,
-                    color: compareMode ? "#a78bfa" : "var(--text-muted)",
+                    color: compareMode ? "var(--c-violet-400)" : "var(--text-muted)",
                   }}>
                   <GitCompare size={14} />
                   {compareMode ? "Esci dal confronto" : "Confronta mesi"}
@@ -2879,12 +2879,12 @@ export default function ClientDetailPage() {
 
             {!scansLoaded ? (
               <div className="text-center py-10">
-                <Loader2 size={22} className="animate-spin mx-auto mb-2" style={{ color: "rgba(201,168,76,0.5)" }} />
+                <Loader2 size={22} className="animate-spin mx-auto mb-2" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(50% + var(--fade-boost))), transparent)" }} />
                 <p className="text-xs" style={{ color: "var(--text-dim)" }}>Caricamento scansioni…</p>
               </div>
             ) : scans.length === 0 ? (
               <div className="text-center py-14 card-luxury rounded-2xl">
-                <Brain size={36} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
+                <Brain size={36} className="mx-auto mb-3" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(30% + var(--fade-boost))), transparent)" }} />
                 <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessuna scansione ancora</p>
                 <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Carica la prima foto per avviare il tracciamento mensile della composizione corporea</p>
               </div>
@@ -2900,8 +2900,8 @@ export default function ClientDetailPage() {
                     const isActive = !compareMode && activeMonth === m;
                     let bg = "var(--surface-sm)", border = "var(--border)", color = "var(--text-muted)";
                     if (isActive) { bg = "rgba(201,168,76,0.12)"; border = "rgba(201,168,76,0.32)"; color = "var(--accent-light)"; }
-                    if (isSelA) { bg = "rgba(99,102,241,0.18)"; border = "rgba(99,102,241,0.4)"; color = "#a78bfa"; }
-                    if (isSelB) { bg = "rgba(20,184,166,0.18)"; border = "rgba(20,184,166,0.4)"; color = "#14b8a6"; }
+                    if (isSelA) { bg = "rgba(99,102,241,0.18)"; border = "rgba(99,102,241,0.4)"; color = "var(--c-violet-400)"; }
+                    if (isSelB) { bg = "rgba(20,184,166,0.18)"; border = "rgba(20,184,166,0.4)"; color = "var(--c-teal-500)"; }
                     return (
                       <button key={m}
                         onClick={() => {
@@ -2930,14 +2930,14 @@ export default function ClientDetailPage() {
                 {compareMode && (
                   <div>
                     <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-                      Seleziona due mesi dalla timeline per confrontarli. <span style={{ color: "#a78bfa" }}>A</span> = Prima · <span style={{ color: "#14b8a6" }}>B</span> = Dopo
+                      Seleziona due mesi dalla timeline per confrontarli. <span style={{ color: "var(--c-violet-400)" }}>A</span> = Prima · <span style={{ color: "var(--c-teal-500)" }}>B</span> = Dopo
                     </p>
 
                     {/* Side-by-side preview */}
                     {(scanA || scanB) && (
                       <div className="grid grid-cols-2 gap-4 mb-4">
-                        {[{ scan: scanA, label: "A — Prima", color: "#a78bfa", accentAlpha: "rgba(99,102,241,0.2)" },
-                          { scan: scanB, label: "B — Dopo",  color: "#14b8a6", accentAlpha: "rgba(20,184,166,0.2)" }
+                        {[{ scan: scanA, label: "A — Prima", color: "var(--c-violet-400)", accentAlpha: "rgba(99,102,241,0.2)" },
+                          { scan: scanB, label: "B — Dopo",  color: "var(--c-teal-500)", accentAlpha: "rgba(20,184,166,0.2)" }
                         ].map(({ scan: s, label, color, accentAlpha }) => (
                           <div key={label} className="rounded-2xl overflow-hidden"
                             style={{ border: `1px solid ${accentAlpha}`, background: "var(--surface-xs)" }}>
@@ -2951,7 +2951,7 @@ export default function ClientDetailPage() {
                                     <img src={scanUrls[s.id]} alt={s.taken_at} className="w-full h-full object-cover" />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--surface-sm)" }}>
-                                      <Loader2 size={18} className="animate-spin" style={{ color: "rgba(201,168,76,0.4)" }} />
+                                      <Loader2 size={18} className="animate-spin" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(40% + var(--fade-boost))), transparent)" }} />
                                     </div>
                                   )}
                                   <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5"
@@ -2959,16 +2959,16 @@ export default function ClientDetailPage() {
                                     <p className="text-xs font-semibold text-white">
                                       {new Date(s.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })}
                                     </p>
-                                    {s.notes && <p className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>{s.notes}</p>}
+                                    {s.notes && <p className="text-xs" style={{ color: "rgba(var(--ink-rgb),0.6)" }}>{s.notes}</p>}
                                   </div>
                                 </div>
                                 {s.ai_analysis && (
                                   <div className="px-3 py-2 space-y-1">
                                     {s.ai_analysis.body_fat_est != null && (
-                                      <p className="text-xs" style={{ color: "#fbbf24" }}>Grasso stimato: <strong>{s.ai_analysis.body_fat_est}%</strong></p>
+                                      <p className="text-xs" style={{ color: "var(--c-amber-400)" }}>Grasso stimato: <strong>{s.ai_analysis.body_fat_est}%</strong></p>
                                     )}
                                     {s.ai_analysis.muscle_mass_est && (
-                                      <p className="text-xs" style={{ color: "#a78bfa" }}>Muscolarità: <strong>{s.ai_analysis.muscle_mass_est}</strong></p>
+                                      <p className="text-xs" style={{ color: "var(--c-violet-400)" }}>Muscolarità: <strong>{s.ai_analysis.muscle_mass_est}</strong></p>
                                     )}
                                   </div>
                                 )}
@@ -2989,7 +2989,7 @@ export default function ClientDetailPage() {
                         onClick={() => handleCompare(scanA!.id, scanB!.id)}
                         disabled={comparing}
                         className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-60 mb-4"
-                        style={{ background: "rgba(99,102,241,0.16)", border: "1px solid rgba(99,102,241,0.35)", color: "#a78bfa" }}>
+                        style={{ background: "rgba(99,102,241,0.16)", border: "1px solid rgba(99,102,241,0.35)", color: "var(--c-violet-400)" }}>
                         {comparing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
                         {comparing ? "Analisi AI in corso…" : "Analizza miglioramenti con AI"}
                       </button>
@@ -2999,17 +2999,17 @@ export default function ClientDetailPage() {
                     {comparingResult?.analysis && (() => {
                       const ca = comparingResult.analysis as ComparisonAnalysis;
                       const trendIcon = ca.overall_trend === "positive"
-                        ? <TrendingUp size={14} style={{ color: "#22c55e" }} />
+                        ? <TrendingUp size={14} style={{ color: "var(--c-green-500)" }} />
                         : ca.overall_trend === "negative"
-                          ? <TrendingDown size={14} style={{ color: "#ef4444" }} />
-                          : <Minus size={14} style={{ color: "#fbbf24" }} />;
-                      const trendColor = ca.overall_trend === "positive" ? "#22c55e" : ca.overall_trend === "negative" ? "#ef4444" : "#fbbf24";
+                          ? <TrendingDown size={14} style={{ color: "var(--c-red-500)" }} />
+                          : <Minus size={14} style={{ color: "var(--c-amber-400)" }} />;
+                      const trendColor = ca.overall_trend === "positive" ? "var(--c-green-500)" : ca.overall_trend === "negative" ? "var(--c-red-500)" : "var(--c-amber-400)";
                       return (
                         <div className="card-luxury rounded-2xl p-5">
                           {/* Header */}
                           <div className="flex items-center gap-2 mb-4">
-                            <GitCompare size={14} style={{ color: "#a78bfa" }} />
-                            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#a78bfa", letterSpacing: "0.1em" }}>
+                            <GitCompare size={14} style={{ color: "var(--c-violet-400)" }} />
+                            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--c-violet-400)", letterSpacing: "0.1em" }}>
                               Analisi Progressione AI — Beta
                             </p>
                             <span className="ml-auto flex items-center gap-1 text-xs font-semibold" style={{ color: trendColor }}>
@@ -3021,18 +3021,18 @@ export default function ClientDetailPage() {
                           {/* Delta metrics */}
                           <div className="grid grid-cols-3 gap-2 mb-4">
                             <div className="rounded-xl p-2.5 text-center" style={{ background: "var(--surface-xs)", border: "1px solid rgba(251,191,36,0.2)" }}>
-                              <p className="text-sm font-black" style={{ color: ca.body_fat_change != null && ca.body_fat_change < 0 ? "#22c55e" : "#fbbf24" }}>
+                              <p className="text-sm font-black" style={{ color: ca.body_fat_change != null && ca.body_fat_change < 0 ? "var(--c-green-500)" : "var(--c-amber-400)" }}>
                                 {ca.body_fat_change != null ? `${ca.body_fat_change > 0 ? "+" : ""}${ca.body_fat_change}%` : "—"}
                               </p>
                               <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>Δ Grasso</p>
                             </div>
                             <div className="rounded-xl p-2.5 text-center" style={{ background: "var(--surface-xs)", border: "1px solid rgba(167,139,250,0.2)" }}>
-                              <p className="text-sm font-black capitalize" style={{ color: ca.muscle_change === "increased" ? "#22c55e" : ca.muscle_change === "decreased" ? "#ef4444" : "#fbbf24" }}>
+                              <p className="text-sm font-black capitalize" style={{ color: ca.muscle_change === "increased" ? "var(--c-green-500)" : ca.muscle_change === "decreased" ? "var(--c-red-500)" : "var(--c-amber-400)" }}>
                                 {ca.muscle_change === "increased" ? "↑" : ca.muscle_change === "decreased" ? "↓" : "="}
                               </p>
                               <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>Massa musc.</p>
                             </div>
-                            <div className="rounded-xl p-2.5 text-center" style={{ background: "var(--surface-xs)", border: `1px solid ${trendColor}22` }}>
+                            <div className="rounded-xl p-2.5 text-center" style={{ background: "var(--surface-xs)", border: `1px solid color-mix(in srgb, ${trendColor} 13.3%, transparent)` }}>
                               <p className="text-sm font-black" style={{ color: trendColor }}>
                                 {ca.confidence === "high" ? "Alta" : ca.confidence === "medium" ? "Media" : "Bassa"}
                               </p>
@@ -3049,22 +3049,22 @@ export default function ClientDetailPage() {
                           {/* Improvements + Areas to work */}
                           <div className="grid grid-cols-2 gap-3 mb-3">
                             <div>
-                              <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "#22c55e", letterSpacing: "0.1em" }}>
+                              <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "var(--c-green-500)", letterSpacing: "0.1em" }}>
                                 Miglioramenti
                               </p>
                               {ca.key_improvements?.map((item, i) => (
                                 <div key={i} className="flex items-start gap-1.5 mb-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
-                                  <span style={{ color: "#22c55e", flexShrink: 0 }}>✓</span> {item}
+                                  <span style={{ color: "var(--c-green-500)", flexShrink: 0 }}>✓</span> {item}
                                 </div>
                               ))}
                             </div>
                             <div>
-                              <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "#ef4444", letterSpacing: "0.1em" }}>
+                              <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "var(--c-red-500)", letterSpacing: "0.1em" }}>
                                 Da lavorare
                               </p>
                               {ca.areas_to_work?.map((item, i) => (
                                 <div key={i} className="flex items-start gap-1.5 mb-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
-                                  <span style={{ color: "#ef4444", flexShrink: 0 }}>→</span> {item}
+                                  <span style={{ color: "var(--c-red-500)", flexShrink: 0 }}>→</span> {item}
                                 </div>
                               ))}
                             </div>
@@ -3089,7 +3089,7 @@ export default function ClientDetailPage() {
                           <p className="text-xs mt-3" style={{ color: "var(--text-faint)" }}>
                             Physique AI Engine · Analisi effettuata il {new Date(ca.analyzed_at).toLocaleDateString("it-IT")}
                           </p>
-                          <p className="text-xs mt-1 px-2 py-1 rounded-lg" style={{ color: "rgba(34,197,94,0.7)", background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.14)" }}>
+                          <p className="text-xs mt-1 px-2 py-1 rounded-lg" style={{ color: "color-mix(in srgb, var(--c-green-500) min(100%, calc(70% + var(--fade-boost))), transparent)", background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.14)" }}>
                             Confronto elaborato con AI vision — nessun dato biometrico trasmesso esternamente.
                           </p>
                         </div>
@@ -3110,7 +3110,7 @@ export default function ClientDetailPage() {
                       const tierCfg  = scanTier ? TIERS[scanTier] : null;
                       return (
                         <div key={scan.id} className="card-luxury rounded-2xl overflow-hidden"
-                          style={tierCfg ? { borderColor: `${tierCfg.color}28`, boxShadow: `0 0 20px ${tierCfg.glow}` } : undefined}>
+                          style={tierCfg ? { borderColor: `color-mix(in srgb, ${tierCfg.color} 15.7%, transparent)`, boxShadow: `0 0 20px ${tierCfg.glow}` } : undefined}>
 
                           {/* ── Scan header ── */}
                           <div className="p-4">
@@ -3118,12 +3118,12 @@ export default function ClientDetailPage() {
                               {/* Thumbnail + tier badge */}
                               <div className="relative flex-shrink-0">
                                 <div className="w-24 h-32 rounded-xl overflow-hidden"
-                                  style={{ background: "var(--surface-sm)", border: `1px solid ${tierCfg ? tierCfg.color + "30" : "rgba(201,168,76,0.12)"}` }}>
+                                  style={{ background: "var(--surface-sm)", border: `1px solid ${tierCfg ? `color-mix(in srgb, ${tierCfg.color} 18.8%, transparent)` : "rgba(201,168,76,0.12)"}` }}>
                                   {imgUrl ? (
                                     <img src={imgUrl} alt={scan.taken_at} className="w-full h-full object-cover" />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center">
-                                      <Loader2 size={16} className="animate-spin" style={{ color: "rgba(201,168,76,0.4)" }} />
+                                      <Loader2 size={16} className="animate-spin" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(40% + var(--fade-boost))), transparent)" }} />
                                     </div>
                                   )}
                                 </div>
@@ -3147,19 +3147,19 @@ export default function ClientDetailPage() {
                                   <div className="flex gap-2 mb-2 flex-wrap">
                                     {analysis.body_fat_est != null && (
                                       <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-                                        style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24" }}>
+                                        style={{ background: "rgba(251,191,36,0.12)", color: "var(--c-amber-400)" }}>
                                         {analysis.body_fat_est}% BF
                                       </span>
                                     )}
                                     {analysis.muscle_mass_est && (
                                       <span className="text-xs px-2 py-0.5 rounded-full font-bold capitalize"
-                                        style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa" }}>
+                                        style={{ background: "rgba(167,139,250,0.12)", color: "var(--c-violet-400)" }}>
                                         {analysis.muscle_mass_est}
                                       </span>
                                     )}
                                     {analysis.body_type && (
                                       <span className="text-xs px-2 py-0.5 rounded-full font-bold capitalize"
-                                        style={{ background: "rgba(56,189,248,0.10)", color: "#38bdf8" }}>
+                                        style={{ background: "rgba(56,189,248,0.10)", color: "var(--c-sky-400)" }}>
                                         {analysis.body_type}
                                       </span>
                                     )}
@@ -3175,7 +3175,7 @@ export default function ClientDetailPage() {
                                   </button>
                                   <button onClick={() => handleScanDelete(scan)}
                                     className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs transition-all"
-                                    style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.15)", color: "rgba(239,68,68,0.7)" }}>
+                                    style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.15)", color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(70% + var(--fade-boost))), transparent)" }}>
                                     <Trash2 size={11} /> Elimina
                                   </button>
                                 </div>
@@ -3186,18 +3186,18 @@ export default function ClientDetailPage() {
                             {cv && cv.metrics && (
                               <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
                                 <div className="flex items-center gap-2 mb-2">
-                                  <ActivityIcon size={11} style={{ color: "#38bdf8" }} />
-                                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#38bdf8", letterSpacing: "0.08em" }}>
+                                  <ActivityIcon size={11} style={{ color: "var(--c-sky-400)" }} />
+                                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--c-sky-400)", letterSpacing: "0.08em" }}>
                                     CV · MoveNet · {Math.round((cv.metrics.pose_confidence ?? 0) * 100)}% conf.
                                   </p>
                                 </div>
                                 <div className="grid grid-cols-3 gap-1.5">
                                   {[
-                                    { k: "SHR", v: cv.metrics.shoulder_hip_ratio?.toFixed(2) ?? "—", label: "Spalle/Fianchi", color: "#38bdf8" },
-                                    { k: "WHR", v: cv.metrics.waist_hip_ratio?.toFixed(2) ?? "—", label: "Vita/Fianchi", color: "#fbbf24" },
-                                    { k: "SIM", v: cv.metrics.bilateral_symmetry ? `${Math.round(cv.metrics.bilateral_symmetry * 100)}%` : "—", label: "Simmetria", color: "#a78bfa" },
+                                    { k: "SHR", v: cv.metrics.shoulder_hip_ratio?.toFixed(2) ?? "—", label: "Spalle/Fianchi", color: "var(--c-sky-400)" },
+                                    { k: "WHR", v: cv.metrics.waist_hip_ratio?.toFixed(2) ?? "—", label: "Vita/Fianchi", color: "var(--c-amber-400)" },
+                                    { k: "SIM", v: cv.metrics.bilateral_symmetry ? `${Math.round(cv.metrics.bilateral_symmetry * 100)}%` : "—", label: "Simmetria", color: "var(--c-violet-400)" },
                                   ].map(({ k, v, label, color }) => (
-                                    <div key={k} className="rounded-lg p-1.5 text-center" style={{ background: "var(--surface-xs)", border: `1px solid ${color}18` }}>
+                                    <div key={k} className="rounded-lg p-1.5 text-center" style={{ background: "var(--surface-xs)", border: `1px solid color-mix(in srgb, ${color} 9.4%, transparent)` }}>
                                       <p className="font-bold" style={{ color, fontSize: "0.85rem" }}>{v}</p>
                                       <p style={{ color: "var(--text-faint)", fontSize: "0.58rem" }}>{label}</p>
                                     </div>
@@ -3208,12 +3208,12 @@ export default function ClientDetailPage() {
 
                             {/* ── AI Full Analysis ── */}
                             {analysis && (
-                              <div className="mt-3 pt-3 space-y-3" style={{ borderTop: `1px solid ${tierCfg ? tierCfg.color + "20" : "rgba(201,168,76,0.1)"}` }}>
+                              <div className="mt-3 pt-3 space-y-3" style={{ borderTop: `1px solid ${tierCfg ? `color-mix(in srgb, ${tierCfg.color} 12.5%, transparent)` : "rgba(201,168,76,0.1)"}` }}>
 
                                 {/* Summary */}
                                 <div className="flex items-center gap-2 mb-1">
                                   <Brain size={12} style={{ color: "var(--accent)" }} />
-                                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(201,168,76,0.8)", letterSpacing: "0.08em" }}>
+                                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(80% + var(--fade-boost))), transparent)", letterSpacing: "0.08em" }}>
                                     Analisi AI · {analysis.confidence === "high" ? "Alta" : analysis.confidence === "medium" ? "Media" : "Bassa"} confidenza
                                   </p>
                                 </div>
@@ -3226,8 +3226,8 @@ export default function ClientDetailPage() {
                                 {analysis.biomechanics && (
                                   <div className="rounded-xl p-3" style={{ background: "rgba(56,189,248,0.05)", border: "1px solid rgba(56,189,248,0.18)" }}>
                                     <div className="flex items-center gap-1.5 mb-1.5">
-                                      <ActivityIcon size={11} style={{ color: "#38bdf8" }} />
-                                      <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#38bdf8" }}>Biomeccanica</p>
+                                      <ActivityIcon size={11} style={{ color: "var(--c-sky-400)" }} />
+                                      <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--c-sky-400)" }}>Biomeccanica</p>
                                     </div>
                                     <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{analysis.biomechanics}</p>
                                   </div>
@@ -3238,20 +3238,20 @@ export default function ClientDetailPage() {
                                   <div className="grid grid-cols-2 gap-2">
                                     {analysis.strengths?.length ? (
                                       <div className="rounded-xl p-3" style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.15)" }}>
-                                        <p className="text-xs font-bold mb-1.5 uppercase tracking-wide" style={{ color: "#22c55e" }}>Punti di Forza</p>
+                                        <p className="text-xs font-bold mb-1.5 uppercase tracking-wide" style={{ color: "var(--c-green-500)" }}>Punti di Forza</p>
                                         {analysis.strengths.map((s, i) => (
                                           <p key={i} className="text-xs mb-1 flex items-start gap-1" style={{ color: "var(--text-muted)" }}>
-                                            <span style={{ color: "#22c55e", flexShrink: 0 }}>✓</span> {s}
+                                            <span style={{ color: "var(--c-green-500)", flexShrink: 0 }}>✓</span> {s}
                                           </p>
                                         ))}
                                       </div>
                                     ) : null}
                                     {analysis.improvements?.length ? (
                                       <div className="rounded-xl p-3" style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.15)" }}>
-                                        <p className="text-xs font-bold mb-1.5 uppercase tracking-wide" style={{ color: "#fbbf24" }}>Da Migliorare</p>
+                                        <p className="text-xs font-bold mb-1.5 uppercase tracking-wide" style={{ color: "var(--c-amber-400)" }}>Da Migliorare</p>
                                         {analysis.improvements.map((s, i) => (
                                           <p key={i} className="text-xs mb-1 flex items-start gap-1" style={{ color: "var(--text-muted)" }}>
-                                            <span style={{ color: "#fbbf24", flexShrink: 0 }}>→</span> {s}
+                                            <span style={{ color: "var(--c-amber-400)", flexShrink: 0 }}>→</span> {s}
                                           </p>
                                         ))}
                                       </div>
@@ -3276,7 +3276,7 @@ export default function ClientDetailPage() {
                                         )}
                                         {analysis.nutrition_protein_g && (
                                           <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-                                            style={{ background: "rgba(139,92,246,0.1)", color: "#a78bfa" }}>
+                                            style={{ background: "rgba(139,92,246,0.1)", color: "var(--c-violet-400)" }}>
                                             {analysis.nutrition_protein_g}g proteine
                                           </span>
                                         )}
@@ -3307,7 +3307,7 @@ export default function ClientDetailPage() {
                                 <p className="text-xs" style={{ color: "var(--text-faint)" }}>
                                   Physique AI Engine · {new Date(analysis.analyzed_at).toLocaleDateString("it-IT")}
                                 </p>
-                                <p className="text-xs px-2 py-1 rounded-lg" style={{ color: "rgba(34,197,94,0.7)", background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.12)" }}>
+                                <p className="text-xs px-2 py-1 rounded-lg" style={{ color: "color-mix(in srgb, var(--c-green-500) min(100%, calc(70% + var(--fade-boost))), transparent)", background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.12)" }}>
                                   Analisi effettuata localmente — nessuna immagine trasmessa a server esterni.
                                 </p>
                               </div>
@@ -3445,7 +3445,7 @@ export default function ClientDetailPage() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Messaggio personale al cliente</label>
-                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.1)", color: "rgba(201,168,76,0.7)", border: "1px solid rgba(201,168,76,0.2)" }}>visibile sul portale</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.1)", color: "color-mix(in srgb, var(--accent) min(100%, calc(70% + var(--fade-boost))), transparent)", border: "1px solid rgba(201,168,76,0.2)" }}>visibile sul portale</span>
                 </div>
                 <textarea value={workoutForm.description} onChange={(e) => setWorkoutForm({ ...workoutForm, description: e.target.value })} rows={3} placeholder="Scrivi qualcosa di personale — il cliente lo vedrà ogni volta che apre il piano…" className={`${inputClass} resize-none`} style={inputStyle} />
                 <div className="flex gap-2 mt-2 flex-wrap">
@@ -3456,7 +3456,7 @@ export default function ClientDetailPage() {
                   ].map(({ label, text }) => (
                     <button key={label} type="button" onClick={() => setWorkoutForm({ ...workoutForm, description: text })}
                       className="text-xs px-2.5 py-1 rounded-lg transition-all hover:opacity-80"
-                      style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.18)", color: "rgba(201,168,76,0.65)" }}>
+                      style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.18)", color: "color-mix(in srgb, var(--accent) min(100%, calc(65% + var(--fade-boost))), transparent)" }}>
                       {label}
                     </button>
                   ))}
@@ -3515,7 +3515,7 @@ export default function ClientDetailPage() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Messaggio personale al cliente</label>
-                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.1)", color: "rgba(201,168,76,0.7)", border: "1px solid rgba(201,168,76,0.2)" }}>visibile sul portale</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.1)", color: "color-mix(in srgb, var(--accent) min(100%, calc(70% + var(--fade-boost))), transparent)", border: "1px solid rgba(201,168,76,0.2)" }}>visibile sul portale</span>
                 </div>
                 <textarea value={editingPlan.description} onChange={(e) => setEditingPlan({ ...editingPlan, description: e.target.value })}
                   rows={3} placeholder="Scrivi qualcosa di personale — il cliente lo vedrà ogni volta che apre il piano…" className={`${inputClass} resize-none`} style={inputStyle} />
@@ -3527,7 +3527,7 @@ export default function ClientDetailPage() {
                   ].map(({ label, text }) => (
                     <button key={label} type="button" onClick={() => setEditingPlan({ ...editingPlan, description: text })}
                       className="text-xs px-2.5 py-1 rounded-lg transition-all hover:opacity-80"
-                      style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.18)", color: "rgba(201,168,76,0.65)" }}>
+                      style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.18)", color: "color-mix(in srgb, var(--accent) min(100%, calc(65% + var(--fade-boost))), transparent)" }}>
                       {label}
                     </button>
                   ))}

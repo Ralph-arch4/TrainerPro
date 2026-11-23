@@ -23,10 +23,10 @@ const goalLabel: Record<string, string> = {
   performance: "Performance",
 };
 const goalColor: Record<string, string> = {
-  dimagrimento: "#38bdf8",
-  massa: "#a78bfa",
-  tonificazione: "#34d399",
-  performance: "#C9A84C",
+  dimagrimento: "var(--c-sky-400)",
+  massa: "var(--c-violet-400)",
+  tonificazione: "var(--c-emerald-400)",
+  performance: "var(--accent)",
 };
 const statusLabel: Record<string, string> = {
   attivo: "Attivo",
@@ -34,9 +34,9 @@ const statusLabel: Record<string, string> = {
   inattivo: "Inattivo",
 };
 const statusColor: Record<string, string> = {
-  attivo: "#22c55e",
-  in_pausa: "#f59e0b",
-  inattivo: "#6b7280",
+  attivo: "var(--c-green-500)",
+  in_pausa: "var(--c-amber-500)",
+  inattivo: "var(--c-gray-500)",
 };
 
 const levelLabel: Record<string, string> = {
@@ -165,7 +165,7 @@ function getFormaScore(client: Client): { score: number; label: string; color: s
 
   const score = freqScore + consScore + progScore;
   const label = score >= 80 ? "In forma" : score >= 55 ? "Costante" : score >= 30 ? "Intermittente" : "Inattivo";
-  const color = score >= 80 ? "#22c55e" : score >= 55 ? "#fbbf24" : score >= 30 ? "#f97316" : "#ef4444";
+  const color = score >= 80 ? "var(--c-green-500)" : score >= 55 ? "var(--c-amber-400)" : score >= 30 ? "var(--c-orange-500)" : "var(--c-red-500)";
   return { score, label, color };
 }
 
@@ -374,11 +374,11 @@ const priorityIconMap = {
   streak: Flame,
 };
 const priorityColorMap = {
-  risk: "#ef4444",
-  expiry: "#f59e0b",
-  progression: "#22c55e",
-  measurement: "#38bdf8",
-  streak: "#f97316",
+  risk: "var(--c-red-500)",
+  expiry: "var(--c-amber-500)",
+  progression: "var(--c-green-500)",
+  measurement: "var(--c-sky-400)",
+  streak: "var(--c-orange-500)",
 };
 
 function WeeklyPulse({ clients }: { clients: Client[] }) {
@@ -403,21 +403,21 @@ function WeeklyPulse({ clients }: { clients: Client[] }) {
     .reduce((sum, c) => sum + (c.monthlyFee ?? 0), 0);
 
   const pct = Math.round((trainedThisWeek.length / activeClients.length) * 100);
-  const ringColor = pct >= 70 ? "#22c55e" : pct >= 40 ? "#fbbf24" : "#ef4444";
+  const ringColor = pct >= 70 ? "var(--c-green-500)" : pct >= 40 ? "var(--c-amber-400)" : "var(--c-red-500)";
   const pulseLabel = pct >= 70 ? "Ottima settimana" : pct >= 40 ? "Settimana nella norma" : "Settimana critica";
   const r = 20, circ = 2 * Math.PI * r;
   const dash = (pct / 100) * circ;
 
   return (
     <div className="mb-5 card-luxury rounded-2xl p-4 fade-in"
-      style={{ borderLeft: "3px solid rgba(255,255,255,0.06)" }}>
+      style={{ borderLeft: "3px solid rgba(var(--ink-rgb),0.06)" }}>
       <div className="flex items-center gap-2 mb-3">
         <BarChart3 size={13} style={{ color: "var(--text-dim)" }} />
         <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-dim)" }}>
           Pulse Settimanale
         </span>
         <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full"
-          style={{ background: `${ringColor}15`, color: ringColor }}>
+          style={{ background: `color-mix(in srgb, ${ringColor} 8.2%, transparent)`, color: ringColor }}>
           {pulseLabel}
         </span>
       </div>
@@ -426,7 +426,7 @@ function WeeklyPulse({ clients }: { clients: Client[] }) {
         <div className="flex items-center gap-3">
           <div className="relative flex-shrink-0" style={{ width: 48, height: 48 }}>
             <svg width="48" height="48" viewBox="0 0 48 48" style={{ transform: "rotate(-90deg)" }}>
-              <circle cx="24" cy="24" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
+              <circle cx="24" cy="24" r={r} fill="none" stroke="rgba(var(--ink-rgb),0.06)" strokeWidth="4" />
               <circle cx="24" cy="24" r={r} fill="none" stroke={ringColor} strokeWidth="4"
                 strokeDasharray={`${dash.toFixed(1)} ${circ.toFixed(1)}`}
                 strokeLinecap="round" />
@@ -443,7 +443,7 @@ function WeeklyPulse({ clients }: { clients: Client[] }) {
           </div>
         </div>
         {/* Sessioni */}
-        <div className="flex items-center gap-2.5 px-3" style={{ borderLeft: "1px solid rgba(255,255,255,0.06)", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="flex items-center gap-2.5 px-3" style={{ borderLeft: "1px solid rgba(var(--ink-rgb),0.06)", borderRight: "1px solid rgba(var(--ink-rgb),0.06)" }}>
           <Dumbbell size={15} style={{ color: "var(--accent)", flexShrink: 0 }} />
           <div>
             <p className="text-lg font-bold leading-none mb-0.5" style={{ color: "var(--text)" }}>{totalSessions}</p>
@@ -453,7 +453,7 @@ function WeeklyPulse({ clients }: { clients: Client[] }) {
         {/* Entrate */}
         {monthlyRevenue > 0 ? (
           <div className="flex items-center gap-2.5 pl-3">
-            <Euro size={15} style={{ color: "#22c55e", flexShrink: 0 }} />
+            <Euro size={15} style={{ color: "var(--c-green-500)", flexShrink: 0 }} />
             <div>
               <p className="text-lg font-bold leading-none mb-0.5" style={{ color: "var(--text)" }}>€{monthlyRevenue}</p>
               <p className="text-xs" style={{ color: "var(--text-dim)" }}>mensili</p>
@@ -642,11 +642,11 @@ function ClientiPageInner() {
           <input value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Cerca per nome o email…"
             className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
-            style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }} />
+            style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--text)" }} />
         </div>
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as Status)}
           className="px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
+          style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--text)" }}>
           <option value="tutti">Tutti gli stati</option>
           <option value="attivo">Attivi</option>
           <option value="in_pausa">In pausa</option>
@@ -654,7 +654,7 @@ function ClientiPageInner() {
         </select>
         <select value={filterGoal} onChange={(e) => setFilterGoal(e.target.value as Goal)}
           className="px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
+          style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--text)" }}>
           <option value="tutti">Tutti gli obiettivi</option>
           <option value="massa">Massa</option>
           <option value="dimagrimento">Dimagrimento</option>
@@ -693,10 +693,10 @@ function ClientiPageInner() {
                   <Link key={p.client.id}
                     href={`/dashboard/clienti/${p.client.id}`}
                     className="flex flex-col gap-1.5 px-3 py-2.5 rounded-xl transition-all hover:brightness-125"
-                    style={{ background: `${color}08`, border: `1px solid ${color}20` }}>
+                    style={{ background: `color-mix(in srgb, ${color} 3.1%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 12.5%, transparent)` }}>
                     <div className="flex items-center gap-3">
                       <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ background: `${color}15` }}>
+                        style={{ background: `color-mix(in srgb, ${color} 8.2%, transparent)` }}>
                         <Icon size={12} style={{ color }} />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -708,7 +708,7 @@ function ClientiPageInner() {
                         </p>
                       </div>
                       <span className="text-xs font-bold flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
-                        style={{ background: `${color}18`, color, fontSize: "9px" }}>
+                        style={{ background: `color-mix(in srgb, ${color} 9.4%, transparent)`, color, fontSize: "9px" }}>
                         {i + 1}
                       </span>
                     </div>
@@ -716,7 +716,7 @@ function ClientiPageInner() {
                       <div className="flex flex-wrap gap-1 pl-9">
                         {p.details.map((d, di) => (
                           <span key={di} className="font-mono rounded px-1.5 py-0.5"
-                            style={{ background: `${color}12`, color, fontSize: "9px", letterSpacing: "0.02em" }}>
+                            style={{ background: `color-mix(in srgb, ${color} 7.1%, transparent)`, color, fontSize: "9px", letterSpacing: "0.02em" }}>
                             {d}
                           </span>
                         ))}
@@ -733,7 +733,7 @@ function ClientiPageInner() {
       {/* Empty state */}
       {filtered.length === 0 && (
         <div className="text-center py-20 card-luxury rounded-2xl">
-          <Users size={48} className="mx-auto mb-4" style={{ color: "rgba(255,107,43,0.25)" }} />
+          <Users size={48} className="mx-auto mb-4" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(25% + var(--fade-boost))), transparent)" }} />
           <p className="font-semibold mb-1" style={{ color: "var(--text)" }}>
             {clients.length === 0 ? "Nessun cliente ancora" : "Nessun risultato"}
           </p>
@@ -768,15 +768,15 @@ function ClientiPageInner() {
               <div className="flex items-center gap-2 -mx-5 -mt-5 mb-4 px-4 py-2 rounded-t-2xl"
                 style={{ background: "rgba(239,68,68,0.1)", borderBottom: "1px solid rgba(239,68,68,0.2)" }}>
                 <span className="relative flex h-2 w-2 flex-shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#f87171" }} />
-                  <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "#ef4444" }} />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "var(--c-red-400)" }} />
+                  <span className="relative inline-flex rounded-full h-2 w-2" style={{ background: "var(--c-red-500)" }} />
                 </span>
-                <TrendingDown size={11} style={{ color: "#f87171" }} />
-                <span className="text-xs font-bold" style={{ color: "#f87171" }}>
+                <TrendingDown size={11} style={{ color: "var(--c-red-400)" }} />
+                <span className="text-xs font-bold" style={{ color: "var(--c-red-400)" }}>
                   Nessun log da {riskDays} giorni — a rischio
                 </span>
                 {birthdayInfo && (
-                  <span className="ml-auto flex items-center gap-1 text-xs font-semibold" style={{ color: "#fbbf24" }}>
+                  <span className="ml-auto flex items-center gap-1 text-xs font-semibold" style={{ color: "var(--c-amber-400)" }}>
                     <Gift size={10} />
                     {birthdayInfo.isToday ? "Compl. oggi!" : `Compl. tra ${birthdayInfo.daysUntil}gg`}
                   </span>
@@ -785,8 +785,8 @@ function ClientiPageInner() {
             ) : birthdayInfo ? (
               <div className="flex items-center gap-2 -mx-5 -mt-5 mb-4 px-4 py-2 rounded-t-2xl"
                 style={{ background: "rgba(251,191,36,0.1)", borderBottom: "1px solid rgba(251,191,36,0.2)" }}>
-                <Gift size={11} style={{ color: "#fbbf24" }} />
-                <span className="text-xs font-bold" style={{ color: "#fbbf24" }}>
+                <Gift size={11} style={{ color: "var(--c-amber-400)" }} />
+                <span className="text-xs font-bold" style={{ color: "var(--c-amber-400)" }}>
                   {birthdayInfo.isToday
                     ? `Buon compleanno, ${client.name.split(" ")[0]}!`
                     : `Compleanno tra ${birthdayInfo.daysUntil} ${birthdayInfo.daysUntil === 1 ? "giorno" : "giorni"}`}
@@ -809,7 +809,7 @@ function ClientiPageInner() {
                   onClick={(e) => handleDelete(client.id, client.name, e)}
                   className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-500/15 transition-all"
                   title="Elimina cliente">
-                  <Trash2 size={14} style={{ color: "rgba(239,68,68,0.7)" }} />
+                  <Trash2 size={14} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(70% + var(--fade-boost))), transparent)" }} />
                 </button>
                 <ChevronRight size={16} className="opacity-0 group-hover:opacity-100 transition-all mt-0.5" style={{ color: "var(--accent-light)" }} />
               </div>
@@ -831,7 +831,7 @@ function ClientiPageInner() {
             <div className="flex items-center justify-between">
               {client.goal ? (
                 <span className="text-xs px-2.5 py-1 rounded-full font-medium"
-                  style={{ background: `${goalColor[client.goal]}18`, color: goalColor[client.goal] }}>
+                  style={{ background: `color-mix(in srgb, ${goalColor[client.goal]} 9.4%, transparent)`, color: goalColor[client.goal] }}>
                   {goalLabel[client.goal]}
                 </span>
               ) : <span />}
@@ -846,8 +846,8 @@ function ClientiPageInner() {
                 {client.monthlyFee != null && <span style={{ color: "var(--accent-light)" }}>€{client.monthlyFee}/m</span>}
                 {weekStreak >= 2 && (
                   <span className="flex items-center gap-1 font-semibold"
-                    style={{ color: weekStreak >= 5 ? "#f97316" : weekStreak >= 3 ? "#fb923c" : "rgba(249,115,22,0.7)" }}>
-                    <Flame size={10} style={{ color: weekStreak >= 5 ? "#f97316" : weekStreak >= 3 ? "#fb923c" : "rgba(249,115,22,0.7)" }} />
+                    style={{ color: weekStreak >= 5 ? "var(--c-orange-500)" : weekStreak >= 3 ? "var(--c-orange-400)" : "color-mix(in srgb, var(--c-orange-500) min(100%, calc(70% + var(--fade-boost))), transparent)" }}>
+                    <Flame size={10} style={{ color: weekStreak >= 5 ? "var(--c-orange-500)" : weekStreak >= 3 ? "var(--c-orange-400)" : "color-mix(in srgb, var(--c-orange-500) min(100%, calc(70% + var(--fade-boost))), transparent)" }} />
                     {weekStreak}w
                   </span>
                 )}
@@ -855,21 +855,21 @@ function ClientiPageInner() {
             </div>
             {(forma || progressionReady > 0) && (
               <div className="mt-3 pt-3 flex items-center justify-between"
-                style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                style={{ borderTop: "1px solid rgba(var(--ink-rgb),0.06)" }}>
                 {forma ? (
                   <>
                     <span className="text-xs" style={{ color: "var(--text-dim)" }}>Indice forma</span>
                     <div className="flex items-center gap-2">
                       {progressionReady > 0 && (
                         <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
-                          style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.2)" }}>
+                          style={{ background: "rgba(34,197,94,0.1)", color: "var(--c-green-500)", border: "1px solid rgba(34,197,94,0.2)" }}>
                           <TrendingUp size={10} />
                           {progressionReady} {progressionReady === 1 ? "esercizio" : "esercizi"} +
                         </span>
                       )}
                       <div className="relative w-7 h-7 flex-shrink-0">
                         <svg className="w-7 h-7" style={{ transform: "rotate(-90deg)" }} viewBox="0 0 28 28">
-                          <circle cx="14" cy="14" r="11" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3" />
+                          <circle cx="14" cy="14" r="11" fill="none" stroke="rgba(var(--ink-rgb),0.07)" strokeWidth="3" />
                           <circle cx="14" cy="14" r="11" fill="none" stroke={forma.color} strokeWidth="3"
                             strokeDasharray={`${((forma.score / 100) * 69.11).toFixed(1)} 69.11`}
                             strokeLinecap="round" />
@@ -884,7 +884,7 @@ function ClientiPageInner() {
                   <>
                     <span className="text-xs" style={{ color: "var(--text-dim)" }}>Progressione</span>
                     <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
-                      style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.2)" }}>
+                      style={{ background: "rgba(34,197,94,0.1)", color: "var(--c-green-500)", border: "1px solid rgba(34,197,94,0.2)" }}>
                       <TrendingUp size={10} />
                       {progressionReady} {progressionReady === 1 ? "esercizio pronto" : "esercizi pronti"} per aumento carico
                     </span>
@@ -915,7 +915,7 @@ function ClientiPageInner() {
               </button>
             </div>
             <pre className="text-xs rounded-xl p-4 whitespace-pre-wrap font-mono leading-relaxed overflow-y-auto flex-1 mb-4"
-              style={{ background: "rgba(0,0,0,0.35)", color: "var(--text)", border: "1px solid rgba(255,255,255,0.07)" }}>
+              style={{ background: "rgba(0,0,0,0.35)", color: "var(--text)", border: "1px solid rgba(var(--ink-rgb),0.07)" }}>
               {generateWeeklyBrief(clients)}
             </pre>
             <button
@@ -945,7 +945,7 @@ function ClientiPageInner() {
             </div>
             {saveError && (
               <div className="mb-4 p-3 rounded-xl flex items-center gap-2 text-xs"
-                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}>
+                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "var(--c-red-400)" }}>
                 <AlertCircle size={13} /> {saveError}
               </div>
             )}
@@ -956,37 +956,37 @@ function ClientiPageInner() {
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Nome completo *</label>
                   <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="Mario Rossi" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Email</label>
                   <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
                     placeholder="email@esempio.com" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Telefono</label>
                   <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     placeholder="+39 333 123 4567" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Data di nascita</label>
                   <input type="date" value={form.birthDate} onChange={(e) => setForm({ ...form, birthDate: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Quota mensile (€)</label>
                   <input type="number" value={form.monthlyFee} onChange={(e) => setForm({ ...form, monthlyFee: e.target.value })}
                     placeholder="150" className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Obiettivo</label>
                   <select value={form.goal} onChange={(e) => setForm({ ...form, goal: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
+                    style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }}>
                     <option value="massa">Massa muscolare</option>
                     <option value="dimagrimento">Dimagrimento</option>
                     <option value="tonificazione">Tonificazione</option>
@@ -997,7 +997,7 @@ function ClientiPageInner() {
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Livello</label>
                   <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
+                    style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }}>
                     <option value="principiante">Principiante</option>
                     <option value="intermedio">Intermedio</option>
                     <option value="avanzato">Avanzato</option>
@@ -1007,7 +1007,7 @@ function ClientiPageInner() {
                   <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-muted)" }}>Stato</label>
                   <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
                     className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
+                    style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }}>
                     <option value="attivo">Attivo</option>
                     <option value="in_pausa">In pausa</option>
                     <option value="inattivo">Inattivo</option>

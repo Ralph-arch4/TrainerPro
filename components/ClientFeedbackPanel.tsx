@@ -62,7 +62,7 @@ export default function ClientFeedbackPanel({ plans }: { plans: WorkoutPlan[] })
 
       {entries.length === 0 ? (
         <div className="card-luxury rounded-2xl p-10 text-center">
-          <MessageSquare size={24} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.4)" }} />
+          <MessageSquare size={24} className="mx-auto mb-3" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(40% + var(--fade-boost))), transparent)" }} />
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>Nessun feedback ancora.</p>
           <p className="text-xs mt-1" style={{ color: "var(--text-dim)" }}>
             Qui compaiono gli orari delle sessioni, i commenti a fine allenamento e le note che il cliente lascia sui singoli esercizi.

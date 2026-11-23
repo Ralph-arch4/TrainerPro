@@ -86,7 +86,7 @@ function WeightSparkline({ history }: { history: number[] }) {
   });
   const last = history[history.length - 1];
   const first = history[0];
-  const color = last > first + 0.4 ? "#22c55e" : last < first - 0.4 ? "#f87171" : "#9ca3af";
+  const color = last > first + 0.4 ? "var(--c-green-500)" : last < first - 0.4 ? "var(--c-red-400)" : "var(--c-gray-400)";
   const [lastX, lastY] = pts[pts.length - 1].split(",").map(Number);
   return (
     <div className="flex items-center gap-1 flex-shrink-0">
@@ -160,10 +160,10 @@ function buildSessionBrief(exs: Exercise[], allLogs: ExerciseLog[], week: number
 
 // ── Superset colors ───────────────────────────────────────────────────────────
 const SS_COLORS: Record<string, string> = {
-  A: "#a78bfa", B: "#38bdf8", C: "#34d399",
-  D: "#fbbf24", E: "#f472b6", F: "#fb923c",
+  A: "var(--c-violet-400)", B: "var(--c-sky-400)", C: "var(--c-emerald-400)",
+  D: "var(--c-amber-400)", E: "var(--c-pink-400)", F: "var(--c-orange-400)",
 };
-function ssColor(g?: string) { return g ? (SS_COLORS[g.toUpperCase()] ?? "#a78bfa") : null; }
+function ssColor(g?: string) { return g ? (SS_COLORS[g.toUpperCase()] ?? "var(--c-violet-400)") : null; }
 
 function fmtTimer(s: number) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -253,8 +253,8 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
     : "— / — / ——";
 
   const color      = ssColor(exercise.supersetGroup);
-  const kindColor  = isCardio ? "#f87171" : exercise.kind === "core" ? "#facc15" : null;
-  const cardBorder = color ? `2px solid ${color}40` : kindColor ? `2px solid ${kindColor}40` : "1px solid var(--border)";
+  const kindColor  = isCardio ? "var(--c-red-400)" : exercise.kind === "core" ? "var(--c-yellow-400)" : null;
+  const cardBorder = color ? `2px solid color-mix(in srgb, ${color} 25.1%, transparent)` : kindColor ? `2px solid color-mix(in srgb, ${kindColor} 25.1%, transparent)` : "1px solid var(--border)";
   const cardioTarget = [
     exercise.duration ? `${exercise.duration} min` : null,
     sets > 1 ? `${sets} blocchi` : null,
@@ -273,7 +273,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
 
       {/* Date header */}
       <div className="flex items-center justify-center px-2 py-1.5 text-xs font-bold"
-        style={{ background: "rgba(201,168,76,0.75)", color: "#fff", letterSpacing: "0.04em", borderBottom: rowBorder }}>
+        style={{ background: "color-mix(in srgb, var(--accent) 75%, transparent)", color: "#fff", letterSpacing: "0.04em", borderBottom: rowBorder }}>
         {sessionDate}
       </div>
 
@@ -286,13 +286,13 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0 flex-1">
           {color && (
             <span className="text-xs font-bold px-1.5 py-0.5 rounded-md shrink-0"
-              style={{ background: `${color}18`, color, border: `1px solid ${color}33` }}>
+              style={{ background: `color-mix(in srgb, ${color} 9.4%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 20%, transparent)` }}>
               SS-{exercise.supersetGroup}
             </span>
           )}
           {kindColor && (
             <span className="flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded-md shrink-0"
-              style={{ background: `${kindColor}18`, color: kindColor, border: `1px solid ${kindColor}33` }}>
+              style={{ background: `color-mix(in srgb, ${kindColor} 9.4%, transparent)`, color: kindColor, border: `1px solid color-mix(in srgb, ${kindColor} 20%, transparent)` }}>
               {isCardio ? <HeartPulse size={10} /> : <Flame size={10} />}
               {isCardio ? "Cardio" : "Addome"}
             </span>
@@ -318,7 +318,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
             </button>
             <button onClick={onDelete} className="p-1.5 rounded-lg hover:opacity-80 transition-opacity"
               style={{ background: "rgba(239,68,68,0.07)" }}>
-              <Trash2 size={11} style={{ color: "rgba(239,68,68,0.45)" }} />
+              <Trash2 size={11} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(45% + var(--fade-boost))), transparent)" }} />
             </button>
           </div>
         )}
@@ -386,7 +386,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
           {mode === "client" ? (
             <div className="rounded-xl overflow-hidden"
               style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)" }}>
-              <p className="text-center pt-1.5 text-xs font-bold" style={{ color: "#fca5a5", fontSize: "0.62rem" }}>MINUTI SVOLTI</p>
+              <p className="text-center pt-1.5 text-xs font-bold" style={{ color: "var(--c-red-300)", fontSize: "0.62rem" }}>MINUTI SVOLTI</p>
               <input
                 type="text" inputMode="decimal"
                 value={minutes}
@@ -472,7 +472,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
                             width: "2.25rem", height: "2.25rem",
                             background: active ? "rgba(201,168,76,0.3)" : "rgba(201,168,76,0.06)",
                             border: `1px solid ${active ? "rgba(201,168,76,0.8)" : "rgba(201,168,76,0.18)"}`,
-                            color: active ? "var(--accent-light)" : "rgba(201,168,76,0.45)",
+                            color: active ? "var(--accent-light)" : "color-mix(in srgb, var(--accent) min(100%, calc(45% + var(--fade-boost))), transparent)",
                           }}>
                           {v}
                         </button>
@@ -499,7 +499,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
             <div key={i} style={{
               display: "grid", gridTemplateColumns: trainerCols,
               borderBottom: i < sets - 1 ? rowBorder : undefined,
-              background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.012)",
+              background: i % 2 === 0 ? "transparent" : "rgba(var(--ink-rgb),0.012)",
             }}>
               <div className="flex items-center px-3 py-2.5 text-xs" style={{ color: "var(--text-dim)", borderRight: rowBorder }}>serie {i + 1}</div>
               <div className="flex items-center justify-center px-2 py-2.5 text-xs font-semibold text-center min-w-0 break-words" style={{ color: "var(--accent-light)", borderRight: rowBorder, overflowWrap: "anywhere" }}>
@@ -552,7 +552,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
         <div className="flex gap-2 px-3 py-2.5" style={{ borderTop: rowBorder }}>
           <button onClick={handleClear}
             className="flex items-center justify-center rounded-xl transition-all active:scale-95"
-            style={{ minWidth: "2.75rem", minHeight: "2.75rem", border: "1px solid rgba(239,68,68,0.2)", color: "rgba(239,68,68,0.55)" }}>
+            style={{ minWidth: "2.75rem", minHeight: "2.75rem", border: "1px solid rgba(239,68,68,0.2)", color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(55% + var(--fade-boost))), transparent)" }}>
             <X size={14} />
           </button>
           <button onClick={handleSave} disabled={!dirty}
@@ -867,7 +867,7 @@ export default function WorkoutLogbook({
               style={{
                 width: activeWeek === maxLoggedWeek + 1 ? 20 : 8, height: 8, borderRadius: 4,
                 background: activeWeek === maxLoggedWeek + 1 ? "var(--accent)" : "var(--surface)",
-                border: "1px dashed rgba(255,255,255,0.2)",
+                border: "1px dashed rgba(var(--ink-rgb),0.2)",
                 transition: "width 0.3s ease",
               }} />
           )}
@@ -928,7 +928,7 @@ export default function WorkoutLogbook({
               style={{ background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.1)" }}>
               <div className="flex items-center gap-2 mb-2">
                 <Target size={12} style={{ color: "var(--accent)" }} />
-                <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(201,168,76,0.55)" }}>
+                <span className="text-xs font-bold uppercase tracking-wide" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(55% + var(--fade-boost))), transparent)" }}>
                   Obiettivo sessione
                 </span>
                 {volPrev > 0 && (
@@ -945,7 +945,7 @@ export default function WorkoutLogbook({
                       <span style={{ color: "var(--text-dim)" }}>{t.name}:</span>
                       <span className="font-bold" style={{ color: "var(--accent-light)" }}>{t.weight}kg</span>
                       {t.delta > 0.1 && (
-                        <span style={{ color: "#22c55e", fontSize: "10px" }}>+{t.delta.toFixed(1)}</span>
+                        <span style={{ color: "var(--c-green-500)", fontSize: "10px" }}>+{t.delta.toFixed(1)}</span>
                       )}
                     </span>
                   ))}
@@ -967,7 +967,7 @@ export default function WorkoutLogbook({
             style={{ background: "rgba(201,168,76,0.05)", border: "1px solid rgba(201,168,76,0.12)", gap: "0.75rem" }}>
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ background: allDone ? "#22c55e" : "var(--accent)" }} />
+                style={{ background: allDone ? "var(--c-green-500)" : "var(--accent)" }} />
               <span className="text-xs font-bold" style={{ color: "var(--ivory)" }}>{loggedCount}/{total}</span>
               <span className="text-xs" style={{ color: "var(--text-dim)" }}>esercizi loggati</span>
             </div>
@@ -977,7 +977,7 @@ export default function WorkoutLogbook({
                 <span className="text-xs font-bold" style={{ color: "var(--accent-light)" }}>{avgW.toFixed(1)} kg</span>
                 {deltaPct !== null && (
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-lg flex-shrink-0"
-                    style={{ background: deltaPct >= 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: deltaPct >= 0 ? "#22c55e" : "#f87171" }}>
+                    style={{ background: deltaPct >= 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: deltaPct >= 0 ? "var(--c-green-500)" : "var(--c-red-400)" }}>
                     {deltaPct > 0 ? "↑" : "↓"}{Math.abs(deltaPct).toFixed(1)}% vs S{activeWeek - 1}
                   </span>
                 )}
@@ -989,7 +989,7 @@ export default function WorkoutLogbook({
                 <span className="text-xs font-bold" style={{ color: "var(--accent-light)" }}>{volCur.toLocaleString("it-IT")} kg</span>
                 {volDelta !== null && (
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-lg flex-shrink-0"
-                    style={{ background: volDelta >= 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: volDelta >= 0 ? "#22c55e" : "#f87171" }}>
+                    style={{ background: volDelta >= 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: volDelta >= 0 ? "var(--c-green-500)" : "var(--c-red-400)" }}>
                     {volDelta > 0 ? "↑" : "↓"}{Math.abs(volDelta).toFixed(0)}% vs S{activeWeek - 1}
                   </span>
                 )}
@@ -1002,7 +1002,7 @@ export default function WorkoutLogbook({
                 <button
                   onClick={() => navigator.clipboard.writeText(brief).then(() => { setBriefCopied(true); setTimeout(() => setBriefCopied(false), 2500); })}
                   className="ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl transition-all hover:opacity-80"
-                  style={{ background: briefCopied ? "rgba(34,197,94,0.12)" : "rgba(201,168,76,0.08)", color: briefCopied ? "#22c55e" : "var(--accent-light)", border: `1px solid ${briefCopied ? "rgba(34,197,94,0.25)" : "rgba(201,168,76,0.18)"}` }}>
+                  style={{ background: briefCopied ? "rgba(34,197,94,0.12)" : "rgba(201,168,76,0.08)", color: briefCopied ? "var(--c-green-500)" : "var(--accent-light)", border: `1px solid ${briefCopied ? "rgba(34,197,94,0.25)" : "rgba(201,168,76,0.18)"}` }}>
                   {briefCopied ? <Check size={11} /> : <Copy size={11} />}
                   {briefCopied ? "Copiato!" : "Copia riepilogo"}
                 </button>
@@ -1016,7 +1016,7 @@ export default function WorkoutLogbook({
       {dayExercises.length === 0 ? (
         <div className="text-center py-16 rounded-2xl"
           style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
-          <Dumbbell size={36} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.25)" }} />
+          <Dumbbell size={36} className="mx-auto mb-3" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(25% + var(--fade-boost))), transparent)" }} />
           <p className="text-sm" style={{ color: "var(--text-dim)" }}>
             {mode === "trainer"
               ? "Nessun esercizio per questo giorno. Usa la vista Avanzato per aggiungere esercizi."
@@ -1102,7 +1102,7 @@ export default function WorkoutLogbook({
                   <button onClick={() => removeSupp(item.id)}
                     className="p-1.5 rounded-lg shrink-0 hover:opacity-80 transition-opacity"
                     style={{ background: "rgba(239,68,68,0.08)" }}>
-                    <Trash2 size={12} style={{ color: "rgba(239,68,68,0.5)" }} />
+                    <Trash2 size={12} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(50% + var(--fade-boost))), transparent)" }} />
                   </button>
                 </div>
               ))}
@@ -1202,7 +1202,7 @@ export default function WorkoutLogbook({
                     {restTimer.secs === 0 ? "VAI!" : fmtTimer(restTimer.secs)}
                   </span>
                   {restTimer.secs > 0 && (
-                    <span className="text-xs mt-1" style={{ color: "rgba(201,168,76,0.6)", letterSpacing: "0.12em" }}>
+                    <span className="text-xs mt-1" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(60% + var(--fade-boost))), transparent)", letterSpacing: "0.12em" }}>
                       RECUPERO
                     </span>
                   )}
@@ -1242,7 +1242,7 @@ export default function WorkoutLogbook({
               style={{ bottom: "90px", left: "50%", transform: "translateX(-50%)", maxWidth: "340px", width: "calc(100% - 32px)" }}
             >
               <div
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer"
+                className="force-dark flex items-center gap-3 px-4 py-3 rounded-2xl cursor-pointer"
                 style={{
                   background: restTimer.secs === 0
                     ? "linear-gradient(135deg,rgba(201,168,76,0.22),rgba(170,21,21,0.14))"
@@ -1276,7 +1276,7 @@ export default function WorkoutLogbook({
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs mb-0.5" style={{ color: "rgba(201,168,76,0.6)" }}>
+                  <p className="text-xs mb-0.5" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(60% + var(--fade-boost))), transparent)" }}>
                     {restTimer.secs === 0 ? "Recupero terminato" : "Recupero in corso"}
                   </p>
                   <p className="text-sm font-bold line-clamp-2 break-words" style={{ color: "var(--ivory)" }}>

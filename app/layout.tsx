@@ -33,7 +33,17 @@ export default function RootLayout({
     <html
       lang="it"
       className={`${dmSans.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        {/* Apply the saved theme before first paint: without this, light-mode
+            users see a dark flash on every page load until ThemeProvider mounts. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{document.documentElement.setAttribute("data-theme",localStorage.getItem("tp-theme")==="light"?"light":"dark")}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="min-h-dvh flex flex-col">
         <ThemeProvider>{children}</ThemeProvider>
       </body>

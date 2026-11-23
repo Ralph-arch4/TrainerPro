@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
           </p>
 
           {error && (
-            <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171" }}>
+            <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "var(--c-red-400)" }}>
               {error}
             </div>
           )}
@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
                 <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--accent-light)" }} />
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="il-tuo@email.com" required
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
-                  style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
+                  style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }} />
               </div>
             </div>
 

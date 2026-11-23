@@ -121,7 +121,7 @@ export default function SessionPanel({ day, week, dayLabel, session, mode, onSav
         {running && (
           <button onClick={stopNow}
             className="flex items-center gap-2 px-4 rounded-xl text-sm font-bold flex-shrink-0 active:scale-95 transition-all"
-            style={{ minHeight: "2.75rem", background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.4)", color: "#fca5a5" }}>
+            style={{ minHeight: "2.75rem", background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.4)", color: "var(--c-red-300)" }}>
             <Square size={13} /> Termina
           </button>
         )}

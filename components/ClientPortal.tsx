@@ -106,7 +106,7 @@ export default function ClientPortal({ token }: { token: string | undefined }) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "var(--bg)" }}>
         <div className="text-center max-w-sm">
-          <AlertCircle size={36} className="mx-auto mb-3" style={{ color: "rgba(239,68,68,0.6)" }} />
+          <AlertCircle size={36} className="mx-auto mb-3" style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(60% + var(--fade-boost))), transparent)" }} />
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>{error || "Link non valido."}</p>
         </div>
       </div>
@@ -147,14 +147,14 @@ export default function ClientPortal({ token }: { token: string | undefined }) {
         )}
         {saveError && (
           <div className="p-3 rounded-xl text-sm flex items-center justify-between gap-3"
-            style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "rgba(239,68,68,0.9)" }}>
+            style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(90% + var(--fade-boost))), transparent)" }}>
             <span>Errore nel salvataggio. Controlla la connessione e riprova.</span>
             <button onClick={() => setSaveError(false)} className="text-xs underline opacity-70 flex-shrink-0">Chiudi</button>
           </div>
         )}
         {plan.exercises.length === 0 ? (
           <div className="text-center py-16 rounded-2xl" style={{ background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
-            <Dumbbell size={24} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.4)" }} />
+            <Dumbbell size={24} className="mx-auto mb-3" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(40% + var(--fade-boost))), transparent)" }} />
             <p className="text-sm font-semibold" style={{ color: "var(--text-muted)" }}>Scheda in preparazione</p>
             <p className="text-xs mt-1" style={{ color: "var(--text-dim)" }}>Il tuo trainer la sta preparando su misura per te.</p>
           </div>

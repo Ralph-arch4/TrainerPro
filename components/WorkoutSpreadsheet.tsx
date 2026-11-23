@@ -66,12 +66,12 @@ const CARDIO_PRESETS = [
 
 const SUPERSET_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
-const KIND_COLORS: Record<ExerciseKind, string> = { strength: "", cardio: "#f87171", core: "#facc15" };
+const KIND_COLORS: Record<ExerciseKind, string> = { strength: "", cardio: "var(--c-red-400)", core: "var(--c-yellow-400)" };
 
 function kindOf(ex: Pick<Exercise, "kind">): ExerciseKind { return ex.kind ?? "strength"; }
 
-const inputStyle = { background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" };
-const selectStyle = { background: "rgba(26,26,26,1)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" };
+const inputStyle = { background: "rgba(var(--ink-rgb),0.05)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--ivory)" };
+const selectStyle = { background: "rgba(26,26,26,1)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--ivory)" };
 
 function emptyForm(sets = 3, kind: ExerciseKind = "strength"): ExerciseFormData {
   return {
@@ -167,8 +167,8 @@ function formatCellLog(log: ExerciseLog | undefined): { weight: string | null; r
 
 // Superset group color palette
 const SUPERSET_COLORS: Record<string, string> = {
-  A: "#a78bfa", B: "#38bdf8", C: "#34d399", D: "#fbbf24",
-  E: "#f472b6", F: "#fb923c", G: "#60a5fa", H: "#a3e635",
+  A: "var(--c-violet-400)", B: "var(--c-sky-400)", C: "var(--c-emerald-400)", D: "var(--c-amber-400)",
+  E: "var(--c-pink-400)", F: "var(--c-orange-400)", G: "#60a5fa", H: "var(--c-lime-400)",
 };
 function ssColor(g?: string) { return g ? (SUPERSET_COLORS[g.toUpperCase()] ?? "var(--accent)") : null; }
 
@@ -209,7 +209,7 @@ function renderRepTargets(ex: Exercise): React.ReactNode {
       ex.intensity || null,
     ].filter(Boolean);
     return (
-      <span className="text-xs break-words" style={{ color: "rgba(245,240,232,0.55)", overflowWrap: "anywhere" }}>
+      <span className="text-xs break-words" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.55 + var(--fade-boost-n))))", overflowWrap: "anywhere" }}>
         {parts.length > 0 ? parts.join(" · ") : "Cardio"}
       </span>
     );
@@ -219,7 +219,7 @@ function renderRepTargets(ex: Exercise): React.ReactNode {
       <div className="space-y-0.5">
         {ex.perSetReps.map((r, i) => (
           <div key={i} className="flex items-baseline gap-1.5">
-            <span className="text-xs w-12 flex-shrink-0 font-medium" style={{ color: "rgba(245,240,232,0.35)" }}>
+            <span className="text-xs w-12 flex-shrink-0 font-medium" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.35 + var(--fade-boost-n))))" }}>
               Serie {i + 1}
             </span>
             <span className="text-xs font-semibold break-words min-w-0" style={{ color: "var(--accent-light)", overflowWrap: "anywhere" }}>
@@ -231,7 +231,7 @@ function renderRepTargets(ex: Exercise): React.ReactNode {
     );
   }
   return (
-    <span className="text-xs break-words" style={{ color: "rgba(245,240,232,0.55)", overflowWrap: "anywhere" }}>
+    <span className="text-xs break-words" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.55 + var(--fade-boost-n))))", overflowWrap: "anywhere" }}>
       {ex.sets} × {ex.targetReps} rep
     </span>
   );
@@ -244,7 +244,7 @@ function KindBadge({ ex }: { ex: Exercise }) {
   const Icon = kind === "cardio" ? HeartPulse : Flame;
   return (
     <span className="flex items-center gap-1 text-xs font-bold px-1.5 py-0.5 rounded"
-      style={{ background: `${color}1a`, color, border: `1px solid ${color}40` }}>
+      style={{ background: `color-mix(in srgb, ${color} 10.2%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 25.1%, transparent)` }}>
       <Icon size={10} /> {kind === "cardio" ? "CARDIO" : "ADDOME"}
     </span>
   );
@@ -256,8 +256,8 @@ function SupersetLinkButton({ linked, onClick, compact }: { linked: boolean; onC
     <button type="button" onClick={onClick}
       className={`flex items-center gap-1 rounded-lg transition-all hover:opacity-90 ${compact ? "p-1" : "px-2.5 py-1 text-xs"}`}
       style={linked
-        ? { background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.35)", color: "#c4b5fd" }
-        : { background: "rgba(255,255,255,0.04)", border: "1px dashed rgba(255,255,255,0.15)", color: "rgba(245,240,232,0.45)" }}
+        ? { background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.35)", color: "var(--c-violet-300)" }
+        : { background: "rgba(var(--ink-rgb),0.04)", border: "1px dashed rgba(var(--ink-rgb),0.15)", color: "rgba(var(--text-rgb), min(1, calc(0.45 + var(--fade-boost-n))))" }}
       title={linked ? "Separa dalla superserie con l'esercizio sopra" : "Metti in superserie con l'esercizio sopra"}>
       {linked ? <Unlink size={11} /> : <Link2 size={11} />}
       {!compact && (linked ? "Separa superserie" : "Superserie con il precedente")}
@@ -279,12 +279,12 @@ function SupersetHelp() {
     <div className="w-full">
       <button type="button" onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-1.5 text-xs transition-opacity hover:opacity-90"
-        style={{ color: "#c4b5fd" }}>
+        style={{ color: "var(--c-violet-300)" }}>
         <Link2 size={12} /> {open ? "Chiudi guida superserie" : "Come creare una superserie?"}
       </button>
       {open && (
         <ol className="mt-2 p-3 rounded-xl space-y-1.5 text-xs list-decimal list-inside"
-          style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)", color: "rgba(245,240,232,0.7)" }}>
+          style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)", color: "rgba(var(--text-rgb), min(1, calc(0.7 + var(--fade-boost-n))))" }}>
           {SUPERSET_STEPS.map((t) => <li key={t}>{t}</li>)}
         </ol>
       )}
@@ -298,16 +298,16 @@ function AddBlockButtons({ onPick, dayLabel, compact }: { onPick: (k: ExerciseKi
   return (
     <>
       <button onClick={() => onPick("strength")} className={`${btn} ${pad} ${compact ? "flex-1" : ""}`}
-        style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
+        style={{ background: "color-mix(in srgb, var(--accent) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--accent-light)" }}>
         <Plus size={14} /> {compact ? "Esercizio" : `Aggiungi esercizio — ${dayLabel}`}
       </button>
       <button onClick={() => onPick("cardio")} className={`${btn} ${pad}`}
-        style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: "#fca5a5" }}
+        style={{ background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.25)", color: "var(--c-red-300)" }}
         title="Aggiungi un blocco cardio a questo giorno">
         <HeartPulse size={14} /> Cardio
       </button>
       <button onClick={() => onPick("core")} className={`${btn} ${pad}`}
-        style={{ background: "rgba(250,204,21,0.07)", border: "1px solid rgba(250,204,21,0.25)", color: "#fde047" }}
+        style={{ background: "rgba(250,204,21,0.07)", border: "1px solid rgba(250,204,21,0.25)", color: "var(--c-yellow-300)" }}
         title="Aggiungi un esercizio per l'addome a questo giorno">
         <Flame size={14} /> Addome
       </button>
@@ -319,7 +319,7 @@ function AddBlockButtons({ onPick, dayLabel, compact }: { onPick: (k: ExerciseKi
 function ImagePreview({ name }: { name: string }) {
   const images = name.trim().length >= 3 ? getExerciseImages(name) : null;
   return (
-    <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>
+    <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }}>
       {images ? (
         <>
           {images.map((src) => (
@@ -414,8 +414,8 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
             <button key={value} type="button" onClick={() => switchKind(value)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all"
               style={active
-                ? { background: "rgba(255,107,43,0.14)", border: "1px solid rgba(255,107,43,0.35)", color: "var(--accent-light)" }
-                : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>
+                ? { background: "color-mix(in srgb, var(--accent) 14%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)", color: "var(--accent-light)" }
+                : { background: "rgba(var(--ink-rgb),0.04)", border: "1px solid rgba(var(--ink-rgb),0.1)", color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>
               <Icon size={12} /> {label}
             </button>
           );
@@ -425,7 +425,7 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
       {isCardio ? (
         <>
           <div>
-            {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Attività cardio *</label>}
+            {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Attività cardio *</label>}
             <input value={form.name} onChange={(e) => handleNameChange(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); }}
               placeholder="es. Tapis roulant, Cyclette, HIIT…" autoFocus
@@ -436,8 +436,8 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
                 <button key={p} type="button" onClick={() => onChange({ ...form, name: p })}
                   className="px-2 py-1 rounded-lg text-xs transition-all"
                   style={form.name === p
-                    ? { background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.4)", color: "#fca5a5" }
-                    : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(245,240,232,0.5)" }}>
+                    ? { background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.4)", color: "var(--c-red-300)" }
+                    : { background: "rgba(var(--ink-rgb),0.04)", border: "1px solid rgba(var(--ink-rgb),0.08)", color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>
                   {p}
                 </button>
               ))}
@@ -445,23 +445,23 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Durata (min)</label>}
+              {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Durata (min)</label>}
               <input value={form.duration} onChange={(e) => onChange({ ...form, duration: e.target.value })}
                 placeholder="es. 20 / 15-20" className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
             </div>
             <div>
-              {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Blocchi / round</label>}
+              {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Blocchi / round</label>}
               <input type="number" min="1" max="20" value={form.sets} onChange={(e) => onChange({ ...form, sets: e.target.value })}
                 placeholder="1" className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
             </div>
             <div>
-              {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Recupero (sec)</label>}
+              {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Recupero (sec)</label>}
               <input value={form.restSeconds} onChange={(e) => onChange({ ...form, restSeconds: e.target.value })}
                 placeholder="es. 60" className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
             </div>
           </div>
           <div>
-            {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Intensità</label>}
+            {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Intensità</label>}
             <input value={form.intensity} onChange={(e) => onChange({ ...form, intensity: e.target.value })}
               placeholder="es. Zona 2, 130-140 bpm, pendenza 10% a 5 km/h, 30s on / 30s off"
               className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
@@ -472,7 +472,7 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
       {/* Row 1: name + muscle */}
       <div className={`grid gap-2 ${compact ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-3"}`}>
         <div className={`relative ${compact ? "" : "sm:col-span-2"}`}>
-          {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Nome esercizio *</label>}
+          {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Nome esercizio *</label>}
           <input value={form.name} onChange={(e) => handleNameChange(e.target.value)}
             onKeyDown={handleNameKeyDown}
             onBlur={() => setTimeout(() => setShowSugg(false), 150)}
@@ -482,17 +482,17 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
             style={inputStyle} />
           {showSugg && (
             <div ref={suggRef} className="absolute left-0 right-0 z-50 mt-1 rounded-xl overflow-hidden shadow-2xl"
-              style={{ background: "#1a1a1a", border: "1px solid rgba(255,107,43,0.25)", top: "100%" }}>
+              style={{ background: "var(--panel-light, #1a1a1a)", border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)", top: "100%" }}>
               {suggestions.map((ex, i) => (
                 <button key={ex.name} type="button"
                   onMouseDown={() => pickSuggestion(ex)}
                   className="w-full text-left px-3 py-2 flex items-center justify-between gap-2 transition-colors"
                   style={{
-                    background: i === activeSugg ? "rgba(255,107,43,0.12)" : "transparent",
-                    borderBottom: i < suggestions.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                    background: i === activeSugg ? "color-mix(in srgb, var(--accent) 12%, transparent)" : "transparent",
+                    borderBottom: i < suggestions.length - 1 ? "1px solid rgba(var(--ink-rgb),0.05)" : "none",
                   }}>
                   <span className="text-xs font-medium break-words min-w-0" style={{ color: "var(--ivory)" }}>{ex.name}</span>
-                  <span className="text-xs shrink-0 px-1.5 py-0.5 rounded-md" style={{ background: "rgba(255,107,43,0.1)", color: "var(--accent-light)" }}>
+                  <span className="text-xs shrink-0 px-1.5 py-0.5 rounded-md" style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--accent-light)" }}>
                     {ex.muscleGroup}
                   </span>
                 </button>
@@ -501,7 +501,7 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
           )}
         </div>
         <div>
-          {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Gruppo muscolare</label>}
+          {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Gruppo muscolare</label>}
           <select value={form.muscleGroup} onChange={(e) => onChange({ ...form, muscleGroup: e.target.value })}
             className={`w-full px-3 rounded-xl outline-none ${compact ? "py-2 text-xs" : "py-2.5 text-sm"}`}
             style={selectStyle}>
@@ -514,7 +514,7 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
       {/* Row 2: sets + rep mode toggle */}
       <div className="flex items-center gap-3 flex-wrap">
         <div>
-          {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Serie</label>}
+          {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Serie</label>}
           <input type="number" min="1" max="10" value={form.sets}
             onChange={(e) => updateSets(e.target.value)}
             placeholder="Serie" className="w-20 px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
@@ -522,8 +522,8 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
         <button onClick={() => onChange({ ...form, usePerSetReps: !form.usePerSetReps })}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all mt-0 sm:mt-5"
           style={form.usePerSetReps
-            ? { background: "rgba(255,107,43,0.14)", border: "1px solid rgba(255,107,43,0.35)", color: "var(--accent-light)" }
-            : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>
+            ? { background: "color-mix(in srgb, var(--accent) 14%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)", color: "var(--accent-light)" }
+            : { background: "rgba(var(--ink-rgb),0.04)", border: "1px solid rgba(var(--ink-rgb),0.1)", color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>
           {form.usePerSetReps ? <Check size={11} /> : <Plus size={11} />}
           Rep variabili per serie
         </button>
@@ -533,24 +533,24 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
       {/* Rep targets */}
       {form.usePerSetReps ? (
         <div>
-          {!compact && <label className="block text-xs mb-2" style={{ color: "rgba(245,240,232,0.5)" }}>Rep target per serie</label>}
+          {!compact && <label className="block text-xs mb-2" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Rep target per serie</label>}
           <div className={`grid gap-2 ${sets === 1 ? "grid-cols-1" : sets === 2 ? "grid-cols-2" : sets === 3 ? "grid-cols-3" : "grid-cols-4"}`}>
             {Array.from({ length: sets }, (_, i) => (
               <div key={i}>
-                <label className="block text-xs mb-1 text-center" style={{ color: "rgba(245,240,232,0.4)" }}>S{i + 1}</label>
+                <label className="block text-xs mb-1 text-center" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }}>S{i + 1}</label>
                 <input value={form.perSetReps[i] ?? ""}
                   onChange={(e) => updatePerSetRep(i, e.target.value)}
                   placeholder="12" className="w-full px-2 py-2 rounded-xl text-sm text-center outline-none" style={inputStyle} />
               </div>
             ))}
           </div>
-          <p className="text-xs mt-1.5" style={{ color: "rgba(245,240,232,0.3)" }}>
+          <p className="text-xs mt-1.5" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.3 + var(--fade-boost-n))))" }}>
             Puoi scrivere: 12, 8-10, AMRAP, 10+4 (drop), ecc.
           </p>
         </div>
       ) : (
         <div>
-          {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Rep target (uguale per tutte le serie)</label>}
+          {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Rep target (uguale per tutte le serie)</label>}
           <input value={form.targetReps} onChange={(e) => onChange({ ...form, targetReps: e.target.value })}
             placeholder="es. 8-10 / 12 / AMRAP / 10+4 (drop)" className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
         </div>
@@ -559,14 +559,14 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
       {/* Row: rest + superset */}
       <div className="grid grid-cols-2 gap-2">
         <div>
-          {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Recupero (sec)</label>}
+          {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Recupero (sec)</label>}
           <input value={form.restSeconds} onChange={(e) => onChange({ ...form, restSeconds: e.target.value })}
             placeholder="es. 90 / 60-90 / 120" className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
         </div>
         <div>
           {!compact && (
-            <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>
-              Superserie <span style={{ color: "rgba(245,240,232,0.35)" }}>(stessa lettera = in sequenza)</span>
+            <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>
+              Superserie <span style={{ color: "rgba(var(--text-rgb), min(1, calc(0.35 + var(--fade-boost-n))))" }}>(stessa lettera = in sequenza)</span>
             </label>
           )}
           <select value={form.supersetGroup.toUpperCase()} onChange={(e) => onChange({ ...form, supersetGroup: e.target.value })}
@@ -588,12 +588,12 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
       {/* Row: notes + video */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <div>
-          {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Note tecniche</label>}
+          {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Note tecniche</label>}
           <input value={form.notes} onChange={(e) => onChange({ ...form, notes: e.target.value })}
             placeholder="es. busto inclinato 30°, pausa in basso…" className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
         </div>
         <div>
-          {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.5)" }}>Link video (opzionale)</label>}
+          {!compact && <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Link video (opzionale)</label>}
           <input value={form.videoUrl} onChange={(e) => onChange({ ...form, videoUrl: e.target.value })}
             placeholder="https://youtube.com/..." className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
         </div>
@@ -602,7 +602,7 @@ function ExerciseFormPanel({ form, onChange, onSubmit, onCancel, submitLabel, co
       {/* Buttons */}
       <div className="flex gap-2 pt-1">
         <button onClick={onCancel} className="px-4 py-2 rounded-xl text-sm"
-          style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>
+          style={{ border: "1px solid rgba(var(--ink-rgb),0.1)", color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>
           Annulla
         </button>
         <button onClick={onSubmit} disabled={!form.name.trim()}
@@ -836,17 +836,17 @@ export default function WorkoutSpreadsheet({
             <h3 className="text-base font-bold" style={{ color: "var(--ivory)" }}>Importa esercizi da CSV</h3>
           </div>
           <button onClick={() => setShowImportGuide(false)}>
-            <X size={16} style={{ color: "rgba(245,240,232,0.4)" }} />
+            <X size={16} style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }} />
           </button>
         </div>
-        <p className="text-xs mb-3" style={{ color: "rgba(245,240,232,0.55)" }}>
+        <p className="text-xs mb-3" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.55 + var(--fade-boost-n))))" }}>
           Il file CSV deve avere una riga di intestazione con queste colonne (l&apos;ordine non importa):
         </p>
-        <div className="rounded-xl p-3 mb-4 text-xs font-mono overflow-x-auto" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--ivory)" }}>
+        <div className="rounded-xl p-3 mb-4 text-xs font-mono overflow-x-auto" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--ivory)" }}>
           <p style={{ color: "var(--accent-light)" }}>Esercizio,Giorno,Serie,Ripetizioni,Recupero,Gruppo</p>
-          <p style={{ color: "rgba(245,240,232,0.6)" }}>Panca Piana,1,4,8-10,120,Petto</p>
-          <p style={{ color: "rgba(245,240,232,0.6)" }}>Squat,1,4,10,90,Gambe</p>
-          <p style={{ color: "rgba(245,240,232,0.6)" }}>Curl Bilanciere,2,3,12,60,Bicipiti</p>
+          <p style={{ color: "rgba(var(--text-rgb), min(1, calc(0.6 + var(--fade-boost-n))))" }}>Panca Piana,1,4,8-10,120,Petto</p>
+          <p style={{ color: "rgba(var(--text-rgb), min(1, calc(0.6 + var(--fade-boost-n))))" }}>Squat,1,4,10,90,Gambe</p>
+          <p style={{ color: "rgba(var(--text-rgb), min(1, calc(0.6 + var(--fade-boost-n))))" }}>Curl Bilanciere,2,3,12,60,Bicipiti</p>
         </div>
         <div className="space-y-1.5 mb-5">
           {([
@@ -863,14 +863,14 @@ export default function WorkoutSpreadsheet({
           ] as [string, string][]).map(([col, desc]) => (
             <div key={col} className="flex items-baseline gap-2 text-xs">
               <span className="font-mono font-semibold w-24 flex-shrink-0" style={{ color: "var(--accent-light)" }}>{col}</span>
-              <span style={{ color: "rgba(245,240,232,0.5)" }}>{desc}</span>
+              <span style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>{desc}</span>
             </div>
           ))}
         </div>
         <div className="flex gap-3">
           <button onClick={handleDownloadTemplate}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm flex-shrink-0"
-            style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
+            style={{ background: "color-mix(in srgb, var(--accent) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--accent-light)" }}>
             <Upload size={14} style={{ transform: "rotate(180deg)" }} /> Scarica template
           </button>
           <button
@@ -892,11 +892,11 @@ export default function WorkoutSpreadsheet({
       <div>
         {/* Share link (trainer) */}
         {mode === "trainer" && shareUrl && (
-          <div className="flex items-center gap-2 mb-4 p-3 rounded-xl" style={{ background: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.15)" }}>
+          <div className="flex items-center gap-2 mb-4 p-3 rounded-xl" style={{ background: "color-mix(in srgb, var(--accent) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)" }}>
             <ExternalLink size={12} style={{ color: "var(--accent)", flexShrink: 0 }} />
-            <span className="text-xs flex-1 truncate" style={{ color: "rgba(245,240,232,0.5)", fontFamily: "monospace" }}>{shareUrl}</span>
+            <span className="text-xs flex-1 truncate" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))", fontFamily: "monospace" }}>{shareUrl}</span>
             <button onClick={copyLink} className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs"
-              style={{ background: copied ? "rgba(34,197,94,0.12)" : "rgba(255,107,43,0.1)", color: copied ? "#22c55e" : "var(--accent-light)", border: `1px solid ${copied ? "rgba(34,197,94,0.2)" : "rgba(255,107,43,0.2)"}` }}>
+              style={{ background: copied ? "rgba(34,197,94,0.12)" : "color-mix(in srgb, var(--accent) 10%, transparent)", color: copied ? "var(--c-green-500)" : "var(--accent-light)", border: `1px solid ${copied ? "rgba(34,197,94,0.2)" : "color-mix(in srgb, var(--accent) 20%, transparent)"}` }}>
               {copied ? <><CheckCircle2 size={10} /> Copiato</> : <><Copy size={10} /> Copia</>}
             </button>
           </div>
@@ -910,9 +910,9 @@ export default function WorkoutSpreadsheet({
               <button key={d} onClick={() => { setActiveDay(d); setActiveCell(null); setShowAddRow(false); setEditId(null); }}
                 className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs whitespace-nowrap transition-all"
                 style={{
-                  background: activeDay === d ? "rgba(255,107,43,0.14)" : "rgba(255,255,255,0.04)",
-                  color: activeDay === d ? "var(--accent-light)" : "rgba(245,240,232,0.5)",
-                  border: `1px solid ${activeDay === d ? "rgba(255,107,43,0.3)" : "rgba(255,255,255,0.07)"}`,
+                  background: activeDay === d ? "color-mix(in srgb, var(--accent) 14%, transparent)" : "rgba(var(--ink-rgb),0.04)",
+                  color: activeDay === d ? "var(--accent-light)" : "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))",
+                  border: `1px solid ${activeDay === d ? "color-mix(in srgb, var(--accent) 30%, transparent)" : "rgba(var(--ink-rgb),0.07)"}`,
                   fontWeight: activeDay === d ? "600" : "400",
                 }}>
                 {getDayLabel(d)}{count > 0 && ` (${count})`}
@@ -924,15 +924,15 @@ export default function WorkoutSpreadsheet({
         {/* Week navigator */}
         <div className="flex items-center justify-between mb-4 px-1">
           <button onClick={() => setMobileWeek((w) => Math.max(1, w - 1))} disabled={mobileWeek === 1}
-            className="p-2 rounded-xl disabled:opacity-30" style={{ background: "rgba(255,255,255,0.05)" }}>
+            className="p-2 rounded-xl disabled:opacity-30" style={{ background: "rgba(var(--ink-rgb),0.05)" }}>
             <ChevronLeft size={16} style={{ color: "var(--ivory)" }} />
           </button>
           <div className="text-center">
             <p className="text-sm font-bold" style={{ color: "var(--ivory)" }}>Settimana {mobileWeek}</p>
-            <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{isUnlimited ? "piano aperto" : `di ${totalWeeks}`}</p>
+            <p className="text-xs" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }}>{isUnlimited ? "piano aperto" : `di ${totalWeeks}`}</p>
           </div>
           <button onClick={() => setMobileWeek((w) => Math.min(effectiveTotal, w + 1))} disabled={mobileWeek >= effectiveTotal}
-            className="p-2 rounded-xl disabled:opacity-30" style={{ background: "rgba(255,255,255,0.05)" }}>
+            className="p-2 rounded-xl disabled:opacity-30" style={{ background: "rgba(var(--ink-rgb),0.05)" }}>
             <ChevronRight size={16} style={{ color: "var(--ivory)" }} />
           </button>
         </div>
@@ -943,7 +943,7 @@ export default function WorkoutSpreadsheet({
             <AddBlockButtons onPick={openAddForm} dayLabel={getDayLabel(activeDay)} compact />
             <button onClick={() => setShowImportGuide(true)}
               className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm flex-shrink-0"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.55)" }}
+              style={{ background: "rgba(var(--ink-rgb),0.04)", border: "1px solid rgba(var(--ink-rgb),0.1)", color: "rgba(var(--text-rgb), min(1, calc(0.55 + var(--fade-boost-n))))" }}
               title="Importa esercizi da CSV">
               <Upload size={14} /> CSV
             </button>
@@ -953,7 +953,7 @@ export default function WorkoutSpreadsheet({
         )}
 
         {mode === "trainer" && showAddRow && (
-          <div className="mb-4 p-4 rounded-2xl" style={{ background: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.2)" }}>
+          <div className="mb-4 p-4 rounded-2xl" style={{ background: "color-mix(in srgb, var(--accent) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
             <p className="text-xs font-bold mb-3 uppercase tracking-wider" style={{ color: "var(--accent-light)" }}>
               {addForm.kind === "cardio" ? "Nuovo blocco cardio" : addForm.kind === "core" ? "Nuovo esercizio addome" : "Nuovo esercizio"} — {getDayLabel(activeDay)}
             </p>
@@ -970,8 +970,8 @@ export default function WorkoutSpreadsheet({
 
         {/* Exercise cards */}
         {dayExercises.length === 0 ? (
-          <div className="text-center py-12 rounded-2xl" style={{ border: "1px dashed rgba(255,107,43,0.15)" }}>
-            <p className="text-sm" style={{ color: "rgba(245,240,232,0.35)" }}>
+          <div className="text-center py-12 rounded-2xl" style={{ border: "1px dashed color-mix(in srgb, var(--accent) 15%, transparent)" }}>
+            <p className="text-sm" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.35 + var(--fade-boost-n))))" }}>
               {mode === "trainer" ? "Nessun esercizio — aggiungine uno" : "Nessun esercizio pianificato"}
             </p>
           </div>
@@ -997,7 +997,7 @@ export default function WorkoutSpreadsheet({
                 <div className="card-luxury rounded-2xl overflow-hidden"
                   style={color ? { borderLeft: `3px solid ${color}` } : kindColor ? { borderLeft: `3px solid ${kindColor}` } : {}}>
                   {isSupersetContinue && (
-                    <div className="px-4 py-1 text-xs flex items-center gap-2" style={{ background: `${color}10`, color }}>
+                    <div className="px-4 py-1 text-xs flex items-center gap-2" style={{ background: `color-mix(in srgb, ${color} 6.3%, transparent)`, color }}>
                       <span style={{ fontFamily: "monospace", fontWeight: 700 }}>SS-{ex.supersetGroup}</span>
                       <span className="opacity-50">↑ superserie con {prevEx?.name}</span>
                     </div>
@@ -1009,7 +1009,7 @@ export default function WorkoutSpreadsheet({
                         <div className="flex items-center gap-2 flex-wrap mb-0.5">
                           {color && !isSupersetContinue && (
                             <span className="text-xs font-bold px-1.5 py-0.5 rounded"
-                              style={{ background: `${color}20`, color, border: `1px solid ${color}40` }}>
+                              style={{ background: `color-mix(in srgb, ${color} 12.5%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 25.1%, transparent)` }}>
                               SS-{ex.supersetGroup}
                             </span>
                           )}
@@ -1021,7 +1021,7 @@ export default function WorkoutSpreadsheet({
                             </a>
                           )}
                         </div>
-                        {ex.muscleGroup && !isCardioEx && <p className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>{ex.muscleGroup}</p>}
+                        {ex.muscleGroup && !isCardioEx && <p className="text-xs" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }}>{ex.muscleGroup}</p>}
                         <div className="mt-1">{renderRepTargets(ex)}</div>
                         {(() => {
                           if (mode !== "trainer") return null;
@@ -1030,16 +1030,16 @@ export default function WorkoutSpreadsheet({
                           return (
                             <div className="flex items-center gap-1 mt-1.5">
                               <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
-                                style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.22)" }}>
+                                style={{ background: "rgba(34,197,94,0.1)", color: "var(--c-green-500)", border: "1px solid rgba(34,197,94,0.22)" }}>
                                 <TrendingUp size={9} />
                                 {sugg.weight}→{sugg.weight + sugg.increment}kg
                               </span>
                             </div>
                           );
                         })()}
-                        {ex.restSeconds && <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.35)" }}>Recupero: {ex.restSeconds}s</p>}
+                        {ex.restSeconds && <p className="text-xs mt-0.5" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.35 + var(--fade-boost-n))))" }}>Recupero: {ex.restSeconds}s</p>}
                         {ex.notes && (
-                          <p className="text-xs mt-1 italic" style={{ color: "rgba(245,240,232,0.5)", borderLeft: "2px solid rgba(255,107,43,0.2)", paddingLeft: "6px" }}>
+                          <p className="text-xs mt-1 italic" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))", borderLeft: "2px solid color-mix(in srgb, var(--accent) 20%, transparent)", paddingLeft: "6px" }}>
                             {ex.notes}
                           </p>
                         )}
@@ -1047,10 +1047,10 @@ export default function WorkoutSpreadsheet({
                       {mode === "trainer" && (
                         <div className="flex gap-1 flex-shrink-0 ml-2">
                           <button onClick={() => startEdit(ex)} className="p-1.5 rounded-lg hover:bg-white/5">
-                            <Pencil size={12} style={{ color: "rgba(245,240,232,0.4)" }} />
+                            <Pencil size={12} style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }} />
                           </button>
                           <button onClick={() => onRemoveExercise?.(ex.id)} className="p-1.5 rounded-lg hover:bg-red-500/10">
-                            <Trash2 size={12} style={{ color: "rgba(239,68,68,0.5)" }} />
+                            <Trash2 size={12} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(50% + var(--fade-boost))), transparent)" }} />
                           </button>
                         </div>
                       )}
@@ -1058,7 +1058,7 @@ export default function WorkoutSpreadsheet({
 
                     {/* Inline edit */}
                     {mode === "trainer" && isEditingThis && (
-                      <div className="mb-3 p-3 rounded-xl" style={{ background: "rgba(255,107,43,0.05)", border: "1px solid rgba(255,107,43,0.2)" }}>
+                      <div className="mb-3 p-3 rounded-xl" style={{ background: "color-mix(in srgb, var(--accent) 5%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
                         <ExerciseFormPanel form={editForm} onChange={setEditForm}
                           onSubmit={saveEdit} onCancel={() => setEditId(null)}
                           submitLabel="Salva" compact />
@@ -1067,14 +1067,14 @@ export default function WorkoutSpreadsheet({
 
                     {/* Log cell */}
                     {activeCell?.exerciseId === ex.id && activeCell?.week === mobileWeek ? (
-                      <div className="p-3 rounded-xl mt-2" style={{ background: "rgba(255,107,43,0.07)", border: "1px solid rgba(255,107,43,0.2)" }}>
+                      <div className="p-3 rounded-xl mt-2" style={{ background: "color-mix(in srgb, var(--accent) 7%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
                         <div className={`grid gap-2 mb-2 ${isCardioEx ? "grid-cols-1" : "grid-cols-2"}`}>
                           {!isCardioEx && (
                           <input type="number" value={activeCell.weight}
                             onChange={(e) => setActiveCell({ ...activeCell, weight: e.target.value })}
                             placeholder="kg" autoFocus
                             className="px-3 py-2 rounded-xl text-sm outline-none"
-                            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,107,43,0.3)", color: "var(--ivory)" }} />
+                            style={{ background: "rgba(var(--ink-rgb),0.08)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)", color: "var(--ivory)" }} />
                           )}
                           <input value={activeCell.reps}
                             onChange={(e) => setActiveCell({ ...activeCell, reps: e.target.value })}
@@ -1082,16 +1082,16 @@ export default function WorkoutSpreadsheet({
                             autoFocus={isCardioEx}
                             onKeyDown={(e) => { if (e.key === "Enter") saveCell(); if (e.key === "Escape") setActiveCell(null); }}
                             className="px-3 py-2 rounded-xl text-sm outline-none"
-                            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,107,43,0.3)", color: "var(--ivory)" }} />
+                            style={{ background: "rgba(var(--ink-rgb),0.08)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)", color: "var(--ivory)" }} />
                         </div>
                         <input value={activeCell.note}
                           onChange={(e) => setActiveCell({ ...activeCell, note: e.target.value })}
                           placeholder="nota libera…"
                           className="w-full px-3 py-2 rounded-xl text-sm outline-none mb-2"
-                          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "var(--ivory)" }} />
+                          style={{ background: "rgba(var(--ink-rgb),0.05)", border: "1px solid rgba(var(--ink-rgb),0.08)", color: "var(--ivory)" }} />
                         <div className="flex gap-2">
                           <button onClick={() => setActiveCell(null)} className="flex-1 py-2 rounded-xl text-sm font-medium"
-                            style={{ background: "rgba(255,255,255,0.06)", color: "rgba(245,240,232,0.5)" }}>Annulla</button>
+                            style={{ background: "rgba(var(--ink-rgb),0.06)", color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Annulla</button>
                           <button onClick={saveCell} className="flex-1 accent-btn py-2 rounded-xl text-sm font-medium">Salva</button>
                         </div>
                       </div>
@@ -1099,18 +1099,18 @@ export default function WorkoutSpreadsheet({
                       <button onClick={() => openCell(ex.id, mobileWeek)}
                         className="w-full mt-2 py-2.5 rounded-xl text-sm transition-all"
                         style={{
-                          background: cell.weight || cell.reps ? "rgba(255,107,43,0.08)" : "rgba(255,255,255,0.03)",
-                          border: `1px solid ${cell.weight || cell.reps ? "rgba(255,107,43,0.2)" : "rgba(255,255,255,0.06)"}`,
+                          background: cell.weight || cell.reps ? "color-mix(in srgb, var(--accent) 8%, transparent)" : "rgba(var(--ink-rgb),0.03)",
+                          border: `1px solid ${cell.weight || cell.reps ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "rgba(var(--ink-rgb),0.06)"}`,
                         }}>
                         {cell.weight || cell.reps ? (
                           <div className="flex items-center justify-center gap-3">
                             {cell.weight && <span className="font-bold" style={{ color: "var(--accent-light)" }}>{cell.weight} kg</span>}
-                            {cell.reps && <span style={{ color: "rgba(245,240,232,0.6)" }}>{cell.reps} {isCardioEx ? "min" : "rep"}</span>}
-                            {log?.note && <span className="text-xs italic" style={{ color: "rgba(245,240,232,0.35)" }}>{log.note}</span>}
-                            <Pencil size={11} style={{ color: "rgba(245,240,232,0.3)" }} />
+                            {cell.reps && <span style={{ color: "rgba(var(--text-rgb), min(1, calc(0.6 + var(--fade-boost-n))))" }}>{cell.reps} {isCardioEx ? "min" : "rep"}</span>}
+                            {log?.note && <span className="text-xs italic" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.35 + var(--fade-boost-n))))" }}>{log.note}</span>}
+                            <Pencil size={11} style={{ color: "rgba(var(--text-rgb), min(1, calc(0.3 + var(--fade-boost-n))))" }} />
                           </div>
                         ) : (
-                          <span className="flex items-center justify-center gap-2" style={{ color: "rgba(245,240,232,0.3)" }}>
+                          <span className="flex items-center justify-center gap-2" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.3 + var(--fade-boost-n))))" }}>
                             <Plus size={14} /> Inserisci sett. {mobileWeek}
                           </span>
                         )}
@@ -1124,7 +1124,7 @@ export default function WorkoutSpreadsheet({
           </div>
         )}
 
-        <p className="text-xs mt-4 text-center" style={{ color: "rgba(245,240,232,0.2)" }}>
+        <p className="text-xs mt-4 text-center" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.2 + var(--fade-boost-n))))" }}>
           ← → per navigare tra le settimane · tocca una cella per inserire
         </p>
         {importGuideModal}
@@ -1137,12 +1137,12 @@ export default function WorkoutSpreadsheet({
     <div>
       {/* Share link (trainer only) */}
       {mode === "trainer" && shareUrl && (
-        <div className="flex items-center gap-3 mb-5 p-3.5 rounded-xl" style={{ background: "rgba(255,107,43,0.06)", border: "1px solid rgba(255,107,43,0.15)" }}>
+        <div className="flex items-center gap-3 mb-5 p-3.5 rounded-xl" style={{ background: "color-mix(in srgb, var(--accent) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)" }}>
           <ExternalLink size={14} style={{ color: "var(--accent)", flexShrink: 0 }} />
-          <span className="text-xs flex-1 truncate" style={{ color: "rgba(245,240,232,0.5)", fontFamily: "monospace" }}>{shareUrl}</span>
+          <span className="text-xs flex-1 truncate" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))", fontFamily: "monospace" }}>{shareUrl}</span>
           <button onClick={copyLink}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all"
-            style={{ background: copied ? "rgba(34,197,94,0.12)" : "rgba(255,107,43,0.1)", color: copied ? "#22c55e" : "var(--accent-light)", border: `1px solid ${copied ? "rgba(34,197,94,0.2)" : "rgba(255,107,43,0.2)"}` }}>
+            style={{ background: copied ? "rgba(34,197,94,0.12)" : "color-mix(in srgb, var(--accent) 10%, transparent)", color: copied ? "var(--c-green-500)" : "var(--accent-light)", border: `1px solid ${copied ? "rgba(34,197,94,0.2)" : "color-mix(in srgb, var(--accent) 20%, transparent)"}` }}>
             {copied ? <CheckCircle2 size={12} /> : <Copy size={12} />}
             {copied ? "Copiato!" : "Copia link"}
           </button>
@@ -1159,29 +1159,29 @@ export default function WorkoutSpreadsheet({
             <div key={d} className="relative flex-shrink-0">
               {isEditing && mode === "trainer" ? (
                 <div className="flex items-center gap-1 px-2 py-1.5 rounded-xl"
-                  style={{ background: "rgba(255,107,43,0.14)", border: "1px solid rgba(255,107,43,0.3)" }}>
+                  style={{ background: "color-mix(in srgb, var(--accent) 14%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
                   <input autoFocus value={dayLabelDraft} onChange={(e) => setDayLabelDraft(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") saveDayLabel(d); if (e.key === "Escape") setEditingDayLabel(null); }}
                     placeholder={`Giorno ${d}`}
                     className="text-sm outline-none w-28 bg-transparent" style={{ color: "var(--accent-light)" }} />
                   <button onClick={() => saveDayLabel(d)} className="p-0.5 rounded hover:bg-white/10">
-                    <Check size={12} style={{ color: "#22c55e" }} />
+                    <Check size={12} style={{ color: "var(--c-green-500)" }} />
                   </button>
-                  <button onClick={() => setEditingDayLabel(null)} className="p-0.5 rounded hover:bg-white/10 text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>✕</button>
+                  <button onClick={() => setEditingDayLabel(null)} className="p-0.5 rounded hover:bg-white/10 text-xs" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }}>✕</button>
                 </div>
               ) : (
                 <button onClick={() => { setActiveDay(d); setShowAddRow(false); setActiveCell(null); setEditId(null); }}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm whitespace-nowrap transition-all group/tab"
                   style={{
-                    background: isActive ? "rgba(255,107,43,0.14)" : "rgba(255,255,255,0.04)",
-                    color: isActive ? "var(--accent-light)" : "rgba(245,240,232,0.5)",
-                    border: `1px solid ${isActive ? "rgba(255,107,43,0.3)" : "rgba(255,255,255,0.07)"}`,
+                    background: isActive ? "color-mix(in srgb, var(--accent) 14%, transparent)" : "rgba(var(--ink-rgb),0.04)",
+                    color: isActive ? "var(--accent-light)" : "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))",
+                    border: `1px solid ${isActive ? "color-mix(in srgb, var(--accent) 30%, transparent)" : "rgba(var(--ink-rgb),0.07)"}`,
                     fontWeight: isActive ? "600" : "400",
                   }}>
                   <span>{getDayLabel(d)}</span>
                   {count > 0 && (
                     <span className="text-xs px-1.5 py-0.5 rounded-full"
-                      style={{ background: isActive ? "rgba(255,107,43,0.2)" : "rgba(255,255,255,0.08)", color: isActive ? "var(--accent-light)" : "rgba(245,240,232,0.4)" }}>
+                      style={{ background: isActive ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "rgba(var(--ink-rgb),0.08)", color: isActive ? "var(--accent-light)" : "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }}>
                       {count}
                     </span>
                   )}
@@ -1204,7 +1204,7 @@ export default function WorkoutSpreadsheet({
           <AddBlockButtons onPick={openAddForm} dayLabel={getDayLabel(activeDay)} />
           <button onClick={() => setShowImportGuide(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm transition-all"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.55)" }}
+            style={{ background: "rgba(var(--ink-rgb),0.04)", border: "1px solid rgba(var(--ink-rgb),0.1)", color: "rgba(var(--text-rgb), min(1, calc(0.55 + var(--fade-boost-n))))" }}
             title="Importa esercizi da CSV">
             <Upload size={14} /> Importa CSV
           </button>
@@ -1213,7 +1213,7 @@ export default function WorkoutSpreadsheet({
       )}
 
       {mode === "trainer" && showAddRow && (
-        <div className="mb-5 p-5 rounded-2xl" style={{ background: "rgba(255,107,43,0.05)", border: "1px solid rgba(255,107,43,0.2)" }}>
+        <div className="mb-5 p-5 rounded-2xl" style={{ background: "color-mix(in srgb, var(--accent) 5%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
           <p className="text-xs font-bold mb-4 uppercase tracking-wider" style={{ color: "var(--accent-light)" }}>
             {addForm.kind === "cardio" ? "Nuovo blocco cardio" : addForm.kind === "core" ? "Nuovo esercizio addome" : "Nuovo esercizio"} — {getDayLabel(activeDay)}
           </p>
@@ -1228,24 +1228,24 @@ export default function WorkoutSpreadsheet({
       )}
 
       {dayExercises.length === 0 ? (
-        <div className="text-center py-14 rounded-2xl" style={{ border: "1px dashed rgba(255,107,43,0.15)" }}>
-          <p className="text-sm" style={{ color: "rgba(245,240,232,0.35)" }}>
+        <div className="text-center py-14 rounded-2xl" style={{ border: "1px dashed color-mix(in srgb, var(--accent) 15%, transparent)" }}>
+          <p className="text-sm" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.35 + var(--fade-boost-n))))" }}>
             {mode === "trainer" ? `Nessun esercizio per ${getDayLabel(activeDay)} — aggiungine uno sopra` : `Nessun esercizio pianificato per ${getDayLabel(activeDay)}`}
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl" style={{ border: "1px solid rgba(255,107,43,0.12)" }}>
+        <div className="overflow-x-auto rounded-2xl" style={{ border: "1px solid color-mix(in srgb, var(--accent) 12%, transparent)" }}>
           <table className="w-full border-collapse" style={{ minWidth: `${360 + weeks.length * 120}px` }}>
             <thead>
-              <tr style={{ background: "rgba(255,107,43,0.08)" }}>
-                {mode === "trainer" && <th className="w-8 p-2" style={{ borderRight: "1px solid rgba(255,107,43,0.1)" }} />}
+              <tr style={{ background: "color-mix(in srgb, var(--accent) 8%, transparent)" }}>
+                {mode === "trainer" && <th className="w-8 p-2" style={{ borderRight: "1px solid color-mix(in srgb, var(--accent) 10%, transparent)" }} />}
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wider"
-                  style={{ color: "var(--accent-light)", minWidth: "240px", borderRight: "2px solid rgba(255,107,43,0.15)", position: "sticky", left: 0, background: "rgba(15,8,4,0.98)", zIndex: 10 }}>
+                  style={{ color: "var(--accent-light)", minWidth: "240px", borderRight: "2px solid color-mix(in srgb, var(--accent) 15%, transparent)", position: "sticky", left: 0, background: "var(--panel-light, rgba(15,8,4,0.98))", zIndex: 10 }}>
                   Esercizio · {getDayLabel(activeDay)}
                 </th>
                 {weeks.map((w) => (
                   <th key={w} className="text-center p-3 text-xs font-semibold"
-                    style={{ color: "rgba(245,240,232,0.45)", minWidth: "120px", borderRight: "1px solid rgba(255,107,43,0.07)" }}>
+                    style={{ color: "rgba(var(--text-rgb), min(1, calc(0.45 + var(--fade-boost-n))))", minWidth: "120px", borderRight: "1px solid color-mix(in srgb, var(--accent) 7%, transparent)" }}>
                     Sett. {w}
                   </th>
                 ))}
@@ -1264,29 +1264,29 @@ export default function WorkoutSpreadsheet({
                   <tr key={ex.id}
                     style={{
                       borderTop: isSupersetContinue
-                        ? `1px dashed ${color}30`
-                        : "1px solid rgba(255,107,43,0.06)",
+                        ? `1px dashed color-mix(in srgb, ${color} 18.8%, transparent)`
+                        : "1px solid color-mix(in srgb, var(--accent) 6%, transparent)",
                       borderLeft: color ? `3px solid ${color}` : kindColor ? `3px solid ${kindColor}` : undefined,
                     }}
                     className="group hover:bg-white/[0.015] transition-colors">
                     {/* Reorder controls */}
                     {mode === "trainer" && (
-                      <td className="w-8 p-1 text-center" style={{ borderRight: "1px solid rgba(255,107,43,0.07)" }}>
+                      <td className="w-8 p-1 text-center" style={{ borderRight: "1px solid color-mix(in srgb, var(--accent) 7%, transparent)" }}>
                         <div className="flex flex-col items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button onClick={() => onMoveExercise?.(ex.id, "up")} disabled={idx === 0}
                             className="p-0.5 rounded hover:bg-white/10 disabled:opacity-20">
-                            <ChevronUp size={11} style={{ color: "rgba(245,240,232,0.4)" }} />
+                            <ChevronUp size={11} style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }} />
                           </button>
                           <button onClick={() => onMoveExercise?.(ex.id, "down")} disabled={idx === dayExercises.length - 1}
                             className="p-0.5 rounded hover:bg-white/10 disabled:opacity-20">
-                            <ChevronDown size={11} style={{ color: "rgba(245,240,232,0.4)" }} />
+                            <ChevronDown size={11} style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }} />
                           </button>
                         </div>
                       </td>
                     )}
 
                     {/* Exercise info cell */}
-                    <td className="p-3" style={{ borderRight: "2px solid rgba(255,107,43,0.12)", position: "sticky", left: 0, background: "rgba(10,10,10,0.98)", zIndex: 5, minWidth: "240px" }}>
+                    <td className="p-3" style={{ borderRight: "2px solid color-mix(in srgb, var(--accent) 12%, transparent)", position: "sticky", left: 0, background: "var(--panel-light, rgba(10,10,10,0.98))", zIndex: 5, minWidth: "240px" }}>
                       {isEditingThis ? (
                         <div className="py-1">
                           <ExerciseFormPanel
@@ -1304,7 +1304,7 @@ export default function WorkoutSpreadsheet({
                             <div className="flex items-center gap-2 flex-wrap mb-0.5">
                               {color && (
                                 <span className="text-xs font-bold px-1.5 py-0.5 rounded"
-                                  style={{ background: `${color}20`, color, border: `1px solid ${color}40`, fontFamily: "monospace" }}>
+                                  style={{ background: `color-mix(in srgb, ${color} 12.5%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 25.1%, transparent)`, fontFamily: "monospace" }}>
                                   SS-{ex.supersetGroup}
                                 </span>
                               )}
@@ -1318,7 +1318,7 @@ export default function WorkoutSpreadsheet({
                               )}
                             </div>
                             {ex.muscleGroup && !isCardioEx && (
-                              <p className="text-xs mb-1" style={{ color: "rgba(245,240,232,0.35)" }}>{ex.muscleGroup}</p>
+                              <p className="text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.35 + var(--fade-boost-n))))" }}>{ex.muscleGroup}</p>
                             )}
                             {renderRepTargets(ex)}
                             {(() => {
@@ -1328,7 +1328,7 @@ export default function WorkoutSpreadsheet({
                               return (
                                 <div className="flex items-center gap-1 mt-1.5">
                                   <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
-                                    style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.22)" }}>
+                                    style={{ background: "rgba(34,197,94,0.1)", color: "var(--c-green-500)", border: "1px solid rgba(34,197,94,0.22)" }}>
                                     <TrendingUp size={9} />
                                     {sugg.weight}→{sugg.weight + sugg.increment}kg
                                   </span>
@@ -1336,12 +1336,12 @@ export default function WorkoutSpreadsheet({
                               );
                             })()}
                             {ex.restSeconds && (
-                              <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.35)" }}>
+                              <p className="text-xs mt-0.5" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.35 + var(--fade-boost-n))))" }}>
                                 Recupero: {ex.restSeconds}s
                               </p>
                             )}
                             {ex.notes && (
-                              <p className="text-xs mt-1 italic" style={{ color: "rgba(245,240,232,0.4)", borderLeft: "2px solid rgba(255,107,43,0.2)", paddingLeft: "6px" }}>
+                              <p className="text-xs mt-1 italic" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))", borderLeft: "2px solid color-mix(in srgb, var(--accent) 20%, transparent)", paddingLeft: "6px" }}>
                                 {ex.notes}
                               </p>
                             )}
@@ -1355,10 +1355,10 @@ export default function WorkoutSpreadsheet({
                             )}
                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                               <button onClick={() => startEdit(ex)} className="p-1 rounded hover:bg-white/10" title="Modifica">
-                                <Pencil size={11} style={{ color: "rgba(245,240,232,0.4)" }} />
+                                <Pencil size={11} style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }} />
                               </button>
                               <button onClick={() => onRemoveExercise?.(ex.id)} className="p-1 rounded hover:bg-red-500/10">
-                                <Trash2 size={11} style={{ color: "rgba(239,68,68,0.5)" }} />
+                                <Trash2 size={11} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(50% + var(--fade-boost))), transparent)" }} />
                               </button>
                             </div>
                             </>
@@ -1374,15 +1374,15 @@ export default function WorkoutSpreadsheet({
                       const isActive = activeCell?.exerciseId === ex.id && activeCell?.week === w;
                       const hasData = cell.weight || cell.reps;
                       return (
-                        <td key={w} className="p-0" style={{ borderRight: "1px solid rgba(255,107,43,0.05)", verticalAlign: "top" }}>
+                        <td key={w} className="p-0" style={{ borderRight: "1px solid color-mix(in srgb, var(--accent) 5%, transparent)", verticalAlign: "top" }}>
                           {isActive ? (
-                            <div className="p-2" style={{ background: "rgba(255,107,43,0.07)", minWidth: "120px" }}>
+                            <div className="p-2" style={{ background: "color-mix(in srgb, var(--accent) 7%, transparent)", minWidth: "120px" }}>
                               {!isCardioEx && (
                               <input type="number" value={activeCell.weight}
                                 onChange={(e) => setActiveCell({ ...activeCell, weight: e.target.value })}
                                 placeholder="kg" autoFocus
                                 className="w-full px-2 py-1 rounded-lg text-xs outline-none mb-1"
-                                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,107,43,0.3)", color: "var(--ivory)" }} />
+                                style={{ background: "rgba(var(--ink-rgb),0.08)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)", color: "var(--ivory)" }} />
                               )}
                               <input value={activeCell.reps}
                                 onChange={(e) => setActiveCell({ ...activeCell, reps: e.target.value })}
@@ -1390,14 +1390,14 @@ export default function WorkoutSpreadsheet({
                                 autoFocus={isCardioEx}
                                 onKeyDown={(e) => { if (e.key === "Enter") saveCell(); if (e.key === "Escape") setActiveCell(null); }}
                                 className="w-full px-2 py-1 rounded-lg text-xs outline-none mb-1"
-                                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,107,43,0.3)", color: "var(--ivory)" }} />
+                                style={{ background: "rgba(var(--ink-rgb),0.08)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)", color: "var(--ivory)" }} />
                               <input value={activeCell.note}
                                 onChange={(e) => setActiveCell({ ...activeCell, note: e.target.value })}
                                 placeholder="nota…"
                                 className="w-full px-2 py-1 rounded-lg text-xs outline-none mb-1.5"
-                                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "var(--ivory)" }} />
+                                style={{ background: "rgba(var(--ink-rgb),0.05)", border: "1px solid rgba(var(--ink-rgb),0.08)", color: "var(--ivory)" }} />
                               <div className="flex gap-1">
-                                <button onClick={() => setActiveCell(null)} className="flex-1 py-1 rounded text-xs" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(245,240,232,0.5)" }}>✕</button>
+                                <button onClick={() => setActiveCell(null)} className="flex-1 py-1 rounded text-xs" style={{ background: "rgba(var(--ink-rgb),0.06)", color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>✕</button>
                                 <button onClick={saveCell} className="flex-1 accent-btn py-1 rounded text-xs">✓</button>
                               </div>
                             </div>
@@ -1408,11 +1408,11 @@ export default function WorkoutSpreadsheet({
                               {hasData ? (
                                 <div>
                                   {cell.weight && <p className="text-sm font-bold" style={{ color: "var(--accent-light)" }}>{cell.weight} kg</p>}
-                                  {cell.reps && <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.6)" }}>{cell.reps}{isCardioEx ? " min" : ""}</p>}
-                                  {log?.note && <p className="text-xs mt-0.5 italic line-clamp-3 break-words" style={{ color: "rgba(245,240,232,0.55)" }} title={log.note}>{log.note}</p>}
+                                  {cell.reps && <p className="text-xs mt-0.5" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.6 + var(--fade-boost-n))))" }}>{cell.reps}{isCardioEx ? " min" : ""}</p>}
+                                  {log?.note && <p className="text-xs mt-0.5 italic line-clamp-3 break-words" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.55 + var(--fade-boost-n))))" }} title={log.note}>{log.note}</p>}
                                 </div>
                               ) : (
-                                <span className="text-xs" style={{ color: "rgba(245,240,232,0.12)" }}>—</span>
+                                <span className="text-xs" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.12 + var(--fade-boost-n))))" }}>—</span>
                               )}
                             </button>
                           )}
@@ -1427,7 +1427,7 @@ export default function WorkoutSpreadsheet({
         </div>
       )}
 
-      <p className="text-xs mt-3" style={{ color: "rgba(245,240,232,0.22)" }}>
+      <p className="text-xs mt-3" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.22 + var(--fade-boost-n))))" }}>
         {mode === "trainer"
           ? "Hover sul tab giorno per rinominarlo · Clicca su una cella per inserire peso/reps · Icona catena = superserie con l'esercizio sopra"
           : "Clicca su una cella per inserire il peso e le ripetizioni · Invio per salvare"}

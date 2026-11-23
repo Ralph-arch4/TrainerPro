@@ -9,13 +9,13 @@ import {
 } from "lucide-react";
 
 const inputStyle = {
-  background: "rgba(255,255,255,0.05)",
-  border: "1px solid rgba(255,107,43,0.2)",
+  background: "rgba(var(--ink-rgb),0.05)",
+  border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
   color: "var(--ivory)",
 };
 const selectStyle = {
   background: "rgba(26,26,26,1)",
-  border: "1px solid rgba(255,107,43,0.2)",
+  border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
   color: "var(--ivory)",
 };
 
@@ -49,14 +49,14 @@ function MacroRow({ label, icon, color, min, max, onMin, onMax, unit }: MacroRow
       </div>
       <div className="flex-1 flex items-center gap-2">
         <div className="flex-1">
-          <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.4)" }}>Min {unit}</label>
+          <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }}>Min {unit}</label>
           <input type="number" value={min} onChange={(e) => onMin(e.target.value)}
             placeholder="0"
             className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
         </div>
-        <span className="text-xs mt-4" style={{ color: "rgba(245,240,232,0.3)" }}>–</span>
+        <span className="text-xs mt-4" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.3 + var(--fade-boost-n))))" }}>–</span>
         <div className="flex-1">
-          <label className="block text-xs mb-1" style={{ color: "rgba(245,240,232,0.4)" }}>Max {unit}</label>
+          <label className="block text-xs mb-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }}>Max {unit}</label>
           <input type="number" value={max} onChange={(e) => onMax(e.target.value)}
             placeholder="facoltativo"
             className="w-full px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
@@ -95,7 +95,7 @@ function MealItemRow({ item, onChange, onRemove }: MealItemRowProps) {
   }
 
   return (
-    <div className="p-3 rounded-xl mb-2" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+    <div className="p-3 rounded-xl mb-2" style={{ background: "rgba(var(--ink-rgb),0.03)", border: "1px solid rgba(var(--ink-rgb),0.06)" }}>
       <div className="flex items-start gap-2">
         <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2">
           <div className="sm:col-span-2 relative">
@@ -104,17 +104,17 @@ function MealItemRow({ item, onChange, onRemove }: MealItemRowProps) {
               placeholder="Alimento (es. Pollo, Riso, Olio EVO…)"
               className="w-full px-2.5 py-1.5 rounded-lg text-sm outline-none" style={inputStyle} />
             {item.foodId && (
-              <span className="text-xs" style={{ color: "rgba(34,197,94,0.6)" }}>dal database · macro auto</span>
+              <span className="text-xs" style={{ color: "color-mix(in srgb, var(--c-green-500) min(100%, calc(60% + var(--fade-boost))), transparent)" }}>dal database · macro auto</span>
             )}
             {suggestions.length > 0 && (
               <div className="absolute left-0 right-0 top-full mt-1 rounded-xl overflow-hidden z-20"
-                style={{ background: "rgba(26,26,26,0.98)", border: "1px solid rgba(255,107,43,0.25)", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+                style={{ background: "rgba(26,26,26,0.98)", border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
                 {suggestions.map((f) => (
                   <button key={f.id} onMouseDown={(e) => { e.preventDefault(); selectFood(f); }}
                     className="w-full px-3 py-2.5 text-left text-sm flex items-center justify-between gap-2 hover:bg-white/5 transition-all"
                     style={{ color: "var(--ivory)" }}>
                     <span className="truncate">{displayName(f)}</span>
-                    <span className="text-xs flex-shrink-0" style={{ color: "rgba(245,240,232,0.4)" }}>
+                    <span className="text-xs flex-shrink-0" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }}>
                       P{f.per100.protein} C{f.per100.carbs} G{f.per100.fat} /100g
                     </span>
                   </button>
@@ -127,36 +127,36 @@ function MealItemRow({ item, onChange, onRemove }: MealItemRowProps) {
               <input type="number" value={item.grams || ""} onChange={(e) => handleGrams(e.target.value)}
                 placeholder="g min"
                 className="flex-1 w-full px-2.5 py-1.5 rounded-lg text-sm outline-none" style={inputStyle} />
-              <span className="text-xs flex-shrink-0" style={{ color: "rgba(245,240,232,0.3)" }}>–</span>
+              <span className="text-xs flex-shrink-0" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.3 + var(--fade-boost-n))))" }}>–</span>
               <input type="number" value={item.gramsMax || ""} onChange={(e) => onChange({ gramsMax: parseFloat(e.target.value) || undefined })}
                 placeholder="g max"
                 className="flex-1 w-full px-2.5 py-1.5 rounded-lg text-sm outline-none" style={inputStyle} />
             </div>
-            <p className="text-xs mt-0.5" style={{ color: "rgba(245,240,232,0.3)" }}>Grammi (range)</p>
+            <p className="text-xs mt-0.5" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.3 + var(--fade-boost-n))))" }}>Grammi (range)</p>
           </div>
           <div className="grid grid-cols-3 gap-1">
             <div>
               <input type="number" value={item.protein || ""} onChange={(e) => onChange({ protein: parseFloat(e.target.value) || undefined })}
                 placeholder="P g"
                 className="w-full px-2 py-1.5 rounded-lg text-xs outline-none" style={{ ...inputStyle, border: "1px solid rgba(167,139,250,0.25)" }} />
-              <p className="text-xs mt-0.5 text-center" style={{ color: "rgba(167,139,250,0.6)" }}>Prot</p>
+              <p className="text-xs mt-0.5 text-center" style={{ color: "color-mix(in srgb, var(--c-violet-400) min(100%, calc(60% + var(--fade-boost))), transparent)" }}>Prot</p>
             </div>
             <div>
               <input type="number" value={item.carbs || ""} onChange={(e) => onChange({ carbs: parseFloat(e.target.value) || undefined })}
                 placeholder="C g"
                 className="w-full px-2 py-1.5 rounded-lg text-xs outline-none" style={{ ...inputStyle, border: "1px solid rgba(56,189,248,0.25)" }} />
-              <p className="text-xs mt-0.5 text-center" style={{ color: "rgba(56,189,248,0.6)" }}>Carb</p>
+              <p className="text-xs mt-0.5 text-center" style={{ color: "color-mix(in srgb, var(--c-sky-400) min(100%, calc(60% + var(--fade-boost))), transparent)" }}>Carb</p>
             </div>
             <div>
               <input type="number" value={item.fat || ""} onChange={(e) => onChange({ fat: parseFloat(e.target.value) || undefined })}
                 placeholder="G g"
                 className="w-full px-2 py-1.5 rounded-lg text-xs outline-none" style={{ ...inputStyle, border: "1px solid rgba(251,191,36,0.25)" }} />
-              <p className="text-xs mt-0.5 text-center" style={{ color: "rgba(251,191,36,0.6)" }}>Gras</p>
+              <p className="text-xs mt-0.5 text-center" style={{ color: "color-mix(in srgb, var(--c-amber-400) min(100%, calc(60% + var(--fade-boost))), transparent)" }}>Gras</p>
             </div>
           </div>
         </div>
         <button onClick={onRemove} className="mt-1 p-1.5 rounded-lg flex-shrink-0 hover:bg-red-500/10 transition-all">
-          <Trash2 size={13} style={{ color: "rgba(239,68,68,0.55)" }} />
+          <Trash2 size={13} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(55% + var(--fade-boost))), transparent)" }} />
         </button>
       </div>
       {/* notes per item */}
@@ -195,38 +195,38 @@ function MealBlock({ meal, index, onUpdate, onRemove }: MealBlockProps) {
   }
 
   return (
-    <div className="rounded-2xl mb-3" style={{ border: "1px solid rgba(255,107,43,0.18)", background: "rgba(255,107,43,0.03)" }}>
+    <div className="rounded-2xl mb-3" style={{ border: "1px solid color-mix(in srgb, var(--accent) 18%, transparent)", background: "color-mix(in srgb, var(--accent) 3%, transparent)" }}>
       {/* Meal header */}
       <div className="flex items-center gap-3 p-3.5">
         <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-          style={{ background: "rgba(255,107,43,0.15)", color: "var(--accent-light)" }}>
+          style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent-light)" }}>
           {index + 1}
         </div>
         <div className="flex-1 flex items-center gap-2 min-w-0">
           <input value={meal.name} onChange={(e) => onUpdate({ name: e.target.value })}
             placeholder={`Pasto ${index + 1}`}
             className="flex-1 min-w-0 bg-transparent text-sm font-semibold outline-none border-b"
-            style={{ color: "var(--ivory)", borderColor: "rgba(255,107,43,0.2)" }} />
+            style={{ color: "var(--ivory)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }} />
           <div className="flex items-center gap-1 flex-shrink-0">
-            <Clock size={11} style={{ color: "rgba(245,240,232,0.3)" }} />
+            <Clock size={11} style={{ color: "rgba(var(--text-rgb), min(1, calc(0.3 + var(--fade-boost-n))))" }} />
             <input value={meal.time || ""} onChange={(e) => onUpdate({ time: e.target.value || undefined })}
               placeholder="orario"
               className="w-16 text-xs bg-transparent outline-none"
-              style={{ color: "rgba(245,240,232,0.5)" }} />
+              style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }} />
           </div>
         </div>
         {totalCalFromItems > 0 && (
           <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
-            style={{ background: "rgba(255,107,43,0.08)", color: "var(--accent-light)" }}>
+            style={{ background: "color-mix(in srgb, var(--accent) 8%, transparent)", color: "var(--accent-light)" }}>
             ~{Math.round(totalCalFromItems)} kcal
           </span>
         )}
         <div className="flex items-center gap-1 flex-shrink-0">
           <button onClick={() => setExpanded(!expanded)} className="p-1.5 rounded-lg hover:bg-white/5 transition-all">
-            {expanded ? <ChevronUp size={14} style={{ color: "rgba(245,240,232,0.4)" }} /> : <ChevronDown size={14} style={{ color: "rgba(245,240,232,0.4)" }} />}
+            {expanded ? <ChevronUp size={14} style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }} /> : <ChevronDown size={14} style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }} />}
           </button>
           <button onClick={onRemove} className="p-1.5 rounded-lg hover:bg-red-500/10 transition-all">
-            <Trash2 size={13} style={{ color: "rgba(239,68,68,0.5)" }} />
+            <Trash2 size={13} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(50% + var(--fade-boost))), transparent)" }} />
           </button>
         </div>
       </div>
@@ -241,7 +241,7 @@ function MealBlock({ meal, index, onUpdate, onRemove }: MealBlockProps) {
           ))}
           <button onClick={addItem}
             className="flex items-center gap-1.5 w-full py-2 rounded-xl text-xs mt-1 transition-all"
-            style={{ border: "1px dashed rgba(255,107,43,0.2)", color: "var(--accent-light)", background: "transparent" }}>
+            style={{ border: "1px dashed color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--accent-light)", background: "transparent" }}>
             <Plus size={12} /> Aggiungi alimento
           </button>
           {/* Meal notes */}
@@ -356,13 +356,13 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
       style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="w-full max-w-2xl rounded-3xl p-6 my-4 flex flex-col gap-5"
-        style={{ background: "rgba(18,12,8,0.98)", border: "1px solid rgba(255,107,43,0.22)", boxShadow: "0 0 60px rgba(255,107,43,0.08)" }}>
+        style={{ background: "var(--panel-light, rgba(18,12,8,0.98))", border: "1px solid color-mix(in srgb, var(--accent) 22%, transparent)", boxShadow: "0 0 60px color-mix(in srgb, var(--accent) 8%, transparent)" }}>
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: "rgba(255,107,43,0.12)", border: "1px solid rgba(255,107,43,0.2)" }}>
+              style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
               <UtensilsCrossed size={16} style={{ color: "var(--accent)" }} />
             </div>
             <h2 className="text-lg font-bold" style={{ color: "var(--ivory)" }}>
@@ -370,20 +370,20 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
             </h2>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/5 transition-all">
-            <X size={18} style={{ color: "rgba(245,240,232,0.5)" }} />
+            <X size={18} style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }} />
           </button>
         </div>
 
         {/* ── Plan metadata ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2">
-            <label className="block text-xs mb-1.5 font-medium" style={{ color: "rgba(245,240,232,0.5)" }}>Nome piano *</label>
+            <label className="block text-xs mb-1.5 font-medium" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Nome piano *</label>
             <input value={name} onChange={(e) => setName(e.target.value)}
               placeholder="es. Massa, Definizione, Mantenimento…"
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
           </div>
           <div>
-            <label className="block text-xs mb-1.5 font-medium" style={{ color: "rgba(245,240,232,0.5)" }}>Fase collegata</label>
+            <label className="block text-xs mb-1.5 font-medium" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Fase collegata</label>
             <select value={phaseId} onChange={(e) => setPhaseId(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={selectStyle}>
               <option value="">— Nessuna —</option>
@@ -394,46 +394,46 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
             <button onClick={() => setActive(!active)}
               className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition-all"
               style={active
-                ? { background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "#22c55e" }
-                : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(245,240,232,0.4)" }}>
-              {active ? <Check size={13} /> : <span className="w-3 h-3 rounded-full inline-block" style={{ background: "rgba(245,240,232,0.2)" }} />}
+                ? { background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", color: "var(--c-green-500)" }
+                : { background: "rgba(var(--ink-rgb),0.04)", border: "1px solid rgba(var(--ink-rgb),0.08)", color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }}>
+              {active ? <Check size={13} /> : <span className="w-3 h-3 rounded-full inline-block" style={{ background: "rgba(var(--text-rgb),0.2)" }} />}
               {active ? "Piano attivo" : "Piano inattivo"}
             </button>
           </div>
         </div>
 
         {/* ── Macros with ranges ── */}
-        <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,107,43,0.1)" }}>
+        <div className="rounded-2xl p-4" style={{ background: "rgba(var(--ink-rgb),0.03)", border: "1px solid color-mix(in srgb, var(--accent) 10%, transparent)" }}>
           <h3 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--ivory)" }}>
             <Flame size={14} style={{ color: "var(--accent)" }} /> Macronutrienti giornalieri
-            <span className="text-xs font-normal ml-1" style={{ color: "rgba(245,240,232,0.35)" }}>(range min – max)</span>
+            <span className="text-xs font-normal ml-1" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.35 + var(--fade-boost-n))))" }}>(range min – max)</span>
           </h3>
 
           <div className="space-y-3">
             <MacroRow label="Calorie" icon={<Flame size={14} />} color="var(--accent)"
               min={calories} max={caloriesMax} unit="kcal"
               onMin={setCalories} onMax={setCaloriesMax} />
-            <MacroRow label="Proteine" icon={<Beef size={14} />} color="#a78bfa"
+            <MacroRow label="Proteine" icon={<Beef size={14} />} color="var(--c-violet-400)"
               min={protein} max={proteinMax} unit="g"
               onMin={setProtein} onMax={setProteinMax} />
-            <MacroRow label="Carboidrati" icon={<Wheat size={14} />} color="#38bdf8"
+            <MacroRow label="Carboidrati" icon={<Wheat size={14} />} color="var(--c-sky-400)"
               min={carbs} max={carbsMax} unit="g"
               onMin={setCarbs} onMax={setCarbsMax} />
-            <MacroRow label="Grassi" icon={<Droplets size={14} />} color="#fbbf24"
+            <MacroRow label="Grassi" icon={<Droplets size={14} />} color="var(--c-amber-400)"
               min={fat} max={fatMax} unit="g"
               onMin={setFat} onMax={setFatMax} />
           </div>
 
           {hasMacros && (
             <div className="mt-3 pt-3 flex items-center gap-3 flex-wrap"
-              style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Calcolato dai macro:</span>
+              style={{ borderTop: "1px solid rgba(var(--ink-rgb),0.06)" }}>
+              <span className="text-xs" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }}>Calcolato dai macro:</span>
               <span className="text-sm font-bold" style={{ color: "var(--accent-light)" }}>
                 {Math.round(computedKcal)}{computedKcalMax > computedKcal ? `–${Math.round(computedKcalMax)}` : ""} kcal
               </span>
               {(parseFloat(calories) > 0) && Math.abs(parseFloat(calories) - computedKcal) > 20 && (
                 <span className="text-xs px-2 py-0.5 rounded-full"
-                  style={{ background: "rgba(245,158,11,0.1)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.2)" }}>
+                  style={{ background: "rgba(245,158,11,0.1)", color: "var(--c-amber-500)", border: "1px solid rgba(245,158,11,0.2)" }}>
                   ⚠ differisce dal valore inserito
                 </span>
               )}
@@ -442,38 +442,38 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
         </div>
 
         {/* ── Auto generator ── */}
-        <div className="rounded-2xl p-4" style={{ background: "rgba(255,107,43,0.05)", border: "1px solid rgba(255,107,43,0.2)" }}>
+        <div className="rounded-2xl p-4" style={{ background: "color-mix(in srgb, var(--accent) 5%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
           <h3 className="text-sm font-semibold mb-1 flex items-center gap-2" style={{ color: "var(--ivory)" }}>
             <Sparkles size={14} style={{ color: "var(--accent)" }} /> Generatore automatico
           </h3>
-          <p className="text-xs mb-4" style={{ color: "rgba(245,240,232,0.45)" }}>
+          <p className="text-xs mb-4" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.45 + var(--fade-boost-n))))" }}>
             Imposta i macro qui sopra e scegli il numero di pasti: il piano viene calcolato al grammo dal database alimenti.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <div>
-              <label className="block text-xs mb-1.5 font-medium" style={{ color: "rgba(245,240,232,0.5)" }}>Numero pasti</label>
+              <label className="block text-xs mb-1.5 font-medium" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Numero pasti</label>
               <div className="flex gap-1.5">
                 {[2, 3, 4, 5, 6].map((num) => (
                   <button key={num} onClick={() => setGenMealsCount(num)}
                     className="w-11 h-11 rounded-xl text-sm font-semibold transition-all"
                     style={num === genMealsCount
-                      ? { background: "rgba(255,107,43,0.18)", border: "1px solid rgba(255,107,43,0.45)", color: "var(--accent-light)" }
-                      : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(245,240,232,0.5)" }}>
+                      ? { background: "color-mix(in srgb, var(--accent) 18%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 45%, transparent)", color: "var(--accent-light)" }
+                      : { background: "rgba(var(--ink-rgb),0.04)", border: "1px solid rgba(var(--ink-rgb),0.08)", color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>
                     {num}
                   </button>
                 ))}
               </div>
             </div>
             <div className="flex-1">
-              <label className="block text-xs mb-1.5 font-medium" style={{ color: "rgba(245,240,232,0.5)" }}>Preferenza alimentare</label>
+              <label className="block text-xs mb-1.5 font-medium" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Preferenza alimentare</label>
               <div className="flex flex-wrap gap-1.5">
                 {([["onnivora", "Onnivora"], ["pescetariana", "Pescetariana"], ["vegetariana", "Vegetariana"]] as Array<[DietPreference, string]>).map(([value, label]) => (
                   <button key={value} onClick={() => setGenPreference(value)}
                     className="px-3 h-11 rounded-xl text-xs font-medium transition-all"
                     style={value === genPreference
-                      ? { background: "rgba(255,107,43,0.18)", border: "1px solid rgba(255,107,43,0.45)", color: "var(--accent-light)" }
-                      : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(245,240,232,0.5)" }}>
+                      ? { background: "color-mix(in srgb, var(--accent) 18%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 45%, transparent)", color: "var(--accent-light)" }
+                      : { background: "rgba(var(--ink-rgb),0.04)", border: "1px solid rgba(var(--ink-rgb),0.08)", color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>
                     {label}
                   </button>
                 ))}
@@ -483,30 +483,30 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
 
           <button onClick={handleGenerate} disabled={!hasMacros}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-            style={{ background: "rgba(255,107,43,0.15)", border: "1px solid rgba(255,107,43,0.35)", color: "var(--accent-light)" }}>
+            style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)", color: "var(--accent-light)" }}>
             {genTotals ? <RefreshCw size={14} /> : <Sparkles size={14} />}
             {genTotals ? "Rigenera con altri alimenti" : "Genera piano alimentare"}
           </button>
 
           {meals.length > 0 && !genTotals && (
-            <p className="text-xs mt-2" style={{ color: "rgba(245,158,11,0.7)" }}>
+            <p className="text-xs mt-2" style={{ color: "color-mix(in srgb, var(--c-amber-500) min(100%, calc(70% + var(--fade-boost))), transparent)" }}>
               La generazione sostituirà i pasti attuali.
             </p>
           )}
           {genError && (
-            <p className="text-xs mt-2" style={{ color: "#ef4444" }}>{genError}</p>
+            <p className="text-xs mt-2" style={{ color: "var(--c-red-500)" }}>{genError}</p>
           )}
           {genTotals && (
-            <div className="mt-3 pt-3 flex items-center gap-2 flex-wrap" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <span className="text-xs" style={{ color: "rgba(245,240,232,0.4)" }}>Piano generato:</span>
+            <div className="mt-3 pt-3 flex items-center gap-2 flex-wrap" style={{ borderTop: "1px solid rgba(var(--ink-rgb),0.06)" }}>
+              <span className="text-xs" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.4 + var(--fade-boost-n))))" }}>Piano generato:</span>
               {[
                 { v: `${genTotals.calories} kcal`, c: "var(--accent-light)" },
-                { v: `P ${genTotals.protein}g`, c: "#a78bfa" },
-                { v: `C ${genTotals.carbs}g`, c: "#38bdf8" },
-                { v: `G ${genTotals.fat}g`, c: "#fbbf24" },
+                { v: `P ${genTotals.protein}g`, c: "var(--c-violet-400)" },
+                { v: `C ${genTotals.carbs}g`, c: "var(--c-sky-400)" },
+                { v: `G ${genTotals.fat}g`, c: "var(--c-amber-400)" },
               ].map((chip, i) => (
                 <span key={i} className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                  style={{ background: "rgba(255,255,255,0.05)", color: chip.c }}>
+                  style={{ background: "rgba(var(--ink-rgb),0.05)", color: chip.c }}>
                   {chip.v}
                 </span>
               ))}
@@ -523,15 +523,15 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
             </h3>
             <button onClick={addMeal}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all"
-              style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
+              style={{ background: "color-mix(in srgb, var(--accent) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--accent-light)" }}>
               <Plus size={12} /> Aggiungi pasto
             </button>
           </div>
 
           {meals.length === 0 ? (
-            <div className="text-center py-8 rounded-2xl" style={{ border: "1px dashed rgba(255,107,43,0.15)" }}>
-              <UtensilsCrossed size={28} className="mx-auto mb-2" style={{ color: "rgba(255,107,43,0.2)" }} />
-              <p className="text-sm" style={{ color: "rgba(245,240,232,0.35)" }}>Nessun pasto ancora</p>
+            <div className="text-center py-8 rounded-2xl" style={{ border: "1px dashed color-mix(in srgb, var(--accent) 15%, transparent)" }}>
+              <UtensilsCrossed size={28} className="mx-auto mb-2" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(20% + var(--fade-boost))), transparent)" }} />
+              <p className="text-sm" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.35 + var(--fade-boost-n))))" }}>Nessun pasto ancora</p>
               <button onClick={addMeal} className="mt-2 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>
                 + Aggiungi il primo pasto
               </button>
@@ -549,7 +549,7 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
 
         {/* ── Notes ── */}
         <div>
-          <label className="block text-xs mb-1.5 font-medium" style={{ color: "rgba(245,240,232,0.5)" }}>Note generali</label>
+          <label className="block text-xs mb-1.5 font-medium" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>Note generali</label>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
             placeholder="Indicazioni generali, strategia di refeed, timing, integratori…"
             rows={3}
@@ -560,7 +560,7 @@ export default function DietPlanEditor({ plan, clientId, phases, onSave, onClose
         <div className="flex gap-3 pt-1">
           <button onClick={onClose}
             className="flex-1 py-2.5 rounded-xl text-sm font-medium"
-            style={{ border: "1px solid rgba(255,255,255,0.1)", color: "rgba(245,240,232,0.5)" }}>
+            style={{ border: "1px solid rgba(var(--ink-rgb),0.1)", color: "rgba(var(--text-rgb), min(1, calc(0.5 + var(--fade-boost-n))))" }}>
             Annulla
           </button>
           <button onClick={handleSave} disabled={!name.trim()}

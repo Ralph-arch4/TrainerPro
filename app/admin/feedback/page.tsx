@@ -6,15 +6,15 @@ import { dbFeedback, type FeedbackNote } from "@/lib/db";
 import { MessageSquare, Bug, Lightbulb, Zap, Loader2, CheckCircle2, Clock, AlertCircle, Users, Filter } from "lucide-react";
 
 const CATEGORY_META = {
-  bug:         { label: "Bug",           color: "#f87171", bg: "rgba(239,68,68,0.12)",    Icon: Bug },
-  improvement: { label: "Miglioramento", color: "#FF9A6C", bg: "rgba(255,107,43,0.12)",   Icon: Zap },
-  idea:        { label: "Idea",          color: "#a78bfa", bg: "rgba(123,47,190,0.12)",   Icon: Lightbulb },
+  bug:         { label: "Bug",           color: "var(--c-red-400)", bg: "rgba(239,68,68,0.12)",    Icon: Bug },
+  improvement: { label: "Miglioramento", color: "var(--c-coral)", bg: "color-mix(in srgb, var(--accent) 12%, transparent)",   Icon: Zap },
+  idea:        { label: "Idea",          color: "var(--c-violet-400)", bg: "rgba(123,47,190,0.12)",   Icon: Lightbulb },
 } as const;
 
 const STATUS_META = {
-  nuovo:     { label: "Nuovo",      color: "#38bdf8", bg: "rgba(56,189,248,0.12)",   Icon: AlertCircle },
-  in_review: { label: "In review",  color: "#fbbf24", bg: "rgba(251,191,36,0.12)",   Icon: Clock },
-  fatto:     { label: "Fatto",      color: "#22c55e", bg: "rgba(34,197,94,0.12)",    Icon: CheckCircle2 },
+  nuovo:     { label: "Nuovo",      color: "var(--c-sky-400)", bg: "rgba(56,189,248,0.12)",   Icon: AlertCircle },
+  in_review: { label: "In review",  color: "var(--c-amber-400)", bg: "rgba(251,191,36,0.12)",   Icon: Clock },
+  fatto:     { label: "Fatto",      color: "var(--c-green-500)", bg: "rgba(34,197,94,0.12)",    Icon: CheckCircle2 },
 } as const;
 
 const ADMIN_EMAIL = "raffaele.dinora0409@gmail.com";
@@ -97,10 +97,10 @@ export default function AdminFeedbackPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {[
-            { label: "Bug aperti",         value: counts.bug,         color: "#f87171" },
-            { label: "Miglioramenti",      value: counts.improvement, color: "#FF9A6C" },
-            { label: "Idee",               value: counts.idea,        color: "#a78bfa" },
-            { label: "Da leggere (nuovi)", value: counts.nuovo,       color: "#38bdf8" },
+            { label: "Bug aperti",         value: counts.bug,         color: "var(--c-red-400)" },
+            { label: "Miglioramenti",      value: counts.improvement, color: "var(--c-coral)" },
+            { label: "Idee",               value: counts.idea,        color: "var(--c-violet-400)" },
+            { label: "Da leggere (nuovi)", value: counts.nuovo,       color: "var(--c-sky-400)" },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-2xl p-4 text-center"
               style={{ background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
@@ -122,7 +122,7 @@ export default function AdminFeedbackPage() {
               style={{
                 background: catFilter === v ? "rgba(201,168,76,0.18)" : "var(--surface-sm)",
                 border: `1px solid ${catFilter === v ? "rgba(201,168,76,0.4)" : "var(--surface-md)"}`,
-                color: catFilter === v ? "#FF9A6C" : "var(--text-muted)",
+                color: catFilter === v ? "var(--c-coral)" : "var(--text-muted)",
               }}>
               {v === "all" ? "Tutte le categorie" : CATEGORY_META[v as keyof typeof CATEGORY_META].label}
             </button>
@@ -134,7 +134,7 @@ export default function AdminFeedbackPage() {
               style={{
                 background: statusFilter === v ? "rgba(56,189,248,0.12)" : "var(--surface-sm)",
                 border: `1px solid ${statusFilter === v ? "rgba(56,189,248,0.35)" : "var(--surface-md)"}`,
-                color: statusFilter === v ? "#38bdf8" : "var(--text-muted)",
+                color: statusFilter === v ? "var(--c-sky-400)" : "var(--text-muted)",
               }}>
               {v === "all" ? "Tutti gli status" : STATUS_META[v as keyof typeof STATUS_META].label}
             </button>
@@ -150,7 +150,7 @@ export default function AdminFeedbackPage() {
               style={{
                 background: trainerFilter === "all" ? "rgba(123,47,190,0.18)" : "var(--surface-sm)",
                 border: `1px solid ${trainerFilter === "all" ? "rgba(123,47,190,0.4)" : "var(--surface-md)"}`,
-                color: trainerFilter === "all" ? "#a78bfa" : "var(--text-muted)",
+                color: trainerFilter === "all" ? "var(--c-violet-400)" : "var(--text-muted)",
               }}>
               Tutti i trainer
             </button>
@@ -160,7 +160,7 @@ export default function AdminFeedbackPage() {
                 style={{
                   background: trainerFilter === email ? "rgba(123,47,190,0.18)" : "var(--surface-sm)",
                   border: `1px solid ${trainerFilter === email ? "rgba(123,47,190,0.4)" : "var(--surface-md)"}`,
-                  color: trainerFilter === email ? "#a78bfa" : "var(--text-muted)",
+                  color: trainerFilter === email ? "var(--c-violet-400)" : "var(--text-muted)",
                 }}>
                 {notes.find(n => n.trainer_email === email)?.trainer_name ?? email}
               </button>
@@ -170,7 +170,7 @@ export default function AdminFeedbackPage() {
 
         {/* Notes list */}
         {loading ? (
-          <div className="text-center py-20"><Loader2 size={28} className="animate-spin mx-auto" style={{ color: "#FF9A6C" }} /></div>
+          <div className="text-center py-20"><Loader2 size={28} className="animate-spin mx-auto" style={{ color: "var(--c-coral)" }} /></div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-16 rounded-2xl" style={{ border: "1px solid var(--border-subtle)" }}>
             <p style={{ color: "var(--text-dim)" }}>Nessuna nota corrisponde ai filtri.</p>
@@ -237,7 +237,7 @@ export default function AdminFeedbackPage() {
                             className="px-3 py-1 rounded-lg text-xs font-bold transition-all disabled:opacity-40"
                             style={{
                               background: note.status === s ? STATUS_META[s].bg : "var(--surface-sm)",
-                              border: `1px solid ${note.status === s ? STATUS_META[s].color + "50" : "var(--surface-md)"}`,
+                              border: `1px solid ${note.status === s ? `color-mix(in srgb, ${STATUS_META[s].color} 31.4%, transparent)` : "var(--surface-md)"}`,
                               color: note.status === s ? STATUS_META[s].color : "var(--text-dim)",
                             }}>
                             {STATUS_META[s].label}

@@ -30,14 +30,14 @@ export default function LoginPage() {
     <div className="min-h-screen flex" style={{ background: "var(--black)" }}>
 
       {/* Left panel — brand */}
-      <div className="hidden lg:flex flex-col justify-between w-[45%] p-12 relative overflow-hidden"
+      <div className="force-dark hidden lg:flex flex-col justify-between w-[45%] p-12 relative overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0A0A0A 0%, #1a0800 50%, #0A0A0A 100%)" }}>
 
         {/* Decorative orb */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(255,107,43,0.15) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--accent) 15%, transparent) 0%, transparent 70%)" }} />
         <div className="absolute top-20 right-10 w-32 h-32 rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(255,107,43,0.08) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--accent) 8%, transparent) 0%, transparent 70%)" }} />
 
         {/* Logo */}
         <div className="flex items-center gap-3 relative z-10">
@@ -54,26 +54,26 @@ export default function LoginPage() {
             Il tuo studio.<br />
             <span className="accent-text">Sempre con te.</span>
           </h2>
-          <p className="text-base mb-10" style={{ color: "rgba(245,240,232,0.55)" }}>
+          <p className="text-base mb-10" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.55 + var(--fade-boost-n))))" }}>
             Gestisci clienti, schede di allenamento, diete e progressi in un'unica piattaforma professionale.
           </p>
 
           {/* Mini stat cards */}
           <div className="space-y-3">
             {[
-              { icon: Users, label: "Clienti gestiti", value: "Tutti in un posto", color: "#C9A84C" },
-              { icon: Activity, label: "Fasi & Allenamento", value: "Bulk · Cut · Maintenance", color: "#818cf8" },
-              { icon: TrendingUp, label: "Progressi tracciati", value: "Misurazioni & Grafici", color: "#34d399" },
+              { icon: Users, label: "Clienti gestiti", value: "Tutti in un posto", color: "var(--accent)" },
+              { icon: Activity, label: "Fasi & Allenamento", value: "Bulk · Cut · Maintenance", color: "var(--c-indigo-400)" },
+              { icon: TrendingUp, label: "Progressi tracciati", value: "Misurazioni & Grafici", color: "var(--c-emerald-400)" },
             ].map(({ icon: Icon, label, value, color }) => (
               <div key={label} className="flex items-center gap-3 p-3 rounded-xl"
                 style={{ background: "var(--surface-md)", border: "1px solid var(--border)" }}>
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: `${color}18` }}>
+                  style={{ background: `color-mix(in srgb, ${color} 9.4%, transparent)` }}>
                   <Icon size={16} style={{ color }} />
                 </div>
                 <div>
                   <p className="text-xs font-semibold" style={{ color: "#F5F0E8" }}>{label}</p>
-                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.55)" }}>{value}</p>
+                  <p className="text-xs" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.55 + var(--fade-boost-n))))" }}>{value}</p>
                 </div>
               </div>
             ))}
@@ -82,7 +82,7 @@ export default function LoginPage() {
 
         {/* Bottom quote — always light text on dark panel */}
         <div className="relative z-10">
-          <p className="text-sm italic" style={{ color: "rgba(245,240,232,0.38)" }}>
+          <p className="text-sm italic" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.38 + var(--fade-boost-n))))" }}>
             "Pericolosamente personalizzato sul tuo modus operandi."
           </p>
         </div>
@@ -108,7 +108,7 @@ export default function LoginPage() {
           <div className="glass-dark rounded-2xl p-8">
             {error && (
               <div className="mb-5 p-3 rounded-xl text-sm flex items-start gap-2"
-                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}>
+                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "var(--c-red-400)" }}>
                 {error}
               </div>
             )}
@@ -121,7 +121,7 @@ export default function LoginPage() {
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                     placeholder="il-tuo@email.com" required
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none transition-all"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }} />
                 </div>
               </div>
 
@@ -137,7 +137,7 @@ export default function LoginPage() {
                   <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••" required
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none transition-all"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }} />
                 </div>
               </div>
 

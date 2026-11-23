@@ -78,13 +78,13 @@ function StudioIdentityStrip({ name, plan }: { name: string; plan: string }) {
   const initials = name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("") || "TP";
   const h = nameHash(name);
   const tierLabel: Record<string, string> = { free: "Starter", personal_coach: "Personal Coach", fitness_master: "Fitness Master" };
-  const tierColor: Record<string, string> = { free: "rgba(201,168,76,0.6)", personal_coach: "#C9A84C", fitness_master: "#f0d060" };
+  const tierColor: Record<string, string> = { free: "rgba(201,168,76,0.6)", personal_coach: "var(--accent)", fitness_master: "#f0d060" };
   const cx = 32, cy = 32;
   const petalCount = 4 + (h[0] % 3);
   const innerR = 14 + (h[1] % 5);
 
   return (
-    <div className="mb-6 rounded-2xl overflow-hidden relative"
+    <div className="force-dark mb-6 rounded-2xl overflow-hidden relative"
       style={{ background: "linear-gradient(135deg, rgba(12,4,4,0.95) 0%, rgba(30,12,6,0.85) 50%, rgba(12,4,4,0.95) 100%)", border: "1px solid rgba(201,168,76,0.18)" }}>
       <StudioPattern name={name} />
       <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 20% 50%, rgba(201,168,76,0.06) 0%, transparent 60%)" }} />
@@ -117,7 +117,7 @@ function StudioIdentityStrip({ name, plan }: { name: string; plan: string }) {
 
         {/* Studio info */}
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] mb-1" style={{ color: "rgba(201,168,76,0.45)" }}>Il tuo studio</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] mb-1" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(45% + var(--fade-boost))), transparent)" }}>Il tuo studio</p>
           <p className="text-lg font-black tracking-tight" style={{ color: "var(--text)", fontFamily: "Georgia,'Times New Roman',serif", fontStyle: "italic" }}>{name}</p>
           <div className="h-px mt-2 mb-2" style={{ background: "linear-gradient(90deg, rgba(201,168,76,0.3), transparent)", maxWidth: 180 }} />
           <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: tierColor[plan] ?? tierColor.free }}>
@@ -127,8 +127,8 @@ function StudioIdentityStrip({ name, plan }: { name: string; plan: string }) {
 
         {/* Brand mark */}
         <div className="hidden sm:flex flex-col items-end gap-1 flex-shrink-0">
-          <span className="text-xs font-black tracking-[0.14em] uppercase" style={{ color: "rgba(201,168,76,0.28)" }}>REC Studio</span>
-          <span className="text-xs" style={{ color: "rgba(201,168,76,0.18)" }}>TrainerPro</span>
+          <span className="text-xs font-black tracking-[0.14em] uppercase" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(28% + var(--fade-boost))), transparent)" }}>REC Studio</span>
+          <span className="text-xs" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(18% + var(--fade-boost))), transparent)" }}>TrainerPro</span>
         </div>
       </div>
       <div className="h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(201,168,76,0.25), rgba(201,168,76,0.4), rgba(201,168,76,0.25), transparent)" }} />
@@ -498,9 +498,9 @@ export default function DashboardPage() {
       "Settimana da monitorare";
 
     const color =
-      clamped >= 80 ? "#22c55e" :
-      clamped >= 60 ? "#fbbf24" :
-      clamped >= 40 ? "#fb923c" : "#ef4444";
+      clamped >= 80 ? "var(--c-green-500)" :
+      clamped >= 60 ? "var(--c-amber-400)" :
+      clamped >= 40 ? "var(--c-orange-400)" : "var(--c-red-500)";
 
     const trendLabel = trend > 0.05 ? `+${Math.round(trend * 100)}% vs settimana scorsa` :
       trend < -0.05 ? `${Math.round(trend * 100)}% vs settimana scorsa` : "Stabile vs settimana scorsa";
@@ -749,26 +749,26 @@ export default function DashboardPage() {
       const wa = client.phone
         ? `https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}, sono passati ${daysSinceLast} giorni dall'ultima sessione. Quando riprendi?`)}`
         : undefined;
-      actions.push({ urgency: daysSinceLast >= 14 ? 1 : 3, label: client.name, detail: `${daysSinceLast}gg senza sessioni`, href: `/dashboard/clienti/${client.id}`, waLink: wa, color: "#f87171" });
+      actions.push({ urgency: daysSinceLast >= 14 ? 1 : 3, label: client.name, detail: `${daysSinceLast}gg senza sessioni`, href: `/dashboard/clienti/${client.id}`, waLink: wa, color: "var(--c-red-400)" });
     }
 
     for (const { client, turnsAge } of upcomingBirthdays.filter(b => b.daysUntil === 0)) {
       const wa = client.phone ? `https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Tanti auguri ${client.name.split(" ")[0]}! Spero tu stia passando una bellissima giornata.`)}` : undefined;
-      actions.push({ urgency: 0, label: client.name, detail: `Compleanno oggi — ${turnsAge} anni`, href: `/dashboard/clienti/${client.id}`, waLink: wa, color: "#c084fc" });
+      actions.push({ urgency: 0, label: client.name, detail: `Compleanno oggi — ${turnsAge} anni`, href: `/dashboard/clienti/${client.id}`, waLink: wa, color: "var(--c-purple-400)" });
     }
 
     for (const { client, daysUntil, fee } of renewalAlerts.filter(r => r.daysUntil <= 1)) {
       const wa = client.phone ? `https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}! Ricordati che il tuo abbonamento (€${fee}) si rinnova ${daysUntil === 0 ? "oggi" : "domani"}.`)}` : undefined;
-      actions.push({ urgency: daysUntil === 0 ? 0 : 2, label: client.name, detail: `Abbonamento €${fee} ${daysUntil === 0 ? "oggi" : "domani"}`, href: `/dashboard/clienti/${client.id}`, waLink: wa, color: "#4ade80" });
+      actions.push({ urgency: daysUntil === 0 ? 0 : 2, label: client.name, detail: `Abbonamento €${fee} ${daysUntil === 0 ? "oggi" : "domani"}`, href: `/dashboard/clienti/${client.id}`, waLink: wa, color: "var(--c-green-400)" });
     }
 
     for (const { client, plan, weeksLeft } of planEndingAlerts.slice(0, 1)) {
-      actions.push({ urgency: weeksLeft === 0 ? 2 : 4, label: client.name, detail: `Scheda "${plan.name}" in scadenza`, href: `/dashboard/clienti/${client.id}/schede/${plan.id}`, color: "#fb7185" });
+      actions.push({ urgency: weeksLeft === 0 ? 2 : 4, label: client.name, detail: `Scheda "${plan.name}" in scadenza`, href: `/dashboard/clienti/${client.id}/schede/${plan.id}`, color: "var(--c-rose-400)" });
     }
 
     for (const { client, w2, w1, w0 } of churnRiskClients.filter(r => r.risk === "critico").slice(0, 1)) {
       const wa = client.phone ? `https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}, come stai? Noto che questa settimana non hai ancora allenato — tutto bene?`)}` : undefined;
-      actions.push({ urgency: 2, label: client.name, detail: `Frequenza azzerata (${w2}→${w1}→${w0} sessioni)`, href: `/dashboard/clienti/${client.id}`, waLink: wa, color: "#f97316" });
+      actions.push({ urgency: 2, label: client.name, detail: `Frequenza azzerata (${w2}→${w1}→${w0} sessioni)`, href: `/dashboard/clienti/${client.id}`, waLink: wa, color: "var(--c-orange-500)" });
     }
 
     return actions.sort((a, b) => a.urgency - b.urgency).slice(0, 5);
@@ -878,18 +878,18 @@ export default function DashboardPage() {
   };
 
   const statusColors: Record<string, string> = {
-    attivo: "#22c55e",
-    inattivo: "#6b7280",
-    in_pausa: "#f59e0b",
+    attivo: "var(--c-green-500)",
+    inattivo: "var(--c-gray-500)",
+    in_pausa: "var(--c-amber-500)",
   };
 
   const revenueLabel = monthlyRevenue > 0 ? `€${monthlyRevenue.toLocaleString("it-IT")}/mese` : "—";
 
   const stats = [
-    { label: "Clienti attivi",      value: `${activeClients} / ${clients.length}`,   icon: Users,       color: "#C9A84C" },
-    { label: "Fatturato mensile",   value: revenueLabel,                              icon: Euro,        color: "#fbbf24" },
-    { label: "Log questo mese",     value: String(logsThisMonth),                     icon: TrendingUp,  color: "#34d399" },
-    { label: "Senza attività (14g)",value: inactiveCount > 0 ? String(inactiveCount) : "—", icon: Activity, color: inactiveCount > 0 ? "#f87171" : "#6b7280" },
+    { label: "Clienti attivi",      value: `${activeClients} / ${clients.length}`,   icon: Users,       color: "var(--accent)" },
+    { label: "Fatturato mensile",   value: revenueLabel,                              icon: Euro,        color: "var(--c-amber-400)" },
+    { label: "Log questo mese",     value: String(logsThisMonth),                     icon: TrendingUp,  color: "var(--c-emerald-400)" },
+    { label: "Senza attività (14g)",value: inactiveCount > 0 ? String(inactiveCount) : "—", icon: Activity, color: inactiveCount > 0 ? "var(--c-red-400)" : "var(--c-gray-500)" },
   ];
 
   if (!dataLoaded) {
@@ -968,7 +968,7 @@ export default function DashboardPage() {
                 <p className="text-3xl lg:text-3xl font-bold" style={{ color: "var(--text)" }}>{value}</p>
               </div>
               <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: `${color}22` }}>
+                style={{ background: `color-mix(in srgb, ${color} 13.3%, transparent)` }}>
                 <Icon size={16} style={{ color }} />
               </div>
             </div>
@@ -979,11 +979,11 @@ export default function DashboardPage() {
       {/* ── Coach Pulse ─────────────────────────────────────────────────── */}
       {coachPulse && (
         <div className="flex items-center gap-4 p-4 rounded-2xl mb-4 flex-wrap"
-          style={{ background: `${coachPulse.color}09`, border: `1px solid ${coachPulse.color}30` }}>
+          style={{ background: `color-mix(in srgb, ${coachPulse.color} 3.5%, transparent)`, border: `1px solid color-mix(in srgb, ${coachPulse.color} 18.8%, transparent)` }}>
           {/* Score ring */}
           <div className="relative flex-shrink-0" style={{ width: 52, height: 52 }}>
             <svg width="52" height="52" style={{ transform: "rotate(-90deg)" }}>
-              <circle cx="26" cy="26" r="21" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
+              <circle cx="26" cy="26" r="21" fill="none" stroke="rgba(var(--ink-rgb),0.06)" strokeWidth="4" />
               <circle cx="26" cy="26" r="21" fill="none" stroke={coachPulse.color} strokeWidth="4"
                 strokeDasharray={`${(coachPulse.score / 100 * 131.9).toFixed(1)} 131.9`}
                 strokeLinecap="round" />
@@ -1000,16 +1000,16 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 flex-shrink-0 basis-full sm:basis-auto justify-end">
             <span className="text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
               style={{
-                background: `${coachPulse.color}18`,
+                background: `color-mix(in srgb, ${coachPulse.color} 9.4%, transparent)`,
                 color: coachPulse.color,
-                border: `1px solid ${coachPulse.color}30`,
+                border: `1px solid color-mix(in srgb, ${coachPulse.color} 18.8%, transparent)`,
               }}>
               {coachPulse.trendLabel}
             </span>
             {/* Copia riepilogo */}
             <button onClick={copyWeeklyRecap} title="Copia riepilogo settimanale"
               className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
-              style={{ background: `${coachPulse.color}18`, color: coachPulse.color }}>
+              style={{ background: `color-mix(in srgb, ${coachPulse.color} 9.4%, transparent)`, color: coachPulse.color }}>
               <ClipboardCopy size={14} />
             </button>
           </div>
@@ -1018,14 +1018,14 @@ export default function DashboardPage() {
 
       {/* ── Focus del Giorno ────────────────────────────────────────────── */}
       {priorityActions.length > 0 && (
-        <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(255,107,43,0.05)", border: "1px solid rgba(255,107,43,0.22)" }}>
+        <div className="rounded-2xl p-4 mb-4" style={{ background: "color-mix(in srgb, var(--accent) 5%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 22%, transparent)" }}>
           <div className="flex items-center gap-2 mb-3">
             <ListChecks size={14} style={{ color: "var(--accent)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Focus del giorno
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold ml-1"
-              style={{ background: "rgba(255,107,43,0.18)", color: "var(--accent)" }}>
+              style={{ background: "color-mix(in srgb, var(--accent) 18%, transparent)", color: "var(--accent)" }}>
               {priorityActions.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>azioni urgenti</span>
@@ -1033,7 +1033,7 @@ export default function DashboardPage() {
           <div className="space-y-1.5">
             {priorityActions.map((action, i) => (
               <div key={i} className="flex items-center gap-3 p-2.5 rounded-xl"
-                style={{ background: `${action.color}08`, borderLeft: `2px solid ${action.color}50` }}>
+                style={{ background: `color-mix(in srgb, ${action.color} 3.1%, transparent)`, borderLeft: `2px solid color-mix(in srgb, ${action.color} 31.4%, transparent)` }}>
                 <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: action.color }} />
                 <Link href={action.href} className="flex-1 min-w-0 hover:opacity-80 transition-opacity">
                   <span className="text-xs font-bold" style={{ color: "var(--text)" }}>{action.label}</span>
@@ -1042,7 +1042,7 @@ export default function DashboardPage() {
                 {action.waLink && (
                   <a href={action.waLink} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
-                    style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                    style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)" }}>
                     <MessageCircle size={11} />
                     WA
                   </a>
@@ -1057,13 +1057,13 @@ export default function DashboardPage() {
       {goalsLoaded && (
         <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(99,102,241,0.05)", border: "1px solid rgba(99,102,241,0.22)" }}>
           <div className="flex items-center gap-2 mb-3">
-            <Target size={14} style={{ color: "#818cf8" }} />
+            <Target size={14} style={{ color: "var(--c-indigo-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Obiettivi della Settimana
             </p>
             {weeklyGoals.length > 0 && (
               <span className="text-xs px-2 py-0.5 rounded-full font-bold ml-1"
-                style={{ background: "rgba(99,102,241,0.15)", color: "#818cf8" }}>
+                style={{ background: "rgba(99,102,241,0.15)", color: "var(--c-indigo-400)" }}>
                 {weeklyGoals.filter(g => g.done).length}/{weeklyGoals.length}
               </span>
             )}
@@ -1075,8 +1075,8 @@ export default function DashboardPage() {
                 style={{ background: goal.done ? "rgba(99,102,241,0.08)" : "rgba(99,102,241,0.04)", borderLeft: `2px solid ${goal.done ? "rgba(129,140,248,0.6)" : "rgba(99,102,241,0.2)"}` }}>
                 <button onClick={() => toggleGoal(goal.id)} className="flex-shrink-0 transition-all hover:scale-110">
                   {goal.done
-                    ? <CheckCircle2 size={16} style={{ color: "#818cf8" }} />
-                    : <Circle size={16} style={{ color: "rgba(129,140,248,0.4)" }} />}
+                    ? <CheckCircle2 size={16} style={{ color: "var(--c-indigo-400)" }} />
+                    : <Circle size={16} style={{ color: "color-mix(in srgb, var(--c-indigo-400) min(100%, calc(40% + var(--fade-boost))), transparent)" }} />}
                 </button>
                 <span className="flex-1 text-xs font-medium"
                   style={{ color: goal.done ? "var(--text-muted)" : "var(--text)", textDecoration: goal.done ? "line-through" : "none" }}>
@@ -1107,7 +1107,7 @@ export default function DashboardPage() {
               />
               <button onClick={addGoal} disabled={!goalInput.trim()}
                 className="px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 transition-all hover:opacity-80 disabled:opacity-30"
-                style={{ background: "rgba(99,102,241,0.18)", color: "#818cf8" }}>
+                style={{ background: "rgba(99,102,241,0.18)", color: "var(--c-indigo-400)" }}>
                 <Plus size={12} />
                 Aggiungi
               </button>
@@ -1120,12 +1120,12 @@ export default function DashboardPage() {
       {cadenceMissedAlerts.length > 0 && (
         <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(250,204,21,0.04)", border: "1px solid rgba(250,204,21,0.22)" }}>
           <div className="flex items-center gap-2 mb-3">
-            <Timer size={14} style={{ color: "#facc15" }} />
+            <Timer size={14} style={{ color: "var(--c-yellow-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Cadenza Personale
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold ml-1"
-              style={{ background: "rgba(250,204,21,0.15)", color: "#facc15" }}>
+              style={{ background: "rgba(250,204,21,0.15)", color: "var(--c-yellow-400)" }}>
               {cadenceMissedAlerts.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>fuori dal loro ritmo personale</span>
@@ -1136,7 +1136,7 @@ export default function DashboardPage() {
                 style={{ background: "rgba(250,204,21,0.04)", borderLeft: "2px solid rgba(250,204,21,0.3)" }}>
                 <Link href={`/dashboard/clienti/${client.id}`} className="flex items-center gap-3 flex-1 min-w-0 group">
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                    style={{ background: "rgba(250,204,21,0.12)", color: "#facc15" }}>
+                    style={{ background: "rgba(250,204,21,0.12)", color: "var(--c-yellow-400)" }}>
                     {client.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1144,7 +1144,7 @@ export default function DashboardPage() {
                     <p className="text-xs" style={{ color: "var(--text-muted)" }}>Ritmo: ogni {avgDays}gg · ultima sessione {daysSinceLast}gg fa</p>
                   </div>
                   <span className="text-xs font-bold flex-shrink-0 px-2 py-0.5 rounded-full"
-                    style={{ background: "rgba(250,204,21,0.15)", color: "#facc15" }}>
+                    style={{ background: "rgba(250,204,21,0.15)", color: "var(--c-yellow-400)" }}>
                     +{overdue}gg
                   </span>
                 </Link>
@@ -1152,7 +1152,7 @@ export default function DashboardPage() {
                   <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}! Di solito alleni ogni ${Math.round(avgDays)} giorni, ma sono passati ${daysSinceLast}gg dall'ultima sessione. Tutto bene? Quando torniamo in pista?`)}`}
                     target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
-                    style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                    style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)" }}>
                     <MessageCircle size={11} />WA
                   </a>
                 )}
@@ -1166,12 +1166,12 @@ export default function DashboardPage() {
       {noActivePlanClients.length > 0 && (
         <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.22)" }}>
           <div className="flex items-center gap-2 mb-3">
-            <ClipboardList size={14} style={{ color: "#fbbf24" }} />
+            <ClipboardList size={14} style={{ color: "var(--c-amber-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Senza scheda attiva
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold ml-1"
-              style={{ background: "rgba(251,191,36,0.18)", color: "#fbbf24" }}>
+              style={{ background: "rgba(251,191,36,0.18)", color: "var(--c-amber-400)" }}>
               {noActivePlanClients.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>clienti attivi senza piano</span>
@@ -1181,7 +1181,7 @@ export default function DashboardPage() {
               <div key={c.id} className="flex items-center gap-3 p-2.5 rounded-xl"
                 style={{ background: "rgba(251,191,36,0.04)", borderLeft: "2px solid rgba(251,191,36,0.3)" }}>
                 <div className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                  style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24" }}>
+                  style={{ background: "rgba(251,191,36,0.12)", color: "var(--c-amber-400)" }}>
                   {c.name.charAt(0).toUpperCase()}
                 </div>
                 <Link href={`/dashboard/clienti/${c.id}`}
@@ -1194,7 +1194,7 @@ export default function DashboardPage() {
                 </span>
                 <Link href={`/dashboard/clienti/${c.id}`}
                   className="text-xs px-2.5 py-1 rounded-lg font-semibold flex-shrink-0 transition-all hover:opacity-80"
-                  style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24" }}>
+                  style={{ background: "rgba(251,191,36,0.15)", color: "var(--c-amber-400)" }}>
                   Assegna scheda
                 </Link>
               </div>
@@ -1208,7 +1208,7 @@ export default function DashboardPage() {
         <div className="flex gap-3 mb-6 flex-wrap">
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm"
             style={{ background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
-            <Euro size={13} style={{ color: "#fbbf24" }} />
+            <Euro size={13} style={{ color: "var(--c-amber-400)" }} />
             <span style={{ color: "var(--text-muted)" }}>Media/cliente:</span>
             <span className="font-bold" style={{ color: "var(--text)" }}>
               {avgRevenue > 0 ? `€${avgRevenue}/mese` : "—"}
@@ -1223,7 +1223,7 @@ export default function DashboardPage() {
           {inactiveCount > 0 && (
             <Link href="/dashboard/clienti"
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all hover:opacity-80"
-              style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171" }}>
+              style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "var(--c-red-400)" }}>
               <Activity size={13} />
               {inactiveCount} {inactiveCount === 1 ? "cliente" : "clienti"} senza attività da 14 giorni
             </Link>
@@ -1235,7 +1235,7 @@ export default function DashboardPage() {
       {weeklyHeatmap.rows.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.15)" }}>
           <div className="flex items-center gap-2 mb-3">
-            <CalendarCheck size={14} style={{ color: "#C9A84C" }} />
+            <CalendarCheck size={14} style={{ color: "var(--accent)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Settimana in Palestra
             </p>
@@ -1249,7 +1249,7 @@ export default function DashboardPage() {
                 <div style={{ width: 76, flexShrink: 0 }} />
                 {["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"].map((d, i) => (
                   <div key={i} className="text-center"
-                    style={{ width: 34, flexShrink: 0, fontSize: 10, fontWeight: 700, color: i === weeklyHeatmap.todayIndex ? "#C9A84C" : "var(--text-dim)" }}>
+                    style={{ width: 34, flexShrink: 0, fontSize: 10, fontWeight: 700, color: i === weeklyHeatmap.todayIndex ? "var(--accent)" : "var(--text-dim)" }}>
                     {d}
                   </div>
                 ))}
@@ -1266,7 +1266,7 @@ export default function DashboardPage() {
                       const isToday = i === weeklyHeatmap.todayIndex;
                       const isFuture = i > weeklyHeatmap.todayIndex;
                       const bg = count === 0
-                        ? isFuture ? "rgba(255,255,255,0.02)" : isToday ? "rgba(201,168,76,0.08)" : "rgba(255,255,255,0.05)"
+                        ? isFuture ? "rgba(var(--ink-rgb),0.02)" : isToday ? "rgba(201,168,76,0.08)" : "rgba(var(--ink-rgb),0.05)"
                         : count >= 4 ? "rgba(201,168,76,0.75)" : count >= 2 ? "rgba(201,168,76,0.5)" : "rgba(201,168,76,0.3)";
                       return (
                         <div key={i} className="rounded-md"
@@ -1279,9 +1279,9 @@ export default function DashboardPage() {
             </div>
           </div>
           {/* Legend */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 pt-2" style={{ borderTop: "1px solid rgba(var(--ink-rgb),0.05)" }}>
             {[
-              { bg: "rgba(255,255,255,0.05)", label: "Nessuna sessione" },
+              { bg: "rgba(var(--ink-rgb),0.05)", label: "Nessuna sessione" },
               { bg: "rgba(201,168,76,0.3)", label: "1–2 esercizi" },
               { bg: "rgba(201,168,76,0.5)", label: "3–4 esercizi" },
               { bg: "rgba(201,168,76,0.75)", label: "5+ esercizi" },
@@ -1300,10 +1300,10 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {/* Top performers — Podio Atleti */}
           {topClients.length > 0 && (
-            <div className="rounded-2xl p-4 relative overflow-hidden"
-              style={{ background: "linear-gradient(160deg,rgba(201,168,76,0.06),rgba(8,8,8,0.7))", border: "1px solid rgba(201,168,76,0.22)" }}>
+            <div className="force-dark rounded-2xl p-4 relative overflow-hidden"
+              style={{ background: "linear-gradient(160deg,rgba(201,168,76,0.06),rgba(8,8,8,0.7)), var(--black)", border: "1px solid rgba(201,168,76,0.22)" }}>
               <div className="flex items-center gap-2 mb-4">
-                <Trophy size={14} style={{ color: "#fbbf24" }} />
+                <Trophy size={14} style={{ color: "var(--c-amber-400)" }} />
                 <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
                   Podio atleti · questa settimana
                 </p>
@@ -1311,8 +1311,8 @@ export default function DashboardPage() {
               {/* Visual podium: 2nd (left) · 1st (center) · 3rd (right) */}
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 8 }}>
                 {[
-                  topClients[1] ? { client: topClients[1].client, weekLogs: topClients[1].weekLogs, color: "#9ca3af", h: 38, rank: "2°", glow: "rgba(156,163,175,0.3)", gold: false } : null,
-                  topClients[0] ? { client: topClients[0].client, weekLogs: topClients[0].weekLogs, color: "#C9A84C", h: 56, rank: "1°", glow: "rgba(201,168,76,0.4)", gold: true  } : null,
+                  topClients[1] ? { client: topClients[1].client, weekLogs: topClients[1].weekLogs, color: "var(--c-gray-400)", h: 38, rank: "2°", glow: "rgba(156,163,175,0.3)", gold: false } : null,
+                  topClients[0] ? { client: topClients[0].client, weekLogs: topClients[0].weekLogs, color: "var(--accent)", h: 56, rank: "1°", glow: "rgba(201,168,76,0.4)", gold: true  } : null,
                   topClients[2] ? { client: topClients[2].client, weekLogs: topClients[2].weekLogs, color: "#cd7f32", h: 28, rank: "3°", glow: "rgba(205,127,50,0.2)", gold: false } : null,
                 ].map((slot, i) => {
                   if (!slot) return null;
@@ -1322,7 +1322,7 @@ export default function DashboardPage() {
                       style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, maxWidth: 88, minWidth: 0 }}>
                       <div style={{
                         width: gold ? 44 : 36, height: gold ? 44 : 36, borderRadius: "50%", marginBottom: 4, flexShrink: 0,
-                        background: `radial-gradient(circle at 35% 30%, ${color}40, rgba(8,8,8,0.9))`,
+                        background: `radial-gradient(circle at 35% 30%, color-mix(in srgb, ${color} 25.1%, transparent), rgba(8,8,8,0.9))`,
                         border: `2px solid ${color}`, display: "flex", alignItems: "center", justifyContent: "center",
                         boxShadow: `0 0 ${gold ? 20 : 8}px ${glow}`,
                         animation: gold ? "pulse-glow 2.5s ease-in-out infinite" : "none",
@@ -1337,11 +1337,11 @@ export default function DashboardPage() {
                       <p style={{ fontSize: "0.58rem", color, fontWeight: 600, marginBottom: 4 }}>{weekLogs} sess.</p>
                       <div style={{
                         width: "100%", height: h, borderRadius: "6px 6px 0 0",
-                        background: `linear-gradient(180deg, ${color}18 0%, transparent 100%)`,
-                        border: `1px solid ${color}35`, borderBottom: "none",
+                        background: `linear-gradient(180deg, color-mix(in srgb, ${color} 9.4%, transparent) 0%, transparent 100%)`,
+                        border: `1px solid color-mix(in srgb, ${color} 20.8%, transparent)`, borderBottom: "none",
                         display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 5,
                       }}>
-                        <span style={{ fontSize: "0.6rem", fontWeight: 900, color: `${color}80`, letterSpacing: "0.1em" }}>{rank}</span>
+                        <span style={{ fontSize: "0.6rem", fontWeight: 900, color: `color-mix(in srgb, ${color} min(100%, calc(50.2% + var(--fade-boost))), transparent)`, letterSpacing: "0.1em" }}>{rank}</span>
                       </div>
                     </Link>
                   );
@@ -1354,7 +1354,7 @@ export default function DashboardPage() {
           {atRiskClients.length > 0 && (
             <div className="rounded-2xl p-4" style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.15)" }}>
               <div className="flex items-center gap-2 mb-3">
-                <AlertTriangle size={14} style={{ color: "#f87171" }} />
+                <AlertTriangle size={14} style={{ color: "var(--c-red-400)" }} />
                 <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
                   Necessitano un messaggio
                 </p>
@@ -1365,12 +1365,12 @@ export default function DashboardPage() {
                     <Link href={`/dashboard/clienti/${client.id}`}
                       className="flex items-center gap-3 flex-1 min-w-0 group">
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                        style={{ background: "rgba(239,68,68,0.1)", color: "#f87171" }}>
+                        style={{ background: "rgba(239,68,68,0.1)", color: "var(--c-red-400)" }}>
                         {client.name.charAt(0).toUpperCase()}
                       </div>
                       <p className="flex-1 text-sm font-semibold truncate group-hover:underline"
                         style={{ color: "var(--text)" }}>{client.name}</p>
-                      <span className="text-xs flex-shrink-0 font-medium" style={{ color: "rgba(248,113,113,0.7)" }}>
+                      <span className="text-xs flex-shrink-0 font-medium" style={{ color: "color-mix(in srgb, var(--c-red-400) min(100%, calc(70% + var(--fade-boost))), transparent)" }}>
                         {daysSinceLast}gg fa
                       </span>
                     </Link>
@@ -1378,7 +1378,7 @@ export default function DashboardPage() {
                       <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}, sono passati ${daysSinceLast} giorni dall'ultima sessione. Quando riprendi?`)}`}
                         target="_blank" rel="noopener noreferrer"
                         className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
-                        style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                        style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)" }}>
                         <MessageCircle size={11} />
                         WA
                       </a>
@@ -1395,12 +1395,12 @@ export default function DashboardPage() {
       {progressionSuggestions.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.18)" }}>
           <div className="flex items-center gap-2 mb-3">
-            <Zap size={14} style={{ color: "#fbbf24" }} />
+            <Zap size={14} style={{ color: "var(--c-amber-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Progressione consigliata
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full ml-1 font-bold"
-              style={{ background: "rgba(251,191,36,0.18)", color: "#fbbf24" }}>
+              style={{ background: "rgba(251,191,36,0.18)", color: "var(--c-amber-400)" }}>
               {progressionSuggestions.length}
             </span>
           </div>
@@ -1409,7 +1409,7 @@ export default function DashboardPage() {
               <Link key={i} href={`/dashboard/clienti/${s.clientId}`}
                 className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                  style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24" }}>
+                  style={{ background: "rgba(251,191,36,0.12)", color: "var(--c-amber-400)" }}>
                   {s.clientName.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1417,8 +1417,8 @@ export default function DashboardPage() {
                   <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{s.exerciseName}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-xs font-bold" style={{ color: "#fbbf24" }}>{s.weight}kg → {s.suggested}kg</p>
-                  <p className="text-xs" style={{ color: "rgba(251,191,36,0.6)" }}>3 sett. stabile</p>
+                  <p className="text-xs font-bold" style={{ color: "var(--c-amber-400)" }}>{s.weight}kg → {s.suggested}kg</p>
+                  <p className="text-xs" style={{ color: "color-mix(in srgb, var(--c-amber-400) min(100%, calc(60% + var(--fade-boost))), transparent)" }}>3 sett. stabile</p>
                 </div>
               </Link>
             ))}
@@ -1430,12 +1430,12 @@ export default function DashboardPage() {
       {prForecastAlerts.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(74,222,128,0.04)", border: "1px solid rgba(74,222,128,0.18)" }}>
           <div className="flex items-center gap-2 mb-3">
-            <Target size={14} style={{ color: "#4ade80" }} />
+            <Target size={14} style={{ color: "var(--c-green-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Traguardi in arrivo
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full ml-1 font-bold"
-              style={{ background: "rgba(74,222,128,0.15)", color: "#4ade80" }}>
+              style={{ background: "rgba(74,222,128,0.15)", color: "var(--c-green-400)" }}>
               {prForecastAlerts.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>prossime 1–4 settimane</span>
@@ -1445,7 +1445,7 @@ export default function DashboardPage() {
               <Link key={i} href={`/dashboard/clienti/${s.clientId}`}
                 className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                  style={{ background: "rgba(74,222,128,0.12)", color: "#4ade80" }}>
+                  style={{ background: "rgba(74,222,128,0.12)", color: "var(--c-green-400)" }}>
                   {s.clientName.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1453,8 +1453,8 @@ export default function DashboardPage() {
                   <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{s.exerciseName}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-xs font-bold" style={{ color: "#4ade80" }}>{s.currentMax}kg → {s.milestone}kg</p>
-                  <p className="text-xs" style={{ color: "rgba(74,222,128,0.6)" }}>
+                  <p className="text-xs font-bold" style={{ color: "var(--c-green-400)" }}>{s.currentMax}kg → {s.milestone}kg</p>
+                  <p className="text-xs" style={{ color: "color-mix(in srgb, var(--c-green-400) min(100%, calc(60% + var(--fade-boost))), transparent)" }}>
                     {s.weeksOut === 1 ? "entro 1 settimana" : `~${s.weeksOut} settimane`}
                   </p>
                 </div>
@@ -1468,12 +1468,12 @@ export default function DashboardPage() {
       {nutritionMisalignAlerts.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(239,68,68,0.04)", border: "1px solid rgba(239,68,68,0.18)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <UtensilsCrossed size={14} style={{ color: "#f87171" }} />
+            <UtensilsCrossed size={14} style={{ color: "var(--c-red-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Radar Nutrizione
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-              style={{ background: "rgba(239,68,68,0.15)", color: "#f87171" }}>
+              style={{ background: "rgba(239,68,68,0.15)", color: "var(--c-red-400)" }}>
               {nutritionMisalignAlerts.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
@@ -1485,15 +1485,15 @@ export default function DashboardPage() {
               <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
                 className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                  style={{ background: type === "no_plan" ? "rgba(239,68,68,0.12)" : "rgba(251,191,36,0.12)", color: type === "no_plan" ? "#f87171" : "#fbbf24" }}>
+                  style={{ background: type === "no_plan" ? "rgba(239,68,68,0.12)" : "rgba(251,191,36,0.12)", color: type === "no_plan" ? "var(--c-red-400)" : "var(--c-amber-400)" }}>
                   {client.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{client.name}</p>
-                  <p className="text-xs truncate" style={{ color: type === "no_plan" ? "#f87171" : "#fbbf24" }}>{reason}</p>
+                  <p className="text-xs truncate" style={{ color: type === "no_plan" ? "var(--c-red-400)" : "var(--c-amber-400)" }}>{reason}</p>
                 </div>
                 <span className="text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0"
-                  style={{ background: type === "no_plan" ? "rgba(239,68,68,0.1)" : "rgba(251,191,36,0.1)", color: type === "no_plan" ? "#f87171" : "#fbbf24" }}>
+                  style={{ background: type === "no_plan" ? "rgba(239,68,68,0.1)" : "rgba(251,191,36,0.1)", color: type === "no_plan" ? "var(--c-red-400)" : "var(--c-amber-400)" }}>
                   {type === "no_plan" ? "Mancante" : "Sfasato"}
                 </span>
               </Link>
@@ -1506,12 +1506,12 @@ export default function DashboardPage() {
       {muscleGapAlerts.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(99,102,241,0.05)", border: "1px solid rgba(99,102,241,0.18)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <Scale size={14} style={{ color: "#818cf8" }} />
+            <Scale size={14} style={{ color: "var(--c-indigo-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Equilibrio Muscolare
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-              style={{ background: "rgba(99,102,241,0.18)", color: "#818cf8" }}>
+              style={{ background: "rgba(99,102,241,0.18)", color: "var(--c-indigo-400)" }}>
               {muscleGapAlerts.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
@@ -1523,7 +1523,7 @@ export default function DashboardPage() {
               <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
                 className="flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-all group">
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
-                  style={{ background: "rgba(99,102,241,0.12)", color: "#818cf8" }}>
+                  style={{ background: "rgba(99,102,241,0.12)", color: "var(--c-indigo-400)" }}>
                   {client.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1533,7 +1533,7 @@ export default function DashboardPage() {
                   <div className="flex flex-wrap gap-1">
                     {missingGroups.map(g => (
                       <span key={g} className="text-xs px-1.5 py-0.5 rounded font-medium"
-                        style={{ background: "rgba(99,102,241,0.12)", color: "rgba(129,140,248,0.9)" }}>
+                        style={{ background: "rgba(99,102,241,0.12)", color: "color-mix(in srgb, var(--c-indigo-400) min(100%, calc(90% + var(--fade-boost))), transparent)" }}>
                         {g}
                       </span>
                     ))}
@@ -1551,12 +1551,12 @@ export default function DashboardPage() {
       {painFlagAlerts.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(220,38,38,0.05)", border: "1px solid rgba(220,38,38,0.2)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <ShieldAlert size={14} style={{ color: "#f87171" }} />
+            <ShieldAlert size={14} style={{ color: "var(--c-red-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Note da monitorare
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-              style={{ background: "rgba(220,38,38,0.18)", color: "#f87171" }}>
+              style={{ background: "rgba(220,38,38,0.18)", color: "var(--c-red-400)" }}>
               {painFlagAlerts.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
@@ -1568,14 +1568,14 @@ export default function DashboardPage() {
               <Link key={i} href={`/dashboard/clienti/${p.clientId}`}
                 className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                  style={{ background: "rgba(220,38,38,0.12)", color: "#f87171" }}>
+                  style={{ background: "rgba(220,38,38,0.12)", color: "var(--c-red-400)" }}>
                   {p.clientName.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>
                     {p.clientName} <span style={{ color: "var(--text-dim)" }}>· {p.exerciseName}</span>
                   </p>
-                  <p className="text-xs truncate" style={{ color: "rgba(248,113,113,0.75)" }}>&ldquo;{p.note}&rdquo;</p>
+                  <p className="text-xs truncate" style={{ color: "color-mix(in srgb, var(--c-red-400) min(100%, calc(75% + var(--fade-boost))), transparent)" }}>&ldquo;{p.note}&rdquo;</p>
                 </div>
                 <span className="text-xs flex-shrink-0" style={{ color: "var(--text-dim)" }}>
                   {new Date(p.loggedAt).toLocaleDateString("it-IT", { day: "2-digit", month: "short" })}
@@ -1590,12 +1590,12 @@ export default function DashboardPage() {
       {planEndingAlerts.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(251,113,133,0.05)", border: "1px solid rgba(251,113,133,0.2)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <CalendarClock size={14} style={{ color: "#fb7185" }} />
+            <CalendarClock size={14} style={{ color: "var(--c-rose-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Piani in scadenza
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-              style={{ background: "rgba(251,113,133,0.18)", color: "#fb7185" }}>
+              style={{ background: "rgba(251,113,133,0.18)", color: "var(--c-rose-400)" }}>
               {planEndingAlerts.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
@@ -1607,7 +1607,7 @@ export default function DashboardPage() {
               <Link key={plan.id} href={`/dashboard/clienti/${client.id}/schede/${plan.id}`}
                 className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                  style={{ background: "rgba(251,113,133,0.12)", color: "#fb7185" }}>
+                  style={{ background: "rgba(251,113,133,0.12)", color: "var(--c-rose-400)" }}>
                   {client.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1615,10 +1615,10 @@ export default function DashboardPage() {
                   <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{plan.name}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-xs font-bold" style={{ color: "#fb7185" }}>
+                  <p className="text-xs font-bold" style={{ color: "var(--c-rose-400)" }}>
                     {weeksLeft === 0 ? "Ultima settimana" : "Penultima settimana"}
                   </p>
-                  <p className="text-xs" style={{ color: "rgba(251,113,133,0.6)" }}>su {plan.totalWeeks} totali</p>
+                  <p className="text-xs" style={{ color: "color-mix(in srgb, var(--c-rose-400) min(100%, calc(60% + var(--fade-boost))), transparent)" }}>su {plan.totalWeeks} totali</p>
                 </div>
               </Link>
             ))}
@@ -1630,12 +1630,12 @@ export default function DashboardPage() {
       {churnRiskClients.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(249,115,22,0.05)", border: "1px solid rgba(249,115,22,0.2)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <TrendingDown size={14} style={{ color: "#fb923c" }} />
+            <TrendingDown size={14} style={{ color: "var(--c-orange-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Frequenza in calo
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-              style={{ background: "rgba(249,115,22,0.18)", color: "#fb923c" }}>
+              style={{ background: "rgba(249,115,22,0.18)", color: "var(--c-orange-400)" }}>
               {churnRiskClients.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
@@ -1644,7 +1644,7 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-1.5">
             {churnRiskClients.map(({ client, w2, w1, w0, risk }) => {
-              const riskColor = risk === "critico" ? "#ef4444" : risk === "alto" ? "#f97316" : "#fbbf24";
+              const riskColor = risk === "critico" ? "var(--c-red-500)" : risk === "alto" ? "var(--c-orange-500)" : "var(--c-amber-400)";
               const riskLabel = risk === "critico" ? "Critico" : risk === "alto" ? "Alto" : "Medio";
               const maxW = Math.max(w2, w1, 1);
               return (
@@ -1653,7 +1653,7 @@ export default function DashboardPage() {
                   <Link href={`/dashboard/clienti/${client.id}`}
                     className="flex items-center gap-3 flex-1 min-w-0 group">
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                      style={{ background: "rgba(249,115,22,0.12)", color: "#fb923c" }}>
+                      style={{ background: "rgba(249,115,22,0.12)", color: "var(--c-orange-400)" }}>
                       {client.name.charAt(0).toUpperCase()}
                     </div>
                     <p className="text-sm font-semibold truncate group-hover:underline flex-1"
@@ -1672,13 +1672,13 @@ export default function DashboardPage() {
                       {w2}→{w1}→{w0}
                     </span>
                     <span className="text-xs font-bold px-1.5 py-0.5 rounded flex-shrink-0"
-                      style={{ background: `${riskColor}18`, color: riskColor }}>{riskLabel}</span>
+                      style={{ background: `color-mix(in srgb, ${riskColor} 9.4%, transparent)`, color: riskColor }}>{riskLabel}</span>
                   </Link>
                   {client.phone && (
                     <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}, come stai? Noto che questa settimana non hai ancora allenato — tutto bene?`)}`}
                       target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
-                      style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                      style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)" }}>
                       <MessageCircle size={11} />
                       WA
                     </a>
@@ -1694,12 +1694,12 @@ export default function DashboardPage() {
       {weeklyAdherence.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(20,184,166,0.05)", border: "1px solid rgba(20,184,166,0.18)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <BarChart2 size={14} style={{ color: "#2dd4bf" }} />
+            <BarChart2 size={14} style={{ color: "var(--c-teal-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Aderenza al Piano
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-              style={{ background: "rgba(20,184,166,0.15)", color: "#2dd4bf" }}>
+              style={{ background: "rgba(20,184,166,0.15)", color: "var(--c-teal-400)" }}>
               {weeklyAdherence.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
@@ -1709,12 +1709,12 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {weeklyAdherence.map(({ client, target, weeks, thisWeek }) => {
               const ratio = target > 0 ? thisWeek / target : 0;
-              const barColor = ratio >= 1 ? "#22c55e" : ratio >= 0.5 ? "#fbbf24" : "#f87171";
+              const barColor = ratio >= 1 ? "var(--c-green-500)" : ratio >= 0.5 ? "var(--c-amber-400)" : "var(--c-red-400)";
               return (
                 <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all group">
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                    style={{ background: "rgba(20,184,166,0.1)", color: "#2dd4bf" }}>
+                    style={{ background: "rgba(20,184,166,0.1)", color: "var(--c-teal-400)" }}>
                     {client.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1723,12 +1723,12 @@ export default function DashboardPage() {
                       {weeks.map((v, i) => {
                         const isLast = i === 3;
                         const h = Math.max(3, Math.round(Math.min(v / Math.max(target, 1), 1.1) * 12));
-                        const clr = v >= target ? "#22c55e" : v > 0 ? "#fbbf24" : "#ef4444";
+                        const clr = v >= target ? "var(--c-green-500)" : v > 0 ? "var(--c-amber-400)" : "var(--c-red-500)";
                         return (
                           <div key={i} className="w-4 rounded-sm"
                             style={{
                               height: h,
-                              background: isLast ? clr : `${clr}55`,
+                              background: isLast ? clr : `color-mix(in srgb, ${clr} 33.3%, transparent)`,
                               transition: "height 0.3s ease",
                             }} />
                         );
@@ -1750,12 +1750,12 @@ export default function DashboardPage() {
       {weekHighlights.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.15)" }}>
           <div className="flex items-center gap-2 mb-3">
-            <Trophy size={14} style={{ color: "#fbbf24" }} />
+            <Trophy size={14} style={{ color: "var(--c-amber-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Highlights della settimana
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full ml-1 font-bold"
-              style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24" }}>
+              style={{ background: "rgba(251,191,36,0.15)", color: "var(--c-amber-400)" }}>
               {weekHighlights.length}
             </span>
           </div>
@@ -1764,13 +1764,13 @@ export default function DashboardPage() {
               <Link key={i} href={`/dashboard/clienti/${h.clientId}`}
                 className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: h.type === "pr" ? "rgba(251,191,36,0.15)" : "rgba(34,197,94,0.12)", color: h.type === "pr" ? "#fbbf24" : "#34d399" }}>
+                  style={{ background: h.type === "pr" ? "rgba(251,191,36,0.15)" : "rgba(34,197,94,0.12)", color: h.type === "pr" ? "var(--c-amber-400)" : "var(--c-emerald-400)" }}>
                   {h.type === "pr" ? <Flame size={14} /> : <Zap size={14} />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold truncate" style={{ color: "var(--text)" }}>{h.clientName}</p>
                   <p className="text-xs truncate">
-                    <span className="font-semibold" style={{ color: h.type === "pr" ? "#fbbf24" : "#34d399" }}>{h.label}</span>
+                    <span className="font-semibold" style={{ color: h.type === "pr" ? "var(--c-amber-400)" : "var(--c-emerald-400)" }}>{h.label}</span>
                     <span style={{ color: "var(--text-muted)" }}>{" · "}{h.detail}</span>
                   </p>
                 </div>
@@ -1784,12 +1784,12 @@ export default function DashboardPage() {
       {upcomingBirthdays.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(168,85,247,0.05)", border: "1px solid rgba(168,85,247,0.2)" }}>
           <div className="flex items-center gap-2 mb-3">
-            <Gift size={14} style={{ color: "#c084fc" }} />
+            <Gift size={14} style={{ color: "var(--c-purple-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Compleanni imminenti
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full ml-1 font-bold"
-              style={{ background: "rgba(168,85,247,0.18)", color: "#c084fc" }}>
+              style={{ background: "rgba(168,85,247,0.18)", color: "var(--c-purple-400)" }}>
               {upcomingBirthdays.length}
             </span>
           </div>
@@ -1798,17 +1798,17 @@ export default function DashboardPage() {
               <div key={client.id} className="flex items-center gap-3 p-3 rounded-xl"
                 style={{ background: daysUntil === 0 ? "rgba(168,85,247,0.12)" : "rgba(168,85,247,0.06)" }}>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0"
-                  style={{ background: "rgba(168,85,247,0.18)", color: "#c084fc" }}>
+                  style={{ background: "rgba(168,85,247,0.18)", color: "var(--c-purple-400)" }}>
                   {client.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate" style={{ color: "var(--text)" }}>
                     {client.name}
-                    <span className="ml-1.5 text-xs font-normal" style={{ color: "rgba(192,132,252,0.65)" }}>
+                    <span className="ml-1.5 text-xs font-normal" style={{ color: "color-mix(in srgb, var(--c-purple-400) min(100%, calc(65% + var(--fade-boost))), transparent)" }}>
                       {turnsAge} anni
                     </span>
                   </p>
-                  <p className="text-xs font-medium" style={{ color: daysUntil === 0 ? "#c084fc" : "var(--text-muted)" }}>
+                  <p className="text-xs font-medium" style={{ color: daysUntil === 0 ? "var(--c-purple-400)" : "var(--text-muted)" }}>
                     {daysUntil === 0 ? "Oggi!" : daysUntil === 1 ? "Domani" : `Tra ${daysUntil} giorni`}
                   </p>
                 </div>
@@ -1816,7 +1816,7 @@ export default function DashboardPage() {
                   <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Tanti auguri ${client.name.split(" ")[0]}!`)}`}
                     target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
-                    style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                    style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)" }}>
                     <MessageCircle size={11} />
                     WA
                   </a>
@@ -1831,12 +1831,12 @@ export default function DashboardPage() {
       {anniversaryAlerts.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(236,72,153,0.05)", border: "1px solid rgba(236,72,153,0.2)" }}>
           <div className="flex items-center gap-2 mb-3">
-            <Heart size={14} style={{ color: "#f472b6" }} />
+            <Heart size={14} style={{ color: "var(--c-pink-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Anniversari del percorso
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full ml-1 font-bold"
-              style={{ background: "rgba(236,72,153,0.18)", color: "#f472b6" }}>
+              style={{ background: "rgba(236,72,153,0.18)", color: "var(--c-pink-400)" }}>
               {anniversaryAlerts.length}
             </span>
           </div>
@@ -1845,14 +1845,14 @@ export default function DashboardPage() {
               <div key={i} className="flex items-center gap-3 p-3 rounded-xl"
                 style={{ background: daysUntil === 0 ? "rgba(236,72,153,0.1)" : "rgba(236,72,153,0.04)" }}>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0"
-                  style={{ background: "rgba(236,72,153,0.15)", color: "#f472b6" }}>
+                  style={{ background: "rgba(236,72,153,0.15)", color: "var(--c-pink-400)" }}>
                   {client.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate" style={{ color: "var(--text)" }}>
                     {client.name}
                   </p>
-                  <p className="text-xs font-medium" style={{ color: daysUntil === 0 ? "#f472b6" : "var(--text-muted)" }}>
+                  <p className="text-xs font-medium" style={{ color: daysUntil === 0 ? "var(--c-pink-400)" : "var(--text-muted)" }}>
                     {daysUntil === 0 ? `Oggi — ${label}!` : daysUntil === 1 ? `Domani — ${label}` : `Tra ${daysUntil} giorni — ${label}`}
                   </p>
                 </div>
@@ -1860,7 +1860,7 @@ export default function DashboardPage() {
                   <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}! Oggi festeggiamo ${label} di percorso insieme — sono fiero dei tuoi progressi. Continua così!`)}`}
                     target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
-                    style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                    style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)" }}>
                     <MessageCircle size={11} />
                     WA
                   </a>
@@ -1875,12 +1875,12 @@ export default function DashboardPage() {
       {measurementPlateauAlerts.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(99,102,241,0.05)", border: "1px solid rgba(99,102,241,0.2)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <Scale size={14} style={{ color: "#818cf8" }} />
+            <Scale size={14} style={{ color: "var(--c-indigo-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Stallo peso corporeo
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-              style={{ background: "rgba(99,102,241,0.18)", color: "#818cf8" }}>
+              style={{ background: "rgba(99,102,241,0.18)", color: "var(--c-indigo-400)" }}>
               {measurementPlateauAlerts.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
@@ -1892,7 +1892,7 @@ export default function DashboardPage() {
               <Link key={i} href={`/dashboard/clienti/${s.client.id}`}
                 className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                  style={{ background: "rgba(99,102,241,0.12)", color: "#818cf8" }}>
+                  style={{ background: "rgba(99,102,241,0.12)", color: "var(--c-indigo-400)" }}>
                   {s.client.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1902,7 +1902,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-xs font-bold" style={{ color: "#818cf8" }}>{s.weight} kg</p>
+                  <p className="text-xs font-bold" style={{ color: "var(--c-indigo-400)" }}>{s.weight} kg</p>
                   <p className="text-xs" style={{ color: "rgba(130,138,252,0.6)" }}>≈ stabile</p>
                 </div>
               </Link>
@@ -1915,12 +1915,12 @@ export default function DashboardPage() {
       {measurementOverdueAlerts.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(249,115,22,0.04)", border: "1px solid rgba(249,115,22,0.18)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <TrendingUp size={14} style={{ color: "#fb923c" }} />
+            <TrendingUp size={14} style={{ color: "var(--c-orange-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Misurazioni Attese
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-              style={{ background: "rgba(249,115,22,0.15)", color: "#fb923c" }}>
+              style={{ background: "rgba(249,115,22,0.15)", color: "var(--c-orange-400)" }}>
               {measurementOverdueAlerts.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
@@ -1929,12 +1929,12 @@ export default function DashboardPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {measurementOverdueAlerts.map(({ client, daysSince, inActivePhase, lastDate }) => {
-              const urgColor = daysSince >= 30 ? "#f87171" : daysSince >= 21 ? "#fb923c" : "#fbbf24";
+              const urgColor = daysSince >= 30 ? "var(--c-red-400)" : daysSince >= 21 ? "var(--c-orange-400)" : "var(--c-amber-400)";
               return (
                 <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
                   className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                    style={{ background: `${urgColor}18`, color: urgColor }}>
+                    style={{ background: `color-mix(in srgb, ${urgColor} 9.4%, transparent)`, color: urgColor }}>
                     {client.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1942,7 +1942,7 @@ export default function DashboardPage() {
                       <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{client.name}</p>
                       {inActivePhase && (
                         <span className="text-xs px-1 py-0.5 rounded font-bold flex-shrink-0"
-                          style={{ background: "rgba(249,115,22,0.12)", color: "#fb923c" }}>fase</span>
+                          style={{ background: "rgba(249,115,22,0.12)", color: "var(--c-orange-400)" }}>fase</span>
                       )}
                     </div>
                     <p className="text-xs" style={{ color: "var(--text-muted)" }}>
@@ -1951,7 +1951,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-sm font-bold" style={{ color: urgColor }}>{daysSince >= 999 ? "Mai" : `${daysSince}gg`}</p>
-                    <p className="text-xs" style={{ color: `${urgColor}80` }}>senza pesata</p>
+                    <p className="text-xs" style={{ color: `color-mix(in srgb, ${urgColor} min(100%, calc(50.2% + var(--fade-boost))), transparent)` }}>senza pesata</p>
                   </div>
                 </Link>
               );
@@ -1964,21 +1964,21 @@ export default function DashboardPage() {
       {renewalAlerts.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.18)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <CreditCard size={14} style={{ color: "#4ade80" }} />
+            <CreditCard size={14} style={{ color: "var(--c-green-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Rinnovi Imminenti
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-              style={{ background: "rgba(34,197,94,0.18)", color: "#4ade80" }}>
+              style={{ background: "rgba(34,197,94,0.18)", color: "var(--c-green-400)" }}>
               {renewalAlerts.length}
             </span>
-            <span className="text-xs ml-auto font-medium" style={{ color: "rgba(74,222,128,0.6)" }}>
+            <span className="text-xs ml-auto font-medium" style={{ color: "color-mix(in srgb, var(--c-green-400) min(100%, calc(60% + var(--fade-boost))), transparent)" }}>
               +€{renewalAlerts.reduce((s, r) => s + r.fee, 0).toLocaleString("it-IT")} in arrivo
             </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {renewalAlerts.map(({ client, daysUntil, fee }) => {
-              const urgency = daysUntil === 0 ? "#f87171" : daysUntil <= 2 ? "#fbbf24" : "#4ade80";
+              const urgency = daysUntil === 0 ? "var(--c-red-400)" : daysUntil <= 2 ? "var(--c-amber-400)" : "var(--c-green-400)";
               const label = daysUntil === 0 ? "Oggi" : daysUntil === 1 ? "Domani" : `Tra ${daysUntil}gg`;
               return (
                 <div key={client.id} className="flex items-center gap-3 p-3 rounded-xl"
@@ -1986,20 +1986,20 @@ export default function DashboardPage() {
                   <Link href={`/dashboard/clienti/${client.id}`}
                     className="flex items-center gap-3 flex-1 min-w-0 group">
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                      style={{ background: "rgba(34,197,94,0.12)", color: "#4ade80" }}>
+                      style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-400)" }}>
                       {client.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold truncate group-hover:underline" style={{ color: "var(--text)" }}>{client.name}</p>
                       <p className="text-xs font-medium" style={{ color: urgency }}>{label}</p>
                     </div>
-                    <span className="text-xs font-bold flex-shrink-0" style={{ color: "#4ade80" }}>€{fee}/m</span>
+                    <span className="text-xs font-bold flex-shrink-0" style={{ color: "var(--c-green-400)" }}>€{fee}/m</span>
                   </Link>
                   {client.phone && (
                     <a href={`https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Ciao ${client.name.split(" ")[0]}! Ti ricordo che il tuo abbonamento mensile (€${fee}) si rinnova ${daysUntil === 0 ? "oggi" : daysUntil === 1 ? "domani" : `tra ${daysUntil} giorni`}. Fammi sapere!`)}`}
                       target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80 flex-shrink-0"
-                      style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+                      style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)" }}>
                       <MessageCircle size={11} />
                       WA
                     </a>
@@ -2015,12 +2015,12 @@ export default function DashboardPage() {
       {revenueEfficiency.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.15)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <Euro size={14} style={{ color: "#fbbf24" }} />
+            <Euro size={14} style={{ color: "var(--c-amber-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Rendimento per Sessione
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-              style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24" }}>
+              style={{ background: "rgba(251,191,36,0.15)", color: "var(--c-amber-400)" }}>
               {revenueEfficiency.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
@@ -2030,13 +2030,13 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {revenueEfficiency.map(({ client, trainingDays, perSession, fee }) => {
               const efficiency = perSession ?? 0;
-              const color = efficiency >= 25 ? "#22c55e" : efficiency >= 12 ? "#fbbf24" : "#f87171";
+              const color = efficiency >= 25 ? "var(--c-green-500)" : efficiency >= 12 ? "var(--c-amber-400)" : "var(--c-red-400)";
               const label = efficiency >= 25 ? "Premium" : efficiency >= 12 ? "Standard" : "Sotto media";
               return (
                 <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
                   className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                    style={{ background: `${color}18`, color }}>
+                    style={{ background: `color-mix(in srgb, ${color} 9.4%, transparent)`, color }}>
                     {client.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -2047,7 +2047,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-sm font-black" style={{ color }}>€{efficiency}</p>
-                    <p className="text-xs" style={{ color: `${color}99` }}>{label}</p>
+                    <p className="text-xs" style={{ color: `color-mix(in srgb, ${color} min(100%, calc(60% + var(--fade-boost))), transparent)` }}>{label}</p>
                   </div>
                 </Link>
               );
@@ -2060,12 +2060,12 @@ export default function DashboardPage() {
       {phaseTrajectoryAlerts.length > 0 && (
         <div className="rounded-2xl p-4 mb-6" style={{ background: "rgba(56,189,248,0.04)", border: "1px solid rgba(56,189,248,0.18)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <Target size={14} style={{ color: "#38bdf8" }} />
+            <Target size={14} style={{ color: "var(--c-sky-400)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Traiettoria Fase
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-              style={{ background: "rgba(56,189,248,0.15)", color: "#38bdf8" }}>
+              style={{ background: "rgba(56,189,248,0.15)", color: "var(--c-sky-400)" }}>
               {phaseTrajectoryAlerts.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
@@ -2074,7 +2074,7 @@ export default function DashboardPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {phaseTrajectoryAlerts.map(({ client, phase, currentWeight, daysRemaining, requiredPerWeek, actualPerWeek, status }) => {
-              const statusColor = status === "ottimo" ? "#22c55e" : status === "in_linea" ? "#38bdf8" : "#f87171";
+              const statusColor = status === "ottimo" ? "var(--c-green-500)" : status === "in_linea" ? "var(--c-sky-400)" : "var(--c-red-400)";
               const statusLabel = status === "ottimo" ? "In anticipo" : status === "in_linea" ? "In linea" : "In ritardo";
               const phaseLabel = phase.type === "bulk" ? "Massa" : phase.type === "cut" ? "Cut" : phase.name;
               const fmt = (v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(2)}kg/sett`;
@@ -2082,14 +2082,14 @@ export default function DashboardPage() {
                 <Link key={client.id} href={`/dashboard/clienti/${client.id}`}
                   className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0"
-                    style={{ background: `${statusColor}18`, color: statusColor }}>
+                    style={{ background: `color-mix(in srgb, ${statusColor} 9.4%, transparent)`, color: statusColor }}>
                     {client.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="text-xs font-semibold truncate" style={{ color: "var(--text)" }}>{client.name}</p>
                       <span className="text-xs px-1.5 py-0.5 rounded font-bold flex-shrink-0"
-                        style={{ background: `${statusColor}18`, color: statusColor }}>{statusLabel}</span>
+                        style={{ background: `color-mix(in srgb, ${statusColor} 9.4%, transparent)`, color: statusColor }}>{statusLabel}</span>
                     </div>
                     <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>
                       {phaseLabel} · {currentWeight}kg → {phase.targetWeight}kg · {daysRemaining}gg rimasti
@@ -2110,12 +2110,12 @@ export default function DashboardPage() {
       {deloadAlerts.length > 0 && (
         <div className="rounded-2xl p-4 mb-4" style={{ background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.22)" }}>
           <div className="flex items-center gap-2 mb-3 flex-wrap">
-            <BatteryLow size={14} style={{ color: "#a855f7" }} />
+            <BatteryLow size={14} style={{ color: "var(--c-purple-500)" }} />
             <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
               Deload Raccomandato
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-              style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7" }}>
+              style={{ background: "rgba(168,85,247,0.15)", color: "var(--c-purple-500)" }}>
               {deloadAlerts.length}
             </span>
             <span className="text-xs ml-auto" style={{ color: "var(--text-dim)" }}>
@@ -2128,7 +2128,7 @@ export default function DashboardPage() {
                 className="flex items-center gap-3 p-2.5 rounded-xl transition-all hover:bg-white/5"
                 style={{ background: "rgba(168,85,247,0.04)", borderLeft: "2px solid rgba(168,85,247,0.3)" }}>
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                  style={{ background: "rgba(168,85,247,0.12)", color: "#a855f7" }}>
+                  style={{ background: "rgba(168,85,247,0.12)", color: "var(--c-purple-500)" }}>
                   {client.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -2138,7 +2138,7 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <span className="text-xs font-bold px-2 py-1 rounded-lg flex-shrink-0"
-                  style={{ background: "rgba(168,85,247,0.12)", color: "#a855f7" }}>
+                  style={{ background: "rgba(168,85,247,0.12)", color: "var(--c-purple-500)" }}>
                   W{consecutiveWeeks}
                 </span>
               </Link>
@@ -2155,7 +2155,7 @@ export default function DashboardPage() {
           <div className="card-luxury rounded-2xl p-6">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "rgba(255,107,43,0.1)" }}>
+                style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)" }}>
                 <Plus size={19} style={{ color: "var(--accent)" }} />
               </div>
               <div>
@@ -2176,12 +2176,12 @@ export default function DashboardPage() {
                   className="flex items-center gap-3 p-3.5 rounded-xl transition-all hover:bg-white/5 group">
                   <div className="flex-shrink-0">
                     {done
-                      ? <CheckCircle2 size={19} style={{ color: "#22c55e" }} />
-                      : <Circle size={19} style={{ color: "rgba(255,107,43,0.3)" }} />}
+                      ? <CheckCircle2 size={19} style={{ color: "var(--c-green-500)" }} />
+                      : <Circle size={19} style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(30% + var(--fade-boost))), transparent)" }} />}
                   </div>
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: done ? "rgba(34,197,94,0.08)" : "rgba(255,107,43,0.08)" }}>
-                    <Icon size={14} style={{ color: done ? "#22c55e" : "var(--accent)" }} />
+                    style={{ background: done ? "rgba(34,197,94,0.08)" : "color-mix(in srgb, var(--accent) 8%, transparent)" }}>
+                    <Icon size={14} style={{ color: done ? "var(--c-green-500)" : "var(--accent)" }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium" style={{
@@ -2248,7 +2248,7 @@ export default function DashboardPage() {
               <Link key={href} href={href}
                 className="flex items-center gap-3 p-3 rounded-xl transition-all hover:bg-white/5 group">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: "rgba(255,107,43,0.08)" }}>
+                  style={{ background: "color-mix(in srgb, var(--accent) 8%, transparent)" }}>
                   <Icon size={16} style={{ color: "var(--accent)" }} />
                 </div>
                 <div className="flex-1">

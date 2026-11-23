@@ -195,7 +195,7 @@ export default function WorkoutPlanPage() {
                 if (!mins) return null;
                 return (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md font-medium"
-                    style={{ background: "rgba(255,107,43,0.1)", color: "var(--accent-light)", border: "1px solid rgba(255,107,43,0.18)", fontSize: "10px" }}>
+                    style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 18%, transparent)", fontSize: "10px" }}>
                     <Timer size={9} />
                     ~{mins} min/sessione
                   </span>
@@ -215,7 +215,7 @@ export default function WorkoutPlanPage() {
             <button key={key} onClick={() => setViewMode(key)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
               style={{
-                background: viewMode === key ? "rgba(255,107,43,0.14)" : "transparent",
+                background: viewMode === key ? "color-mix(in srgb, var(--accent) 14%, transparent)" : "transparent",
                 color: viewMode === key ? "var(--accent-light)" : "var(--text-muted)",
               }}>
               <Icon size={13} /> {label}
@@ -232,11 +232,11 @@ export default function WorkoutPlanPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <MessageSquare size={14} style={{ color: "var(--accent)", flexShrink: 0 }} />
             <p className="text-xs font-bold uppercase tracking-widest"
-              style={{ color: "rgba(201,168,76,0.65)", letterSpacing: "0.12em" }}>
+              style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(65% + var(--fade-boost))), transparent)", letterSpacing: "0.12em" }}>
               Dedica personale
             </p>
             <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-              style={{ background: "rgba(201,168,76,0.1)", color: "rgba(201,168,76,0.5)", fontSize: "0.6rem", border: "1px solid rgba(201,168,76,0.15)" }}>
+              style={{ background: "rgba(201,168,76,0.1)", color: "color-mix(in srgb, var(--accent) min(100%, calc(50% + var(--fade-boost))), transparent)", fontSize: "0.6rem", border: "1px solid rgba(201,168,76,0.15)" }}>
               visibile al cliente
             </span>
           </div>
@@ -280,7 +280,7 @@ export default function WorkoutPlanPage() {
           </div>
         )}
         {dedicaSaved && (
-          <div className="px-4 pb-3 flex items-center gap-2 text-xs font-semibold" style={{ color: "#22c55e" }}>
+          <div className="px-4 pb-3 flex items-center gap-2 text-xs font-semibold" style={{ color: "var(--c-green-500)" }}>
             <Check size={12} /> Dedica salvata — il cliente la vedrà nel suo portale
           </div>
         )}
@@ -289,10 +289,10 @@ export default function WorkoutPlanPage() {
       {/* ── Piano DNA ───────────────────────────────────────────────────────── */}
       {plan.exercises.length > 0 && (() => {
         const GROUP_COLORS: Record<string, string> = {
-          "Petto": "#ef4444", "Schiena": "#3b82f6", "Spalle": "#f59e0b",
-          "Bicipiti": "#8b5cf6", "Tricipiti": "#ec4899", "Gambe": "#22c55e",
-          "Glutei": "#14b8a6", "Core": "#f97316", "Addominali": "#f97316",
-          "Full Body": "#6366f1", "Cardio": "#a3e635",
+          "Petto": "var(--c-red-500)", "Schiena": "var(--c-blue-500)", "Spalle": "var(--c-amber-500)",
+          "Bicipiti": "var(--c-violet-500)", "Tricipiti": "var(--c-pink-500)", "Gambe": "var(--c-green-500)",
+          "Glutei": "var(--c-teal-500)", "Core": "var(--c-orange-500)", "Addominali": "var(--c-orange-500)",
+          "Full Body": "#6366f1", "Cardio": "var(--c-lime-400)",
         };
         const counts = new Map<string, number>();
         for (const ex of plan.exercises) {
@@ -311,12 +311,12 @@ export default function WorkoutPlanPage() {
             <div className="flex items-center justify-between px-4 py-3"
               style={{ borderBottom: "1px solid rgba(201,168,76,0.1)" }}>
               <div className="flex items-center gap-2">
-                <span style={{ fontSize: "0.7rem", color: "rgba(201,168,76,0.65)", fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>Piano DNA</span>
-                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.1)", color: "rgba(201,168,76,0.55)", fontSize: "0.6rem", border: "1px solid rgba(201,168,76,0.15)" }}>
+                <span style={{ fontSize: "0.7rem", color: "color-mix(in srgb, var(--accent) min(100%, calc(65% + var(--fade-boost))), transparent)", fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase" }}>Piano DNA</span>
+                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(201,168,76,0.1)", color: "color-mix(in srgb, var(--accent) min(100%, calc(55% + var(--fade-boost))), transparent)", fontSize: "0.6rem", border: "1px solid rgba(201,168,76,0.15)" }}>
                   {sorted.length} gruppi · {total} esercizi
                 </span>
               </div>
-              <span className="text-xs font-bold" style={{ color: isBalanced ? "#22c55e" : "#f59e0b" }}>
+              <span className="text-xs font-bold" style={{ color: isBalanced ? "var(--c-green-500)" : "var(--c-amber-500)" }}>
                 {isBalanced ? "Piano bilanciato" : `Focus: ${dominant} (${dominantPct}%)`}
               </span>
             </div>
@@ -329,7 +329,7 @@ export default function WorkoutPlanPage() {
                     <span className="text-xs font-medium w-20 flex-shrink-0 text-right" style={{ color: "var(--text-muted)" }}>{group}</span>
                     <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "var(--surface-sm)" }}>
                       <div className="h-full rounded-full transition-all duration-700"
-                        style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${color}99, ${color})`, boxShadow: `0 0 6px ${color}44` }} />
+                        style={{ width: `${pct}%`, background: `linear-gradient(90deg, color-mix(in srgb, ${color} 60%, transparent), ${color})`, boxShadow: `0 0 6px color-mix(in srgb, ${color} 26.7%, transparent)` }} />
                     </div>
                     <span className="text-xs font-black w-5 text-center flex-shrink-0" style={{ color }}>{count}</span>
                   </div>
@@ -361,32 +361,32 @@ export default function WorkoutPlanPage() {
         const plateaued = progress.filter(p => p.plateau).length;
         return (
           <div className="mb-5 rounded-2xl overflow-hidden"
-            style={{ border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.018)" }}>
+            style={{ border: "1px solid rgba(var(--ink-rgb),0.07)", background: "rgba(var(--ink-rgb),0.018)" }}>
             <div className="flex items-center gap-2 px-4 py-3"
-              style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              style={{ borderBottom: "1px solid rgba(var(--ink-rgb),0.05)" }}>
               <TrendingUp size={13} style={{ color: "var(--accent)" }} />
               <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
                 Progressi Piano
               </span>
               <span className="ml-auto text-xs" style={{ color: "var(--text-dim)" }}>
-                {growing > 0 && <span style={{ color: "#22c55e" }}>{growing} in crescita</span>}
+                {growing > 0 && <span style={{ color: "var(--c-green-500)" }}>{growing} in crescita</span>}
                 {growing > 0 && plateaued > 0 && <span style={{ color: "var(--text-dim)" }}> · </span>}
-                {plateaued > 0 && <span style={{ color: "#fb923c" }}>{plateaued} plateau</span>}
+                {plateaued > 0 && <span style={{ color: "var(--c-orange-400)" }}>{plateaued} plateau</span>}
               </span>
             </div>
             <div className="overflow-x-auto">
               <div className="min-w-[320px]">
                 {progress.map(({ ex, firstW, lastW, delta, plateau }, i) => (
                   <div key={ex.id} className="flex items-center gap-3 px-4 py-2.5"
-                    style={{ borderBottom: i < progress.length - 1 ? "1px solid rgba(255,255,255,0.035)" : "none" }}>
+                    style={{ borderBottom: i < progress.length - 1 ? "1px solid rgba(var(--ink-rgb),0.035)" : "none" }}>
                     <span className="text-xs flex-1 truncate" style={{ color: "var(--text)", minWidth: 0 }}>{ex.name}</span>
                     <span className="text-xs flex-shrink-0" style={{ color: "var(--text-dim)" }}>
                       {firstW}kg → {lastW}kg
                     </span>
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0"
                       style={{
-                        background: plateau ? "rgba(251,146,60,0.12)" : delta > 0 ? "rgba(34,197,94,0.1)" : delta < 0 ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.06)",
-                        color: plateau ? "#fb923c" : delta > 0 ? "#22c55e" : delta < 0 ? "#ef4444" : "#6b7280",
+                        background: plateau ? "rgba(251,146,60,0.12)" : delta > 0 ? "rgba(34,197,94,0.1)" : delta < 0 ? "rgba(239,68,68,0.1)" : "rgba(var(--ink-rgb),0.06)",
+                        color: plateau ? "var(--c-orange-400)" : delta > 0 ? "var(--c-green-500)" : delta < 0 ? "var(--c-red-500)" : "var(--c-gray-500)",
                       }}>
                       {plateau ? "Plateau" : delta > 0 ? `+${delta}kg` : delta === 0 ? "Stabile" : `${delta}kg`}
                     </span>
@@ -419,15 +419,15 @@ export default function WorkoutPlanPage() {
             style={{ border: "1px solid rgba(34,197,94,0.2)", background: "rgba(34,197,94,0.03)" }}>
             <div className="flex items-center gap-2 px-4 py-3"
               style={{ borderBottom: "1px solid rgba(34,197,94,0.1)" }}>
-              <TrendingUp size={13} style={{ color: "#22c55e" }} />
-              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "#22c55e" }}>
+              <TrendingUp size={13} style={{ color: "var(--c-green-500)" }} />
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--c-green-500)" }}>
                 Suggerimento Carico
               </span>
-              <span className="ml-1 text-xs" style={{ color: "rgba(34,197,94,0.55)" }}>
+              <span className="ml-1 text-xs" style={{ color: "color-mix(in srgb, var(--c-green-500) min(100%, calc(55% + var(--fade-boost))), transparent)" }}>
                 — prossima sessione
               </span>
               <span className="ml-auto text-xs px-2 py-0.5 rounded-full font-medium"
-                style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>
+                style={{ background: "rgba(34,197,94,0.1)", color: "var(--c-green-500)" }}>
                 {suggestions.length} {suggestions.length === 1 ? "esercizio" : "esercizi"}
               </span>
             </div>
@@ -440,7 +440,7 @@ export default function WorkoutPlanPage() {
                     <span className="text-xs flex-shrink-0" style={{ color: "var(--text-dim)" }}>{currentW}kg</span>
                     <span className="text-xs flex-shrink-0" style={{ color: "var(--text-dim)" }}>→</span>
                     <span className="text-xs font-bold px-2.5 py-0.5 rounded-full flex-shrink-0"
-                      style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.2)" }}>
+                      style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)", border: "1px solid rgba(34,197,94,0.2)" }}>
                       {suggestedW}kg <span style={{ opacity: 0.6, fontSize: "9px" }}>+{step}</span>
                     </span>
                   </div>
@@ -448,7 +448,7 @@ export default function WorkoutPlanPage() {
               </div>
             </div>
             <div className="px-4 py-2.5" style={{ borderTop: "1px solid rgba(34,197,94,0.06)" }}>
-              <p className="text-xs" style={{ color: "rgba(34,197,94,0.5)" }}>
+              <p className="text-xs" style={{ color: "color-mix(in srgb, var(--c-green-500) min(100%, calc(50% + var(--fade-boost))), transparent)" }}>
                 3 sessioni consecutive allo stesso carico — il momento ideale per progredire
               </p>
             </div>

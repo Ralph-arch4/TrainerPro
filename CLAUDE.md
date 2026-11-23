@@ -94,6 +94,11 @@ Classes: `.accent-text`, `.accent-btn`, `.glass`, `.glass-dark`, `.card-luxury`,
 // SUPABASE_SERVICE_ROLE_KEY: never in tracked files, only .env.local (gitignored)
 ```
 
+**Theme-safe colours (light + dark):** no raw hex/rgba for text or surfaces in components.
+Status colours -> `var(--c-green-500)` etc. (globals.css palette, darker in light). Ivory/white alpha -> `rgba(var(--text-rgb),a)` / `rgba(var(--ink-rgb),a)`.
+Alpha of a colour var -> `color-mix(in srgb, ${c} 20%, transparent)` (never `${c}20`). Gold text -> `var(--accent)`/`var(--accent-light)`; gradients -> `var(--accent-hi)`.
+Always-dark surfaces (hero cards, nav user card) -> add class `force-dark`. Opaque dark panels -> `var(--panel-light, <dark colour>)`.
+
 **db.ts camelCase->snake_case pattern:** Each update() function manually maps fields. Convention: `const mapped: Record<string, unknown> = {}; if (payload.fieldName !== undefined) mapped.field_name = payload.fieldName;`
 > PENDING USER APPROVAL: Abstract into `mapFields(payload, fieldMap)` utility to eliminate ~90 lines of repeated mapping across 6 update() functions.
 

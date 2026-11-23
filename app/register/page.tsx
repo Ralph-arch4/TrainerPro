@@ -48,7 +48,7 @@ export default function RegisterPage() {
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "var(--black)" }}>
         <div className="w-full max-w-md text-center fade-in glass-dark rounded-2xl p-10">
           <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.25)" }}>
-            <CheckCircle2 size={32} style={{ color: "#22c55e" }} />
+            <CheckCircle2 size={32} style={{ color: "var(--c-green-500)" }} />
           </div>
           <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--text)" }}>Controlla la tua email</h2>
           <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
@@ -68,11 +68,11 @@ export default function RegisterPage() {
     <div className="min-h-screen flex" style={{ background: "var(--black)" }}>
 
       {/* Left panel — brand */}
-      <div className="hidden lg:flex flex-col justify-between w-[45%] p-12 relative overflow-hidden"
+      <div className="force-dark hidden lg:flex flex-col justify-between w-[45%] p-12 relative overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0A0A0A 0%, #1a0800 50%, #0A0A0A 100%)" }}>
 
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(255,107,43,0.15) 0%, transparent 70%)" }} />
+          style={{ background: "radial-gradient(circle, color-mix(in srgb, var(--accent) 15%, transparent) 0%, transparent 70%)" }} />
 
         {/* Logo */}
         <div className="flex items-center gap-3 relative z-10">
@@ -89,32 +89,32 @@ export default function RegisterPage() {
             Tutto gratis.<br />
             <span className="accent-text">Clienti illimitati.</span>
           </h2>
-          <p className="text-base mb-10" style={{ color: "rgba(245,240,232,0.55)" }}>
+          <p className="text-base mb-10" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.55 + var(--fade-boost-n))))" }}>
             Crea il tuo account in 30 secondi. Nessuna carta di credito richiesta.
           </p>
 
           {/* Benefits */}
           <div className="space-y-4">
             {[
-              { icon: Star,   label: "Accesso completo gratuito", desc: "Clienti illimitati, tutte le funzionalità", color: "#fbbf24" },
-              { icon: Shield, label: "Dati al sicuro",            desc: "Crittografia end-to-end su Supabase",       color: "#34d399" },
-              { icon: Zap,    label: "Pronto in 2 minuti",        desc: "Setup immediato, zero configurazione",       color: "#818cf8" },
+              { icon: Star,   label: "Accesso completo gratuito", desc: "Clienti illimitati, tutte le funzionalità", color: "var(--c-amber-400)" },
+              { icon: Shield, label: "Dati al sicuro",            desc: "Crittografia end-to-end su Supabase",       color: "var(--c-emerald-400)" },
+              { icon: Zap,    label: "Pronto in 2 minuti",        desc: "Setup immediato, zero configurazione",       color: "var(--c-indigo-400)" },
             ].map(({ icon: Icon, label, desc, color }) => (
               <div key={label} className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: `${color}18` }}>
+                  style={{ background: `color-mix(in srgb, ${color} 9.4%, transparent)` }}>
                   <Icon size={16} style={{ color }} />
                 </div>
                 <div>
                   <p className="text-sm font-semibold" style={{ color: "#F5F0E8" }}>{label}</p>
-                  <p className="text-xs" style={{ color: "rgba(245,240,232,0.55)" }}>{desc}</p>
+                  <p className="text-xs" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.55 + var(--fade-boost-n))))" }}>{desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <p className="text-sm italic relative z-10" style={{ color: "rgba(245,240,232,0.38)" }}>
+        <p className="text-sm italic relative z-10" style={{ color: "rgba(var(--text-rgb), min(1, calc(0.38 + var(--fade-boost-n))))" }}>
           "Pericolosamente personalizzato sul tuo modus operandi."
         </p>
       </div>
@@ -139,7 +139,7 @@ export default function RegisterPage() {
           <div className="glass-dark rounded-2xl p-8">
             {error && (
               <div className="mb-5 p-3 rounded-xl text-sm"
-                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}>
+                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "var(--c-red-400)" }}>
                 {error}
               </div>
             )}
@@ -152,7 +152,7 @@ export default function RegisterPage() {
                   <input type="text" value={name} onChange={(e) => setName(e.target.value)}
                     placeholder="Mario Rossi" required
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }} />
                 </div>
               </div>
 
@@ -163,7 +163,7 @@ export default function RegisterPage() {
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                     placeholder="il-tuo@email.com" required
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }} />
                 </div>
               </div>
 
@@ -174,7 +174,7 @@ export default function RegisterPage() {
                   <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                     placeholder="Minimo 6 caratteri" required minLength={6}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />
+                    style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }} />
                 </div>
               </div>
 

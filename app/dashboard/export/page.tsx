@@ -54,8 +54,8 @@ export default function ExportPage() {
         </div>
         <div className="card-luxury rounded-2xl p-12 text-center">
           <div className="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center"
-            style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.15)" }}>
-            <FileDown size={28} style={{ color: "rgba(255,107,43,0.5)" }} />
+            style={{ background: "color-mix(in srgb, var(--accent) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)" }}>
+            <FileDown size={28} style={{ color: "color-mix(in srgb, var(--accent) 50%, transparent)" }} />
           </div>
           <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>Nessun cliente da esportare</h2>
           <p className="text-sm mb-1 max-w-sm mx-auto" style={{ color: "var(--text-muted)" }}>
@@ -90,7 +90,7 @@ export default function ExportPage() {
               <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--text)" }}>Seleziona cliente</h2>
               <select value={selectedClientId} onChange={(e) => setSelectedClientId(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>
+                style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }}>
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
@@ -102,17 +102,17 @@ export default function ExportPage() {
                   <button key={key} onClick={() => toggleSection(key)}
                     className="w-full flex items-center justify-between p-3 rounded-xl transition-all"
                     style={{
-                      background: sections[key] ? "rgba(255,107,43,0.08)" : "var(--surface-xs)",
-                      border: `1px solid ${sections[key] ? "rgba(255,107,43,0.25)" : "var(--surface-md)"}`,
+                      background: sections[key] ? "color-mix(in srgb, var(--accent) 8%, transparent)" : "var(--surface-xs)",
+                      border: `1px solid ${sections[key] ? "color-mix(in srgb, var(--accent) 25%, transparent)" : "var(--surface-md)"}`,
                     }}>
                     <div className="flex items-center gap-3">
                       <Icon size={15} style={{ color: sections[key] ? "var(--accent)" : "var(--text-dim)" }} />
                       <span className="text-sm" style={{ color: sections[key] ? "var(--ivory)" : "var(--text-muted)" }}>{label}</span>
                       {count !== undefined && count > 0 && (
-                        <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "rgba(255,107,43,0.12)", color: "var(--accent-light)" }}>{count}</span>
+                        <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent-light)" }}>{count}</span>
                       )}
                     </div>
-                    {sections[key] ? <CheckCircle2 size={16} style={{ color: "var(--accent)" }} /> : <div className="w-4 h-4 rounded-full border" style={{ borderColor: "rgba(255,255,255,0.15)" }} />}
+                    {sections[key] ? <CheckCircle2 size={16} style={{ color: "var(--accent)" }} /> : <div className="w-4 h-4 rounded-full border" style={{ borderColor: "rgba(var(--ink-rgb),0.15)" }} />}
                   </button>
                 ))}
               </div>
@@ -135,7 +135,7 @@ export default function ExportPage() {
               ? <PrintPreview client={client} sections={sections} trainerName={user?.name ?? "REC Studio"} />
               : (
                 <div className="flex flex-col items-center justify-center py-16" style={{ color: "var(--text-faint)" }}>
-                  <FileDown size={40} className="mb-3" style={{ color: "rgba(255,107,43,0.15)" }} />
+                  <FileDown size={40} className="mb-3" style={{ color: "color-mix(in srgb, var(--accent) 15%, transparent)" }} />
                   <p className="text-sm">Seleziona un cliente per vedere l&apos;anteprima</p>
                 </div>
               )
@@ -162,7 +162,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
 }) {
   const textColor = forPrint ? "#111" : "var(--ivory)";
   const mutedColor = forPrint ? "#555" : "var(--text-muted)";
-  const borderColor = forPrint ? "#e5e7eb" : "rgba(255,107,43,0.12)";
+  const borderColor = forPrint ? "#e5e7eb" : "color-mix(in srgb, var(--accent) 12%, transparent)";
   const bgCard = forPrint ? "#f9fafb" : "var(--surface-sm)";
 
   return (
@@ -241,7 +241,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
               return (
                 <div key={w.id} className="rounded-xl overflow-hidden" style={{ border: `1px solid ${borderColor}` }}>
                   {/* Plan header */}
-                  <div className="px-4 py-3 flex items-center justify-between" style={{ background: forPrint ? "#fff7f5" : "rgba(255,107,43,0.08)" }}>
+                  <div className="px-4 py-3 flex items-center justify-between" style={{ background: forPrint ? "#fff7f5" : "color-mix(in srgb, var(--accent) 8%, transparent)" }}>
                     <div>
                       <p className="font-bold">{w.name}</p>
                       {w.description && <p className="text-xs mt-0.5" style={{ color: mutedColor }}>{w.description}</p>}
@@ -316,7 +316,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
               const fmt = (min: number, max?: number, unit = "g") => max && max > min ? `${min}–${max}${unit}` : `${min}${unit}`;
               return (
                 <div key={d.id} className="rounded-xl overflow-hidden" style={{ border: `1px solid ${borderColor}` }}>
-                  <div className="px-4 py-3" style={{ background: forPrint ? "#fff7f5" : "rgba(255,107,43,0.08)" }}>
+                  <div className="px-4 py-3" style={{ background: forPrint ? "#fff7f5" : "color-mix(in srgb, var(--accent) 8%, transparent)" }}>
                     <div className="flex items-start justify-between">
                       <p className="font-bold">{d.name}</p>
                       <p className="font-bold" style={{ color: forPrint ? "#C9A84C" : "var(--accent)" }}>{fmt(d.calories, d.caloriesMax, " kcal")}</p>

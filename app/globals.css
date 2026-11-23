@@ -1,10 +1,13 @@
 @import "tailwindcss";
 
 /* ── DARK THEME (default) — REC GROUP laser gold identity ─────────────────── */
-:root {
+/* .force-dark re-applies the dark tokens to a subtree, for surfaces that stay
+   dark in both themes (hero cards, photo overlays, the login brand panel). */
+:root, .force-dark {
   /* Brand accent — laser gold */
   --accent:       #C9A84C;
   --accent-light: #E8C96B;
+  --accent-hi:    #E8C96B; /* gradient highlight (buttons, gradient text) */
   --accent-dark:  #8B6820;
   --accent-glow:  rgba(201,168,76,0.20);
 
@@ -42,13 +45,60 @@
   /* Scrollbar */
   --scroll-track: var(--charcoal);
   --scroll-thumb: var(--accent-dark);
+
+  /* RGB channels for translucent text/overlays: rgba(var(--text-rgb), a) */
+  --text-rgb: 245,240,232;
+  --ink-rgb:  255,255,255;
+
+  /* Opaque panel colour in light mode only; unset here so inline
+     var(--panel-light, <dark colour>) falls back to the dark original. */
+  --panel-light: initial;
+
+  /* Added to the alpha of translucent coloured text: faded tints that read
+     fine on black wash out on the light background. */
+  --fade-boost: 0%;
+  --fade-boost-n: 0;
+
+  /* Status palette: bright on dark, deeper shades in light mode for contrast */
+  --c-green-500: #22c55e;
+  --c-green-400: #4ade80;
+  --c-emerald-400: #34d399;
+  --c-amber-400: #fbbf24;
+  --c-amber-500: #f59e0b;
+  --c-yellow-400: #facc15;
+  --c-yellow-300: #fde047;
+  --c-red-400: #f87171;
+  --c-red-500: #ef4444;
+  --c-red-300: #fca5a5;
+  --c-rose-400: #fb7185;
+  --c-violet-400: #a78bfa;
+  --c-violet-300: #c4b5fd;
+  --c-violet-500: #8b5cf6;
+  --c-purple-400: #c084fc;
+  --c-purple-500: #a855f7;
+  --c-sky-400: #38bdf8;
+  --c-indigo-400: #818cf8;
+  --c-blue-500: #3b82f6;
+  --c-orange-400: #fb923c;
+  --c-orange-500: #f97316;
+  --c-orange-300: #fdba74;
+  --c-coral: #ff9a6c;
+  --c-pink-400: #f472b6;
+  --c-pink-500: #ec4899;
+  --c-teal-500: #14b8a6;
+  --c-teal-400: #2dd4bf;
+  --c-lime-400: #a3e635;
+  --c-gray-500: #6b7280;
+  --c-gray-400: #9ca3af;
 }
+.force-dark { color: var(--text); }
 
 /* ── LIGHT THEME ─────────────────────────────────────────────────────────────── */
 [data-theme="light"] {
   /* Brand accent — deeper gold for white bg contrast */
   --accent:       #9A7620;
-  --accent-light: #C9A84C;
+  --accent-light: #7A5C12; /* used as gold text colour: must read on cream */
+  --accent-hi:    #C9A84C;
   --accent-dark:  #6B5010;
   --accent-glow:  rgba(154,118,32,0.12);
 
@@ -86,6 +136,43 @@
   /* Scrollbar */
   --scroll-track: #EDE8E2;
   --scroll-thumb: var(--accent-dark);
+
+  --text-rgb: 26,18,0;
+  --ink-rgb:  26,18,0;
+  --panel-light: #FFFFFF;
+  --fade-boost: 35%;
+  --fade-boost-n: 0.3;
+
+  --c-green-500: #15803d;
+  --c-green-400: #15803d;
+  --c-emerald-400: #047857;
+  --c-amber-400: #b45309;
+  --c-amber-500: #b45309;
+  --c-yellow-400: #a16207;
+  --c-yellow-300: #a16207;
+  --c-red-400: #dc2626;
+  --c-red-500: #dc2626;
+  --c-red-300: #b91c1c;
+  --c-rose-400: #e11d48;
+  --c-violet-400: #7c3aed;
+  --c-violet-300: #6d28d9;
+  --c-violet-500: #7c3aed;
+  --c-purple-400: #9333ea;
+  --c-purple-500: #9333ea;
+  --c-sky-400: #0369a1;
+  --c-indigo-400: #4f46e5;
+  --c-blue-500: #2563eb;
+  --c-orange-400: #c2410c;
+  --c-orange-500: #c2410c;
+  --c-orange-300: #c2410c;
+  --c-coral: #c2410c;
+  --c-pink-400: #db2777;
+  --c-pink-500: #db2777;
+  --c-teal-500: #0f766e;
+  --c-teal-400: #0f766e;
+  --c-lime-400: #4d7c0f;
+  --c-gray-500: #4b5563;
+  --c-gray-400: #4b5563;
 }
 
 /* ── BASE ────────────────────────────────────────────────────────────────────── */
@@ -110,7 +197,7 @@ html, body {
 
 /* ── TYPOGRAPHY ───────────────────────────────────────────────────────────────── */
 .accent-text {
-  background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 45%, #A07828 100%);
+  background: linear-gradient(135deg, var(--accent-hi) 0%, var(--accent) 45%, #A07828 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -139,7 +226,7 @@ html, body {
 
 /* ── BUTTONS ──────────────────────────────────────────────────────────────────── */
 .accent-btn {
-  background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 50%, var(--accent-dark) 100%);
+  background: linear-gradient(135deg, var(--accent-hi) 0%, var(--accent) 50%, var(--accent-dark) 100%);
   color: #0A0A0A;
   font-weight: 700;
   transition: all 0.22s ease;
@@ -425,4 +512,13 @@ html, body {
 .outline-btn:hover {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   border-color: var(--accent);
+}
+
+/* Light mode: inputs that are meant to blend into their container
+   (inline background: transparent) keep it instead of the white field. */
+[data-theme="light"] input[style*="background: transparent"],
+[data-theme="light"] input[style*="background:transparent"],
+[data-theme="light"] textarea[style*="background: transparent"],
+[data-theme="light"] textarea[style*="background:transparent"] {
+  background-color: transparent !important;
 }

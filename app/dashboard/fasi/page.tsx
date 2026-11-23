@@ -5,7 +5,7 @@ import { useAppStore } from "@/lib/store";
 import { Activity, CheckCircle2, Circle, ChevronRight, Filter } from "lucide-react";
 
 const phaseTypeLabel: Record<string, string> = { bulk: "Bulk", cut: "Cut", maintenance: "Mantenimento", custom: "Personalizzata" };
-const phaseTypeColor: Record<string, string> = { bulk: "#a78bfa", cut: "#38bdf8", maintenance: "#34d399", custom: "#f59e0b" };
+const phaseTypeColor: Record<string, string> = { bulk: "var(--c-violet-400)", cut: "var(--c-sky-400)", maintenance: "var(--c-emerald-400)", custom: "var(--c-amber-500)" };
 
 type FilterType = "tutte" | "bulk" | "cut" | "maintenance" | "custom";
 type FilterStatus = "tutte" | "attive" | "completate";
@@ -76,7 +76,7 @@ export default function FasiPage() {
           { label: "Fasi attive",  value: active,    color: "var(--accent)"       },
           { label: "Completate",   value: completed, color: "var(--accent-light)"  },
           { label: "Bulk",         value: bulkCount, color: "#CC5522"              },
-          { label: "Cut",          value: cutCount,  color: "rgba(255,107,43,0.65)"},
+          { label: "Cut",          value: cutCount,  color: "color-mix(in srgb, var(--accent) min(100%, calc(65% + var(--fade-boost))), transparent)"},
         ].map(({ label, value, color }) => (
           <div key={label} className="card-luxury rounded-2xl p-4 text-center">
             <p className="text-3xl font-bold" style={{ color }}>{value}</p>
@@ -90,10 +90,10 @@ export default function FasiPage() {
         <input value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Cerca fase o cliente…"
           className="flex-1 px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }} />
+          style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--text)" }} />
         <select value={filterType} onChange={(e) => setFilterType(e.target.value as FilterType)}
           className="px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
+          style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--text)" }}>
           <option value="tutte">Tutti i tipi</option>
           <option value="bulk">Bulk</option>
           <option value="cut">Cut</option>
@@ -102,7 +102,7 @@ export default function FasiPage() {
         </select>
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
           className="px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
+          style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--text)" }}>
           <option value="tutte">Tutti gli stati</option>
           <option value="attive">Attive</option>
           <option value="completate">Completate</option>
@@ -112,7 +112,7 @@ export default function FasiPage() {
       {/* Empty state */}
       {sorted.length === 0 && (
         <div className="text-center py-20 card-luxury rounded-2xl">
-          <Activity size={48} className="mx-auto mb-4" style={{ color: "rgba(255,107,43,0.2)" }} />
+          <Activity size={48} className="mx-auto mb-4" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(20% + var(--fade-boost))), transparent)" }} />
           <p className="font-semibold mb-1" style={{ color: "var(--text)" }}>
             {allPhases.length === 0 ? "Nessuna fase pianificata" : "Nessun risultato"}
           </p>
@@ -145,14 +145,14 @@ export default function FasiPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold" style={{ color: "var(--text)" }}>{phase.name}</p>
                       <span className="text-xs px-2.5 py-0.5 rounded-full"
-                        style={{ background: `${phaseTypeColor[phase.type]}18`, color: phaseTypeColor[phase.type] }}>
+                        style={{ background: `color-mix(in srgb, ${phaseTypeColor[phase.type]} 9.4%, transparent)`, color: phaseTypeColor[phase.type] }}>
                         {phaseTypeLabel[phase.type]}
                       </span>
                       {isOngoing && (
-                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(255,107,43,0.12)", color: "var(--accent-light)" }}>In corso</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent-light)" }}>In corso</span>
                       )}
                       {phase.completed && (
-                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>Completata</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(34,197,94,0.1)", color: "var(--c-green-500)" }}>Completata</span>
                       )}
                     </div>
                     <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
@@ -165,7 +165,7 @@ export default function FasiPage() {
                     onClick={() => updatePhase(phase.clientId, phase.id, { completed: !phase.completed })}
                     className="p-1.5 rounded-lg hover:bg-white/5 transition-all">
                     {phase.completed
-                      ? <CheckCircle2 size={16} style={{ color: "#22c55e" }} />
+                      ? <CheckCircle2 size={16} style={{ color: "var(--c-green-500)" }} />
                       : <Circle size={16} style={{ color: "var(--text-dim)" }} />}
                   </button>
                   <Link href={`/dashboard/clienti/${phase.clientId}`}
@@ -186,7 +186,7 @@ export default function FasiPage() {
                   <div className="h-1.5 rounded-full" style={{ background: "var(--surface-md)" }}>
                     <div className="h-1.5 rounded-full transition-all" style={{
                       width: `${progress}%`,
-                      background: `linear-gradient(90deg, ${phaseTypeColor[phase.type]}, ${phaseTypeColor[phase.type]}aa)`,
+                      background: `linear-gradient(90deg, ${phaseTypeColor[phase.type]}, color-mix(in srgb, ${phaseTypeColor[phase.type]} 66.7%, transparent))`,
                     }} />
                   </div>
                 </div>

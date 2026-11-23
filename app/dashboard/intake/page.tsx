@@ -130,7 +130,7 @@ export default function IntakePage() {
                   placeholder="es. Mario Rossi – Marzo 2025"
                   required
                   className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
-                  style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}
+                  style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }}
                 />
                 <p className="text-xs mt-1.5" style={{ color: "var(--text-dim)" }}>
                   Solo tu la vedi — serve per riconoscere il form nella lista.
@@ -153,8 +153,8 @@ export default function IntakePage() {
       ) : forms.length === 0 ? (
         <div className="card-luxury rounded-2xl p-14 text-center">
           <div className="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center"
-            style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.15)" }}>
-            <ClipboardList size={28} style={{ color: "rgba(255,107,43,0.5)" }} />
+            style={{ background: "color-mix(in srgb, var(--accent) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)" }}>
+            <ClipboardList size={28} style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(50% + var(--fade-boost))), transparent)" }} />
           </div>
           <h2 className="text-lg font-bold mb-2" style={{ color: "var(--text)" }}>Nessun form ancora</h2>
           <p className="text-sm mb-6 max-w-sm mx-auto" style={{ color: "var(--text-muted)" }}>
@@ -209,7 +209,7 @@ export default function IntakePage() {
               <ResponseDetail form={selected} />
             ) : selected?.status === "pending" ? (
               <div className="card-luxury rounded-2xl p-8 text-center">
-                <Clock size={36} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.3)" }} />
+                <Clock size={36} className="mx-auto mb-3" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(30% + var(--fade-boost))), transparent)" }} />
                 <p className="text-sm font-medium mb-1" style={{ color: "var(--text)" }}>In attesa di risposta</p>
                 <p className="text-xs mb-5" style={{ color: "var(--text-dim)" }}>
                   Il cliente non ha ancora compilato il form.
@@ -227,7 +227,7 @@ export default function IntakePage() {
                   <button
                     onClick={() => copyLink(selected)}
                     className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm transition-all"
-                    style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
+                    style={{ background: "color-mix(in srgb, var(--accent) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--accent-light)" }}>
                     {copiedId === selected.id ? <CheckCircle2 size={14} /> : <Copy size={14} />}
                     {copiedId === selected.id ? "Link copiato!" : "Copia link web"}
                   </button>
@@ -235,7 +235,7 @@ export default function IntakePage() {
               </div>
             ) : (
               <div className="card-luxury rounded-2xl p-8 text-center">
-                <ChevronRight size={36} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.15)" }} />
+                <ChevronRight size={36} className="mx-auto mb-3" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(15% + var(--fade-boost))), transparent)" }} />
                 <p className="text-sm" style={{ color: "var(--text-dim)" }}>
                   Seleziona un form dalla lista per vedere i dettagli
                 </p>
@@ -258,13 +258,13 @@ function FormRow({ form, selected, onSelect, onCopy, copied, onDownload, downloa
   return (
     <div
       className="card-luxury rounded-2xl p-4 mb-2 transition-all cursor-pointer"
-      style={{ borderColor: selected ? "rgba(255,107,43,0.35)" : undefined, background: selected ? "rgba(255,107,43,0.06)" : undefined }}
+      style={{ borderColor: selected ? "color-mix(in srgb, var(--accent) 35%, transparent)" : undefined, background: selected ? "color-mix(in srgb, var(--accent) 6%, transparent)" : undefined }}
       onClick={onSelect}>
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: isSubmitted ? "rgba(34,197,94,0.1)" : "var(--surface)" }}>
           {isSubmitted
-            ? <CheckCircle2 size={17} style={{ color: "#22c55e" }} />
+            ? <CheckCircle2 size={17} style={{ color: "var(--c-green-500)" }} />
             : <Clock size={17} style={{ color: "var(--text-dim)" }} />}
         </div>
         <div className="flex-1 min-w-0">
@@ -282,13 +282,13 @@ function FormRow({ form, selected, onSelect, onCopy, copied, onDownload, downloa
           <button onClick={onDownload}
             title="Scarica HTML da inviare al cliente"
             className="p-2 rounded-lg transition-all hover:bg-white/5"
-            style={{ color: downloaded ? "#22c55e" : "var(--text-dim)" }}>
+            style={{ color: downloaded ? "var(--c-green-500)" : "var(--text-dim)" }}>
             {downloaded ? <CheckCircle2 size={14} /> : <FileDown size={14} />}
           </button>
           <button onClick={onCopy}
             title="Copia link"
             className="p-2 rounded-lg transition-all hover:bg-white/5"
-            style={{ color: copied ? "#22c55e" : "var(--text-dim)" }}>
+            style={{ color: copied ? "var(--c-green-500)" : "var(--text-dim)" }}>
             {copied ? <CheckCircle2 size={14} /> : <Copy size={14} />}
           </button>
           <button onClick={onDelete} disabled={deleting}
@@ -351,7 +351,7 @@ function ResponseDetail({ form }: { form: IntakeForm }) {
 
   const Sec = ({ title, icon: Icon, children }: { title: string; icon: React.FC<{ size?: number; style?: React.CSSProperties }>; children: React.ReactNode }) => (
     <div className="mb-5">
-      <div className="flex items-center gap-2 mb-2.5 pb-1.5" style={{ borderBottom: "1px solid rgba(255,107,43,0.08)" }}>
+      <div className="flex items-center gap-2 mb-2.5 pb-1.5" style={{ borderBottom: "1px solid color-mix(in srgb, var(--accent) 8%, transparent)" }}>
         <Icon size={13} style={{ color: "var(--accent)" }} />
         <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--accent)" }}>{title}</p>
       </div>
@@ -368,7 +368,7 @@ function ResponseDetail({ form }: { form: IntakeForm }) {
       : typeof value === "string" ? value : JSON.stringify(value);
     return (
       <div className="flex gap-2">
-        <span className="text-xs font-bold flex-shrink-0 mt-0.5 w-5 text-right" style={{ color: "rgba(255,107,43,0.5)" }}>{n}.</span>
+        <span className="text-xs font-bold flex-shrink-0 mt-0.5 w-5 text-right" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(50% + var(--fade-boost))), transparent)" }}>{n}.</span>
         <div className="flex-1 min-w-0">
           <span className="text-xs" style={{ color: "var(--text-dim)" }}>{label} </span>
           <span className="text-sm" style={{ color: "var(--text)" }}>{display}</span>
@@ -380,7 +380,7 @@ function ResponseDetail({ form }: { form: IntakeForm }) {
   return (
     <div className="card-luxury rounded-2xl overflow-hidden">
       {/* Header bar */}
-      <div className="p-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,107,43,0.1)" }}>
+      <div className="p-4 flex items-center justify-between" style={{ borderBottom: "1px solid color-mix(in srgb, var(--accent) 10%, transparent)" }}>
         <div>
           <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>{r.fullName}</h2>
           <p className="text-xs" style={{ color: "var(--text-dim)" }}>
@@ -390,14 +390,14 @@ function ResponseDetail({ form }: { form: IntakeForm }) {
         </div>
         {created ? (
           <span className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold"
-            style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e" }}>
+            style={{ background: "rgba(34,197,94,0.12)", color: "var(--c-green-500)" }}>
             <CheckCircle2 size={13} /> Cliente creato!
           </span>
         ) : existingClient ? (
           <button
             onClick={() => router.push(`/dashboard/clienti/${existingClient.id}`)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
-            style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", color: "#f59e0b" }}>
+            style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.25)", color: "var(--c-amber-500)" }}>
             <CheckCircle2 size={13} /> Già esistente — Apri
           </button>
         ) : (
@@ -412,7 +412,7 @@ function ResponseDetail({ form }: { form: IntakeForm }) {
       {/* Error banner */}
       {error && (
         <div className="px-4 py-2.5 flex items-center justify-between gap-2 text-xs"
-          style={{ background: "rgba(239,68,68,0.08)", borderBottom: "1px solid rgba(239,68,68,0.15)", color: "#f87171" }}>
+          style={{ background: "rgba(239,68,68,0.08)", borderBottom: "1px solid rgba(239,68,68,0.15)", color: "var(--c-red-400)" }}>
           <span>⚠ {error}</span>
           <button onClick={() => setError("")} className="opacity-60 hover:opacity-100">✕</button>
         </div>

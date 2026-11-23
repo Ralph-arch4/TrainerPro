@@ -118,7 +118,7 @@ export default function PreventiviPage() {
   }
 
   const inputClass = "w-full px-3 py-2 rounded-xl text-sm outline-none";
-  const inputStyle = { background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" };
+  const inputStyle = { background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--text)" };
 
   return (
     <div className="p-6 lg:p-8 fade-in">
@@ -138,7 +138,7 @@ export default function PreventiviPage() {
           <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--text-muted)" }}>I tuoi preventivi</h2>
           {quotes.length === 0 ? (
             <div className="card-luxury rounded-2xl p-8 text-center">
-              <Calculator size={36} className="mx-auto mb-3" style={{ color: "rgba(255,107,43,0.2)" }} />
+              <Calculator size={36} className="mx-auto mb-3" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(20% + var(--fade-boost))), transparent)" }} />
               <p className="text-sm" style={{ color: "var(--text-dim)" }}>Nessun preventivo ancora</p>
               <button onClick={newQuote} className="mt-3 text-xs hover:underline" style={{ color: "var(--accent-light)" }}>Crea il primo</button>
             </div>
@@ -147,8 +147,8 @@ export default function PreventiviPage() {
               {quotes.map((q) => (
                 <div key={q.id}
                   onClick={() => setActiveQuote(q)}
-                  className="card-luxury rounded-xl p-4 cursor-pointer transition-all hover:border-[rgba(255,107,43,0.3)]"
-                  style={{ borderColor: activeQuote?.id === q.id ? "rgba(255,107,43,0.4)" : undefined, background: activeQuote?.id === q.id ? "rgba(255,107,43,0.06)" : undefined }}>
+                  className="card-luxury rounded-xl p-4 cursor-pointer transition-all hover:border-[color-mix(in_srgb,var(--accent)_30%,transparent)]"
+                  style={{ borderColor: activeQuote?.id === q.id ? "color-mix(in srgb, var(--accent) 40%, transparent)" : undefined, background: activeQuote?.id === q.id ? "color-mix(in srgb, var(--accent) 6%, transparent)" : undefined }}>
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>
@@ -160,7 +160,7 @@ export default function PreventiviPage() {
                       <p className="text-sm font-bold" style={{ color: "var(--accent)" }}>€{getTotal(q).toFixed(2)}</p>
                       <button onClick={(e) => { e.stopPropagation(); deleteQuote(q.id); }}
                         className="mt-1 p-1 rounded-lg hover:bg-red-500/10 transition-all">
-                        <Trash2 size={12} style={{ color: "rgba(239,68,68,0.5)" }} />
+                        <Trash2 size={12} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(50% + var(--fade-boost))), transparent)" }} />
                       </button>
                     </div>
                   </div>
@@ -174,7 +174,7 @@ export default function PreventiviPage() {
         <div className="lg:col-span-2">
           {!activeQuote ? (
             <div className="card-luxury rounded-2xl p-12 text-center h-full flex flex-col items-center justify-center">
-              <Calculator size={48} className="mb-4" style={{ color: "rgba(255,107,43,0.15)" }} />
+              <Calculator size={48} className="mb-4" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(15% + var(--fade-boost))), transparent)" }} />
               <p className="text-base font-semibold mb-1" style={{ color: "var(--text-muted)" }}>Seleziona o crea un preventivo</p>
               <p className="text-sm mb-5" style={{ color: "var(--text-dim)" }}>Aggiungi servizi, calcola il totale e copialo con un click</p>
               <button onClick={newQuote} className="accent-btn px-5 py-2.5 rounded-xl text-sm inline-flex items-center gap-2">
@@ -210,7 +210,7 @@ export default function PreventiviPage() {
                   {PRESET_SERVICES.map((p) => (
                     <button key={p.description} onClick={() => addPreset(p)}
                       className="text-xs px-3 py-1.5 rounded-full transition-all hover:opacity-80"
-                      style={{ background: "rgba(255,107,43,0.08)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--accent-light)" }}>
+                      style={{ background: "color-mix(in srgb, var(--accent) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--accent-light)" }}>
                       + {p.description.split(" ").slice(0, 3).join(" ")}…
                     </button>
                   ))}
@@ -241,7 +241,7 @@ export default function PreventiviPage() {
                       <div className="col-span-2 flex items-center justify-end gap-1">
                         <span className="text-sm font-semibold" style={{ color: "var(--text)" }}>€{(item.qty * item.price).toFixed(2)}</span>
                         <button onClick={() => removeItem(item.id)} className="p-1 rounded-lg hover:bg-red-500/10 transition-all">
-                          <Trash2 size={12} style={{ color: "rgba(239,68,68,0.5)" }} />
+                          <Trash2 size={12} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(50% + var(--fade-boost))), transparent)" }} />
                         </button>
                       </div>
                     </div>
@@ -254,7 +254,7 @@ export default function PreventiviPage() {
               </div>
 
               {/* Discount + totals */}
-              <div className="pt-4 mb-4" style={{ borderTop: "1px solid rgba(255,107,43,0.1)" }}>
+              <div className="pt-4 mb-4" style={{ borderTop: "1px solid color-mix(in srgb, var(--accent) 10%, transparent)" }}>
                 <div className="flex items-center gap-3 mb-3">
                   <label className="text-sm" style={{ color: "var(--text-muted)" }}>Sconto (%)</label>
                   <input type="number" min="0" max="100" value={activeQuote.discount}
@@ -269,7 +269,7 @@ export default function PreventiviPage() {
                         <span>Subtotale</span>
                         <span>€{getSubtotal(activeQuote).toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between text-sm" style={{ color: "#22c55e" }}>
+                      <div className="flex justify-between text-sm" style={{ color: "var(--c-green-500)" }}>
                         <span>Sconto {activeQuote.discount}%</span>
                         <span>-€{(getSubtotal(activeQuote) * activeQuote.discount / 100).toFixed(2)}</span>
                       </div>
@@ -295,7 +295,7 @@ export default function PreventiviPage() {
               <div className="flex gap-3">
                 <button onClick={copyText}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm transition-all"
-                  style={{ border: "1px solid rgba(255,107,43,0.25)", color: copied ? "#22c55e" : "var(--accent-light)" }}>
+                  style={{ border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)", color: copied ? "var(--c-green-500)" : "var(--accent-light)" }}>
                   {copied ? <CheckCircle2 size={15} /> : <Copy size={15} />}
                   {copied ? "Copiato!" : "Copia testo"}
                 </button>

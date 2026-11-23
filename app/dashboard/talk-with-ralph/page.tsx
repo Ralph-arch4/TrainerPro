@@ -9,15 +9,15 @@ import { createClient } from "@/lib/supabase/client";
 type Category = "bug" | "improvement" | "idea";
 
 const CAT: Record<Category, { label: string; color: string; bg: string; border: string; Icon: React.FC<{ size?: number }> }> = {
-  bug:         { label: "Bug",           color: "#f87171", bg: "rgba(239,68,68,0.12)",   border: "rgba(239,68,68,0.3)",   Icon: Bug },
-  improvement: { label: "Miglioramento", color: "#FF9A6C", bg: "rgba(255,107,43,0.12)",  border: "rgba(255,107,43,0.3)",  Icon: Zap },
-  idea:        { label: "Idea",          color: "#a78bfa", bg: "rgba(123,47,190,0.12)",  border: "rgba(123,47,190,0.3)",  Icon: Lightbulb },
+  bug:         { label: "Bug",           color: "var(--c-red-400)", bg: "rgba(239,68,68,0.12)",   border: "rgba(239,68,68,0.3)",   Icon: Bug },
+  improvement: { label: "Miglioramento", color: "var(--c-coral)", bg: "color-mix(in srgb, var(--accent) 12%, transparent)",  border: "color-mix(in srgb, var(--accent) 30%, transparent)",  Icon: Zap },
+  idea:        { label: "Idea",          color: "var(--c-violet-400)", bg: "rgba(123,47,190,0.12)",  border: "rgba(123,47,190,0.3)",  Icon: Lightbulb },
 };
 
 const STATUS_ICON = {
   nuovo:     <Check size={12} style={{ color: "var(--text-dim)" }} />,
   in_review: <CheckCheck size={12} style={{ color: "var(--text-muted)" }} />,
-  fatto:     <CheckCheck size={12} style={{ color: "#22c55e" }} />,
+  fatto:     <CheckCheck size={12} style={{ color: "var(--c-green-500)" }} />,
 };
 
 export default function TalkWithRalphPage() {
@@ -87,7 +87,7 @@ export default function TalkWithRalphPage() {
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-5 py-4 flex-shrink-0"
         style={{
-          background: "rgba(10,8,20,0.95)",
+          background: "var(--panel-light, rgba(10,8,20,0.95))",
           borderBottom: "1px solid var(--border-subtle)",
           backdropFilter: "blur(20px)",
           paddingTop: "calc(env(safe-area-inset-top, 0px) + 1rem)",
@@ -99,11 +99,11 @@ export default function TalkWithRalphPage() {
             R
           </div>
           <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2"
-            style={{ background: "#22c55e", borderColor: "var(--black)" }} />
+            style={{ background: "var(--c-green-500)", borderColor: "var(--black)" }} />
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-black text-sm" style={{ color: "var(--text)" }}>Ralph</p>
-          <p className="text-xs" style={{ color: "#22c55e" }}>Platform developer · in ascolto</p>
+          <p className="text-xs" style={{ color: "var(--c-green-500)" }}>Platform developer · in ascolto</p>
         </div>
         {/* Count badges */}
         <div className="flex gap-1.5">
@@ -144,7 +144,7 @@ export default function TalkWithRalphPage() {
         {/* Loading */}
         {loading && (
           <div className="flex justify-center py-8">
-            <Loader2 size={22} className="animate-spin" style={{ color: "rgba(255,107,43,0.4)" }} />
+            <Loader2 size={22} className="animate-spin" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(40% + var(--fade-boost))), transparent)" }} />
           </div>
         )}
 
@@ -178,7 +178,7 @@ export default function TalkWithRalphPage() {
                         onClick={() => handleDelete(note.id)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded"
                         title="Elimina">
-                        <Trash2 size={11} style={{ color: "rgba(239,68,68,0.5)" }} />
+                        <Trash2 size={11} style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(50% + var(--fade-boost))), transparent)" }} />
                       </button>
                     </div>
                   </div>
@@ -195,7 +195,7 @@ export default function TalkWithRalphPage() {
       <div className="flex-shrink-0 px-4 pb-4"
         style={{
           paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)",
-          background: "rgba(10,8,20,0.95)",
+          background: "var(--panel-light, rgba(10,8,20,0.95))",
           borderTop: "1px solid var(--border-subtle)",
           backdropFilter: "blur(20px)",
         }}>
@@ -248,9 +248,9 @@ export default function TalkWithRalphPage() {
             className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all disabled:opacity-30"
             style={{
               background: text.trim()
-                ? `linear-gradient(135deg, ${CAT[cat].color}, ${CAT[cat].color}aa)`
+                ? `linear-gradient(135deg, ${CAT[cat].color}, color-mix(in srgb, ${CAT[cat].color} 66.7%, transparent))`
                 : "var(--surface-md)",
-              boxShadow: text.trim() ? `0 4px 16px ${CAT[cat].color}40` : "none",
+              boxShadow: text.trim() ? `0 4px 16px color-mix(in srgb, ${CAT[cat].color} 25.1%, transparent)` : "none",
               transform: text.trim() ? "scale(1.05)" : "scale(1)",
             }}>
             {sending

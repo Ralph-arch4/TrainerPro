@@ -18,19 +18,19 @@ const STEPS = [
 function Lbl({ n, children, req }: { n: number; children: React.ReactNode; req?: boolean }) {
   return (
     <label className="block text-sm font-medium mb-1.5" style={{ color: "var(--text)" }}>
-      <span className="mr-1 text-xs font-bold" style={{ color: "rgba(255,107,43,0.6)" }}>{n}.</span>
+      <span className="mr-1 text-xs font-bold" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(60% + var(--fade-boost))), transparent)" }}>{n}.</span>
       {children}{req && <span className="ml-0.5" style={{ color: "var(--accent)" }}>*</span>}
     </label>
   );
 }
 function Inp(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all" style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />;
+  return <input {...props} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-all" style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }} />;
 }
 function Sel({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select {...props} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={{ background: "#151515", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }}>{children}</select>;
+  return <select {...props} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={{ background: "#151515", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }}>{children}</select>;
 }
 function Txt(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea {...props} rows={3} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none" style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.2)", color: "var(--text)" }} />;
+  return <textarea {...props} rows={3} className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none" style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--text)" }} />;
 }
 function Radio({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
   return (
@@ -38,7 +38,7 @@ function Radio({ options, value, onChange }: { options: string[]; value: string;
       {options.map((o) => (
         <button key={o} type="button" onClick={() => onChange(o)}
           className="px-3 py-1.5 rounded-xl text-sm transition-all"
-          style={{ background: value === o ? "rgba(255,107,43,0.12)" : "var(--surface-sm)", border: `1px solid ${value === o ? "rgba(255,107,43,0.4)" : "var(--surface-md)"}`, color: value === o ? "var(--accent-light)" : "var(--text-muted)", fontWeight: value === o ? 600 : 400 }}>
+          style={{ background: value === o ? "color-mix(in srgb, var(--accent) 12%, transparent)" : "var(--surface-sm)", border: `1px solid ${value === o ? "color-mix(in srgb, var(--accent) 40%, transparent)" : "var(--surface-md)"}`, color: value === o ? "var(--accent-light)" : "var(--text-muted)", fontWeight: value === o ? 600 : 400 }}>
           {o}
         </button>
       ))}
@@ -54,7 +54,7 @@ function Multi({ options, value, onChange }: { options: string[]; value: string[
         return (
           <button key={o} type="button" onClick={() => toggle(o)}
             className="px-3 py-1.5 rounded-xl text-sm transition-all"
-            style={{ background: on ? "rgba(255,107,43,0.12)" : "var(--surface-sm)", border: `1px solid ${on ? "rgba(255,107,43,0.4)" : "var(--surface-md)"}`, color: on ? "var(--accent-light)" : "var(--text-muted)", fontWeight: on ? 600 : 400 }}>
+            style={{ background: on ? "color-mix(in srgb, var(--accent) 12%, transparent)" : "var(--surface-sm)", border: `1px solid ${on ? "color-mix(in srgb, var(--accent) 40%, transparent)" : "var(--surface-md)"}`, color: on ? "var(--accent-light)" : "var(--text-muted)", fontWeight: on ? 600 : 400 }}>
             {o}
           </button>
         );
@@ -63,7 +63,7 @@ function Multi({ options, value, onChange }: { options: string[]; value: string[
   );
 }
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs font-bold uppercase tracking-wider mt-6 mb-3 pb-1.5" style={{ color: "rgba(255,107,43,0.7)", borderBottom: "1px solid rgba(255,107,43,0.1)" }}>{children}</p>;
+  return <p className="text-xs font-bold uppercase tracking-wider mt-6 mb-3 pb-1.5" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(70% + var(--fade-boost))), transparent)", borderBottom: "1px solid color-mix(in srgb, var(--accent) 10%, transparent)" }}>{children}</p>;
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -97,9 +97,9 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
   }
 
   if (status === "loading") return <Screen><div className="flex justify-center py-24"><Loader2 size={32} className="animate-spin" style={{ color: "var(--accent)" }} /></div></Screen>;
-  if (status === "not_found") return <Screen><div className="text-center py-20"><AlertCircle size={48} className="mx-auto mb-4" style={{ color: "rgba(239,68,68,0.5)" }} /><h2 className="text-xl font-bold mb-2" style={{ color: "var(--text)" }}>Link non valido</h2><p className="text-sm" style={{ color: "var(--text-muted)" }}>Contatta il tuo personal trainer.</p></div></Screen>;
-  if (status === "already_submitted") return <Screen><div className="text-center py-20"><div className="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)" }}><CheckCircle2 size={40} style={{ color: "#22c55e" }} /></div><h2 className="text-2xl font-bold mb-2" style={{ color: "var(--text)" }}>Già compilato!</h2><p className="text-sm" style={{ color: "var(--text-muted)" }}>Il tuo trainer ha già ricevuto le tue risposte.</p></div></Screen>;
-  if (status === "success") return <Screen><div className="text-center py-16"><div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.1)", border: "2px solid rgba(34,197,94,0.3)" }}><CheckCircle2 size={44} style={{ color: "#22c55e" }} /></div><h2 className="text-2xl font-bold mb-3" style={{ color: "var(--text)" }}>Questionario inviato!</h2><p className="text-base mb-2" style={{ color: "var(--text-muted)" }}>Grazie, <strong style={{ color: "var(--text)" }}>{v.fullName}</strong>!</p><p className="text-sm" style={{ color: "var(--text-dim)" }}>Il tuo personal trainer ha ricevuto tutte le risposte.</p></div></Screen>;
+  if (status === "not_found") return <Screen><div className="text-center py-20"><AlertCircle size={48} className="mx-auto mb-4" style={{ color: "color-mix(in srgb, var(--c-red-500) min(100%, calc(50% + var(--fade-boost))), transparent)" }} /><h2 className="text-xl font-bold mb-2" style={{ color: "var(--text)" }}>Link non valido</h2><p className="text-sm" style={{ color: "var(--text-muted)" }}>Contatta il tuo personal trainer.</p></div></Screen>;
+  if (status === "already_submitted") return <Screen><div className="text-center py-20"><div className="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)" }}><CheckCircle2 size={40} style={{ color: "var(--c-green-500)" }} /></div><h2 className="text-2xl font-bold mb-2" style={{ color: "var(--text)" }}>Già compilato!</h2><p className="text-sm" style={{ color: "var(--text-muted)" }}>Il tuo trainer ha già ricevuto le tue risposte.</p></div></Screen>;
+  if (status === "success") return <Screen><div className="text-center py-16"><div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.1)", border: "2px solid rgba(34,197,94,0.3)" }}><CheckCircle2 size={44} style={{ color: "var(--c-green-500)" }} /></div><h2 className="text-2xl font-bold mb-3" style={{ color: "var(--text)" }}>Questionario inviato!</h2><p className="text-base mb-2" style={{ color: "var(--text-muted)" }}>Grazie, <strong style={{ color: "var(--text)" }}>{v.fullName}</strong>!</p><p className="text-sm" style={{ color: "var(--text-dim)" }}>Il tuo personal trainer ha ricevuto tutte le risposte.</p></div></Screen>;
 
   return (
     <Screen label={label}>
@@ -113,7 +113,7 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
         </div>
         <div className="h-1.5 rounded-full mb-3" style={{ background: "var(--surface-md)" }}>
           <div className="h-1.5 rounded-full transition-all duration-500"
-            style={{ background: "linear-gradient(90deg,var(--accent),var(--accent-light))", width: `${((step + 1) / STEPS.length) * 100}%` }} />
+            style={{ background: "linear-gradient(90deg,var(--accent),var(--accent-hi))", width: `${((step + 1) / STEPS.length) * 100}%` }} />
         </div>
         {/* Step dots */}
         <div className="flex gap-1.5">
@@ -205,19 +205,19 @@ export default function IntakeFormPage({ params }: { params: Promise<{ token: st
         <div><Lbl n={47}>Quanta acqua bevi in media al giorno?</Lbl><Sel value={v.waterIntake ?? ""} onChange={(e) => s("waterIntake", e.target.value)}><option value="">— Seleziona —</option><option>Meno di 1 litro</option><option>1–1.5 litri</option><option>1.5–2 litri</option><option>2–2.5 litri</option><option>Più di 2.5 litri</option></Sel></div>
         <div><Lbl n={48}>Consumi alcolici?</Lbl><Radio options={["No", "Raramente", "1–2 volte/sett.", "Quasi ogni giorno"]} value={v.alcoholConsumption ?? ""} onChange={(x) => s("alcoholConsumption", x)} /></div>
         <div><Lbl n={49}>Elenca ciò che mangi in una giornata tipo</Lbl><Txt value={v.typicalDayMeals ?? ""} onChange={(e) => s("typicalDayMeals", e.target.value)} rows={5} placeholder={"Colazione: ...\nSpuntino: ...\nPranzo: ...\nSpuntino: ...\nCena: ..."} /></div>
-        {error && <div className="p-3 rounded-xl text-sm flex items-center gap-2" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}><AlertCircle size={15} />{error}</div>}
+        {error && <div className="p-3 rounded-xl text-sm flex items-center gap-2" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "var(--c-red-400)" }}><AlertCircle size={15} />{error}</div>}
       </div>}
 
       {/* Step validation error */}
       {stepError && (
         <div className="mt-4 p-3 rounded-xl text-sm flex items-center gap-2"
-          style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171" }}>
+          style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", color: "var(--c-red-400)" }}>
           <AlertCircle size={15} />{stepError}
         </div>
       )}
 
       {/* Nav */}
-      <div className="flex items-center justify-between mt-8 pt-5" style={{ borderTop: "1px solid rgba(255,107,43,0.1)" }}>
+      <div className="flex items-center justify-between mt-8 pt-5" style={{ borderTop: "1px solid color-mix(in srgb, var(--accent) 10%, transparent)" }}>
         {step > 0 ? (
           <button onClick={() => { setStepError(""); setStep((s) => s - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm transition-all hover:bg-white/5"
@@ -259,12 +259,12 @@ function Screen({ children, label }: { children: React.ReactNode; label?: string
         <span className="font-bold accent-text">REC Studio</span>
         {label ? (
           <span className="text-xs ml-2 px-2 py-0.5 rounded-full truncate max-w-[200px]"
-            style={{ background: "rgba(255,107,43,0.1)", color: "var(--accent-light)", border: "1px solid rgba(255,107,43,0.2)" }}>
+            style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
             {label}
           </span>
         ) : (
           <span className="text-xs ml-2 px-2 py-0.5 rounded-full"
-            style={{ background: "rgba(255,107,43,0.08)", color: "var(--accent-light)" }}>
+            style={{ background: "color-mix(in srgb, var(--accent) 8%, transparent)", color: "var(--accent-light)" }}>
             Questionario programmazione
           </span>
         )}

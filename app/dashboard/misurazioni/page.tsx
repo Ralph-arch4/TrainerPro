@@ -17,7 +17,7 @@ function SparkLine({ data, positive }: { data: number[]; positive?: boolean }) {
   const pts = data
     .map((v, i) => `${(i / (data.length - 1)) * W},${H - ((v - min) / range) * H}`)
     .join(" ");
-  const color = positive ? "#22c55e" : "#f87171";
+  const color = positive ? "var(--c-green-500)" : "var(--c-red-400)";
   const endX = W;
   const endY = H - ((data[data.length - 1] - min) / range) * H;
   return (
@@ -34,8 +34,8 @@ function WeightTrend({ current, prev }: { current: number; prev?: number }) {
   const diff = current - prev;
   if (Math.abs(diff) < 0.1) return <span style={{ color: "var(--text-dim)" }}><Minus size={13} /></span>;
   return diff < 0
-    ? <span className="flex items-center gap-0.5 text-xs" style={{ color: "#22c55e" }}><TrendingDown size={13} />{Math.abs(diff).toFixed(1)}</span>
-    : <span className="flex items-center gap-0.5 text-xs" style={{ color: "#f87171" }}><TrendingUp size={13} />+{diff.toFixed(1)}</span>;
+    ? <span className="flex items-center gap-0.5 text-xs" style={{ color: "var(--c-green-500)" }}><TrendingDown size={13} />{Math.abs(diff).toFixed(1)}</span>
+    : <span className="flex items-center gap-0.5 text-xs" style={{ color: "var(--c-red-400)" }}><TrendingUp size={13} />+{diff.toFixed(1)}</span>;
 }
 
 export default function MisurazioniPage() {
@@ -94,9 +94,9 @@ export default function MisurazioniPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {[
           { label: "Clienti monitorati", value: clientsWithData, color: "var(--accent)" },
-          { label: "Totale rilevazioni", value: allMeasurements.length, color: "#38bdf8" },
-          { label: "Peso medio", value: avgWeight !== "—" ? `${avgWeight} kg` : "—", color: "#a78bfa" },
-          { label: "% grasso medio", value: avgBodyFat !== "—" ? `${avgBodyFat}%` : "—", color: "#fbbf24" },
+          { label: "Totale rilevazioni", value: allMeasurements.length, color: "var(--c-sky-400)" },
+          { label: "Peso medio", value: avgWeight !== "—" ? `${avgWeight} kg` : "—", color: "var(--c-violet-400)" },
+          { label: "% grasso medio", value: avgBodyFat !== "—" ? `${avgBodyFat}%` : "—", color: "var(--c-amber-400)" },
         ].map(({ label, value, color }) => (
           <div key={label} className="card-luxury rounded-2xl p-4 text-center">
             <p className="text-2xl font-bold" style={{ color }}>{value}</p>
@@ -112,11 +112,11 @@ export default function MisurazioniPage() {
           <input value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Cerca cliente…"
             className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
-            style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }} />
+            style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--text)" }} />
         </div>
         <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
           className="px-3 py-2.5 rounded-xl text-sm outline-none"
-          style={{ background: "var(--surface)", border: "1px solid rgba(255,107,43,0.15)", color: "var(--text)" }}>
+          style={{ background: "var(--surface)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--text)" }}>
           <option value="recenti">Più recenti</option>
           <option value="peso_asc">Peso ↑</option>
           <option value="peso_desc">Peso ↓</option>
@@ -126,7 +126,7 @@ export default function MisurazioniPage() {
       {/* Empty state */}
       {sorted.length === 0 && (
         <div className="text-center py-20 card-luxury rounded-2xl">
-          <TrendingUp size={48} className="mx-auto mb-4" style={{ color: "rgba(255,107,43,0.2)" }} />
+          <TrendingUp size={48} className="mx-auto mb-4" style={{ color: "color-mix(in srgb, var(--accent) min(100%, calc(20% + var(--fade-boost))), transparent)" }} />
           <p className="font-semibold mb-1" style={{ color: "var(--text)" }}>
             {allMeasurements.length === 0 ? "Nessuna misurazione" : "Nessun risultato"}
           </p>
@@ -147,7 +147,7 @@ export default function MisurazioniPage() {
       <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {sorted.map(({ client, latest, prev, totalChange, count, weightHistory }) => (
           <Link key={client.id} href={`/dashboard/clienti/${client.id}?tab=misurazioni`}
-            className="card-luxury rounded-2xl p-5 hover:border-[rgba(255,107,43,0.3)] transition-all group block">
+            className="card-luxury rounded-2xl p-5 hover:border-[color-mix(in_srgb,var(--accent)_30%,transparent)] transition-all group block">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl accent-btn flex items-center justify-center font-bold flex-shrink-0">
@@ -171,7 +171,7 @@ export default function MisurazioniPage() {
                   <WeightTrend current={latest.weight} prev={prev?.weight} />
                 </div>
                 {count > 1 && (
-                  <p className="text-xs mt-1" style={{ color: totalChange < 0 ? "#22c55e" : totalChange > 0 ? "#f87171" : "var(--text-muted)" }}>
+                  <p className="text-xs mt-1" style={{ color: totalChange < 0 ? "var(--c-green-500)" : totalChange > 0 ? "var(--c-red-400)" : "var(--text-muted)" }}>
                     {totalChange > 0 ? "+" : ""}{totalChange.toFixed(1)} kg totale
                   </p>
                 )}
