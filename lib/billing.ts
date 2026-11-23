@@ -35,7 +35,7 @@ export const TRIAL_FEATURES = [
 const DAY_MS = 86_400_000;
 
 export interface TrialStatus {
-  onTrial: boolean;     // demo account (plan "free")
+  onTrial: boolean;     // demo account (plan "free") with a trial end date
   endsAt: Date | null;  // null when unknown (profile not loaded / migration 027 missing)
   daysLeft: number;     // whole days left, 0 once expired
   suspended: boolean;   // trial over without Premium
@@ -54,8 +54,9 @@ export function getTrialStatus(
   if (!user) return null;
   if (isPremium(user.plan)) return { onTrial: false, endsAt: null, daysLeft: 0, suspended: false };
   const endsAt = parseDate(user.trialEndsAt);
-  // Unknown end date: never lock the trainer out from the browser side.
-  if (!endsAt) return { onTrial: true, endsAt: null, daysLeft: TRIAL_DAYS, suspended: false };
+  // No end date = account that existed before the trial (migration 027 leaves
+  // them alone) or profile not loaded: no trial, never locked out.
+  if (!endsAt) return { onTrial: false, endsAt: null, daysLeft: 0, suspended: false };
   const msLeft = endsAt.getTime() - now.getTime();
   return { onTrial: true, endsAt, daysLeft: Math.max(0, Math.ceil(msLeft / DAY_MS)), suspended: msLeft <= 0 };
 }

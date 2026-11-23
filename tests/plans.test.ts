@@ -70,3 +70,9 @@ test("suspension error is recognised", () => {
   assert.equal(isSuspendedError(new Error("ACCOUNT_SUSPENDED")), true);
   assert.equal(isSuspendedError(new Error("DEMO_CLIENT_LIMIT")), false);
 });
+
+test("migration 027 leaves existing accounts alone (no backfill of trial_ends_at)", () => {
+  const sql = readFileSync("supabase/migrations/027_trial_and_suspension.sql", "utf-8");
+  assert.doesNotMatch(sql.replace(/^\s*--.*$/gm, ""), /update\s+public\.profiles/i);
+  assert.match(sql, /p\.trial_ends_at is null/); // NULL = active forever
+});

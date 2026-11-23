@@ -24,11 +24,12 @@ test("paid plans are never on trial nor suspended", () => {
   }
 });
 
-test("unknown or invalid end date never suspends", () => {
+test("accounts without an end date (existing before the trial) are never on trial nor suspended", () => {
   for (const trialEndsAt of [undefined, null, "boh"]) {
     const st = getTrialStatus({ plan: "free", trialEndsAt }, NOW)!;
-    assert.deepEqual([st.onTrial, st.suspended, st.endsAt, st.daysLeft], [true, false, null, TRIAL_DAYS]);
+    assert.deepEqual([st.onTrial, st.suspended, st.endsAt], [false, false, null]);
   }
+  assert.equal(TRIAL_DAYS, 14);
 });
 
 test("accountAccess: admin status wins over the trial", () => {

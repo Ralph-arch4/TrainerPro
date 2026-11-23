@@ -9,18 +9,13 @@
 --   (portal, logbook writes, intake forms) stop working on the server.
 --   Nothing is deleted: approving Premium (or extending the trial) restores
 --   everything as it was.
--- * Existing demo accounts are NOT suspended on the day this runs: they get
---   the later of "sign-up + 14 days" and TRIAL_START_FOR_EXISTING below.
+-- * Accounts that already exist when this runs are NOT touched: their
+--   trial_ends_at stays NULL, which account_is_active() treats as active, so
+--   they never get a trial nor a suspension. Only accounts created after this
+--   migration get the 14-day trial (set by handle_new_user).
 
 -- ─── 1. Trial end date ────────────────────────────────────────────────────────
 alter table public.profiles add column if not exists trial_ends_at timestamptz;
-
--- Backfill only rows that have no date yet (safe to re-run).
--- Existing demo accounts: at least until 2026-12-13 (the payment deadline
--- already announced in the app); change it here before running if needed.
-update public.profiles p
-set trial_ends_at = greatest(coalesce(p.created_at, now()) + interval '14 days', timestamptz '2026-12-13 23:59:59+01')
-where p.trial_ends_at is null;
 
 -- New accounts: trial starts at sign-up.
 create or replace function public.handle_new_user()

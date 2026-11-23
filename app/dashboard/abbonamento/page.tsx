@@ -47,7 +47,7 @@ export default function SubscriptionPage() {
     <div className="p-4 pt-4 lg:pt-8 lg:p-8 fade-in max-w-4xl">
       <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Abbonamento</h1>
       <p className="text-sm mt-0.5 mb-6" style={{ color: "var(--text-muted)" }}>
-        Piano attuale: <strong data-testid="current-plan" style={{ color: "var(--accent-light)" }}>{premium ? "Premium" : "Prova gratuita"}</strong>
+        Piano attuale: <strong data-testid="current-plan" style={{ color: "var(--accent-light)" }}>{premium ? "Premium" : trial?.onTrial ? "Prova gratuita" : "Piano base"}</strong>
         {!premium && <> · {clientCount} {clientCount === 1 ? "cliente" : "clienti"} su {FREE_CLIENT_LIMIT} disponibile</>}
         {!premium && trial?.endsAt && (
           <span data-testid="trial-ends" className="block mt-0.5" style={{ color: trial.suspended ? "#f87171" : "var(--text-muted)" }}>
