@@ -1,5 +1,5 @@
 ﻿"use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import type { DietPlan } from "@/lib/store";
@@ -1043,7 +1043,7 @@ export default function ClientDetailPage() {
   }, 0);
 
   // ── Weekly Volume Analysis: sessions per week for last 6 weeks ──
-  const volumeAnalysis = useMemo(() => {
+  const volumeAnalysis = (() => {
     const now = Date.now();
     const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
     if (allLogs.length < 2) return null;
@@ -1077,10 +1077,10 @@ export default function ClientDetailPage() {
 
     const totalWeightMoved = weeks.reduce((s, w) => s + w.totalWeight, 0);
     return { weeks, maxSessions, trend, insight, current, prev, avgSessions, totalWeightMoved, target };
-  }, [client]);
+  })();
 
   // ── Stato Piano Attivo: week progress + expiry alert ──
-  const planStatus = useMemo(() => {
+  const planStatus = (() => {
     const activePlan = client.workoutPlans.find(p => p.active);
     if (!activePlan || !activePlan.totalWeeks) return null;
 
@@ -1096,10 +1096,10 @@ export default function ClientDetailPage() {
       remaining <= 2 ? "in_scadenza" : "attivo";
 
     return { plan: activePlan, currentWeek: maxWeek, totalWeeks: activePlan.totalWeeks, pct, status, remaining };
-  }, [client]);
+  })();
 
   // ── Ritmo di Allenamento: 12-week training heatmap ──
-  const trainingCalendar = useMemo(() => {
+  const trainingCalendar = (() => {
     const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
     const trainedSet = new Set(allLogs.map(l => new Date(l.loggedAt).toDateString()));
     const today = new Date();
@@ -1116,10 +1116,10 @@ export default function ClientDetailPage() {
     const total = days.filter(d => d.trained && !d.future).length;
     const bestWeek = Math.max(0, ...weeks.map(w => w.filter(d => d.trained && !d.future).length));
     return { weeks, total, bestWeek };
-  }, [client]);
+  })();
 
   // ── Smart priority brief: single highest-priority action for this client ──
-  const priorityBrief = useMemo(() => {
+  const priorityBrief = (() => {
     if (client.status !== "attivo") return null;
     const now = Date.now();
     const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
@@ -1172,9 +1172,9 @@ export default function ClientDetailPage() {
     }
 
     return null;
-  }, [client]);
+  })();
 
-  const quickMessages = useMemo(() => {
+  const quickMessages = (() => {
     if (!client.phone) return [];
     const fn = client.name.split(" ")[0];
     const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
@@ -1196,9 +1196,9 @@ export default function ClientDetailPage() {
     msgs.push({ label: "Check-in rapido", color: "#38bdf8", bg: "rgba(56,189,248,0.08)", text: `Ciao ${fn}, come stai? Volevo fare un check-in veloce — come ti senti con gli allenamenti? Hai domande o vorresti modificare qualcosa?` });
     if (lastW) msgs.push({ label: `Peso: ${lastW}kg`, color: "#818cf8", bg: "rgba(99,102,241,0.08)", text: `Ciao ${fn}! Sei a ${lastW}kg dall'ultima misurazione — come ti senti fisicamente? Stai seguendo le indicazioni alimentari?` });
     return msgs.slice(0, 4);
-  }, [client]);
+  })();
 
-  const birthdayAlert = useMemo(() => {
+  const birthdayAlert = (() => {
     if (!client.birthDate) return null;
     const today = new Date();
     const bd = new Date(client.birthDate);
@@ -1214,9 +1214,9 @@ export default function ClientDetailPage() {
       ? `Buon compleanno ${fn}! ${age} anni e una forma sempre migliore. Sono fiero del percorso che stiamo facendo insieme — oggi festeggia, te lo sei meritato!`
       : `Ciao ${fn}! Il tuo compleanno si avvicina — ti auguro il meglio in anticipo. Ci vediamo in palestra per festeggiare con un allenamento speciale!`;
     return { isToday, daysLeft: diffDays, age, waMsg };
-  }, [client]);
+  })();
 
-  const clientMilestone = useMemo(() => {
+  const clientMilestone = (() => {
     if (client.status !== "attivo") return null;
     const daysTogether = Math.floor((Date.now() - new Date(client.startDate).getTime()) / 86400000);
     const totalLogs = client.workoutPlans.flatMap(p => p.logs ?? []).length;
@@ -1239,9 +1239,9 @@ export default function ClientDetailPage() {
       }
     }
     return null;
-  }, [client]);
+  })();
 
-  const loadSuggestions = useMemo(() => {
+  const loadSuggestions = (() => {
     const activePlan = client.workoutPlans.find(p => p.active);
     if (!activePlan || !activePlan.logs?.length) return [];
     const byEx: Record<string, typeof activePlan.logs> = {};
@@ -1260,9 +1260,9 @@ export default function ClientDetailPage() {
       const increment = current >= 80 ? 5 : 2.5;
       return [{ exName: ex.name, current, suggested: current + increment, lastLog: last3[0].loggedAt }];
     });
-  }, [client]);
+  })();
 
-  const trainingDNA = useMemo(() => {
+  const trainingDNA = (() => {
     const allLogs = client.workoutPlans.flatMap(p => p.logs ?? []);
     if (allLogs.length < 5) return null;
     const dayNames = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
@@ -1304,9 +1304,9 @@ export default function ClientDetailPage() {
       ? preferred.map(d => d.name).join(" - ")
       : null;
     return { dayCounts, dayNames, maxCount, preferred, consistency, rhythm, totalDays, weeksTracked, target, actualAvg };
-  }, [client]);
+  })();
 
-  const muscleBalance = useMemo(() => {
+  const muscleBalance = (() => {
     const activePlan = client.workoutPlans.find(p => p.active);
     if (!activePlan || activePlan.exercises.length === 0) return null;
 
@@ -1342,7 +1342,7 @@ export default function ClientDetailPage() {
     const upperLowerRatio = lowerSets > 0 ? upperSets / lowerSets : upperSets > 0 ? 999 : 0;
 
     return { sorted, maxSets, totalSets, mgColors, pushSets, pullSets, upperSets, lowerSets, pushPullRatio, upperLowerRatio };
-  }, [client.workoutPlans]);
+  })();
 
   return (
     <div className="p-4 pt-4 lg:pt-8 lg:p-8 fade-in">
