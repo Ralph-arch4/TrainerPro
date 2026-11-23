@@ -27,9 +27,9 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       // Fonts
       "font-src 'self' https://fonts.gstatic.com",
-      // Images: self + Supabase storage (signed URLs) + data URIs (canvas)
-      "img-src 'self' data: blob: https://*.supabase.co",
-      // API calls: self + Supabase + Anthropic (server-side only, but include for fetch)
+      // Images: self-hosted only (plus data/blob URIs)
+      "img-src 'self' data: blob:",
+      // API calls: self + Supabase
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live",
       // WebWorkers and blobs (Three.js)
       "worker-src 'self' blob:",
@@ -41,20 +41,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      { protocol: "https", hostname: "*.supabase.co" },
-    ],
-  },
-
-  // Next.js 16: Turbopack is the default bundler.
-  // @mediapipe/pose has no proper ESM exports; TF.js pose-detection imports it
-  // statically but MoveNet (our only model) never calls it at runtime.
-  // resolveAlias stubs it out to silence Turbopack static-analysis errors.
-  turbopack: {
-    resolveAlias: {
-      "@mediapipe/pose": "./lib/mediapipe-stub.js",
-    },
+  async rewrites() {
+    return [
+      // Android app verification (see app/api/assetlinks/route.ts)
+      { source: "/.well-known/assetlinks.json", destination: "/api/assetlinks" },
+    ];
   },
 
   async headers() {
@@ -63,6 +54,14 @@ const nextConfig: NextConfig = {
         // Apply to all routes
         source: "/(.*)",
         headers: securityHeaders,
+      },
+      {
+        // The service worker must always be revalidated so updates roll out
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
       },
     ];
   },

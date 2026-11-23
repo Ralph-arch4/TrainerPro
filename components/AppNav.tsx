@@ -6,9 +6,10 @@ import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/lib/store";
 import {
   Dumbbell, LayoutDashboard, Users, Activity, UtensilsCrossed,
-  TrendingUp, Calculator, FileDown, LogOut, Menu, X, ClipboardList, MessageSquare,
+  TrendingUp, Calculator, FileDown, LogOut, Menu, X, ClipboardList, MessageSquare, UserRound, Crown,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
+import { planLabel } from "@/lib/plan-limits";
 
 function nameHash(name: string): number[] {
   const h: number[] = [];
@@ -75,11 +76,13 @@ const navItems = [
   { href: "/dashboard/clienti",         icon: Users,           label: "Clienti" },
   { href: "/dashboard/intake",          icon: ClipboardList,   label: "Form Intake" },
   { href: "/dashboard/fasi",            icon: Activity,        label: "Fasi & Piani" },
-  { href: "/dashboard/diete",           icon: UtensilsCrossed, label: "Diete" },
+  { href: "/dashboard/diete",           icon: UtensilsCrossed, label: "Alimentazione" },
   { href: "/dashboard/misurazioni",     icon: TrendingUp,      label: "Misurazioni" },
   { href: "/dashboard/preventivi",      icon: Calculator,      label: "Preventivi" },
   { href: "/dashboard/export",          icon: FileDown,        label: "Esporta PDF" },
   { href: "/dashboard/talk-with-ralph", icon: MessageSquare,   label: "Talk with Ralph" },
+  { href: "/dashboard/abbonamento",     icon: Crown,           label: "Abbonamento" },
+  { href: "/dashboard/account",         icon: UserRound,       label: "Account" },
 ];
 
 export default function AppNav() {
@@ -145,7 +148,7 @@ export default function AppNav() {
               </p>
               <p className="text-[10px] mt-0.5 font-semibold uppercase tracking-[0.14em]"
                 style={{ color: "rgba(201,168,76,0.5)" }}>
-                {clientCount} {clientCount === 1 ? "cliente" : "clienti"}
+                {planLabel(user?.plan)} · {clientCount} {clientCount === 1 ? "cliente" : "clienti"}
               </p>
             </div>
             <button onClick={handleLogout} className="p-1.5 rounded-lg transition-all flex-shrink-0"

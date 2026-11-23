@@ -25,10 +25,10 @@ const PRESET_SERVICES = [
   { description: "Abbonamento mensile Personal Training", price: 150 },
   { description: "Sessione singola Personal Training (1h)", price: 50 },
   { description: "Scheda di allenamento personalizzata", price: 80 },
-  { description: "Piano alimentare personalizzato", price: 100 },
+  { description: "Indicazioni alimentari generali", price: 100 },
   { description: "Analisi composizione corporea", price: 30 },
   { description: "Pacchetto 10 sessioni Personal Training", price: 450 },
-  { description: "Consulenza nutrizionale (1h)", price: 70 },
+  { description: "Consulenza stile di vita (1h)", price: 70 },
   { description: "Revisione scheda mensile", price: 40 },
 ];
 

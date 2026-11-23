@@ -125,6 +125,7 @@ export async function POST(
     "eatingOutFrequency", "cheatFoods", "dietType", "foodAllergies",
     "mealsPerDay", "mealDistribution", "canPrepMeals", "waterIntake",
     "alcoholConsumption", "typicalDayMeals",
+    "privacyConsentAt", // proof of the consent given when submitting
   ]);
   const sanitised: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(body)) {

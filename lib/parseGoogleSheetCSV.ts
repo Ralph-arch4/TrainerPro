@@ -3,7 +3,7 @@ import type { Exercise } from "@/lib/store";
 export type ImportedExercise = Omit<Exercise, "id" | "order">;
 
 /**
- * Parses a CSV export from Google Sheets with the TrainerPro logbook layout.
+ * Parses a CSV export from Google Sheets with the app logbook layout.
  *
  * Expected sheet structure per day group (3 columns):
  *   Col A: rest time (top of block) + "serie N" labels

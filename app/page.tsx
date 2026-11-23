@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { APP_NAME } from "@/lib/brand";
+import { PREMIUM_PRICE } from "@/lib/billing";
 import HamburgerNav from "@/components/HamburgerNav";
 import TiltCard from "@/components/TiltCard";
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
@@ -14,7 +16,7 @@ const EASE: [number,number,number,number] = [0.16, 1, 0.3, 1];
 const features = [
   { icon: Users,           title: "Clienti",          desc: "Anagrafica completa, obiettivi, livello e storico in un unico posto." },
   { icon: Activity,        title: "Fasi Training",    desc: "Bulk, Cut e Mantenimento con durata, calorie target e progressi." },
-  { icon: UtensilsCrossed, title: "Piani Alimentari", desc: "Diete personalizzate con macro collegate a ogni fase." },
+  { icon: UtensilsCrossed, title: "Indicazioni alimentari", desc: "Linee guida generali sull'alimentazione, collegate a ogni fase." },
   { icon: TrendingUp,      title: "Misurazioni",      desc: "Traccia peso, % grasso, circonferenze e visualizza i progressi." },
   { icon: Calculator,      title: "Preventivi",       desc: "Genera preventivi professionali in pochi secondi." },
   { icon: FileDown,        title: "Export PDF",       desc: "Condividi schede e piani con i tuoi clienti in PDF." },
@@ -179,7 +181,7 @@ function Hero() {
                   <div className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1 rounded-full"
                     style={{ background: "rgba(5,5,5,0.6)", border: "1px solid rgba(201,168,76,0.3)", backdropFilter: "blur(8px)" }}>
                     <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--accent)", boxShadow: "0 0 8px var(--accent)" }} />
-                    <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "var(--accent-light, #E8CC7A)" }}>TrainerPro</span>
+                    <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "var(--accent-light, #E8CC7A)" }}>{APP_NAME}</span>
                   </div>
                 </div>
               </motion.div>
@@ -209,7 +211,7 @@ function Hero() {
               className="mt-4 text-base leading-relaxed"
               style={{ color: "rgba(245,240,232,0.6)" }}
             >
-              L&apos;unico CRM pensato per chi trasforma i corpi. Schede, nutrizione e progressi — tutto in un click.
+              L&apos;unico CRM pensato per chi trasforma i corpi. Schede, alimentazione e progressi — tutto in un click.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -329,7 +331,7 @@ function Hero() {
         >
           <p className="text-sm max-w-xs leading-relaxed" style={{ color: "rgba(245,240,232,0.55)" }}>
             L&apos;unico CRM pensato per chi trasforma i corpi.<br />
-            Schede, nutrizione e progressi — tutto in un click.
+            Schede, alimentazione e progressi — tutto in un click.
           </p>
           <div className="flex items-center gap-4">
             <Link href="/register" className="accent-btn inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold tracking-wide">
@@ -550,7 +552,7 @@ export default function LandingPage() {
               {[
                 { value: "2 min", label: "Setup iniziale" },
                 { value: "∞",    label: "Clienti gestibili" },
-                { value: "100%", label: "Gratis per sempre" },
+                { value: "€0",   label: "Per provare la demo" },
               ].map(({ value, label }) => (
                 <div key={label} className="text-center">
                   <div className="font-black mb-1" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", color: "var(--accent)" }}>{value}</div>
@@ -572,11 +574,11 @@ export default function LandingPage() {
               className="font-black tracking-tight leading-none mb-6"
               style={{ fontSize: "clamp(3rem, 6vw, 5rem)", letterSpacing: "-0.04em" }}
             >
-              Tutto incluso.<br />
-              <span className="accent-text">Per sempre gratis.</span>
+              Provalo gratis.<br />
+              <span className="accent-text">Poi Premium.</span>
             </h2>
             <p className="text-base leading-relaxed" style={{ color: "var(--text-muted)", maxWidth: "26rem" }}>
-              Nessuna carta di credito. Nessun piano a pagamento. Accesso completo a tutte le funzionalità dal primo giorno.
+              La demo gratuita ti fa lavorare con un cliente, senza carta di credito. Con Premium gestisci tutti i tuoi clienti con ogni funzionalità.
             </p>
           </RevealDiv>
 
@@ -590,14 +592,14 @@ export default function LandingPage() {
               }}
             >
               <div className="flex items-baseline gap-2 mb-8">
-                <span className="font-black" style={{ fontSize: "clamp(3rem,8vw,5rem)", color: "var(--ivory)" }}>€0</span>
-                <span style={{ color: "var(--text-dim)" }}>/ per sempre</span>
+                <span className="font-black" style={{ fontSize: "clamp(3rem,8vw,5rem)", color: "var(--ivory)" }}>€{PREMIUM_PRICE}</span>
+                <span style={{ color: "var(--text-dim)" }}>/ mese · Premium</span>
               </div>
               <ul className="space-y-3 mb-8">
                 {[
                   "Clienti illimitati",
                   "Schede di allenamento personalizzate",
-                  "Piani alimentari con macro",
+                  "Indicazioni alimentari generali",
                   "Fasi: Bulk, Cut, Mantenimento",
                   "Misurazioni corporee",
                   "Form di intake per i clienti",
@@ -619,9 +621,12 @@ export default function LandingPage() {
                   </motion.li>
                 ))}
               </ul>
-              <Link href="/register"
+              <Link href="/register?piano=premium"
                 className="accent-btn w-full py-4 rounded-xl text-sm text-center font-bold block tracking-wide">
-                Crea account gratuito →
+                Attiva Premium →
+              </Link>
+              <Link href="/register" className="block text-center text-sm mt-4 underline" style={{ color: "var(--text-muted)" }}>
+                Oppure inizia con la demo gratuita (1 cliente)
               </Link>
             </TiltCard>
           </RevealDiv>
@@ -644,10 +649,10 @@ export default function LandingPage() {
           </RevealDiv>
           <div>
             {[
-              { q: "REC Studio è davvero gratuito?",     a: "Sì, completamente. Nessuna carta di credito, nessun piano a pagamento, nessun limite nascosto." },
-              { q: "Posso esportare i piani in PDF?",    a: "Sì, tutti i piani di allenamento e le diete possono essere esportati in PDF per essere condivisi." },
+              { q: "Posso provarlo gratis?",             a: "Sì. La demo gratuita include tutte le funzionalità con un cliente e non richiede carta di credito." },
+              { q: "Posso esportare i piani in PDF?",    a: "Sì, schede di allenamento e indicazioni alimentari si esportano in PDF per essere condivise." },
               { q: "I miei dati sono al sicuro?",        a: "I dati sono archiviati su Supabase con crittografia e accesso protetto da Row Level Security." },
-              { q: "Quanti clienti posso gestire?",      a: "Clienti illimitati. Non c'è nessun tetto massimo dal primo giorno." },
+              { q: "Quanti clienti posso gestire?",      a: "Uno con la demo gratuita, illimitati con Premium. Passando a Premium non perdi nessun dato." },
             ].map(({ q, a }, i) => (
               <RevealDiv key={q} delay={i * 0.08}>
                 <div className="py-7 border-b group" style={{ borderColor: "rgba(201,168,76,0.07)" }}>
@@ -665,7 +670,7 @@ export default function LandingPage() {
       <section className="relative py-40 lg:py-56 px-6 lg:px-14 text-center overflow-hidden">
         {/* Echo of hero image — bottom portion */}
         <div className="absolute inset-0" aria-hidden style={{
-          backgroundImage: "url(/hero-athlete.jpg)",
+          backgroundImage: "url(/hero-still.jpg)",
           backgroundSize: "cover",
           backgroundPosition: "center 70%",
           filter: "contrast(1.0) brightness(0.25) saturate(0.6)",

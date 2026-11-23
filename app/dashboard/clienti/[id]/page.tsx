@@ -1,11 +1,11 @@
 ﻿"use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import type { DietPlan } from "@/lib/store";
 import { dbClients, dbPhases, dbWorkoutPlans, dbDietPlans, dbNotes, dbMeasurements } from "@/lib/db";
 import { showToast } from "@/components/Toast";
-import DietPlanEditor from "@/components/DietPlanEditor";
+import DietPlanEditor, { DIET_DISCLAIMER } from "@/components/DietPlanEditor";
 import ClientFeedbackPanel, { collectClientFeedback } from "@/components/ClientFeedbackPanel";
 import Link from "next/link";
 import {
@@ -13,85 +13,11 @@ import {
   Dumbbell, Plus, X, Loader2, Pencil, Trash2, CheckCircle2, Circle,
   Mail, Phone, Calendar, Target, BarChart2, ExternalLink, Copy, Check, Timer,
   ChevronDown, ChevronUp, Flame, Beef, Wheat, Droplets, TrendingUp,
-  Camera, Lock, Upload, Eye, EyeOff, MessageCircle,
+  MessageCircle,
 } from "lucide-react";
-import { dbProgressPhotos, type ProgressPhoto, dbFitnessScans, type FitnessScan, type FitnessScanAnalysis, dbFitnessScanComparisons, type FitnessScanComparison, type ComparisonAnalysis } from "@/lib/db";
-import { createClient as createSupabaseClient } from "@/lib/supabase/client";
-import { Scan, Sparkles, ShieldCheck, Brain, GitCompare, TrendingDown, Minus, KeyRound, Activity as ActivityIcon, Utensils, Zap, Award, ChevronRight, Cake, AlertTriangle } from "lucide-react";
-import type { BodyFeatures } from "@/lib/cv-analysis";
-import { computeTier, TIERS, TIER_ORDER, tierDelta, type Tier } from "@/lib/tier-system";
+import { Sparkles, TrendingDown, Zap, Award, Cake, AlertTriangle } from "lucide-react";
 
-type Tab = "overview" | "fasi" | "schede" | "feedback" | "dieta" | "misurazioni" | "note" | "foto" | "scan";
-
-// PIN is no longer hardcoded — verified server-side via /api/photo/pin
-// Session token stored in sessionStorage (tab-scoped, not persisted)
-
-async function resizeImage(file: File): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const MAX = 1200;
-      const r = Math.min(MAX / img.width, MAX / img.height, 1);
-      const canvas = document.createElement("canvas");
-      canvas.width  = Math.round(img.width  * r);
-      canvas.height = Math.round(img.height * r);
-      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(b => b ? resolve(b) : reject(new Error("blob")), "image/jpeg", 0.85);
-    };
-    img.onerror = reject;
-    img.src = url;
-  });
-}
-
-function PhotoCard({ photo, secureUrl, onDelete }: { photo: ProgressPhoto; secureUrl?: string; onDelete: () => void }) {
-  // secureUrl is a single-use view-token URL passed from parent (not fetched here)
-  const [url, setUrl] = useState<string | null>(secureUrl ?? null);
-  const [showDelete, setShowDelete] = useState(false);
-  useEffect(() => {
-    // If no secureUrl provided, fall back to the old signed URL (for backwards compat)
-    if (!secureUrl) {
-      dbProgressPhotos.getSignedUrl(photo.storage_path).then(setUrl);
-    } else {
-      setUrl(secureUrl);
-    }
-  }, [photo.storage_path, secureUrl]);
-  return (
-    <div className="relative rounded-2xl overflow-hidden group"
-      style={{ aspectRatio: "3/4", background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
-      {url ? (
-        <img src={url} alt={photo.taken_at} className="w-full h-full object-cover" />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center">
-          <Loader2 size={20} className="animate-spin" style={{ color: "rgba(201,168,76,0.5)" }} />
-        </div>
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-        <p className="text-xs font-bold text-white">{new Date(photo.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" })}</p>
-        {photo.notes && <p className="text-xs text-white/70 mt-0.5 truncate">{photo.notes}</p>}
-        <button onClick={() => setShowDelete(true)}
-          className="mt-2 flex items-center gap-1 text-xs px-2 py-1 rounded-lg w-fit"
-          style={{ background: "rgba(239,68,68,0.2)", color: "#f87171" }}>
-          <Trash2 size={10} /> Elimina
-        </button>
-      </div>
-      {showDelete && (
-        <div className="absolute inset-0 flex items-center justify-center p-4"
-          style={{ background: "var(--surface-modal)" }}>
-          <div className="text-center">
-            <p className="text-sm font-bold text-white mb-1">Eliminare la foto?</p>
-            <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.5)" }}>Azione irreversibile</p>
-            <div className="flex gap-2">
-              <button onClick={() => setShowDelete(false)} className="flex-1 py-1.5 rounded-lg text-xs" style={{ border: "1px solid rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.6)" }}>Annulla</button>
-              <button onClick={onDelete} className="flex-1 py-1.5 rounded-lg text-xs font-bold" style={{ background: "rgba(239,68,68,0.3)", color: "#f87171" }}>Elimina</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+type Tab = "overview" | "fasi" | "schede" | "feedback" | "dieta" | "misurazioni" | "note";
 
 const goalLabel: Record<string, string> = { dimagrimento: "Dimagrimento", massa: "Massa", tonificazione: "Tonificazione", performance: "Performance" };
 const levelLabel: Record<string, string> = { principiante: "Principiante", intermedio: "Intermedio", avanzato: "Avanzato" };
@@ -320,7 +246,29 @@ function QuickConnectionMessages({ name, phone }: { name: string; phone?: string
   );
 }
 
+// Guard component: ClientDetail calls hooks after its own "client missing"
+// branch, so it must only ever be mounted when the client exists. Rendering it
+// before the data arrived (deep link, fresh device) crashed the page with
+// "Rendered more hooks than during the previous render".
 export default function ClientDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const exists = useAppStore((s) => s.clients.some((c) => c.id === id));
+  const dataLoaded = useAppStore((s) => s.dataLoaded);
+  if (exists) return <ClientDetail key={id} />;
+  return (
+    <div className="p-8 text-center">
+      <p style={{ color: "var(--text-muted)" }}>{dataLoaded ? "Cliente non trovato." : "Caricamento del cliente…"}</p>
+      {dataLoaded && (
+        <button onClick={() => router.push("/dashboard/clienti")} className="mt-4 text-sm hover:underline" style={{ color: "var(--accent-light)" }}>
+          Torna alla lista
+        </button>
+      )}
+    </div>
+  );
+}
+
+function ClientDetail() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -409,275 +357,6 @@ export default function ClientDetailPage() {
 
   // Note
   const [noteText, setNoteText] = useState("");
-
-  // Fitness scan state
-  const [scans, setScans] = useState<FitnessScan[]>([]);
-  const [scansLoaded, setScansLoaded] = useState(false);
-  const [scanUploading, setScanUploading] = useState(false);
-  const [scanAnalyzing, setScanAnalyzing] = useState<string | null>(null); // scanId being analyzed
-  const [scanUploadDate, setScanUploadDate] = useState(new Date().toISOString().slice(0, 10));
-  const [scanUploadNotes, setScanUploadNotes] = useState("");
-  const [scanUrls, setScanUrls] = useState<Record<string, string>>({});
-
-  // Comparison state
-  const [compareMode, setCompareMode] = useState(false);
-  const [selectedMonthA, setSelectedMonthA] = useState<string | null>(null); // "YYYY-MM"
-  const [selectedMonthB, setSelectedMonthB] = useState<string | null>(null);
-  const [comparingScanIds, setComparingScanIds] = useState<{ before: string; after: string } | null>(null);
-  const [comparingResult, setComparingResult] = useState<FitnessScanComparison | null>(null);
-  const [comparing, setComparing] = useState(false);
-  const [activeTimelineMonth, setActiveTimelineMonth] = useState<string | null>(null); // for non-compare view
-
-  async function loadScans() {
-    if (scansLoaded) return;
-    const list = await dbFitnessScans.list(client!.id);
-    setScans(list);
-    setScansLoaded(true);
-    // Load signed URLs (5-min TTL)
-    const urls: Record<string, string> = {};
-    await Promise.all(list.map(async (s) => {
-      const url = await dbFitnessScans.getSignedUrl(s.storage_path);
-      if (url) urls[s.id] = url;
-    }));
-    setScanUrls(urls);
-  }
-
-  async function handleScanUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !file.type.startsWith("image/")) return;
-    e.target.value = "";
-    setScanUploading(true);
-    try {
-      // Resize + strip EXIF client-side
-      const resized = await resizeImage(file);
-
-      // CV analysis via TF.js MoveNet (zero token cost, non-blocking)
-      let bodyFeatures: BodyFeatures | null = null;
-      try {
-        const { analyseImage } = await import("@/lib/cv-analysis");
-        bodyFeatures = await analyseImage(resized);
-      } catch (cvErr) {
-        console.warn("[CV] Pose detection skipped:", cvErr);
-      }
-
-      // Get auth token for server-side upload (bypasses storage RLS via service_role)
-      const { data: { session } } = await createSupabaseClient().auth.getSession();
-      if (!session) throw new Error("Sessione scaduta — effettua di nuovo il login");
-
-      const form = new FormData();
-      form.append("file",      resized, "scan.jpg");
-      form.append("client_id", client!.id);
-      form.append("taken_at",  scanUploadDate);
-      if (scanUploadNotes) form.append("notes", scanUploadNotes);
-      if (bodyFeatures)    form.append("body_features", JSON.stringify(bodyFeatures));
-
-      const resp = await fetch("/api/fitness-scan/upload", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${session.access_token}` },
-        body: form,
-      });
-
-      const json = await resp.json();
-      if (!resp.ok) throw new Error(json.error ?? `Upload fallito (${resp.status})`);
-
-      const record = json.scan as import("@/lib/db").FitnessScan;
-      setScans(prev => [record, ...prev]);
-      if (json.signedUrl) setScanUrls(prev => ({ ...prev, [record.id]: json.signedUrl }));
-      setScanUploadNotes("");
-      showToast(bodyFeatures ? "Foto caricata · analisi CV completata ✓" : "Foto caricata con successo");
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Errore sconosciuto";
-      showToast(`Errore: ${msg}`, "error");
-      console.error("[scan-upload]", err);
-    } finally {
-      setScanUploading(false);
-    }
-  }
-
-  async function handleScanDelete(scan: FitnessScan) {
-    setScans(prev => prev.filter(s => s.id !== scan.id));
-    setScanUrls(prev => { const n = { ...prev }; delete n[scan.id]; return n; });
-    try { await dbFitnessScans.remove(scan.id, scan.storage_path); }
-    catch {
-      setScans(prev => [scan, ...prev]);
-      showToast("Errore nell'eliminazione", "error");
-    }
-  }
-
-  async function handleScanAnalyze(scan: FitnessScan) {
-    setScanAnalyzing(scan.id);
-    try {
-      const { data: { session } } = await createSupabaseClient().auth.getSession();
-      if (!session) throw new Error("not authenticated");
-      const resp = await fetch("/api/fitness-scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
-        body: JSON.stringify({ scanId: scan.id, storagePath: scan.storage_path }),
-      });
-      const json = await resp.json();
-      if (!resp.ok) throw new Error(json.detail || json.error || "Analisi fallita");
-      const analysis: FitnessScanAnalysis = json.analysis;
-      setScans(prev => prev.map(s => s.id === scan.id ? { ...s, ai_analysis: analysis } : s));
-      showToast("Analisi completata");
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Errore nell'analisi", "error");
-    } finally {
-      setScanAnalyzing(null);
-    }
-  }
-
-  async function handleCompare(beforeId: string, afterId: string) {
-    setComparing(true);
-    setComparingResult(null);
-    try {
-      const { data: { session } } = await createSupabaseClient().auth.getSession();
-      if (!session) throw new Error("not authenticated");
-      const resp = await fetch("/api/fitness-scan/compare", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
-        body: JSON.stringify({ scanBeforeId: beforeId, scanAfterId: afterId, clientId: client!.id }),
-      });
-      const json = await resp.json();
-      if (!resp.ok) throw new Error(json.error || "Confronto fallito");
-      setComparingResult(json.comparison as FitnessScanComparison);
-      showToast("Confronto completato");
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Errore nel confronto", "error");
-    } finally {
-      setComparing(false);
-    }
-  }
-
-  // Progress photos — DB-backed PIN (no longer hardcoded)
-  const [photoUnlocked, setPhotoUnlocked] = useState(false);
-  const [photoPin, setPhotoPin] = useState("");
-  const [showPw, setShowPw] = useState(false);
-  const [pwError, setPwError] = useState("");
-  const [pinVerifying, setPinVerifying] = useState(false);
-  const [hasPinSet, setHasPinSet] = useState<boolean | null>(null);
-  const [settingNewPin, setSettingNewPin] = useState(false);
-  const [newPinVal, setNewPinVal] = useState("");
-  const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
-  const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
-  const [photosLoaded, setPhotosLoaded] = useState(false);
-  const [uploadDate, setUploadDate] = useState(new Date().toISOString().slice(0, 10));
-  const [uploadNotes, setUploadNotes] = useState("");
-  const [uploading, setUploading] = useState(false);
-
-  // Check if PIN is set on mount (when foto tab is opened)
-  async function checkPinStatus() {
-    try {
-      const r = await fetch("/api/photo/pin");
-      const j = await r.json();
-      setHasPinSet(j.has_pin ?? false);
-    } catch { setHasPinSet(false); }
-  }
-
-  // Save a new PIN
-  async function saveNewPin() {
-    if (!/^\d{4,8}$/.test(newPinVal)) {
-      setPwError("Il PIN deve essere di 4-8 cifre numeriche");
-      return;
-    }
-    setPinVerifying(true);
-    try {
-      const r = await fetch("/api/photo/pin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin: newPinVal }),
-      });
-      if (!r.ok) throw new Error((await r.json()).error);
-      setHasPinSet(true);
-      setSettingNewPin(false);
-      setNewPinVal("");
-      showToast("PIN impostato con successo");
-    } catch (err) {
-      setPwError(err instanceof Error ? err.message : "Errore");
-    } finally { setPinVerifying(false); }
-  }
-
-  // Verify PIN via API — server-side hash comparison, rate-limited
-  async function unlockPhotos() {
-    if (!photoPin) { setPwError("Inserisci il PIN"); return; }
-    setPinVerifying(true);
-    setPwError("");
-    try {
-      const r = await fetch("/api/photo/pin", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin: photoPin }),
-      });
-      const j = await r.json();
-      if (!r.ok) {
-        setPwError(j.error ?? "PIN errato");
-        setPhotoPin("");
-        return;
-      }
-      // Store session token in sessionStorage (tab-scoped, cleared on close)
-      sessionStorage.setItem("photo_session", j.token);
-      sessionStorage.setItem("photo_session_exp", j.expires_at);
-      setPhotoUnlocked(true);
-      setPwError("");
-      if (!photosLoaded) {
-        const list = await dbProgressPhotos.list(client!.id);
-        setPhotos(list);
-        setPhotosLoaded(true);
-        // Load view-token-secured URLs for each photo
-        await refreshPhotoUrls(list);
-      }
-    } catch { setPwError("Errore di rete. Riprova."); }
-    finally { setPinVerifying(false); }
-  }
-
-  // Get a single-use secure URL for each photo
-  async function refreshPhotoUrls(list: ProgressPhoto[]) {
-    const urls: Record<string, string> = {};
-    await Promise.all(list.map(async (p) => {
-      try {
-        const r = await fetch(`/api/photo/view-token?path=${encodeURIComponent(p.storage_path)}&bucket=progress`);
-        if (r.ok) {
-          const j = await r.json();
-          urls[p.id] = j.signed_url;
-          // Mark token used after a short delay (image should have loaded)
-          setTimeout(() => {
-            fetch("/api/photo/view-token", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ token: j.view_token }),
-            }).catch(() => {});
-          }, 10000); // 10s — enough for image to fully load
-        }
-      } catch {}
-    }));
-    setPhotoUrls(urls);
-  }
-
-  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !file.type.startsWith("image/")) return;
-    e.target.value = "";
-    setUploading(true);
-    try {
-      const { data: { user } } = await createSupabaseClient().auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-      const resized = await resizeImage(file);
-      const path = await dbProgressPhotos.upload(client!.id, resized, uploadDate);
-      const record = await dbProgressPhotos.create({ clientId: client!.id, storagePath: path, takenAt: uploadDate, notes: uploadNotes || undefined });
-      setPhotos(prev => [record, ...prev]);
-      setUploadNotes("");
-      showToast("Foto caricata");
-    } catch { showToast("Errore nel caricamento", "error"); }
-    finally { setUploading(false); }
-  }
-
-  async function handlePhotoDelete(photo: ProgressPhoto) {
-    setPhotos(prev => prev.filter(p => p.id !== photo.id));
-    try { await dbProgressPhotos.remove(photo.id, photo.storage_path); }
-    catch {
-      setPhotos(prev => [photo, ...prev]);
-      showToast("Errore nell'eliminazione", "error");
-    }
-  }
 
   // Portal link copy
   const [copiedPlanId, setCopiedPlanId] = useState<string | null>(null);
@@ -952,7 +631,7 @@ export default function ClientDetailPage() {
       try {
         await dbDietPlans.create(d);
         setDietEditorOpen(false);
-        showToast("Piano alimentare creato");
+        showToast("Indicazioni alimentari create");
       } catch (err) {
         removeDietPlan(client!.id, d.id);
         setSaveError(err instanceof Error ? err.message : "Errore nel salvataggio");
@@ -1021,11 +700,9 @@ export default function ClientDetailPage() {
     { key: "fasi", label: "Fasi", icon: Activity, count: client.phases.length },
     { key: "schede", label: "Schede", icon: Dumbbell, count: client.workoutPlans.length },
     { key: "feedback", label: "Feedback", icon: MessageCircle, count: collectClientFeedback(client.workoutPlans).length },
-    { key: "dieta", label: "Dieta", icon: UtensilsCrossed, count: client.dietPlans.length },
+    { key: "dieta", label: "Alimentazione", icon: UtensilsCrossed, count: client.dietPlans.length },
     { key: "misurazioni", label: "Misurazioni", icon: TrendingUp, count: client.measurements.length },
     { key: "note", label: "Note", icon: StickyNote, count: client.notes.length },
-    { key: "foto", label: "Foto", icon: Camera, count: photosLoaded ? photos.length : undefined },
-    { key: "scan", label: "Fitness Scan", icon: Scan, beta: true },
   ];
 
   const inputClass = "w-full px-3 py-2.5 rounded-xl text-sm outline-none";
@@ -1486,7 +1163,7 @@ export default function ClientDetailPage() {
       {/* Tabs */}
       <div className="flex gap-1 mb-6 overflow-x-auto pb-1">
         {tabs.map(({ key, label, icon: Icon, count, beta }) => (
-          <button key={key} onClick={() => { setTab(key); if (key === "scan") loadScans(); if (key === "foto" && hasPinSet === null) checkPinStatus(); }}
+          <button key={key} onClick={() => { setTab(key); }}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm whitespace-nowrap transition-all"
             style={{
               background: tab === key ? "rgba(201,168,76,0.12)" : "transparent",
@@ -1609,7 +1286,7 @@ export default function ClientDetailPage() {
               {[
                 { label: "Fasi", value: client.phases.length, color: "#a78bfa" },
                 { label: "Schede", value: client.workoutPlans.length, color: "var(--accent)" },
-                { label: "Diete", value: client.dietPlans.length, color: "#34d399" },
+                { label: "Alimentazione", value: client.dietPlans.length, color: "#34d399" },
                 { label: "Log recenti", value: recentLogCount, color: "#38bdf8" },
               ].map(({ label, value, color }) => (
                 <div key={label} className="rounded-xl p-3 text-center" style={{ background: "var(--surface-sm)" }}>
@@ -2232,27 +1909,28 @@ export default function ClientDetailPage() {
       {/* ── DIETA ── */}
       {tab === "dieta" && (
         <div>
+          <p className="text-xs mb-4 p-3 rounded-xl" style={{ color: "var(--text-muted)", background: "var(--surface-xs)", border: "1px solid var(--border)" }}>{DIET_DISCLAIMER}</p>
           <div className="flex justify-between items-center mb-4">
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{client.dietPlans.length} piani</p>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>{client.dietPlans.length} {client.dietPlans.length === 1 ? "scheda di indicazioni" : "schede di indicazioni"}</p>
             <button onClick={() => { setEditingDietPlan(null); setDietEditorOpen(true); }} className="accent-btn flex items-center gap-2 px-4 py-2 rounded-xl text-sm">
-              <Plus size={14} /> Nuovo piano
+              <Plus size={14} /> Nuove indicazioni
             </button>
           </div>
           {client.dietPlans.length === 0 ? (
             <div className="text-center py-16 card-luxury rounded-2xl">
               <UtensilsCrossed size={40} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
-              <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessun piano alimentare</p>
-              <p className="text-xs mb-4" style={{ color: "var(--text-dim)" }}>Crea un piano con macro, range di grammi e pasti dettagliati</p>
+              <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessuna indicazione alimentare</p>
+              <p className="text-xs mb-4" style={{ color: "var(--text-dim)" }}>Linee guida generali su pasti e alimenti, senza grammature</p>
               <button onClick={() => { setEditingDietPlan(null); setDietEditorOpen(true); }}
                 className="accent-btn px-5 py-2.5 rounded-xl text-sm inline-flex items-center gap-2">
-                <Plus size={14} /> Crea il primo piano
+                <Plus size={14} /> Crea le prime indicazioni
               </button>
             </div>
           ) : (
             <div className="space-y-4">
               {client.dietPlans.map((dp) => {
                 const linkedPhase = client.phases.find((ph) => ph.id === dp.phaseId);
-                const mealsData: Array<{ id: string; name: string; time?: string; items: Array<{ id: string; name: string; grams: number; gramsMax?: number; protein?: number; carbs?: number; fat?: number }> }> = (() => {
+                const mealsData: Array<{ id: string; name: string; time?: string; items: Array<{ id: string; name: string; portion?: string; grams: number; gramsMax?: number; protein?: number; carbs?: number; fat?: number }> }> = (() => {
                   try { const p = JSON.parse(dp.meals); if (Array.isArray(p) && p[0]?.items) return p; } catch {}
                   return [];
                 })();
@@ -2315,7 +1993,7 @@ export default function ClientDetailPage() {
                           style={{ color: "var(--text-muted)" }}>
                           <span className="text-xs font-medium flex items-center gap-2">
                             <UtensilsCrossed size={12} style={{ color: "var(--accent)" }} />
-                            {mealsData.length} {mealsData.length === 1 ? "pasto" : "pasti"} nel piano
+                            {mealsData.length} {mealsData.length === 1 ? "pasto" : "pasti"}
                           </span>
                           {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                         </button>
@@ -2334,14 +2012,7 @@ export default function ClientDetailPage() {
                                     {meal.items.map((item) => (
                                       <div key={item.id} className="flex items-center gap-2 text-xs" style={{ color: "var(--text-muted)" }}>
                                         <span className="flex-1">{item.name || "—"}</span>
-                                        <span className="font-medium" style={{ color: "var(--text)" }}>
-                                          {item.gramsMax ? `${item.grams}–${item.gramsMax}g` : `${item.grams}g`}
-                                        </span>
-                                        {(item.protein || item.carbs || item.fat) && (
-                                          <span className="text-xs" style={{ color: "var(--text-dim)" }}>
-                                            {item.protein ? `P:${item.protein}g` : ""}{item.carbs ? ` C:${item.carbs}g` : ""}{item.fat ? ` G:${item.fat}g` : ""}
-                                          </span>
-                                        )}
+                                        {item.portion && <span className="font-medium" style={{ color: "var(--text)" }}>{item.portion}</span>}
                                       </div>
                                     ))}
                                   </div>
@@ -2412,156 +2083,6 @@ export default function ClientDetailPage() {
                   <p className="text-xs mt-2" style={{ color: "var(--text-dim)" }}>{formatDate(note.createdAt)}</p>
                 </div>
               ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── FOTO ── */}
-      {tab === "foto" && (
-        <div>
-          {!photoUnlocked ? (
-            <div className="max-w-sm mx-auto mt-8">
-              <div className="text-center mb-6">
-                <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-                  style={{ background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.22)" }}>
-                  <KeyRound size={24} style={{ color: "var(--accent)" }} />
-                </div>
-                <h2 className="text-lg font-bold mb-1" style={{ color: "var(--text)" }}>Sezione protetta</h2>
-                <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                  Le foto di progresso sono protette da un PIN personale che imposti tu.
-                  Verificato server-side — non è nel codice sorgente.
-                </p>
-              </div>
-
-              {/* Set PIN for first time */}
-              {hasPinSet === false || settingNewPin ? (
-                <div className="card-luxury rounded-2xl p-5 space-y-3">
-                  <p className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
-                    {hasPinSet === false ? "Primo accesso — imposta il tuo PIN (4-8 cifre):" : "Cambia PIN:"}
-                  </p>
-                  <div className="relative">
-                    <input type={showPw ? "text" : "password"} value={newPinVal}
-                      onChange={e => { setNewPinVal(e.target.value.replace(/\D/g, "")); setPwError(""); }}
-                      onKeyDown={e => e.key === "Enter" && saveNewPin()}
-                      placeholder="es. 1234" maxLength={8}
-                      className="w-full px-4 py-3 rounded-xl text-sm outline-none pr-12"
-                      style={{ background: "var(--surface)", border: `1px solid ${pwError ? "rgba(239,68,68,0.5)" : "rgba(201,168,76,0.22)"}`, color: "var(--text)" }} autoFocus />
-                    <button onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-dim)" }}>
-                      {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                  {pwError && <p className="text-xs" style={{ color: "#f87171" }}>{pwError}</p>}
-                  <div className="flex gap-2">
-                    {settingNewPin && (
-                      <button onClick={() => { setSettingNewPin(false); setPwError(""); setNewPinVal(""); }}
-                        className="flex-1 py-2.5 rounded-xl text-sm" style={{ border: "1px solid var(--border)", color: "var(--text-muted)" }}>
-                        Annulla
-                      </button>
-                    )}
-                    <button onClick={saveNewPin} disabled={pinVerifying}
-                      className="flex-1 accent-btn py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-                      {pinVerifying ? <Loader2 size={14} className="animate-spin" /> : <KeyRound size={14} />}
-                      {pinVerifying ? "Salvataggio…" : "Salva PIN"}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="card-luxury rounded-2xl p-5 space-y-3">
-                  <div className="relative">
-                    <input type={showPw ? "text" : "password"} value={photoPin}
-                      onChange={e => { setPhotoPin(e.target.value.replace(/\D/g, "")); setPwError(""); }}
-                      onKeyDown={e => e.key === "Enter" && unlockPhotos()}
-                      placeholder="Inserisci PIN" maxLength={8}
-                      className="w-full px-4 py-3 rounded-xl text-sm outline-none pr-12"
-                      style={{ background: "var(--surface)", border: `1px solid ${pwError ? "rgba(239,68,68,0.5)" : "rgba(201,168,76,0.22)"}`, color: "var(--text)" }} autoFocus />
-                    <button onClick={() => setShowPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "var(--text-dim)" }}>
-                      {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                  {pwError && <p className="text-xs" style={{ color: "#f87171" }}>{pwError}</p>}
-                  <button onClick={unlockPhotos} disabled={pinVerifying}
-                    className="w-full accent-btn py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-                    {pinVerifying ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
-                    {pinVerifying ? "Verifica in corso…" : "Sblocca sezione"}
-                  </button>
-                  <button onClick={() => { setSettingNewPin(true); setPwError(""); checkPinStatus(); }}
-                    className="w-full text-xs text-center" style={{ color: "var(--text-faint)" }}>
-                    Cambia PIN
-                  </button>
-                  <p className="text-xs text-center" style={{ color: "var(--text-faint)" }}>
-                    PIN verificato server-side · SHA-256 salted hash · rate limited 5 tentativi/5 min
-                  </p>
-                </div>
-              )}
-            </div>
-          ) : (
-            /* Photo gallery + upload */
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-xs flex items-center gap-1.5" style={{ color: "#22c55e" }}>
-                  <ShieldCheck size={12} /> Sessione sicura attiva · link usa-e-getta · scade in 30 min
-                </p>
-                <button onClick={() => { setPhotoUnlocked(false); setPhotos([]); setPhotosLoaded(false); setPhotoUrls({}); sessionStorage.removeItem("photo_session"); }}
-                  className="text-xs px-2.5 py-1 rounded-lg transition-all"
-                  style={{ background: "rgba(239,68,68,0.07)", color: "rgba(239,68,68,0.7)" }}>
-                  Blocca
-                </button>
-              </div>
-
-              {/* Upload form */}
-              <div className="card-luxury rounded-2xl p-5 mb-5">
-                <h3 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: "var(--text)" }}>
-                  <Upload size={15} style={{ color: "var(--accent)" }} /> Aggiungi foto
-                </h3>
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div>
-                    <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Data foto *</label>
-                    <input type="date" value={uploadDate} onChange={e => setUploadDate(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                      style={{ background: "var(--surface)", border: "1px solid rgba(201,168,76,0.2)", color: "var(--text)" }} />
-                  </div>
-                  <div>
-                    <label className="block text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>Note (opzionale)</label>
-                    <input type="text" value={uploadNotes} onChange={e => setUploadNotes(e.target.value)}
-                      placeholder="es. Settimana 4 bulk"
-                      className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                      style={{ background: "var(--surface)", border: "1px solid rgba(201,168,76,0.2)", color: "var(--text)" }} />
-                  </div>
-                </div>
-                <label className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold cursor-pointer transition-all ${uploading ? "opacity-60 pointer-events-none" : "hover:opacity-90"} accent-btn`}>
-                  {uploading ? <Loader2 size={15} className="animate-spin" /> : <Camera size={15} />}
-                  {uploading ? "Caricamento..." : "Seleziona foto"}
-                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
-                </label>
-                <p className="text-xs mt-2 text-center" style={{ color: "var(--text-faint)" }}>
-                  Ridimensionata · Cifrata a riposo · Link single-use 90s · Audit log
-                </p>
-              </div>
-
-              {/* Gallery — use view-token secured URLs */}
-              {photos.length === 0 ? (
-                <div className="text-center py-16 card-luxury rounded-2xl">
-                  <Camera size={40} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
-                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>Nessuna foto ancora</p>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-xs mb-3" style={{ color: "var(--text-dim)" }}>
-                    {photos.length} foto · URL a uso singolo · scadono dopo la visualizzazione
-                  </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {photos.map(photo => (
-                      <PhotoCard
-                        key={photo.id}
-                        photo={photo}
-                        secureUrl={photoUrls[photo.id]}
-                        onDelete={() => handlePhotoDelete(photo)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -2715,610 +2236,6 @@ export default function ClientDetailPage() {
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-        );
-      })()}
-
-      {/* ── FITNESS SCAN ── */}
-      {tab === "scan" && (() => {
-        // Group scans by month "YYYY-MM"
-        const byMonth: Record<string, FitnessScan[]> = {};
-        [...scans].sort((a, b) => new Date(b.taken_at).getTime() - new Date(a.taken_at).getTime())
-          .forEach(s => {
-            const key = s.taken_at.slice(0, 7);
-            if (!byMonth[key]) byMonth[key] = [];
-            byMonth[key].push(s);
-          });
-        const months = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
-        const activeMonth = activeTimelineMonth ?? months[0] ?? null;
-
-        // Build tier history: for each analysed scan (sorted oldest→newest), compute tier
-        const tierHistory: { date: string; tier: Tier }[] = [...scans]
-          .filter(s => s.ai_analysis)
-          .sort((a, b) => new Date(a.taken_at).getTime() - new Date(b.taken_at).getTime())
-          .map(s => ({
-            date: s.taken_at,
-            tier: computeTier(s.ai_analysis!.body_fat_est, s.ai_analysis!.muscle_mass_est),
-          }))
-          .filter((h): h is { date: string; tier: Tier } => h.tier != null);
-        const currentTier = tierHistory.length > 0 ? tierHistory[tierHistory.length - 1].tier : null;
-        const prevTier    = tierHistory.length > 1 ? tierHistory[tierHistory.length - 2].tier : null;
-        const delta       = currentTier && prevTier ? tierDelta(prevTier, currentTier) : 0;
-        const cfg         = currentTier ? TIERS[currentTier] : null;
-
-        // For compare mode: pick the first scan of each selected month
-        const scanA = selectedMonthA ? byMonth[selectedMonthA]?.[0] : null;
-        const scanB = selectedMonthB ? byMonth[selectedMonthB]?.[0] : null;
-        const canCompare = !!(scanA && scanB && selectedMonthA !== selectedMonthB);
-
-        return (
-          <div>
-            {/* ── SOLO LEVELING RANK HEADER ── */}
-            {cfg && (
-              <div className="rounded-2xl p-5 mb-5 relative overflow-hidden"
-                style={{ background: cfg.bg, border: `1px solid ${cfg.color}30`, boxShadow: `0 0 30px ${cfg.glow}` }}>
-                {/* Ambient glow */}
-                <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full pointer-events-none"
-                  style={{ background: `radial-gradient(circle, ${cfg.glow} 0%, transparent 70%)`, opacity: 0.5 }} />
-                <div className="flex items-center gap-4 relative z-10">
-                  {/* Big rank badge */}
-                  <div className="w-20 h-20 rounded-2xl flex flex-col items-center justify-center flex-shrink-0 relative"
-                    style={{ background: cfg.badge_bg, border: `2px solid ${cfg.color}`, boxShadow: `0 0 20px ${cfg.glow}, inset 0 0 12px ${cfg.glow}` }}>
-                    <span className="text-2xl font-black leading-none" style={{ color: cfg.color }}>
-                      {currentTier}
-                    </span>
-                    <span className="text-xs font-bold uppercase tracking-widest mt-0.5" style={{ color: cfg.color, opacity: 0.7, fontSize: "0.5rem" }}>RANK</span>
-                    {delta > 0 && (
-                      <div className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-white font-black animate-bounce"
-                        style={{ background: "#22c55e", fontSize: "0.55rem", boxShadow: "0 0 8px rgba(34,197,94,0.6)" }}>↑{delta}</div>
-                    )}
-                  </div>
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: cfg.color, letterSpacing: "0.15em" }}>
-                        RANK {currentTier}
-                      </p>
-                      <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: cfg.badge_bg, color: cfg.color }}>
-                        {cfg.label}
-                      </span>
-                    </div>
-                    {delta > 0 && prevTier && (
-                      <p className="text-xs font-bold mb-1" style={{ color: "#22c55e" }}>
-                        ↑ RANK UP: {prevTier} → {currentTier} · {cfg.rank_up_msg}
-                      </p>
-                    )}
-                    <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{cfg.description}</p>
-                  </div>
-                </div>
-
-                {/* Tier progression track */}
-                <div className="flex items-center gap-1.5 mt-4 relative z-10">
-                  {TIER_ORDER.map((t, i) => {
-                    const tc = TIERS[t];
-                    const isReached = tierHistory.some(h => h.tier === t);
-                    const isCurrent = t === currentTier;
-                    return (
-                      <div key={t} className="flex items-center gap-1">
-                        <div className={`flex items-center justify-center rounded-lg font-black transition-all ${isCurrent ? "w-10 h-8 text-sm" : "w-7 h-7 text-xs"}`}
-                          style={{
-                            background: isReached ? tc.badge_bg : "var(--surface-xs)",
-                            border: `1px solid ${isReached ? tc.color : "var(--border)"}`,
-                            color: isReached ? tc.color : "var(--text-faint)",
-                            boxShadow: isCurrent ? `0 0 10px ${tc.glow}` : undefined,
-                            opacity: isReached ? 1 : 0.4,
-                          }}>
-                          {t}
-                        </div>
-                        {i < TIER_ORDER.length - 1 && (
-                          <ChevronRight size={10} style={{ color: isReached ? "var(--text-dim)" : "var(--text-faint)", opacity: 0.5 }} />
-                        )}
-                      </div>
-                    );
-                  })}
-                  {tierHistory.length > 0 && (
-                    <span className="ml-auto text-xs" style={{ color: "var(--text-faint)" }}>
-                      {tierHistory.length} scan{tierHistory.length !== 1 ? " analizzate" : " analizzata"}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Security notice (compact) */}
-            <div className="rounded-xl px-3 py-2 mb-4 flex items-center gap-2"
-              style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.14)" }}>
-              <ShieldCheck size={12} style={{ color: "#fbbf24", flexShrink: 0 }} />
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                <span className="font-bold" style={{ color: "#fbbf24" }}>BETA · Enterprise security</span>
-                {" "}· Bucket privato · Link 5 min TTL · Rate limiting · Audit SHA-256 · AI server-side
-              </p>
-            </div>
-
-            {/* Upload + Compare mode toggle row */}
-            <div className="flex items-center gap-3 mb-4">
-              <label className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer transition-all flex-1 justify-center ${scanUploading ? "opacity-60 pointer-events-none" : "hover:opacity-90"} accent-btn`}>
-                {scanUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-                {scanUploading ? "Caricamento…" : "Carica nuova foto"}
-                <input type="file" accept="image/*" className="hidden" onChange={handleScanUpload} disabled={scanUploading} />
-              </label>
-              {months.length >= 2 && (
-                <button
-                  onClick={() => { setCompareMode(c => !c); setComparingResult(null); setSelectedMonthA(null); setSelectedMonthB(null); }}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                  style={{
-                    background: compareMode ? "rgba(99,102,241,0.18)" : "var(--surface-sm)",
-                    border: `1px solid ${compareMode ? "rgba(99,102,241,0.4)" : "var(--border)"}`,
-                    color: compareMode ? "#a78bfa" : "var(--text-muted)",
-                  }}>
-                  <GitCompare size={14} />
-                  {compareMode ? "Esci dal confronto" : "Confronta mesi"}
-                </button>
-              )}
-            </div>
-
-            {/* Upload date + notes — shown when no compare mode */}
-            {!compareMode && (
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div>
-                  <label className="block text-xs mb-1" style={{ color: "var(--text-muted)" }}>Data foto</label>
-                  <input type="date" value={scanUploadDate} onChange={e => setScanUploadDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(201,168,76,0.2)", color: "var(--text)" }} />
-                </div>
-                <div>
-                  <label className="block text-xs mb-1" style={{ color: "var(--text-muted)" }}>Note</label>
-                  <input type="text" value={scanUploadNotes} onChange={e => setScanUploadNotes(e.target.value)}
-                    placeholder="es. Fronte, Lato, Schiena…"
-                    className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-                    style={{ background: "var(--surface)", border: "1px solid rgba(201,168,76,0.2)", color: "var(--text)" }} />
-                </div>
-              </div>
-            )}
-
-            {!scansLoaded ? (
-              <div className="text-center py-10">
-                <Loader2 size={22} className="animate-spin mx-auto mb-2" style={{ color: "rgba(201,168,76,0.5)" }} />
-                <p className="text-xs" style={{ color: "var(--text-dim)" }}>Caricamento scansioni…</p>
-              </div>
-            ) : scans.length === 0 ? (
-              <div className="text-center py-14 card-luxury rounded-2xl">
-                <Brain size={36} className="mx-auto mb-3" style={{ color: "rgba(201,168,76,0.3)" }} />
-                <p className="text-sm mb-1" style={{ color: "var(--text-muted)" }}>Nessuna scansione ancora</p>
-                <p className="text-xs max-w-xs mx-auto" style={{ color: "var(--text-dim)" }}>Carica la prima foto per avviare il tracciamento mensile della composizione corporea</p>
-              </div>
-            ) : (
-              <>
-                {/* Month timeline pills */}
-                <div className="flex gap-2 overflow-x-auto pb-1 mb-4">
-                  {months.map(m => {
-                    const label = new Date(m + "-01").toLocaleDateString("it-IT", { month: "short", year: "2-digit" }).replace(" ", " '");
-                    const count = byMonth[m].length;
-                    const isSelA = compareMode && selectedMonthA === m;
-                    const isSelB = compareMode && selectedMonthB === m;
-                    const isActive = !compareMode && activeMonth === m;
-                    let bg = "var(--surface-sm)", border = "var(--border)", color = "var(--text-muted)";
-                    if (isActive) { bg = "rgba(201,168,76,0.12)"; border = "rgba(201,168,76,0.32)"; color = "var(--accent-light)"; }
-                    if (isSelA) { bg = "rgba(99,102,241,0.18)"; border = "rgba(99,102,241,0.4)"; color = "#a78bfa"; }
-                    if (isSelB) { bg = "rgba(20,184,166,0.18)"; border = "rgba(20,184,166,0.4)"; color = "#14b8a6"; }
-                    return (
-                      <button key={m}
-                        onClick={() => {
-                          if (!compareMode) {
-                            setActiveTimelineMonth(m);
-                          } else {
-                            if (!selectedMonthA || (selectedMonthA && selectedMonthB)) {
-                              setSelectedMonthA(m); setSelectedMonthB(null); setComparingResult(null);
-                            } else if (m !== selectedMonthA) {
-                              setSelectedMonthB(m); setComparingResult(null);
-                            }
-                          }
-                        }}
-                        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
-                        style={{ background: bg, border: `1px solid ${border}`, color }}>
-                        {label}
-                        <span className="opacity-60">{count}</span>
-                        {isSelA && <span style={{ fontSize: "0.55rem", fontWeight: 800 }}>A</span>}
-                        {isSelB && <span style={{ fontSize: "0.55rem", fontWeight: 800 }}>B</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* ── COMPARE MODE ── */}
-                {compareMode && (
-                  <div>
-                    <p className="text-xs mb-3" style={{ color: "var(--text-muted)" }}>
-                      Seleziona due mesi dalla timeline per confrontarli. <span style={{ color: "#a78bfa" }}>A</span> = Prima · <span style={{ color: "#14b8a6" }}>B</span> = Dopo
-                    </p>
-
-                    {/* Side-by-side preview */}
-                    {(scanA || scanB) && (
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        {[{ scan: scanA, label: "A — Prima", color: "#a78bfa", accentAlpha: "rgba(99,102,241,0.2)" },
-                          { scan: scanB, label: "B — Dopo",  color: "#14b8a6", accentAlpha: "rgba(20,184,166,0.2)" }
-                        ].map(({ scan: s, label, color, accentAlpha }) => (
-                          <div key={label} className="rounded-2xl overflow-hidden"
-                            style={{ border: `1px solid ${accentAlpha}`, background: "var(--surface-xs)" }}>
-                            <div className="px-3 py-2 text-xs font-bold" style={{ color, borderBottom: `1px solid ${accentAlpha}` }}>
-                              {label}
-                            </div>
-                            {s ? (
-                              <div>
-                                <div className="aspect-[3/4] relative overflow-hidden">
-                                  {scanUrls[s.id] ? (
-                                    <img src={scanUrls[s.id]} alt={s.taken_at} className="w-full h-full object-cover" />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center" style={{ background: "var(--surface-sm)" }}>
-                                      <Loader2 size={18} className="animate-spin" style={{ color: "rgba(201,168,76,0.4)" }} />
-                                    </div>
-                                  )}
-                                  <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5"
-                                    style={{ background: "rgba(0,0,0,0.65)" }}>
-                                    <p className="text-xs font-semibold text-white">
-                                      {new Date(s.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })}
-                                    </p>
-                                    {s.notes && <p className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>{s.notes}</p>}
-                                  </div>
-                                </div>
-                                {s.ai_analysis && (
-                                  <div className="px-3 py-2 space-y-1">
-                                    {s.ai_analysis.body_fat_est != null && (
-                                      <p className="text-xs" style={{ color: "#fbbf24" }}>Grasso stimato: <strong>{s.ai_analysis.body_fat_est}%</strong></p>
-                                    )}
-                                    {s.ai_analysis.muscle_mass_est && (
-                                      <p className="text-xs" style={{ color: "#a78bfa" }}>Muscolarità: <strong>{s.ai_analysis.muscle_mass_est}</strong></p>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="aspect-[3/4] flex items-center justify-center" style={{ color: "var(--text-faint)" }}>
-                                <p className="text-xs">Seleziona mese</p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Run comparison button */}
-                    {canCompare && (
-                      <button
-                        onClick={() => handleCompare(scanA!.id, scanB!.id)}
-                        disabled={comparing}
-                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-60 mb-4"
-                        style={{ background: "rgba(99,102,241,0.16)", border: "1px solid rgba(99,102,241,0.35)", color: "#a78bfa" }}>
-                        {comparing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                        {comparing ? "Analisi AI in corso…" : "Analizza miglioramenti con AI"}
-                      </button>
-                    )}
-
-                    {/* Comparison result */}
-                    {comparingResult?.analysis && (() => {
-                      const ca = comparingResult.analysis as ComparisonAnalysis;
-                      const trendIcon = ca.overall_trend === "positive"
-                        ? <TrendingUp size={14} style={{ color: "#22c55e" }} />
-                        : ca.overall_trend === "negative"
-                          ? <TrendingDown size={14} style={{ color: "#ef4444" }} />
-                          : <Minus size={14} style={{ color: "#fbbf24" }} />;
-                      const trendColor = ca.overall_trend === "positive" ? "#22c55e" : ca.overall_trend === "negative" ? "#ef4444" : "#fbbf24";
-                      return (
-                        <div className="card-luxury rounded-2xl p-5">
-                          {/* Header */}
-                          <div className="flex items-center gap-2 mb-4">
-                            <GitCompare size={14} style={{ color: "#a78bfa" }} />
-                            <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#a78bfa", letterSpacing: "0.1em" }}>
-                              Analisi Progressione AI — Beta
-                            </p>
-                            <span className="ml-auto flex items-center gap-1 text-xs font-semibold" style={{ color: trendColor }}>
-                              {trendIcon}
-                              {ca.overall_trend === "positive" ? "Trend positivo" : ca.overall_trend === "negative" ? "Trend negativo" : "Stabile"}
-                            </span>
-                          </div>
-
-                          {/* Delta metrics */}
-                          <div className="grid grid-cols-3 gap-2 mb-4">
-                            <div className="rounded-xl p-2.5 text-center" style={{ background: "var(--surface-xs)", border: "1px solid rgba(251,191,36,0.2)" }}>
-                              <p className="text-sm font-black" style={{ color: ca.body_fat_change != null && ca.body_fat_change < 0 ? "#22c55e" : "#fbbf24" }}>
-                                {ca.body_fat_change != null ? `${ca.body_fat_change > 0 ? "+" : ""}${ca.body_fat_change}%` : "—"}
-                              </p>
-                              <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>Δ Grasso</p>
-                            </div>
-                            <div className="rounded-xl p-2.5 text-center" style={{ background: "var(--surface-xs)", border: "1px solid rgba(167,139,250,0.2)" }}>
-                              <p className="text-sm font-black capitalize" style={{ color: ca.muscle_change === "increased" ? "#22c55e" : ca.muscle_change === "decreased" ? "#ef4444" : "#fbbf24" }}>
-                                {ca.muscle_change === "increased" ? "↑" : ca.muscle_change === "decreased" ? "↓" : "="}
-                              </p>
-                              <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>Massa musc.</p>
-                            </div>
-                            <div className="rounded-xl p-2.5 text-center" style={{ background: "var(--surface-xs)", border: `1px solid ${trendColor}22` }}>
-                              <p className="text-sm font-black" style={{ color: trendColor }}>
-                                {ca.confidence === "high" ? "Alta" : ca.confidence === "medium" ? "Media" : "Bassa"}
-                              </p>
-                              <p className="text-xs mt-0.5" style={{ color: "var(--text-dim)" }}>Confidenza</p>
-                            </div>
-                          </div>
-
-                          {/* Summary narrative */}
-                          <p className="text-xs leading-relaxed italic px-3 py-2.5 rounded-xl mb-4"
-                            style={{ color: "var(--text-muted)", background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
-                            {ca.summary}
-                          </p>
-
-                          {/* Improvements + Areas to work */}
-                          <div className="grid grid-cols-2 gap-3 mb-3">
-                            <div>
-                              <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "#22c55e", letterSpacing: "0.1em" }}>
-                                Miglioramenti
-                              </p>
-                              {ca.key_improvements?.map((item, i) => (
-                                <div key={i} className="flex items-start gap-1.5 mb-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
-                                  <span style={{ color: "#22c55e", flexShrink: 0 }}>✓</span> {item}
-                                </div>
-                              ))}
-                            </div>
-                            <div>
-                              <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "#ef4444", letterSpacing: "0.1em" }}>
-                                Da lavorare
-                              </p>
-                              {ca.areas_to_work?.map((item, i) => (
-                                <div key={i} className="flex items-start gap-1.5 mb-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
-                                  <span style={{ color: "#ef4444", flexShrink: 0 }}>→</span> {item}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Coach tips */}
-                          {ca.coach_tips?.length > 0 && (
-                            <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
-                              <p className="text-xs font-bold mb-2 uppercase tracking-wide" style={{ color: "var(--accent)", letterSpacing: "0.1em" }}>
-                                Consigli per il trainer
-                              </p>
-                              {ca.coach_tips.map((tip, i) => (
-                                <div key={i} className="flex items-start gap-1.5 mb-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
-                                  <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 font-bold"
-                                    style={{ background: "rgba(201,168,76,0.14)", color: "var(--accent)", fontSize: "0.6rem" }}>{i + 1}</span>
-                                  {tip}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          <p className="text-xs mt-3" style={{ color: "var(--text-faint)" }}>
-                            Physique AI Engine · Analisi effettuata il {new Date(ca.analyzed_at).toLocaleDateString("it-IT")}
-                          </p>
-                          <p className="text-xs mt-1 px-2 py-1 rounded-lg" style={{ color: "rgba(34,197,94,0.7)", background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.14)" }}>
-                            Confronto elaborato con AI vision — nessun dato biometrico trasmesso esternamente.
-                          </p>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                )}
-
-                {/* ── TIMELINE MODE (non-compare) ── */}
-                {!compareMode && activeMonth && byMonth[activeMonth] && (
-                  <div className="space-y-4">
-                    {byMonth[activeMonth].map(scan => {
-                      const analysis = scan.ai_analysis;
-                      const cv = scan.body_features;
-                      const isAnalyzing = scanAnalyzing === scan.id;
-                      const imgUrl = scanUrls[scan.id];
-                      const scanTier = analysis ? computeTier(analysis.body_fat_est, analysis.muscle_mass_est) : null;
-                      const tierCfg  = scanTier ? TIERS[scanTier] : null;
-                      return (
-                        <div key={scan.id} className="card-luxury rounded-2xl overflow-hidden"
-                          style={tierCfg ? { borderColor: `${tierCfg.color}28`, boxShadow: `0 0 20px ${tierCfg.glow}` } : undefined}>
-
-                          {/* ── Scan header ── */}
-                          <div className="p-4">
-                            <div className="flex items-start gap-4">
-                              {/* Thumbnail + tier badge */}
-                              <div className="relative flex-shrink-0">
-                                <div className="w-24 h-32 rounded-xl overflow-hidden"
-                                  style={{ background: "var(--surface-sm)", border: `1px solid ${tierCfg ? tierCfg.color + "30" : "rgba(201,168,76,0.12)"}` }}>
-                                  {imgUrl ? (
-                                    <img src={imgUrl} alt={scan.taken_at} className="w-full h-full object-cover" />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                      <Loader2 size={16} className="animate-spin" style={{ color: "rgba(201,168,76,0.4)" }} />
-                                    </div>
-                                  )}
-                                </div>
-                                {/* Tier badge overlaid on photo */}
-                                {tierCfg && (
-                                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full font-black text-xs flex items-center gap-1"
-                                    style={{ background: tierCfg.badge_bg, border: `1px solid ${tierCfg.color}`, color: tierCfg.color, boxShadow: `0 0 8px ${tierCfg.glow}`, whiteSpace: "nowrap" }}>
-                                    <Award size={9} /> RANK {scanTier}
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="flex-1 min-w-0 pt-0.5">
-                                <p className="text-sm font-semibold mb-1" style={{ color: "var(--text)" }}>
-                                  {new Date(scan.taken_at).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })}
-                                </p>
-                                {scan.notes && <p className="text-xs mb-2" style={{ color: "var(--text-muted)" }}>{scan.notes}</p>}
-
-                                {/* Key metrics row (if analysed) */}
-                                {analysis && (
-                                  <div className="flex gap-2 mb-2 flex-wrap">
-                                    {analysis.body_fat_est != null && (
-                                      <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-                                        style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24" }}>
-                                        {analysis.body_fat_est}% BF
-                                      </span>
-                                    )}
-                                    {analysis.muscle_mass_est && (
-                                      <span className="text-xs px-2 py-0.5 rounded-full font-bold capitalize"
-                                        style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa" }}>
-                                        {analysis.muscle_mass_est}
-                                      </span>
-                                    )}
-                                    {analysis.body_type && (
-                                      <span className="text-xs px-2 py-0.5 rounded-full font-bold capitalize"
-                                        style={{ background: "rgba(56,189,248,0.10)", color: "#38bdf8" }}>
-                                        {analysis.body_type}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <button onClick={() => handleScanAnalyze(scan)} disabled={isAnalyzing}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-60"
-                                    style={{ background: analysis ? "var(--surface-sm)" : "rgba(201,168,76,0.12)", border: `1px solid ${analysis ? "var(--border)" : "rgba(201,168,76,0.28)"}`, color: analysis ? "var(--text-dim)" : "var(--accent-light)" }}>
-                                    {isAnalyzing ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
-                                    {isAnalyzing ? "Analisi…" : analysis ? "Rianalizza" : "Analizza con AI"}
-                                  </button>
-                                  <button onClick={() => handleScanDelete(scan)}
-                                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs transition-all"
-                                    style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.15)", color: "rgba(239,68,68,0.7)" }}>
-                                    <Trash2 size={11} /> Elimina
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* CV MoveNet metrics */}
-                            {cv && cv.metrics && (
-                              <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
-                                <div className="flex items-center gap-2 mb-2">
-                                  <ActivityIcon size={11} style={{ color: "#38bdf8" }} />
-                                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#38bdf8", letterSpacing: "0.08em" }}>
-                                    CV · MoveNet · {Math.round((cv.metrics.pose_confidence ?? 0) * 100)}% conf.
-                                  </p>
-                                </div>
-                                <div className="grid grid-cols-3 gap-1.5">
-                                  {[
-                                    { k: "SHR", v: cv.metrics.shoulder_hip_ratio?.toFixed(2) ?? "—", label: "Spalle/Fianchi", color: "#38bdf8" },
-                                    { k: "WHR", v: cv.metrics.waist_hip_ratio?.toFixed(2) ?? "—", label: "Vita/Fianchi", color: "#fbbf24" },
-                                    { k: "SIM", v: cv.metrics.bilateral_symmetry ? `${Math.round(cv.metrics.bilateral_symmetry * 100)}%` : "—", label: "Simmetria", color: "#a78bfa" },
-                                  ].map(({ k, v, label, color }) => (
-                                    <div key={k} className="rounded-lg p-1.5 text-center" style={{ background: "var(--surface-xs)", border: `1px solid ${color}18` }}>
-                                      <p className="font-bold" style={{ color, fontSize: "0.85rem" }}>{v}</p>
-                                      <p style={{ color: "var(--text-faint)", fontSize: "0.58rem" }}>{label}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* ── AI Full Analysis ── */}
-                            {analysis && (
-                              <div className="mt-3 pt-3 space-y-3" style={{ borderTop: `1px solid ${tierCfg ? tierCfg.color + "20" : "rgba(201,168,76,0.1)"}` }}>
-
-                                {/* Summary */}
-                                <div className="flex items-center gap-2 mb-1">
-                                  <Brain size={12} style={{ color: "var(--accent)" }} />
-                                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "rgba(201,168,76,0.8)", letterSpacing: "0.08em" }}>
-                                    Analisi AI · {analysis.confidence === "high" ? "Alta" : analysis.confidence === "medium" ? "Media" : "Bassa"} confidenza
-                                  </p>
-                                </div>
-                                <p className="text-xs leading-relaxed italic px-3 py-2.5 rounded-xl"
-                                  style={{ color: "var(--text-muted)", background: "var(--surface-xs)", border: "1px solid var(--border-subtle)" }}>
-                                  {analysis.summary}
-                                </p>
-
-                                {/* Biomechanics */}
-                                {analysis.biomechanics && (
-                                  <div className="rounded-xl p-3" style={{ background: "rgba(56,189,248,0.05)", border: "1px solid rgba(56,189,248,0.18)" }}>
-                                    <div className="flex items-center gap-1.5 mb-1.5">
-                                      <ActivityIcon size={11} style={{ color: "#38bdf8" }} />
-                                      <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "#38bdf8" }}>Biomeccanica</p>
-                                    </div>
-                                    <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>{analysis.biomechanics}</p>
-                                  </div>
-                                )}
-
-                                {/* Strengths & Improvements side by side */}
-                                {(analysis.strengths?.length || analysis.improvements?.length) && (
-                                  <div className="grid grid-cols-2 gap-2">
-                                    {analysis.strengths?.length ? (
-                                      <div className="rounded-xl p-3" style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.15)" }}>
-                                        <p className="text-xs font-bold mb-1.5 uppercase tracking-wide" style={{ color: "#22c55e" }}>Punti di Forza</p>
-                                        {analysis.strengths.map((s, i) => (
-                                          <p key={i} className="text-xs mb-1 flex items-start gap-1" style={{ color: "var(--text-muted)" }}>
-                                            <span style={{ color: "#22c55e", flexShrink: 0 }}>✓</span> {s}
-                                          </p>
-                                        ))}
-                                      </div>
-                                    ) : null}
-                                    {analysis.improvements?.length ? (
-                                      <div className="rounded-xl p-3" style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.15)" }}>
-                                        <p className="text-xs font-bold mb-1.5 uppercase tracking-wide" style={{ color: "#fbbf24" }}>Da Migliorare</p>
-                                        {analysis.improvements.map((s, i) => (
-                                          <p key={i} className="text-xs mb-1 flex items-start gap-1" style={{ color: "var(--text-muted)" }}>
-                                            <span style={{ color: "#fbbf24", flexShrink: 0 }}>→</span> {s}
-                                          </p>
-                                        ))}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                )}
-
-                                {/* Nutrition plan */}
-                                {(analysis.nutrition_tips?.length || analysis.nutrition_calories) && (
-                                  <div className="rounded-xl p-3" style={{ background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.18)" }}>
-                                    <div className="flex items-center gap-1.5 mb-2">
-                                      <Utensils size={11} style={{ color: "var(--accent)" }} />
-                                      <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--accent)" }}>Piano Nutrizionale</p>
-                                    </div>
-                                    {(analysis.nutrition_calories || analysis.nutrition_protein_g) && (
-                                      <div className="flex gap-3 mb-2">
-                                        {analysis.nutrition_calories && (
-                                          <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-                                            style={{ background: "rgba(201,168,76,0.1)", color: "var(--accent-light)" }}>
-                                            ~{analysis.nutrition_calories} kcal/die
-                                          </span>
-                                        )}
-                                        {analysis.nutrition_protein_g && (
-                                          <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-                                            style={{ background: "rgba(139,92,246,0.1)", color: "#a78bfa" }}>
-                                            {analysis.nutrition_protein_g}g proteine
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
-                                    {analysis.nutrition_tips?.map((tip, i) => (
-                                      <p key={i} className="text-xs mb-1 flex items-start gap-1" style={{ color: "var(--text-muted)" }}>
-                                        <Zap size={9} style={{ color: "var(--accent)", flexShrink: 0, marginTop: 2 }} /> {tip}
-                                      </p>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {/* Training recommendations */}
-                                {analysis.recommendations?.length ? (
-                                  <div>
-                                    <p className="text-xs font-bold mb-1.5 uppercase tracking-wide" style={{ color: "var(--text-dim)" }}>Raccomandazioni Allenamento</p>
-                                    {analysis.recommendations.map((r, i) => (
-                                      <div key={i} className="flex items-start gap-2 text-xs mb-1" style={{ color: "var(--text-muted)" }}>
-                                        <span className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 font-bold"
-                                          style={{ background: "rgba(201,168,76,0.14)", color: "var(--accent)", fontSize: "0.6rem" }}>{i + 1}</span>
-                                        {r}
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : null}
-
-                                <p className="text-xs" style={{ color: "var(--text-faint)" }}>
-                                  Physique AI Engine · {new Date(analysis.analyzed_at).toLocaleDateString("it-IT")}
-                                </p>
-                                <p className="text-xs px-2 py-1 rounded-lg" style={{ color: "rgba(34,197,94,0.7)", background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.12)" }}>
-                                  Analisi effettuata localmente — nessuna immagine trasmessa a server esterni.
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </>
             )}
           </div>
         );

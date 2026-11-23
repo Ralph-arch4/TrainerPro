@@ -38,25 +38,28 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 | `lib/store.ts` | TS types + Zustand store (see type summary below) |
 | `lib/db.ts` | All Supabase calls (camelCase<->snake_case). NEVER raw calls in components. |
 | `lib/exerciseLibrary.ts` | 110+ Italian exercises. `searchExercises(q, muscleGroup?)` |
-| `lib/plan-limits.ts` | `checkLimit(plan, "clients", count)` -- tier gating |
+| `lib/plan-limits.ts` | `checkLimit(plan, "clients", count)`, `isPremium`, `FREE_CLIENT_LIMIT` -- tier gating |
 | `lib/foodDatabase.ts` | 75 Italian foods, per-100g macros. `searchFoods(q)`, `getFood(id)`, `macrosFor(food, g)` |
-| `lib/nutritionGenerator.ts` | `generateNutritionPlan({protein,carbs,fat,mealsCount,preference,seed})` -> Meal[] with exact grams (Gauss-Seidel solver + fine-tune) |
 | `components/SupabaseDataLoader.tsx` | Loads all data at mount (logs, supplements). Has `dataLoaded` flag. |
 | `components/WorkoutLogbook.tsx` | Card grid view, per-set logging, supplements |
 | `components/WorkoutSpreadsheet.tsx` | Table view: add/edit/reorder exercises + autocomplete |
-| `components/DietPlanEditor.tsx` | Full-screen diet editor with macro ranges |
+| `components/DietPlanEditor.tsx` | "Indicazioni alimentari" editor: foods + free-text `portion`, optional orientative macro ranges, exports `DIET_DISCLAIMER` |
 | `app/dashboard/clienti/[id]/page.tsx` | Client detail (plans, diet, phases, measurements, notes) |
 | `app/dashboard/clienti/[id]/schede/[planId]/page.tsx` | PT plan view: toggle Logbook/Spreadsheet |
 | `components/ClientPortal.tsx` | Client portal: plan only (no gamification). Used by `app/cliente/[token]` and `app/scheda/[token]`. Trainer notes/links rendered via `LinkifiedText` |
 | `lib/exerciseImages.ts` | Exercise name -> guide photos in `public/exercises/<id>/{0,1}.webp` (free-exercise-db, public domain) |
 | `app/api/intake/[token]/route.ts` | Server-side API with service_role key |
+| `lib/progressions.ts` | Pre-planned progressions: `applyProgression(ex, week)`, `normalizeProgressions`, `moveWithinDay`. Stored in `exercise.progressions[]` (JSONB, no migration). Edited via `components/ProgressionEditor.tsx` |
+| `lib/billing.ts` + `components/PaymentNotice.tsx` | Payment reminder pop-up for `plan === "free"`; due date = user metadata `payment_due_at` or `PAYMENT_NOTICE_START` + 30 days |
+| `lib/brand.ts`, `app/manifest.ts`, `public/sw.js`, `android/twa-manifest.json` | PWA / Play Store (TWA). Steps in `docs/PLAY_STORE.md` |
+| `app/dashboard/account/page.tsx` + `app/api/account/delete/route.ts` | Account page + self-service account deletion (service_role) |
 
 ### store.ts type summary (avoid loading 360-line file)
 | Type | Key fields |
 |------|-----------|
-| `User` | id, name, email, plan: PlanTier |
+| `User` | id, name, email, plan: PlanTier, premiumStatus?, wantsPremium? |
 | `Exercise` | id, name, muscleGroup?, sets, targetReps, perSetReps?, restSeconds?, day, order, supersetGroup?, videoUrl?, kind? (strength/cardio/core), duration?, intensity? |
-| `MealItem` | id, name, grams, gramsMax?, protein/carbs/fat/calories? |
+| `MealItem` | id, name, portion? (free text), notes?; grams/gramsMax/macros = legacy, never shown or saved |
 | `Meal` | id, name, time?, items: MealItem[] |
 | `ExerciseLog` | id, exerciseId, weekNumber, weight?, reps?, note?, loggedAt |
 | `Phase` | id, clientId, name, type: bulk/cut/maintenance/custom, startDate, endDate, targetCalories?, completed |
@@ -70,7 +73,11 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 **Store actions** (all on `useAppStore`): setUser, clearUser, setActiveClient, setAllClients, addClient, updateClient, removeClient, addWorkoutPlan, updateWorkoutPlan, removeWorkoutPlan, addExercise, updateExercise, removeExercise, reorderExercises, upsertLog, removeLog, addPhase, updatePhase, removePhase, addDietPlan, updateDietPlan, removeDietPlan, addMeasurement, updateMeasurement, removeMeasurement, addNote, updateNote, removeNote
 
 ### Tiering
-Free: 1 client | Personal Coach (EUR29/mo): 15 | Fitness Master: unlimited
+Demo (`plan = "free"`): 1 client | Premium (any other plan value): unlimited, full app.
+- Source of truth: `profiles.plan` + `premium_status` (migration 026). Never read/write the plan from user metadata or from the browser; DB triggers block self-upgrade and the 2nd client on demo (`DEMO_CLIENT_LIMIT`)
+- UI rules: `lib/plan-limits.ts` (`isPremium`, `checkLimit`). Price/payment details: env vars in `lib/billing.ts`
+- Flow: register (two paths, `intended_plan` metadata) -> `/dashboard/abbonamento` -> `POST /api/premium/request` (pending) -> super user approves on `/admin/premium` (`/api/admin/premium`, `SUPERUSER_EMAILS`, service_role via `lib/supabase/admin.ts`)
+- Android app (TWA): no payment links/IBAN in-app (`lib/platform.ts` `isAndroidApp`), Google Play billing policy
 
 ### Palette
 Accent: `#C9A84C` (gold) | Light: `#E8C96B` | Dark: `#8B6820` | BG: `#080808`
@@ -163,6 +170,21 @@ Fan-out only when genuinely multi-perspective; use Glob/Grep directly for single
 - No Agent for simple searches (Glob/Grep are 10x faster)
 - CLAUDE.md length directly reduces context cache advantage -- keep dense
 
+- Never `overflow-x: hidden` on both html and body (iOS scroll lock): body uses `overflow-x: clip`
+- `.card-luxury` has no backdrop blur on touch/mobile (scroll performance); hover effects only under `@media (hover: hover)`
+- Components that call hooks after an early return must be mounted behind a guard (see `ClientDetailPage` -> `ClientDetail`)
+- Reorder exercises with `moveWithinDay` (per-day swap), never by global `order` index
+
+### Testing
+- `npm test` -- unit tests (node:test, no deps): progressions, billing, exercise image matching
+- `npm run test:e2e` -- Playwright against `next start` with mocked Supabase; build first with `NEXT_PUBLIC_SUPABASE_URL=https://e2e-test.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=test-anon-key`
+
+- REMOVED for compliance (do not re-add without legal review): client progress photos, AI Fitness Scan (Anthropic/TensorFlow), `lib/cv-analysis`, `lib/physique-analyzer`, `lib/tier-system`, `/api/fitness-scan/*`, `/api/photo/*`. Cleanup SQL: migration 025
+- Intake form collects health data: submit requires the explicit consent checkbox (`privacyConsentAt` stored in the response)
+- Diets are "Indicazioni alimentari" (legal: no gram prescriptions, no auto-generator, never call them "dieta"/"piano alimentare"); show `DIET_DISCLAIMER` wherever they are edited or displayed
+- App name only via `lib/brand.ts` (`APP_NAME`); never hardcode it in UI strings
+- No credentials in scripts; hosting/DB production checklist in `docs/INFRASTRUTTURA.md`
+
 ### Confirmed patterns
 - Client sessions (start/end/duration/feedback) = exercise_logs rows with `exercise_id = "session:<day>"` (lib/workoutSession.ts); SupabaseDataLoader splits them into `plan.sessionLogs`. Client per-exercise feedback = `log.note`. PT reads both in client detail tab "Feedback"
 - Per-set log in `reps` TEXT as JSON `[{r,w}]` -- no DB migration needed
@@ -172,4 +194,4 @@ Fan-out only when genuinely multi-perspective; use Glob/Grep directly for single
 
 ---
 
-*Last updated: 2026-06-16 -- Session: Phase 1 motion toolkit + mobile touch-target fixes + palette correction*
+*Last updated: 2026-11-15 -- Session: demo/Premium plans with super-user approval, Play Store listing assets*

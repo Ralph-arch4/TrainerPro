@@ -1,17 +1,22 @@
 "use client";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { ExerciseProgression } from "./progressions";
 
 function uid() { return crypto.randomUUID(); }
 function genToken() { return crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, ""); }
 
-export type PlanTier = "free" | "personal_coach" | "fitness_master";
+import type { PlanTier, PremiumStatus } from "./plan-limits";
+export type { PlanTier, PremiumStatus };
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  plan: PlanTier;
+  plan: PlanTier;               // from profiles.plan (server-authoritative), never from user metadata
+  premiumStatus?: PremiumStatus; // state of the Premium request
+  wantsPremium?: boolean;        // chose Premium at sign-up and has not requested it yet
+  paymentDueAt?: string; // ISO date from user metadata `payment_due_at` (see lib/billing.ts)
 }
 
 // ─── Workout Exercise (template set by trainer) ───────────────────────────────
@@ -35,6 +40,7 @@ export interface Exercise {
   kind?: ExerciseKind;      // missing = "strength" (legacy exercises)
   duration?: string;        // cardio: minutes, e.g. "20", "15-20"
   intensity?: string;       // cardio: e.g. "Zona 2", "130-140 bpm", "HIIT 30/30"
+  progressions?: ExerciseProgression[]; // pre-planned changes from a given week (lib/progressions.ts)
 }
 
 // ─── Meal Food Item ────────────────────────────────────────────────────────────
@@ -42,8 +48,9 @@ export interface MealItem {
   id: string;
   name: string;
   foodId?: string; // link to lib/foodDatabase entry (enables gram->macro recalc)
-  grams: number;
-  gramsMax?: number; // if set, show as range
+  portion?: string; // free-text indicative portion ("1 porzione", "a piacere"): never a gram prescription
+  grams: number;     // legacy (old gram-based plans): no longer edited nor shown
+  gramsMax?: number; // legacy
   protein?: number;
   carbs?: number;
   fat?: number;

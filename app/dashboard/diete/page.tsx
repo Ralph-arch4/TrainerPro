@@ -1,5 +1,6 @@
 ﻿"use client";
 import { useState } from "react";
+import { DIET_DISCLAIMER } from "@/components/DietPlanEditor";
 import Link from "next/link";
 import { useAppStore } from "@/lib/store";
 import { UtensilsCrossed, ChevronRight, Search } from "lucide-react";
@@ -38,9 +39,12 @@ export default function DietePage() {
   return (
     <div className="p-4 pt-4 lg:pt-8 lg:p-8 fade-in">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Piani Alimentari</h1>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--text)" }}>Indicazioni alimentari</h1>
         <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
-          {allDiets.length} piani su {clients.length} {clients.length === 1 ? "cliente" : "clienti"}
+          {allDiets.length} schede su {clients.length} {clients.length === 1 ? "cliente" : "clienti"}
+        </p>
+        <p className="text-xs mt-3 p-3 rounded-xl" style={{ color: "var(--text-muted)", background: "var(--surface-xs)", border: "1px solid var(--border)" }}>
+          {DIET_DISCLAIMER}
         </p>
       </div>
 
@@ -84,11 +88,11 @@ export default function DietePage() {
         <div className="text-center py-20 card-luxury rounded-2xl">
           <UtensilsCrossed size={48} className="mx-auto mb-4" style={{ color: "rgba(255,107,43,0.2)" }} />
           <p className="font-semibold mb-1" style={{ color: "var(--text)" }}>
-            {allDiets.length === 0 ? "Nessun piano alimentare" : "Nessun risultato"}
+            {allDiets.length === 0 ? "Nessuna indicazione alimentare" : "Nessun risultato"}
           </p>
           <p className="text-sm mb-4" style={{ color: "var(--text-dim)" }}>
             {allDiets.length === 0
-              ? "Crea piani alimentari dalla scheda di ogni cliente"
+              ? "Crea le indicazioni dalla scheda di ogni cliente"
               : "Prova a modificare i filtri"}
           </p>
           {allDiets.length === 0 && (
