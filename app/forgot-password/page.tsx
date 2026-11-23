@@ -4,8 +4,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Dumbbell, Mail, Loader2, CheckCircle2 } from "lucide-react";
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,8 +15,10 @@ export default function ForgotPasswordPage() {
     setError("");
     setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${SITE_URL}/reset-password`,
+    // Use the origin the user is actually on: the env var was deployed with a
+    // stray tab, which made Supabase reject redirectTo and fall back to Site URL.
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) {
       setError("Si è verificato un errore. Controlla l'email e riprova.");

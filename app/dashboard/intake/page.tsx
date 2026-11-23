@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { showToast } from "@/components/Toast";
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ||
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL?.trim() ||
   (typeof window !== "undefined" ? window.location.origin : "");
 
 function fmtDate(d: string) {

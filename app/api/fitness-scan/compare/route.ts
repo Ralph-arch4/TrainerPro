@@ -13,7 +13,7 @@ import type { ComparisonAnalysis } from "@/lib/db";
 // CORS    : explicit same-origin restriction header
 
 const SCAN_BUCKET = "fitness-scans";
-const CORS_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL ?? "https://trainer-pro-phi.vercel.app";
+const CORS_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://trainer-pro-phi.vercel.app";
 
 function serviceClient() {
   return createClient(

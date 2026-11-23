@@ -18,7 +18,7 @@ const SCAN_BUCKET    = "fitness-scans";
 const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB max (canvas-resized images are <500 KB)
 const SIGNED_URL_TTL = 3600;            // 1 hour — enough for a full session view
 const MAX_SCANS_PER_CLIENT = 120;        // quota: prevent storage abuse
-const ALLOWED_ORIGIN = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? "https://trainer-pro-phi.vercel.app";
+const ALLOWED_ORIGIN = process.env.NEXT_PUBLIC_APP_URL?.trim() || process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://trainer-pro-phi.vercel.app";
 
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
