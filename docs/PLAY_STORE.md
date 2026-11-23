@@ -108,7 +108,7 @@ Dati di pagamento: si inseriscono come variabili su Vercel, senza toccare il cod
 | `NEXT_PUBLIC_PREMIUM_PRICE` | prezzo mensile mostrato (ora `29`, valore provvisorio) |
 | `NEXT_PUBLIC_PAYMENT_LINK` | link di pagamento online (Stripe, PayPal...) |
 | `NEXT_PUBLIC_PAYMENT_IBAN`, `NEXT_PUBLIC_PAYMENT_HOLDER` | coordinate per il bonifico |
-| `SUPERUSER_EMAILS` | email (separate da virgola) degli account che possono approvare Premium |
+| `SUPERUSER_EMAILS` | facoltativa: gli admin si gestiscono nella tabella Supabase `user_roles` (migrazione 028) |
 
 ## Account di prova per la revisione di Google
 

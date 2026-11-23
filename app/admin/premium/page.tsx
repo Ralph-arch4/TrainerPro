@@ -1,19 +1,17 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
-import { Crown, Loader2, RefreshCw, ShieldAlert, Search } from "lucide-react";
-import ThemeToggle from "@/components/ThemeToggle";
+import { Search } from "lucide-react";
+import AdminShell, { AdminGate, type Gate } from "@/components/admin/AdminShell";
 
 interface Trainer {
   id: string; name: string; email: string; createdAt: string | null;
   plan: string; premiumStatus: string; requestedAt: string | null; decidedAt: string | null; clients: number;
 }
-type Gate = "loading" | "ok" | "login" | "forbidden" | "error";
 type Filter = "pending" | "premium" | "free" | "all";
 
 const fmt = (d: string | null) => d ? new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
-// Super-user console. Access is decided by the server (SUPERUSER_EMAILS):
+// Super-user console. Access is decided by the server (public.user_roles):
 // this page only renders what /api/admin/premium returns.
 export default function AdminPremiumPage() {
   const [gate, setGate] = useState<Gate>("loading");
@@ -58,27 +56,7 @@ export default function AdminPremiumPage() {
     } finally { setBusy(null); }
   }
 
-  if (gate !== "ok") {
-    return (
-      <main className="min-h-dvh flex items-center justify-center p-6" style={{ background: "var(--bg)" }}>
-        <div className="text-center max-w-sm">
-          {gate === "loading" ? <Loader2 size={28} className="animate-spin mx-auto" style={{ color: "var(--accent)" }} /> : (
-            <>
-              <ShieldAlert size={34} className="mx-auto mb-3" style={{ color: "var(--accent)" }} />
-              <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
-                {gate === "login" ? "Accedi con le credenziali del super user per gestire gli abbonamenti."
-                  : gate === "forbidden" ? "Questo account non è autorizzato a gestire gli abbonamenti."
-                  : "Pannello non disponibile. Controlla la configurazione del server e riprova."}
-              </p>
-              <Link href={gate === "login" ? "/login" : "/dashboard"} className="accent-btn inline-block px-5 py-2.5 rounded-xl text-sm">
-                {gate === "login" ? "Vai al login" : "Torna alla dashboard"}
-              </Link>
-            </>
-          )}
-        </div>
-      </main>
-    );
-  }
+  if (gate !== "ok") return <AdminGate gate={gate} />;
 
   const isPrem = (t: Trainer) => t.plan !== "free";
   const counts = {
@@ -94,23 +72,7 @@ export default function AdminPremiumPage() {
     .sort((a, b) => (b.requestedAt ?? b.createdAt ?? "").localeCompare(a.requestedAt ?? a.createdAt ?? ""));
 
   return (
-    <main className="min-h-dvh p-4 lg:p-8" style={{ background: "var(--bg)" }}>
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between gap-3 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: "var(--text)" }}>
-              <Crown size={22} style={{ color: "var(--accent)" }} /> Abbonamenti
-            </h1>
-            <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>Approva l&apos;accesso Premium dopo aver verificato il pagamento.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => void load()} aria-label="Aggiorna" className="p-2.5 rounded-xl" style={{ background: "var(--surface-sm)", border: "1px solid var(--border)", color: "var(--text-muted)" }}>
-              <RefreshCw size={15} />
-            </button>
-            <ThemeToggle size={15} />
-          </div>
-        </div>
-
+    <AdminShell title="Richieste Premium" subtitle="Approva l'accesso Premium dopo aver verificato il pagamento." onRefresh={() => void load()}>
         <div className="flex flex-wrap gap-2 mb-4">
           {([["pending", "In attesa"], ["premium", "Premium"], ["free", "Demo"], ["all", "Tutti"]] as Array<[Filter, string]>).map(([key, label]) => (
             <button key={key} onClick={() => setFilter(key)} className="px-3 py-2 rounded-xl text-sm"
@@ -169,7 +131,6 @@ export default function AdminPremiumPage() {
             ))}
           </div>
         )}
-      </div>
-    </main>
+    </AdminShell>
   );
 }

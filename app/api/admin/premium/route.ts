@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminClient, isSameOrigin, isSuperuser, sessionUser } from "@/lib/supabase/admin";
+import { adminGuard, auditLog, isSameOrigin } from "@/lib/supabase/admin";
 
 // Super-user console: list trainers and approve / reject / revoke Premium.
-// Every call re-checks the session and the SUPERUSER_EMAILS list on the server.
+// Every call re-checks the session and the admin role (public.user_roles) on the server.
 
-async function guard() {
-  const user = await sessionUser();
-  if (!user) return { error: NextResponse.json({ error: "unauthorized" }, { status: 401 }) };
-  if (!isSuperuser(user)) return { error: NextResponse.json({ error: "forbidden" }, { status: 403 }) };
-  const admin = adminClient();
-  if (!admin) return { error: NextResponse.json({ error: "not_configured" }, { status: 503 }) };
-  return { user, admin };
-}
+const guard = adminGuard;
 
 export async function GET() {
   const g = await guard();
@@ -76,5 +69,6 @@ export async function POST(req: NextRequest) {
     .eq("id", body.userId).select("id");
   if (error) return NextResponse.json({ error: "save_failed" }, { status: 500 });
   if (!data || data.length === 0) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  await auditLog(admin, user.email ?? "", body.action as string, body.userId);
   return NextResponse.json({ ok: true, plan: patch.plan, premiumStatus: patch.premium_status });
 }
