@@ -59,7 +59,7 @@ const IMAGE_IDS: Record<string, string> = {
   "Leg Curl al cavo": "Standing_Leg_Curl",
   "Sumo Deadlift": "Sumo_Deadlift",
   "Hip Thrust con bilanciere": "Barbell_Hip_Thrust",
-  "Hip Thrust al Multipower": "Smith_Machine_Hip_Raise",
+  "Hip Thrust al Multipower": "Barbell_Hip_Thrust",
   "Abductor Machine": "Thigh_Abductor",
   "Adductor Machine": "Thigh_Adductor",
   "Cable Kickback": "One-Legged_Cable_Kickback",
@@ -93,7 +93,7 @@ const IMAGE_IDS: Record<string, string> = {
   "Curl concentrato": "Concentration_Curls",
   "Curl su panca Scott (Preacher Curl)": "Preacher_Curl",
   "Curl spider con bilanciere EZ": "Spider_Curl",
-  "Curl ai cavi incrociati": "High_Cable_Curls",
+  "Curl ai cavi incrociati": "Standing_Biceps_Cable_Curl",
   "Tricipiti al cavo con barra": "Triceps_Pushdown",
   "Tricipiti al cavo con corda": "Triceps_Pushdown_-_Rope_Attachment",
   "Tricipiti al cavo presa inversa": "Reverse_Grip_Triceps_Pushdown",
@@ -107,7 +107,7 @@ const IMAGE_IDS: Record<string, string> = {
   "Wrist Curl con bilanciere": "Seated_Palm-Up_Barbell_Wrist_Curl",
   "Reverse Curl con bilanciere": "Reverse_Barbell_Curl",
   "Reverse Curl con manubri": "Standing_Dumbbell_Reverse_Curl",
-  "Zottman Curl": "Zottman_Curl",
+  "Zottman Curl": "Dumbbell_Alternate_Bicep_Curl",
   "Farmer's Walk": "Farmers_Walk",
   "Plate Pinch": "Plate_Pinch",
   "Crunch classico": "Crunches",
@@ -142,9 +142,44 @@ const IMAGE_IDS: Record<string, string> = {
   "Corda": "Rope_Jumping",
 };
 
-// Keyword fallbacks for free-text names typed by the trainer (checked in order,
+// Keyword rules: "a+b" matches when every part is contained in the name.
+// A null target means "show no photo" (better than a wrong one).
+
+// Checked BEFORE the contained-library-name match: free-text names where a
+// generic library name is contained but the equipment/variant differs.
+const OVERRIDE_IDS: Array<[string, string | null]> = [
+  ["curl+inclinata", "Dumbbell_Bicep_Curl"],
+  ["curl+60", "Dumbbell_Bicep_Curl"],
+  ["bayesian", "Standing_Biceps_Cable_Curl"],
+  ["military+manubri", "Dumbbell_Shoulder_Press"],
+  ["crunch+panca", "Crunches"],
+  ["leg raise+sbarra", "Hanging_Leg_Raise"],
+  ["croci+inclinata", "Incline_Dumbbell_Flyes"],
+  ["croci+basso", "Low_Cable_Crossover"],
+  ["croci+cav", "Cable_Crossover"],
+  ["french press+manubri", "Standing_Dumbbell_Triceps_Extension"],
+  ["rematore+manubri", "One-Arm_Dumbbell_Row"],
+  ["push down+corda", "Triceps_Pushdown_-_Rope_Attachment"],
+  ["pushdown+corda", "Triceps_Pushdown_-_Rope_Attachment"],
+  ["curl+cavo+corda", "Cable_Hammer_Curls_-_Rope_Attachment"],
+  ["curl+cav", "Standing_Biceps_Cable_Curl"],
+  ["kick back+multipower", "Glute_Kickback"],
+  ["kickback+multipower", "Glute_Kickback"],
+  ["corpo libero", null],
+  ["air squat", null],
+  ["squat+cavo", null],
+  ["abduction", null],
+];
+
+// Fallbacks for free-text names typed by the trainer (checked in order,
 // first match wins — keep more specific keywords first).
-const KEYWORD_IDS: Array<[string, string]> = [
+const KEYWORD_IDS: Array<[string, string | null]> = [
+  ["panca+presa stretta", "Close-Grip_Barbell_Bench_Press"],
+  ["spinte+seduto", "Dumbbell_Shoulder_Press"],
+  ["spinte+60", "Dumbbell_Shoulder_Press"],
+  ["spinte+panca", "Incline_Dumbbell_Press"],
+  ["floor press", "Dumbbell_Bench_Press"],
+  ["shoulder+machine", "Machine_Shoulder_Military_Press"],
   ["panca inclinata", "Incline_Dumbbell_Press"],
   ["panca declinata", "Decline_Barbell_Bench_Press"],
   ["panca piana", "Barbell_Bench_Press_-_Medium_Grip"],
@@ -161,8 +196,13 @@ const KEYWORD_IDS: Array<[string, string]> = [
   ["lat machine", "Wide-Grip_Lat_Pulldown"],
   ["lat pulldown", "Wide-Grip_Lat_Pulldown"],
   ["trazioni", "Pullups"],
+  ["chin up", "Chin-Up"],
+  ["pull up", "Pullups"],
+  ["push up", "Pushups"],
   ["front squat", "Front_Barbell_Squat"],
-  ["goblet", "Goblet_Squat"],
+  ["goblet", "Dumbbell_Squat"],
+  ["squat sumo", "Dumbbell_Squat"],
+  ["sumo squat", "Dumbbell_Squat"],
   ["bulgar", "Split_Squat_with_Dumbbells"],
   ["affondi", "Dumbbell_Lunges"],
   ["lunge", "Dumbbell_Lunges"],
@@ -178,18 +218,30 @@ const KEYWORD_IDS: Array<[string, string]> = [
   ["military", "Standing_Military_Press"],
   ["lento avanti", "Standing_Military_Press"],
   ["shoulder press", "Dumbbell_Shoulder_Press"],
+  ["alzate laterali+seduto", "Seated_Side_Lateral_Raise"],
   ["alzate laterali", "Side_Lateral_Raise"],
   ["alzate frontali", "Front_Dumbbell_Raise"],
   ["alzate posteriori", "Reverse_Flyes"],
   ["tirate al mento", "Upright_Barbell_Row"],
+  ["reverse fly", "Reverse_Flyes"],
+  ["face pull", "Face_Pull"],
   ["hammer", "Hammer_Curls"],
   ["martello", "Hammer_Curls"],
   ["scott", "Preacher_Curl"],
+  ["curl inverso", "Reverse_Barbell_Curl"],
+  ["reverse curl", "Reverse_Barbell_Curl"],
+  ["curl+ez", "EZ-Bar_Curl"],
+  ["curl+alternat", "Dumbbell_Alternate_Bicep_Curl"],
+  ["curl+manubri", "Dumbbell_Bicep_Curl"],
   ["curl", "Barbell_Curl"],
   ["push down", "Triceps_Pushdown"],
   ["pushdown", "Triceps_Pushdown"],
+  ["estensioni+cavo", "Cable_Rope_Overhead_Triceps_Extension"],
   ["french press", "Lying_Triceps_Press"],
-  ["dips", "Dips_-_Triceps_Version"],
+  ["kick back", "Tricep_Dumbbell_Kickback"],
+  ["kickback", "Tricep_Dumbbell_Kickback"],
+  ["slanci", "One-Legged_Cable_Kickback"],
+  ["dip", "Dips_-_Triceps_Version"],
   ["crunch", "Crunches"],
   ["plank", "Plank"],
   ["sit up", "Crunches"],
@@ -213,17 +265,24 @@ function normalize(s: string): string {
 const NORMALIZED = Object.entries(IMAGE_IDS).map(([k, v]) => [normalize(k), v] as const);
 
 /** Image folder id for an exercise name, or null when no reliable match exists. */
+function matches(n: string, rule: string): boolean {
+  return rule.split("+").every((part) => n.includes(part));
+}
+
 export function getExerciseImageId(name: string): string | null {
-  const n = normalize(name);
+  // Supersets ("Curl al cavo + push down con corda"): show the first exercise.
+  const n = normalize(name.split(" + ")[0]);
   if (!n) return null;
   const exact = NORMALIZED.find(([k]) => k === n);
   if (exact) return exact[1];
+  const override = OVERRIDE_IDS.find(([k]) => matches(n, k));
+  if (override) return override[1];
   // Longest library name contained in the typed one ("Panca Piana con bilanciere - fermo al petto")
   const contained = NORMALIZED
     .filter(([k]) => k.length >= 8 && n.includes(k))
     .sort((a, b) => b[0].length - a[0].length)[0];
   if (contained) return contained[1];
-  const kw = KEYWORD_IDS.find(([k]) => n.includes(k));
+  const kw = KEYWORD_IDS.find(([k]) => matches(n, k));
   return kw ? kw[1] : null;
 }
 

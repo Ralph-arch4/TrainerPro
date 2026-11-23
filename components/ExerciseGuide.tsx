@@ -30,8 +30,10 @@ export default function ExerciseGuide({ name, height = 140 }: { name: string; he
           // eslint-disable-next-line @next/next/no-img-element
           <img key={src} src={src} alt={i === 0 ? `${name} — posizione iniziale` : `${name} — posizione finale`}
             loading="lazy" decoding="async" onError={() => setBroken(true)}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ objectPosition: "center 30%", opacity: frame === i ? 1 : 0, transition: "opacity 0.5s ease" }} />
+            // contain, not cover: the box is much wider than the photos, so
+            // cover cut off heads/feet and mangled portrait frames.
+            className="absolute inset-0 w-full h-full object-contain"
+            style={{ opacity: frame === i ? 1 : 0, transition: "opacity 0.5s ease" }} />
         ))}
         <span className="absolute bottom-1.5 left-1.5 text-xs font-bold px-1.5 py-0.5 rounded-md"
           style={{ background: "rgba(0,0,0,0.6)", color: "#fff", fontSize: "0.6rem", letterSpacing: "0.05em" }}>

@@ -266,7 +266,7 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
     ? calcSuggestion(parseSetData(lastWeekLog, sets))
     : null;
 
-  const trainerCols = "4.5rem 1fr 1fr";
+  const trainerCols = "4rem 1fr 1fr 1.2fr";
 
   return (
     <div className="rounded-2xl overflow-hidden flex flex-col" style={{ border: cardBorder, background: "var(--surface-card)" }}>
@@ -491,8 +491,9 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
         <>
           <div style={{ display: "grid", gridTemplateColumns: trainerCols, borderBottom: rowBorder, background: "var(--surface-xs)" }}>
             <div className="px-3 py-1.5 text-xs" style={{ color: "transparent", borderRight: rowBorder }}>·</div>
-            <div className="px-3 py-1.5 text-xs font-semibold text-center" style={{ color: "var(--text-dim)", borderRight: rowBorder }}>ripetizioni</div>
-            <div className="px-3 py-1.5 text-xs font-semibold text-center" style={{ color: "var(--text-dim)" }}>carico (kg)</div>
+            <div className="px-2 py-1.5 text-xs font-semibold text-center" style={{ color: "var(--text-dim)", borderRight: rowBorder }}>target</div>
+            <div className="px-2 py-1.5 text-xs font-semibold text-center" style={{ color: "var(--text-dim)", borderRight: rowBorder }}>rip. fatte</div>
+            <div className="px-2 py-1.5 text-xs font-semibold text-center" style={{ color: "var(--text-dim)" }}>carico (kg)</div>
           </div>
           {Array.from({ length: sets }, (_, i) => (
             <div key={i} style={{
@@ -503,6 +504,10 @@ function ExerciseCard({ exercise, log, lastWeekLog, week, mode, onUpsertLog, onS
               <div className="flex items-center px-3 py-2.5 text-xs" style={{ color: "var(--text-dim)", borderRight: rowBorder }}>serie {i + 1}</div>
               <div className="flex items-center justify-center px-2 py-2.5 text-xs font-semibold text-center min-w-0 break-words" style={{ color: "var(--accent-light)", borderRight: rowBorder, overflowWrap: "anywhere" }}>
                 {targetRep(i)}
+              </div>
+              <div className="flex items-center justify-center px-2 py-2.5 text-sm font-bold text-center min-w-0"
+                style={{ color: data[i]?.reps ? "var(--ivory)" : "var(--text-faint)", borderRight: rowBorder }}>
+                {data[i]?.reps || "—"}
               </div>
               <div className="flex flex-wrap items-center justify-center gap-x-2 px-2 py-2.5 text-sm font-bold min-w-0"
                 style={{ color: data[i]?.weight ? "var(--ivory)" : "var(--text-faint)" }}>
@@ -772,12 +777,15 @@ export default function WorkoutLogbook({
 
   useEffect(() => { setSuppDraft(supplements); }, [supplements]);
 
+  // Open on the latest logged week (both modes). Trainer logs arrive async
+  // (fresh fetch on mount), so jump once when they first become available.
+  const jumpedToLatest = useRef(false);
   useEffect(() => {
-    if (mode === "client" && logs.length > 0) {
-      const max = Math.max(...logs.map(l => l.weekNumber));
-      setActiveWeek(isUnlimited ? max : Math.min(max, totalWeeks));
-    }
-  }, [mode, totalWeeks]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (jumpedToLatest.current || logs.length === 0) return;
+    jumpedToLatest.current = true;
+    const max = Math.max(...logs.map(l => l.weekNumber));
+    setActiveWeek(isUnlimited ? max : Math.min(max, totalWeeks));
+  }, [logs.length, totalWeeks]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function getDayLabel(d: number) { return dayLabels[d] || `Giorno ${d}`; }
   function getLog(exerciseId: string, week: number) {
