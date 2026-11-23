@@ -11,7 +11,7 @@ type Filter = "pending" | "premium" | "free" | "all";
 
 const fmt = (d: string | null) => d ? new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
-// Super-user console. Access is decided by the server (SUPERUSER_EMAILS):
+// Super-user console. Access is decided by the server (public.user_roles):
 // this page only renders what /api/admin/premium returns.
 export default function AdminPremiumPage() {
   const [gate, setGate] = useState<Gate>("loading");

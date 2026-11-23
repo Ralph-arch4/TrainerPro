@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminGuard, auditLog, isSameOrigin } from "@/lib/supabase/admin";
 
 // Super-user console: list trainers and approve / reject / revoke Premium.
-// Every call re-checks the session and the SUPERUSER_EMAILS list on the server.
+// Every call re-checks the session and the admin role (public.user_roles) on the server.
 
 const guard = adminGuard;
 

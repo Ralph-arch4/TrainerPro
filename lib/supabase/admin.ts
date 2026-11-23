@@ -12,16 +12,20 @@ export function adminClient() {
   return createSupabaseClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-// Super users approve Premium access. They sign in with their normal
-// credentials; their emails are listed in SUPERUSER_EMAILS (comma separated,
-// server-only variable). With the variable unset nobody is a super user.
+// Admins are listed in the Supabase table public.user_roles (role = 'admin',
+// migration 028), read here with the service role. SUPERUSER_EMAILS (server-only,
+// comma separated) is an optional fallback; with neither set nobody is admin.
 export function superuserEmails(): string[] {
   return (process.env.SUPERUSER_EMAILS ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
 }
 
-export function isSuperuser(user: { email?: string | null; email_confirmed_at?: string | null } | null | undefined): boolean {
-  if (!user?.email || !user.email_confirmed_at) return false;
-  return superuserEmails().includes(user.email.toLowerCase());
+type MinimalUser = { id: string; email?: string | null; email_confirmed_at?: string | null };
+
+export async function isAdmin(admin: NonNullable<ReturnType<typeof adminClient>>, user: MinimalUser | null | undefined): Promise<boolean> {
+  if (!user?.id || !user.email_confirmed_at) return false;
+  const { data, error } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+  if (!error && data) return true;
+  return !!user.email && superuserEmails().includes(user.email.toLowerCase());
 }
 
 export async function sessionUser() {
@@ -38,17 +42,17 @@ export function isSameOrigin(req: NextRequest): boolean {
 
 type AdminDb = NonNullable<ReturnType<typeof adminClient>>;
 
-// Shared guard for every /api/admin route: signed in, listed in
-// SUPERUSER_EMAILS with a confirmed email, and the service role configured.
+// Shared guard for every /api/admin route: signed in with a confirmed email,
+// role 'admin' in public.user_roles, and the service role configured.
 export async function adminGuard(): Promise<
   | { error: Response; user?: undefined; admin?: undefined }
   | { error?: undefined; user: NonNullable<Awaited<ReturnType<typeof sessionUser>>>; admin: AdminDb }
 > {
   const user = await sessionUser();
   if (!user) return { error: NextResponse.json({ error: "unauthorized" }, { status: 401 }) };
-  if (!isSuperuser(user)) return { error: NextResponse.json({ error: "forbidden" }, { status: 403 }) };
   const admin = adminClient();
   if (!admin) return { error: NextResponse.json({ error: "not_configured" }, { status: 503 }) };
+  if (!(await isAdmin(admin, user))) return { error: NextResponse.json({ error: "forbidden" }, { status: 403 }) };
   return { user, admin };
 }
 

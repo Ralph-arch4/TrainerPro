@@ -57,8 +57,11 @@ ogni trainer. Non serve cambiare prodotto, serve configurarlo da produzione:
    cancella e non modifica i dati esistenti: aggiunge lo stato Premium ai
    profili, impedisce al trainer di cambiarsi il piano da solo e limita la
    demo a un cliente.
-2. Su Vercel imposta `SUPERUSER_EMAILS` con l'email del tuo account e fai un
-   redeploy. Accedi all'app con quell'account e apri `/admin/premium`.
+2. Esegui anche la migrazione `028_admin_moderation.sql` (dopo la 027) e dai a te
+   stesso il ruolo admin nell'SQL Editor, con l'email del tuo account:
+   `insert into public.user_roles (user_id, role) select id, 'admin' from auth.users where email = 'TUA-EMAIL' on conflict do nothing;`
+   Accedi all'app con quell'account e apri `/admin`. Nessuna variabile su Vercel
+   da impostare (serve solo `SUPABASE_SERVICE_ROLE_KEY`, gia' usata dall'app).
 3. Approva subito i trainer che stanno gia' lavorando: finche' non li approvi
    restano in demo, vedono tutti i loro dati ma non possono aggiungere clienti.
 4. Quando hai i dati di pagamento, inseriscili nelle variabili elencate in

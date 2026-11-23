@@ -68,8 +68,18 @@ test("migration 028: browser cannot change moderation fields, gate includes acco
   assert.match(sql, /alter table public\.admin_trainer_notes enable row level security/);
 });
 
+test("migration 028: admin role lives in user_roles, no browser writes", () => {
+  const sql = readFileSync(new URL("../supabase/migrations/028_admin_moderation.sql", import.meta.url), "utf8");
+  assert.match(sql, /create table if not exists public\.user_roles/);
+  assert.match(sql, /alter table public\.user_roles enable row level security/);
+  assert.doesNotMatch(sql, /on public\.user_roles for (insert|update|delete|all)/);
+  assert.match(sql, /function public\.is_platform_admin\(\)[\s\S]*user_roles/);
+  const guard = readFileSync(new URL("../lib/supabase/admin.ts", import.meta.url), "utf8");
+  assert.match(guard, /from\("user_roles"\)/);
+});
+
 test("every admin API route goes through the server guard", () => {
-  for (const f of ["trainers/route.ts", "trainers/[id]/route.ts", "audit/route.ts", "leads/route.ts", "premium/route.ts"]) {
+  for (const f of ["me/route.ts", "trainers/route.ts", "trainers/[id]/route.ts", "audit/route.ts", "leads/route.ts", "premium/route.ts"]) {
     const src = readFileSync(new URL(`../app/api/admin/${f}`, import.meta.url), "utf8");
     assert.match(src, /adminGuard/, f);
     if (/export async function POST/.test(src)) assert.match(src, /isSameOrigin/, f);

@@ -1,7 +1,6 @@
 ﻿"use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { dbFeedback, type FeedbackNote } from "@/lib/db";
 import { MessageSquare, Bug, Lightbulb, Zap, Loader2, CheckCircle2, Clock, AlertCircle, Users, Filter } from "lucide-react";
 
@@ -17,7 +16,6 @@ const STATUS_META = {
   fatto:     { label: "Fatto",      color: "#22c55e", bg: "rgba(34,197,94,0.12)",    Icon: CheckCircle2 },
 } as const;
 
-const ADMIN_EMAIL = "raffaele.dinora0409@gmail.com";
 
 export default function AdminFeedbackPage() {
   const router = useRouter();
@@ -30,8 +28,9 @@ export default function AdminFeedbackPage() {
 
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await createClient().auth.getUser();
-      if (!user || user.email !== ADMIN_EMAIL) {
+      // Admin role is checked on the server (public.user_roles).
+      const res = await fetch("/api/admin/me", { cache: "no-store" }).catch(() => null);
+      if (!res?.ok) {
         router.replace("/dashboard");
         return;
       }

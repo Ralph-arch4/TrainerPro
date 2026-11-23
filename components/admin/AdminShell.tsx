@@ -8,7 +8,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 export type Gate = "loading" | "ok" | "login" | "forbidden" | "error";
 
 // Loads an /api/admin endpoint and maps auth failures to a gate state.
-// Access is decided by the server (SUPERUSER_EMAILS): pages only render what it returns.
+// Access is decided by the server (public.user_roles): pages only render what it returns.
 export function useAdminData<T>(url: string) {
   const [gate, setGate] = useState<Gate>("loading");
   const [data, setData] = useState<T | null>(null);

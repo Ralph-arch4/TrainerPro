@@ -9,6 +9,25 @@
 -- * A trainer can never change these fields from the browser; admin notes and
 --   the audit log are readable only by the server.
 
+-- ─── 0. Admin role (replaces the SUPERUSER_EMAILS env var) ──────────────────
+-- Give the admin role from the SQL Editor (see the end of this file).
+create table if not exists public.user_roles (
+  user_id    uuid not null references auth.users(id) on delete cascade,
+  role       text not null check (role in ('admin')),
+  created_at timestamptz not null default now(),
+  primary key (user_id, role)
+);
+alter table public.user_roles enable row level security;
+drop policy if exists "user_roles_select_own" on public.user_roles;
+create policy "user_roles_select_own" on public.user_roles for select using (auth.uid() = user_id);
+-- No insert/update/delete policies: roles change only from the SQL Editor or the service role.
+
+-- Feedback admin (014) now uses the same table instead of a hardcoded email.
+create or replace function public.is_platform_admin()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.user_roles where user_id = auth.uid() and role = 'admin');
+$$;
+
 -- ─── 1. Columns ───────────────────────────────────────────────────────────────
 alter table public.profiles add column if not exists account_status text not null default 'active';
 alter table public.profiles drop constraint if exists profiles_account_status_check;
@@ -82,3 +101,8 @@ create index if not exists admin_audit_log_target_idx on public.admin_audit_log 
 create index if not exists admin_audit_log_created_idx on public.admin_audit_log (created_at desc);
 alter table public.admin_audit_log enable row level security;
 -- No policies: only the service role (the /api/admin routes) can read or write.
+
+-- ─── 5. Make your account admin (run once, with your login email) ────────────
+-- insert into public.user_roles (user_id, role)
+-- select id, 'admin' from auth.users where email = 'la-tua-email@example.com'
+-- on conflict do nothing;
