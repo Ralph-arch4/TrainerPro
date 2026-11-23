@@ -21,6 +21,7 @@ const ENV = { ...process.env, NEXT_PUBLIC_SUPABASE_URL: SUPA, NEXT_PUBLIC_SUPABA
 // ── Fake backend state ────────────────────────────────────────────────────────
 const USER = { id: "u-1", email: "trainer@example.com", aud: "authenticated", role: "authenticated", user_metadata: { full_name: "Mario Trainer", plan: "free" }, app_metadata: {} };
 const TOKEN = "tok".repeat(20);
+function inDays(n) { return new Date(Date.now() + n * 86_400_000).toISOString(); }
 function freshState() {
   const clients = Array.from({ length: 30 }, (_, i) => ({
     id: `c${i + 1}`, user_id: USER.id, name: `Cliente ${String(i + 1).padStart(2, "0")}`, email: `c${i + 1}@example.com`,
@@ -40,8 +41,8 @@ function freshState() {
       ex("e3", "Tricipiti al cavo con corda", 1, 4, 3),
     ],
   };
-  const profile = { id: USER.id, full_name: "Mario Trainer", plan: "free", premium_status: "none" };
-  return { clients, plan, profile, patches: [], logUpserts: [] };
+  const profile = { id: USER.id, full_name: "Mario Trainer", plan: "free", premium_status: "none", trial_ends_at: inDays(10) };
+  return { clients, plan, profile, patches: [], logUpserts: [], suspended: false };
 }
 let state = freshState();
 
@@ -66,6 +67,7 @@ async function mockSupabase(context) {
     if (p === "/rest/v1/rpc/get_portal_data") {
       const { p_token } = req.postDataJSON();
       if (p_token !== TOKEN) return json({ error: "not_found" });
+      if (state.suspended) return json({ error: "suspended" });
       return json({ plan: state.plan, logs: [], diets: [], trainer_name: "Mario Trainer" });
     }
     if (p === "/rest/v1/rpc/upsert_exercise_log") { state.logUpserts.push(req.postDataJSON()); return json({ id: `log-${state.logUpserts.length}` }); }
@@ -185,13 +187,14 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
       assert(errors.length === 0, `errori JS: ${errors.join(" | ")}`);
     });
 
-    await check("avviso pagamento visibile con conto alla rovescia, richiudibile", async () => {
+    await check("ultimi giorni di prova: avviso con conto alla rovescia, richiudibile", async () => {
+      state.profile = { ...state.profile, trial_ends_at: inDays(2) };
       await page.goto(`${BASE}/dashboard/clienti`);
       const notice = page.getByTestId("payment-notice");
       await notice.waitFor({ timeout: 15000 });
       const text = await notice.innerText();
-      assert(/entro 30 giorni/.test(text) && /via email in modo sicuro/.test(text), "testo avviso");
-      assert(/Mancano? \d+ giorn|scadut/i.test(text), "conto alla rovescia");
+      assert(/sospesi/.test(text) && /non vengono cancellati/.test(text), "testo avviso");
+      assert(/Mancano 2 giorni/.test(text), "conto alla rovescia");
       await shot(page, "01-avviso-pagamento-mobile");
       const box = await notice.boundingBox();
       assert(box.height < 844 * 0.5, "l'avviso deve restare piccolo");
@@ -200,6 +203,7 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
       await page.reload();
       await page.locator('a[href="/dashboard/clienti/c30"]').waitFor();
       assert(await page.getByTestId("payment-notice").count() === 0, "non deve riapparire lo stesso giorno");
+      state.profile = { ...state.profile, trial_ends_at: inDays(10) };
     });
 
     await check("elenco clienti: 30 clienti e la pagina scorre fino in fondo", async () => {
@@ -313,21 +317,39 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
     await context.close();
 
     // ── Plans: demo vs Premium ───────────────────────────────────────────────
-    console.log("Piani: demo gratuita e Premium");
+    console.log("Piani: prova gratuita di 14 giorni e Premium");
     ({ context, page } = await newPage(browser, MOBILE, errors, { auth: false }));
-    await check("registrazione: due vie (demo gratuita o Premium)", async () => {
+    await check("homepage: prova di 14 giorni, nessun prezzo, contatto commerciale", async () => {
+      await page.goto(`${BASE}/`);
+      await page.locator("#prova").waitFor({ timeout: 15000 });
+      const text = await page.locator("body").innerText();
+      assert(!/€\s*\d|\d\s*€|\/\s*mese/.test(text), "nessun prezzo in homepage");
+      assert(/14 giorni/.test(text), "prova di 14 giorni");
+      assert(await page.locator('a[href="/contatti"]').count() >= 2, "CTA team commerciale");
+      await shot(page, "09-homepage-mobile");
+    });
+    await check("registrazione: un solo percorso, prova gratuita", async () => {
       await page.goto(`${BASE}/register`);
-      const free = page.getByTestId("plan-free"), premium = page.getByTestId("plan-premium");
-      await free.waitFor();
-      assert(await free.getAttribute("aria-checked") === "true", "la demo deve essere la scelta iniziale");
-      assert(/1 cliente/.test(await free.innerText()) && /illimitati/.test(await premium.innerText()), "descrizione piani");
-      await page.getByRole("button", { name: "Inizia la demo gratuita" }).waitFor();
-      await premium.click();
-      await page.getByRole("button", { name: "Crea account e attiva Premium" }).waitFor();
-      await shot(page, "10-registrazione-piani-mobile");
-      await page.goto(`${BASE}/register?piano=premium`);
-      await page.getByRole("button", { name: "Crea account e attiva Premium" }).waitFor();
+      const box = page.getByTestId("trial-box");
+      await box.waitFor();
+      assert(/14 giorni/.test(await box.innerText()) && /1 cliente/.test(await box.innerText()), "descrizione prova");
+      assert(!/€/.test(await page.locator("body").innerText()), "nessun prezzo nella registrazione");
+      await page.getByRole("button", { name: "Inizia la prova gratuita" }).waitFor();
+      await shot(page, "10-registrazione-prova-mobile");
       assert((await fetch(`${BASE}/termini`)).ok, "/termini");
+    });
+    await check("contatti: il form invia la richiesta al team commerciale", async () => {
+      let lead = null;
+      await page.route("**/api/contact", (route) => { lead = route.request().postDataJSON(); return route.fulfill({ status: 200, contentType: "application/json", body: "{\"ok\":true}" }); });
+      await page.goto(`${BASE}/contatti`);
+      await page.getByLabel("Nome e cognome").fill("Luca Bianchi");
+      await page.getByLabel("Email").fill("luca@example.com");
+      await page.getByRole("button", { name: "6-15" }).click();
+      await page.getByRole("checkbox").check();
+      await page.getByRole("button", { name: "Contatta il team commerciale" }).click();
+      await page.getByTestId("contact-sent").waitFor();
+      assert(lead && lead.email === "luca@example.com" && lead.clients === "6-15" && lead.consent === true, "dati inviati");
+      await shot(page, "10b-contatti-mobile");
     });
     await context.close();
 
@@ -336,6 +358,8 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
       assert((await post("/api/premium/request", {})).status === 401, "richiesta premium senza login");
       assert((await post("/api/premium/request", {}, { origin: "https://evil.example" })).status === 403, "richiesta premium cross-site");
       assert((await fetch(`${BASE}/api/admin/premium`)).status === 401, "elenco admin senza login");
+      assert((await post("/api/contact", { name: "x", email: "x@example.com", consent: true }, { origin: "https://evil.example" })).status === 403, "contatto cross-site");
+      assert((await post("/api/contact", { name: "", email: "no" })).status === 422, "contatto non valido");
       assert((await post("/api/admin/premium", { userId: USER.id, action: "approve" })).status === 401, "approvazione senza login");
     });
 
@@ -345,8 +369,9 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
     await check("demo: con un cliente il secondo e' bloccato e propone Premium", async () => {
       await page.goto(`${BASE}/dashboard/clienti`);
       await page.locator('a[href="/dashboard/clienti/c1"]').waitFor({ timeout: 15000 });
-      assert(/Demo gratuita · 1\/1 cliente/.test(await page.getByTestId("plan-banner").innerText()), "banner demo");
-      assert(await page.getByTestId("payment-notice").count() === 0, "nessun avviso di scadenza entro il limite demo");
+      const banner = await page.getByTestId("plan-banner").innerText();
+      assert(/Prova gratuita/.test(banner) && /10 giorni rimasti/.test(banner) && /1\/1 cliente/.test(banner), `banner prova: ${banner}`);
+      assert(await page.getByTestId("payment-notice").count() === 0, "nessun avviso di scadenza a 10 giorni dalla fine");
       await page.getByRole("button", { name: "Nuovo cliente" }).click();
       const dialog = page.getByTestId("upgrade-dialog");
       await dialog.waitFor();
@@ -356,7 +381,9 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
       await page.waitForURL("**/dashboard/abbonamento");
     });
     await check("abbonamento: richiesta Premium inviata e mostrata in attesa", async () => {
-      assert(await page.getByTestId("current-plan").innerText() === "Demo gratuita", "piano attuale");
+      assert(await page.getByTestId("current-plan").innerText() === "Prova gratuita", "piano attuale");
+      await page.getByTestId("trial-ends").waitFor();
+      assert(!/€/.test(await page.locator("main").innerText()), "nessun prezzo nella pagina abbonamento");
       await page.getByTestId("payment-methods").waitFor();
       await page.route("**/api/premium/request", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "pending" }) }));
       await page.getByRole("button", { name: "Richiedi Premium" }).click();
@@ -381,6 +408,26 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
     await context.close();
     state.clients = allClients;
     state.profile = { ...state.profile, plan: "free", premium_status: "none" };
+
+    state.profile = { ...state.profile, trial_ends_at: inDays(-1) };
+    state.suspended = true;
+    ({ context, page } = await newPage(browser, MOBILE, errors));
+    await check("prova scaduta: pannello sospeso, abbonamento raggiungibile", async () => {
+      await page.goto(`${BASE}/dashboard/clienti`);
+      await page.getByTestId("account-suspended").waitFor({ timeout: 15000 });
+      assert(await page.locator('a[href="/dashboard/clienti/c1"]').count() === 0, "clienti nascosti");
+      await shot(page, "13-account-sospeso-mobile");
+      await page.getByRole("link", { name: "Attiva Premium" }).click();
+      await page.waitForURL("**/dashboard/abbonamento");
+      await page.getByTestId("checkout").waitFor();
+    });
+    await check("prova scaduta: il link del cliente mostra un messaggio chiaro", async () => {
+      await page.goto(`${BASE}/scheda/${TOKEN}`);
+      await page.getByText("non è al momento disponibile").waitFor({ timeout: 15000 });
+    });
+    await context.close();
+    state.suspended = false;
+    state.profile = { ...state.profile, trial_ends_at: inDays(10) };
 
     ({ context, page } = await newPage(browser, DESKTOP, errors));
     await check("super user: elenco richieste e approvazione Premium", async () => {
