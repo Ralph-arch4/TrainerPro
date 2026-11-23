@@ -50,7 +50,7 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 | `lib/exerciseImages.ts` | Exercise name -> guide photos in `public/exercises/<id>/{0,1}.webp` (free-exercise-db, public domain) |
 | `app/api/intake/[token]/route.ts` | Server-side API with service_role key |
 | `lib/progressions.ts` | Pre-planned progressions: `applyProgression(ex, week)`, `normalizeProgressions`, `moveWithinDay`. Stored in `exercise.progressions[]` (JSONB, no migration). Edited via `components/ProgressionEditor.tsx` |
-| `lib/billing.ts` + `components/PaymentNotice.tsx` | Payment reminder pop-up for `plan === "free"`; due date = user metadata `payment_due_at` or `PAYMENT_NOTICE_START` + 30 days |
+| `lib/billing.ts` + `components/TrialGate.tsx` | 14-day trial: `getTrialStatus`, `accountAccess` (ok/trial_expired/suspended/banned). TrialGate blocks the dashboard (except abbonamento/account); PlanBanner + PaymentNotice (last 3 days) show the countdown |
 | `lib/brand.ts`, `app/manifest.ts`, `public/sw.js`, `android/twa-manifest.json` | PWA / Play Store (TWA). Steps in `docs/PLAY_STORE.md` |
 | `app/dashboard/account/page.tsx` + `app/api/account/delete/route.ts` | Account page + self-service account deletion (service_role) |
 
@@ -73,10 +73,11 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 **Store actions** (all on `useAppStore`): setUser, clearUser, setActiveClient, setAllClients, addClient, updateClient, removeClient, addWorkoutPlan, updateWorkoutPlan, removeWorkoutPlan, addExercise, updateExercise, removeExercise, reorderExercises, upsertLog, removeLog, addPhase, updatePhase, removePhase, addDietPlan, updateDietPlan, removeDietPlan, addMeasurement, updateMeasurement, removeMeasurement, addNote, updateNote, removeNote
 
 ### Tiering
-Demo (`plan = "free"`): 1 client | Premium (any other plan value): unlimited, full app.
+Trial (`plan = "free"`): 1 client, full app, 14 days (`profiles.trial_ends_at`), then suspended | Premium (any other plan value): unlimited. NO PRICES anywhere in the UI: "contact sales" -> `/contatti` (form -> `POST /api/contact` -> `sales_leads`)
 - Source of truth: `profiles.plan` + `premium_status` (migration 026). Never read/write the plan from user metadata or from the browser; DB triggers block self-upgrade and the 2nd client on demo (`DEMO_CLIENT_LIMIT`)
-- UI rules: `lib/plan-limits.ts` (`isPremium`, `checkLimit`). Price/payment details: env vars in `lib/billing.ts`
-- Flow: register (two paths, `intended_plan` metadata) -> `/dashboard/abbonamento` -> `POST /api/premium/request` (pending) -> super user approves on `/admin/premium` (`/api/admin/premium`, `SUPERUSER_EMAILS`, service_role via `lib/supabase/admin.ts`)
+- UI rules: `lib/plan-limits.ts` (`isPremium`, `checkLimit`). Payment details: env vars in `lib/billing.ts`; sales channels/company: env vars in `lib/brand.ts`
+- Suspension is server-side in `public.account_is_active(uuid)` (mig. 027, extended by 028 with `account_status`): portal RPCs return `{error:'suspended'}`, intake API 403, new clients `ACCOUNT_SUSPENDED`. Data is never deleted
+- Flow: register (single trial path) -> `/dashboard/abbonamento` -> `POST /api/premium/request` (pending) -> super user approves on `/admin/premium` (`/api/admin/premium`, `SUPERUSER_EMAILS`, service_role via `lib/supabase/admin.ts`)
 - Android app (TWA): no payment links/IBAN in-app (`lib/platform.ts` `isAndroidApp`), Google Play billing policy
 
 ### Palette

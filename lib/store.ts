@@ -16,7 +16,8 @@ export interface User {
   plan: PlanTier;               // from profiles.plan (server-authoritative), never from user metadata
   premiumStatus?: PremiumStatus; // state of the Premium request
   wantsPremium?: boolean;        // chose Premium at sign-up and has not requested it yet
-  paymentDueAt?: string; // ISO date from user metadata `payment_due_at` (see lib/billing.ts)
+  trialEndsAt?: string | null; // end of the free trial, from profiles.trial_ends_at (lib/billing.ts)
+  accountStatus?: string | null; // profiles.account_status: active / suspended / banned (admin switch)
 }
 
 // ─── Workout Exercise (template set by trainer) ───────────────────────────────

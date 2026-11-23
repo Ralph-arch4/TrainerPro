@@ -1,4 +1,5 @@
 ﻿"use client";
+import { APP_NAME } from "@/lib/brand";
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
 import { Calculator, Plus, Trash2, Copy, CheckCircle2, Printer } from "lucide-react";
@@ -101,7 +102,7 @@ export default function PreventiviPage() {
     const text = [
       `PREVENTIVO — ${activeQuote.date}`,
       activeQuote.clientName ? `Cliente: ${activeQuote.clientName}` : "",
-      `Trainer: ${user?.name ?? "REC Studio"}`,
+      `Trainer: ${user?.name ?? APP_NAME}`,
       "",
       "SERVIZI:",
       ...activeQuote.items.map((i) => `• ${i.description} (x${i.qty}) — €${(i.qty * i.price).toFixed(2)}`),

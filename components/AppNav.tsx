@@ -1,4 +1,5 @@
 "use client";
+import { APP_NAME } from "@/lib/brand";
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -107,7 +108,7 @@ export default function AppNav() {
           <div className="w-9 h-9 rounded-xl accent-btn flex items-center justify-center flex-shrink-0">
             <Dumbbell size={18} />
           </div>
-          <span className="font-bold text-lg accent-text">REC Studio</span>
+          <span className="font-bold text-lg accent-text">{APP_NAME}</span>
         </div>
         <ThemeToggle />
       </div>
@@ -169,7 +170,7 @@ export default function AppNav() {
         style={{ height: "calc(env(safe-area-inset-top, 0px) + 3.5rem)", paddingTop: "env(safe-area-inset-top, 0px)" }}>
         <div className="flex items-center gap-2">
           <Dumbbell size={20} style={{ color: "var(--accent)" }} />
-          <span className="font-bold accent-text">REC Studio</span>
+          <span className="font-bold accent-text">{APP_NAME}</span>
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle size={15} />

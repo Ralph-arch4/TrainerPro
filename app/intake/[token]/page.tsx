@@ -1,4 +1,5 @@
 ﻿"use client";
+import { APP_NAME } from "@/lib/brand";
 import { useState, useEffect, use } from "react";
 import type { IntakeResponse } from "@/lib/db";
 import { Dumbbell, ChevronRight, ChevronLeft, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
@@ -264,7 +265,7 @@ function Screen({ children, label }: { children: React.ReactNode; label?: string
         <div className="w-8 h-8 rounded-xl accent-btn flex items-center justify-center flex-shrink-0">
           <Dumbbell size={16} />
         </div>
-        <span className="font-bold accent-text">REC Studio</span>
+        <span className="font-bold accent-text">{APP_NAME}</span>
         {label ? (
           <span className="text-xs ml-2 px-2 py-0.5 rounded-full truncate max-w-[200px]"
             style={{ background: "rgba(255,107,43,0.1)", color: "var(--accent-light)", border: "1px solid rgba(255,107,43,0.2)" }}>

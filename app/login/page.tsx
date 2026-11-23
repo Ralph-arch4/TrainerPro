@@ -1,4 +1,5 @@
 ﻿"use client";
+import { APP_NAME } from "@/lib/brand";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -44,7 +45,7 @@ export default function LoginPage() {
           <div className="w-10 h-10 rounded-xl accent-btn flex items-center justify-center">
             <Dumbbell size={20} />
           </div>
-          <span className="font-bold text-xl accent-text">REC Studio</span>
+          <span className="font-bold text-xl accent-text">{APP_NAME}</span>
         </div>
 
         {/* Center content */}
@@ -97,12 +98,12 @@ export default function LoginPage() {
             <div className="w-14 h-14 rounded-2xl accent-btn flex items-center justify-center mb-3">
               <Dumbbell size={28} />
             </div>
-            <h1 className="text-2xl font-bold accent-text">REC Studio</h1>
+            <h1 className="text-2xl font-bold accent-text">{APP_NAME}</h1>
           </div>
 
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-1" style={{ color: "var(--text)" }}>Bentornato</h2>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>Accedi al tuo account REC Studio</p>
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>Accedi al tuo account {APP_NAME}</p>
           </div>
 
           <div className="glass-dark rounded-2xl p-8">

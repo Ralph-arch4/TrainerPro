@@ -35,6 +35,10 @@ export default function ClientPortal({ token }: { token: string | undefined }) {
       if (!token) { setError("Link non valido."); setLoading(false); return; }
       try {
         const { data, error: rpcErr } = await createClient().rpc("get_portal_data", { p_token: token });
+        if (data?.error === "suspended") {
+          setError("Questo link non è al momento disponibile. Contatta il tuo personal trainer.");
+          return;
+        }
         if (rpcErr || !data || data.error === "not_found") {
           setError("Scheda non trovata o link non più valido.");
           return;

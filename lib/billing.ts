@@ -1,18 +1,20 @@
-// Payment reminder shown to trainers without a paid subscription.
-// Pure module (no React / store) so it can be unit-tested.
+// Free trial and payment details. Pure module (no React / store) so it can be
+// unit-tested.
+//
+// Every new account starts a TRIAL_DAYS free trial with the full app and one
+// client. When it ends without Premium the account is suspended: the trainer
+// panel is blocked and client links stop working (migration 027 enforces the
+// links on the server). No prices are shown anywhere: trainers talk to sales.
 
-import { FREE_CLIENT_LIMIT } from "./plan-limits.ts";
+import { isPremium } from "./plan-limits.ts";
 
-export const PAYMENT_GRACE_DAYS = 30;
+export const TRIAL_DAYS = 14;
 
-// ── Premium offer and payment details ────────────────────────────────────────
-// Everything here is configuration: set the variables on Vercel when the real
-// payment data is ready, no code change needed.
-//   NEXT_PUBLIC_PREMIUM_PRICE     e.g. "29"            (EUR per month, shown to trainers)
+// ── Payment details (shown only to trainers in the subscription page) ───────
+// Configuration only: set the variables on Vercel, no code change needed.
 //   NEXT_PUBLIC_PAYMENT_LINK      e.g. a Stripe / PayPal payment link
 //   NEXT_PUBLIC_PAYMENT_IBAN      bank transfer details (IBAN)
 //   NEXT_PUBLIC_PAYMENT_HOLDER    bank account holder
-export const PREMIUM_PRICE = process.env.NEXT_PUBLIC_PREMIUM_PRICE || "29";
 export const PAYMENT_LINK = process.env.NEXT_PUBLIC_PAYMENT_LINK || "";
 export const PAYMENT_IBAN = process.env.NEXT_PUBLIC_PAYMENT_IBAN || "";
 export const PAYMENT_HOLDER = process.env.NEXT_PUBLIC_PAYMENT_HOLDER || "";
@@ -24,25 +26,19 @@ export const PREMIUM_FEATURES = [
   "Indicazioni alimentari, fasi e misurazioni",
   "Form di intake, preventivi ed export PDF",
 ];
-export const DEMO_FEATURES = [
-  "1 cliente",
-  "Tutte le funzioni per provarle davvero",
+export const TRIAL_FEATURES = [
+  `${TRIAL_DAYS} giorni gratuiti`,
+  "Tutte le funzioni, con 1 cliente",
   "Nessuna carta richiesta",
 ];
 
-// Day the reminder went live: trainers without a personal due date have
-// PAYMENT_GRACE_DAYS from here. Override per account with the Supabase user
-// metadata key `payment_due_at` (ISO date), or globally with
-// NEXT_PUBLIC_PAYMENT_NOTICE_START.
-export const PAYMENT_NOTICE_START = process.env.NEXT_PUBLIC_PAYMENT_NOTICE_START || "2026-11-13";
-
 const DAY_MS = 86_400_000;
 
-export interface PaymentStatus {
-  show: boolean;        // false for paid plans
-  dueDate: Date;
-  daysLeft: number;     // 0 when the deadline has passed
-  expired: boolean;
+export interface TrialStatus {
+  onTrial: boolean;     // demo account (plan "free") with a trial end date
+  endsAt: Date | null;  // null when unknown (profile not loaded / migration 027 missing)
+  daysLeft: number;     // whole days left, 0 once expired
+  suspended: boolean;   // trial over without Premium
 }
 
 function parseDate(value: string | undefined | null): Date | null {
@@ -51,22 +47,36 @@ function parseDate(value: string | undefined | null): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-// The reminder is only for accounts that are over the demo limit (trainers who
-// joined before plans existed): they have PAYMENT_GRACE_DAYS to upgrade.
-export function getPaymentStatus(
-  user: { plan: string; paymentDueAt?: string | null } | null | undefined,
+export function getTrialStatus(
+  user: { plan: string; trialEndsAt?: string | null } | null | undefined,
   now: Date = new Date(),
-  noticeStart: string = PAYMENT_NOTICE_START,
-  clientCount: number = Infinity,
-): PaymentStatus | null {
+): TrialStatus | null {
   if (!user) return null;
-  const start = parseDate(noticeStart) ?? now;
-  const dueDate = parseDate(user.paymentDueAt) ?? new Date(start.getTime() + PAYMENT_GRACE_DAYS * DAY_MS);
-  const msLeft = dueDate.getTime() - now.getTime();
-  const daysLeft = Math.max(0, Math.ceil(msLeft / DAY_MS));
-  return { show: user.plan === "free" && clientCount > FREE_CLIENT_LIMIT, dueDate, daysLeft, expired: msLeft <= 0 };
+  if (isPremium(user.plan)) return { onTrial: false, endsAt: null, daysLeft: 0, suspended: false };
+  const endsAt = parseDate(user.trialEndsAt);
+  // No end date = account that existed before the trial (migration 027 leaves
+  // them alone) or profile not loaded: no trial, never locked out.
+  if (!endsAt) return { onTrial: false, endsAt: null, daysLeft: 0, suspended: false };
+  const msLeft = endsAt.getTime() - now.getTime();
+  return { onTrial: true, endsAt, daysLeft: Math.max(0, Math.ceil(msLeft / DAY_MS)), suspended: msLeft <= 0 };
 }
 
 export function formatDueDate(d: Date): string {
   return d.toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" });
+}
+
+// ── Overall access ──────────────────────────────────────────────────────────
+// "suspended" / "banned" are manual admin switches (profiles.account_status,
+// migration 028); "trial_expired" comes from the trial. The server applies the
+// same rule in public.account_is_active (migrations 027/028).
+export type AccountAccess = "ok" | "trial_expired" | "suspended" | "banned";
+
+export function accountAccess(
+  user: { plan: string; trialEndsAt?: string | null; accountStatus?: string | null } | null | undefined,
+  now: Date = new Date(),
+): AccountAccess {
+  if (!user) return "ok";
+  if (user.accountStatus === "banned") return "banned";
+  if (user.accountStatus === "suspended") return "suspended";
+  return getTrialStatus(user, now)?.suspended ? "trial_expired" : "ok";
 }

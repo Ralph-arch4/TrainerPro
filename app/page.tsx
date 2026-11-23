@@ -1,14 +1,14 @@
 "use client";
 import Link from "next/link";
-import { APP_NAME } from "@/lib/brand";
-import { PREMIUM_PRICE } from "@/lib/billing";
+import { APP_NAME, APP_INITIAL, COMPANY_NAME, CONTACT_SALES_PATH, SALES_EMAIL, SALES_WHATSAPP } from "@/lib/brand";
+import { TRIAL_DAYS } from "@/lib/billing";
 import HamburgerNav from "@/components/HamburgerNav";
 import TiltCard from "@/components/TiltCard";
 import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
   Users, Activity, UtensilsCrossed, TrendingUp,
-  FileDown, Calculator, CheckCircle, ArrowRight,
+  FileDown, Calculator, CheckCircle, ArrowRight, MessageCircle, Mail,
 } from "lucide-react";
 
 const EASE: [number,number,number,number] = [0.16, 1, 0.3, 1];
@@ -22,7 +22,7 @@ const features = [
   { icon: FileDown,        title: "Export PDF",       desc: "Condividi schede e piani con i tuoi clienti in PDF." },
 ];
 
-const MARQUEE_TEXT = "REC STUDIO · GESTIONE CLIENTI · SCHEDE DI ALLENAMENTO · NUTRIZIONE · PROGRESSI · EXPORT PDF · ";
+const MARQUEE_TEXT = `${APP_NAME.toUpperCase()} · GESTIONE CLIENTI · SCHEDE DI ALLENAMENTO · NUTRIZIONE · PROGRESSI · EXPORT PDF · `;
 
 function SectionNum({ n }: { n: string }) {
   return (
@@ -211,7 +211,8 @@ function Hero() {
               className="mt-4 text-base leading-relaxed"
               style={{ color: "rgba(245,240,232,0.6)" }}
             >
-              L&apos;unico CRM pensato per chi trasforma i corpi. Schede, alimentazione e progressi — tutto in un click.
+              Il gestionale per personal trainer: clienti, schede, alimentazione e progressi in un unico posto.
+              Provalo gratis per {TRIAL_DAYS} giorni, con tutte le funzioni.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 16 }}
@@ -220,11 +221,14 @@ function Hero() {
               className="mt-7 flex flex-col gap-3"
             >
               <Link href="/register" className="accent-btn inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl text-base font-bold">
-                Inizia gratis <ArrowRight size={16} />
+                Prova gratis {TRIAL_DAYS} giorni <ArrowRight size={16} />
               </Link>
-              <Link href="/login" className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl text-base font-medium"
+              <Link href={CONTACT_SALES_PATH} className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-xl text-base font-medium"
                 style={{ border: "1px solid rgba(201,168,76,0.25)", color: "rgba(245,240,232,0.8)", background: "rgba(201,168,76,0.05)" }}>
-                Accedi al tuo account
+                Parla con il team commerciale
+              </Link>
+              <Link href="/login" className="text-center text-sm py-1" style={{ color: "rgba(245,240,232,0.55)" }}>
+                Hai già un account? Accedi
               </Link>
             </motion.div>
           </div>
@@ -330,12 +334,17 @@ function Hero() {
           className="flex flex-col sm:flex-row sm:items-end justify-between gap-8 mt-10"
         >
           <p className="text-sm max-w-xs leading-relaxed" style={{ color: "rgba(245,240,232,0.55)" }}>
-            L&apos;unico CRM pensato per chi trasforma i corpi.<br />
-            Schede, alimentazione e progressi — tutto in un click.
+            Il gestionale per personal trainer: clienti, schede,<br />
+            alimentazione e progressi in un unico posto.<br />
+            <span style={{ color: "rgba(245,240,232,0.8)" }}>{TRIAL_DAYS} giorni gratis, tutte le funzioni.</span>
           </p>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <Link href="/register" className="accent-btn inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold tracking-wide">
-              Inizia gratis <ArrowRight size={14} />
+              Prova gratis {TRIAL_DAYS} giorni <ArrowRight size={14} />
+            </Link>
+            <Link href={CONTACT_SALES_PATH} className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-medium"
+              style={{ border: "1px solid rgba(201,168,76,0.3)", color: "rgba(245,240,232,0.85)", background: "rgba(201,168,76,0.06)" }}>
+              Parla con noi
             </Link>
             <Link href="/login" className="text-sm font-medium transition-colors"
               style={{ color: "rgba(245,240,232,0.5)" }}
@@ -432,6 +441,21 @@ function Label({ num, text }: { num: string; text: string }) {
   );
 }
 
+const TRIAL_INCLUDES = [
+  "Scheda di allenamento con progressioni e superserie",
+  "Portale del cliente con link condiviso",
+  "Indicazioni alimentari, fasi e misurazioni",
+  "Form di intake, preventivi ed export PDF",
+];
+
+const FAQ = [
+  { q: "Come funziona la prova gratuita?", a: `Ti registri con email e password, senza carta di credito. Per ${TRIAL_DAYS} giorni hai tutte le funzionalità, con un cliente: puoi creare la sua scheda, condividergli il link e seguire i suoi progressi.` },
+  { q: `Cosa succede alla fine dei ${TRIAL_DAYS} giorni?`, a: "Se vuoi continuare, il team commerciale attiva Premium e lavori con tutti i tuoi clienti. Altrimenti l'account viene sospeso, insieme ai link condivisi con il cliente. Non cancelliamo nulla: i dati tornano disponibili appena attivi Premium." },
+  { q: "Quanto costa?", a: "Dipende da quanti clienti segui e da come lavori. Non abbiamo un listino unico: scrivi al team commerciale e ti facciamo una proposta su misura." },
+  { q: "I miei clienti devono installare qualcosa?", a: "No. Ricevono un link personale e aprono la scheda dal telefono, senza registrarsi. Lì segnano carichi, ripetizioni e feedback." },
+  { q: "I miei dati sono al sicuro?", a: "I dati sono archiviati in Europa, con connessioni cifrate, e ogni trainer vede solo i propri clienti." },
+];
+
 export default function LandingPage() {
   return (
     <div style={{ background: "#050505", color: "var(--text)" }}>
@@ -455,15 +479,15 @@ export default function LandingPage() {
               In <span className="accent-text">3 passi</span><br />sei operativo.
             </h2>
             <p className="text-base leading-relaxed max-w-sm" style={{ color: "var(--text-muted)" }}>
-              Setup immediato, zero configurazione. Il tuo studio digitale è pronto in meno di 2 minuti.
+              Niente da installare, niente da configurare. Ti registri e in due minuti lavori con il tuo primo cliente.
             </p>
           </RevealDiv>
 
           <div className="space-y-0">
             {[
-              { step: "01", title: "Aggiungi i clienti",  desc: "Crea il profilo con obiettivi, livello e dati personali. Tutto organizzato in un posto." },
-              { step: "02", title: "Costruisci le schede", desc: "Schede divise per giorni, esercizi con serie e ripetizioni target. Condividi in un click." },
-              { step: "03", title: "Traccia i progressi", desc: "Il cliente compila i progressi settimana dopo settimana — senza registrarsi." },
+              { step: "01", title: "Attiva la prova gratuita", desc: `Email e password, nessuna carta di credito. Hai ${TRIAL_DAYS} giorni con tutte le funzioni.` },
+              { step: "02", title: "Crea la scheda del cliente", desc: "Giorni, esercizi con foto guida, serie, ripetizioni e progressioni settimana per settimana." },
+              { step: "03", title: "Condividi il link", desc: "Il cliente apre la scheda dal telefono e registra i suoi progressi, senza registrarsi. Tu li vedi in tempo reale." },
             ].map(({ step, title, desc }, i) => (
               <RevealDiv key={step} delay={i * 0.1}>
                 <div
@@ -526,7 +550,6 @@ export default function LandingPage() {
       {/* ── 03: Statement section (full-bleed dark) ── */}
       <section className="relative py-32 lg:py-48 px-6 lg:px-14 overflow-hidden"
         style={{ background: "#030303", borderBottom: "1px solid rgba(201,168,76,0.06)" }}>
-        {/* Gold glow blob */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden style={{
           background: "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(201,168,76,0.05) 0%, transparent 70%)",
         }} />
@@ -541,18 +564,18 @@ export default function LandingPage() {
               className="font-black tracking-tight leading-tight"
               style={{ fontSize: "clamp(2.5rem, 7vw, 6rem)", letterSpacing: "-0.03em" }}
             >
-              "Il trainer che usa la tecnologia<br />
+              &ldquo;Il trainer che usa la tecnologia<br />
               <span className="accent-text">non viene mai superato</span><br />
-              da chi non la usa."
+              da chi non la usa.&rdquo;
             </h2>
           </RevealDiv>
 
           <RevealDiv delay={0.2} className="mt-16">
             <div className="flex items-center justify-center gap-12 flex-wrap">
               {[
-                { value: "2 min", label: "Setup iniziale" },
-                { value: "∞",    label: "Clienti gestibili" },
-                { value: "€0",   label: "Per provare la demo" },
+                { value: "2 min",            label: "Per iniziare" },
+                { value: `${TRIAL_DAYS} gg`, label: "Di prova gratuita" },
+                { value: "0",                label: "App da installare per i clienti" },
               ].map(({ value, label }) => (
                 <div key={label} className="text-center">
                   <div className="font-black mb-1" style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", color: "var(--accent)" }}>{value}</div>
@@ -564,9 +587,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── 04: Pricing ── */}
-      <EditorialSection id="pricing" num="04">
-        <Label num="04 —" text="Pricing" />
+      {/* ── 04: Free trial ── */}
+      <EditorialSection id="prova" num="04">
+        <Label num="04 —" text="Prova gratuita" />
 
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <RevealDiv>
@@ -574,11 +597,12 @@ export default function LandingPage() {
               className="font-black tracking-tight leading-none mb-6"
               style={{ fontSize: "clamp(3rem, 6vw, 5rem)", letterSpacing: "-0.04em" }}
             >
-              Provalo gratis.<br />
-              <span className="accent-text">Poi Premium.</span>
+              {TRIAL_DAYS} giorni.<br />
+              <span className="accent-text">Tutto incluso.</span>
             </h2>
-            <p className="text-base leading-relaxed" style={{ color: "var(--text-muted)", maxWidth: "26rem" }}>
-              La demo gratuita ti fa lavorare con un cliente, senza carta di credito. Con Premium gestisci tutti i tuoi clienti con ogni funzionalità.
+            <p className="text-base leading-relaxed" style={{ color: "var(--text-muted)", maxWidth: "28rem" }}>
+              Provalo sul campo con un tuo cliente vero: ogni funzione è sbloccata, senza carta di credito.
+              Alla fine dei {TRIAL_DAYS} giorni decidi tu se continuare: i tuoi dati restano dove sono.
             </p>
           </RevealDiv>
 
@@ -591,22 +615,12 @@ export default function LandingPage() {
                 border: "1px solid rgba(201,168,76,0.16)",
               }}
             >
-              <div className="flex items-baseline gap-2 mb-8">
-                <span className="font-black" style={{ fontSize: "clamp(3rem,8vw,5rem)", color: "var(--ivory)" }}>€{PREMIUM_PRICE}</span>
-                <span style={{ color: "var(--text-dim)" }}>/ mese · Premium</span>
-              </div>
+              <p className="text-xs font-mono tracking-[0.2em] uppercase mb-3" style={{ color: "var(--accent)" }}>La prova comprende</p>
+              <p className="font-black mb-8 leading-tight" style={{ fontSize: "clamp(1.75rem,4vw,2.5rem)", color: "var(--ivory)" }}>
+                1 cliente · {TRIAL_DAYS} giorni · ogni funzione
+              </p>
               <ul className="space-y-3 mb-8">
-                {[
-                  "Clienti illimitati",
-                  "Schede di allenamento personalizzate",
-                  "Indicazioni alimentari generali",
-                  "Fasi: Bulk, Cut, Mantenimento",
-                  "Misurazioni corporee",
-                  "Form di intake per i clienti",
-                  "Preventivi professionali",
-                  "Export PDF completo",
-                  "Link condiviso per ogni cliente",
-                ].map((f, i) => (
+                {TRIAL_INCLUDES.map((f, i) => (
                   <motion.li
                     key={f}
                     initial={{ opacity: 0, x: -16, rotateX: 12 }}
@@ -621,21 +635,65 @@ export default function LandingPage() {
                   </motion.li>
                 ))}
               </ul>
-              <Link href="/register?piano=premium"
+              <Link href="/register"
                 className="accent-btn w-full py-4 rounded-xl text-sm text-center font-bold block tracking-wide">
-                Attiva Premium →
+                Inizia la prova gratuita →
               </Link>
-              <Link href="/register" className="block text-center text-sm mt-4 underline" style={{ color: "var(--text-muted)" }}>
-                Oppure inizia con la demo gratuita (1 cliente)
+              <Link href={CONTACT_SALES_PATH} className="block text-center text-sm mt-4 underline" style={{ color: "var(--text-muted)" }}>
+                Segui già molti clienti? Parla con il team commerciale
               </Link>
             </TiltCard>
           </RevealDiv>
         </div>
       </EditorialSection>
 
-      {/* ── 05: FAQ ── */}
-      <EditorialSection id="faq" num="05">
-        <Label num="05 —" text="FAQ" />
+      {/* ── 05: Contact sales ── */}
+      <EditorialSection id="contatti" num="05">
+        <Label num="05 —" text="Team commerciale" />
+
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <RevealDiv>
+            <h2
+              className="font-black tracking-tight leading-none mb-6"
+              style={{ fontSize: "clamp(3rem, 6vw, 5rem)", letterSpacing: "-0.04em" }}
+            >
+              Nessun listino.<br />
+              <span className="accent-text">Una proposta su misura.</span>
+            </h2>
+            <p className="text-base leading-relaxed" style={{ color: "var(--text-muted)", maxWidth: "28rem" }}>
+              Ogni studio è diverso: quanti clienti segui, se lavori da solo o con altri coach, come vuoi presentarti.
+              Raccontacelo e ti ricontattiamo con la soluzione giusta per te.
+            </p>
+          </RevealDiv>
+
+          <RevealDiv delay={0.15}>
+            <div className="flex flex-col gap-3">
+              <Link href={CONTACT_SALES_PATH}
+                className="accent-btn inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-sm font-bold tracking-wide">
+                <MessageCircle size={16} /> Contatta il team commerciale
+              </Link>
+              {SALES_WHATSAPP && (
+                <a href={`https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(`Ciao! Vorrei informazioni su ${APP_NAME}.`)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="outline-btn inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-sm">
+                  <MessageCircle size={16} /> Scrivici su WhatsApp
+                </a>
+              )}
+              {SALES_EMAIL && (
+                <a href={`mailto:${SALES_EMAIL}?subject=${encodeURIComponent(`Informazioni su ${APP_NAME}`)}`}
+                  className="outline-btn inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-sm break-all">
+                  <Mail size={16} /> {SALES_EMAIL}
+                </a>
+              )}
+              <p className="text-xs text-center mt-1" style={{ color: "var(--text-dim)" }}>Rispondiamo entro un giorno lavorativo.</p>
+            </div>
+          </RevealDiv>
+        </div>
+      </EditorialSection>
+
+      {/* ── 06: FAQ ── */}
+      <EditorialSection id="faq" num="06">
+        <Label num="06 —" text="FAQ" />
 
         <div className="grid lg:grid-cols-2 gap-16 items-start">
           <RevealDiv>
@@ -648,12 +706,7 @@ export default function LandingPage() {
             </h2>
           </RevealDiv>
           <div>
-            {[
-              { q: "Posso provarlo gratis?",             a: "Sì. La demo gratuita include tutte le funzionalità con un cliente e non richiede carta di credito." },
-              { q: "Posso esportare i piani in PDF?",    a: "Sì, schede di allenamento e indicazioni alimentari si esportano in PDF per essere condivise." },
-              { q: "I miei dati sono al sicuro?",        a: "I dati sono archiviati su Supabase con crittografia e accesso protetto da Row Level Security." },
-              { q: "Quanti clienti posso gestire?",      a: "Uno con la demo gratuita, illimitati con Premium. Passando a Premium non perdi nessun dato." },
-            ].map(({ q, a }, i) => (
+            {FAQ.map(({ q, a }, i) => (
               <RevealDiv key={q} delay={i * 0.08}>
                 <div className="py-7 border-b group" style={{ borderColor: "rgba(201,168,76,0.07)" }}>
                   <h3 className="font-semibold mb-2 text-sm transition-colors duration-300 group-hover:text-[var(--accent-light)]"
@@ -668,7 +721,6 @@ export default function LandingPage() {
 
       {/* ── Final CTA (full-bleed photo echo) ── */}
       <section className="relative py-40 lg:py-56 px-6 lg:px-14 text-center overflow-hidden">
-        {/* Echo of hero image — bottom portion */}
         <div className="absolute inset-0" aria-hidden style={{
           backgroundImage: "url(/hero-still.jpg)",
           backgroundSize: "cover",
@@ -684,7 +736,7 @@ export default function LandingPage() {
 
         <RevealDiv className="relative z-10 max-w-3xl mx-auto">
           <p className="text-xs font-mono tracking-[0.3em] uppercase mb-6" style={{ color: "var(--accent)" }}>
-            Inizia oggi · Gratis
+            Inizia oggi · {TRIAL_DAYS} giorni gratis
           </p>
           <h2
             className="font-black tracking-tight leading-none mb-8"
@@ -694,15 +746,21 @@ export default function LandingPage() {
             <span className="accent-text">dominare?</span>
           </h2>
           <p className="text-base mb-12 max-w-md mx-auto leading-relaxed" style={{ color: "rgba(245,240,232,0.5)" }}>
-            Unisciti ai personal trainer che usano REC Studio per gestire il loro business in modo professionale.
+            Porta il tuo lavoro di personal trainer su {APP_NAME}: prova tutto gratis, poi scegli con noi come continuare.
           </p>
-          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}>
-            <Link href="/register"
-              className="accent-btn inline-flex items-center gap-3 px-10 py-5 rounded-xl text-base font-bold tracking-wide">
-              Crea il tuo account gratuito <ArrowRight size={16} />
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}>
+              <Link href="/register"
+                className="accent-btn inline-flex items-center gap-3 px-10 py-5 rounded-xl text-base font-bold tracking-wide">
+                Inizia la prova gratuita <ArrowRight size={16} />
+              </Link>
+            </motion.div>
+            <Link href={CONTACT_SALES_PATH} className="inline-flex items-center gap-2 px-8 py-5 rounded-xl text-base font-medium"
+              style={{ border: "1px solid rgba(201,168,76,0.3)", color: "rgba(245,240,232,0.85)", background: "rgba(201,168,76,0.06)" }}>
+              Parla con il team commerciale
             </Link>
-          </motion.div>
+          </div>
         </RevealDiv>
       </section>
 
@@ -710,15 +768,17 @@ export default function LandingPage() {
       <footer className="px-6 lg:px-14 py-10 flex flex-col sm:flex-row items-center justify-between gap-4"
         style={{ borderTop: "1px solid rgba(201,168,76,0.07)" }}>
         <div className="flex items-center gap-3">
-          <div className="w-6 h-6 rounded-md accent-btn flex items-center justify-center text-xs font-black">R</div>
-          <span className="font-black text-xs tracking-[0.18em] uppercase accent-text">REC STUDIO</span>
+          <div className="w-6 h-6 rounded-md accent-btn flex items-center justify-center text-xs font-black">{APP_INITIAL}</div>
+          <span className="font-black text-xs tracking-[0.18em] uppercase accent-text">{APP_NAME}</span>
         </div>
-        <p className="text-xs font-mono" style={{ color: "var(--text-faint)" }}>
-          © {new Date().getFullYear()} REC GROUP · Tutti i diritti riservati
+        <p className="text-xs font-mono text-center" style={{ color: "var(--text-faint)" }}>
+          © {new Date().getFullYear()} {COMPANY_NAME} · Tutti i diritti riservati
         </p>
-        <div className="flex items-center gap-6 text-xs font-mono" style={{ color: "var(--text-dim)" }}>
+        <div className="flex items-center gap-x-6 gap-y-2 flex-wrap justify-center text-xs font-mono" style={{ color: "var(--text-dim)" }}>
+          <Link href={CONTACT_SALES_PATH} className="hover:text-[var(--accent)] transition-colors">Contatti</Link>
+          <Link href="/privacy"  className="hover:text-[var(--accent)] transition-colors">Privacy</Link>
+          <Link href="/termini"  className="hover:text-[var(--accent)] transition-colors">Termini</Link>
           <Link href="/login"    className="hover:text-[var(--accent)] transition-colors">Accedi</Link>
-          <Link href="/register" className="hover:text-[var(--accent)] transition-colors">Registrati</Link>
         </div>
       </footer>
     </div>
