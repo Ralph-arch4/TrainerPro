@@ -80,6 +80,12 @@ async function mockSupabase(context) {
       if (table === "workout_plans") return json([state.plan]);
       return json([]);
     }
+    if (table === "clients" && req.method() === "DELETE") {
+      const id = (url.searchParams.get("id") || "").replace(/^eq\./, "");
+      state.deletedClients = [...(state.deletedClients || []), id];
+      state.clients = state.clients.filter((c) => c.id !== id);
+      return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } });
+    }
     if (table === "workout_plans" && req.method() === "PATCH") {
       const patch = req.postDataJSON();
       state.patches.push(patch);
@@ -365,6 +371,31 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
       await page.goto(`${BASE}/dashboard`);
     });
     await context.close();
+
+    ({ context, page } = await newPage(browser, MOBILE, errors));
+    await check("demo: eliminare il cliente chiede conferma e libera lo slot", async () => {
+      await page.goto(`${BASE}/dashboard/clienti/c1`);
+      await page.getByRole("button", { name: "Elimina cliente" }).first().click();
+      const dialog = page.getByRole("dialog");
+      await dialog.waitFor();
+      assert(/1\s*schede di allenamento/.test(await dialog.innerText()), "riepilogo dati collegati");
+      const confirmBtn = dialog.getByRole("button", { name: "Elimina cliente" });
+      assert(await confirmBtn.isDisabled(), "bottone attivo senza conferma");
+      await dialog.getByRole("textbox").fill("Cliente 0");
+      assert(await confirmBtn.isDisabled(), "bottone attivo con nome sbagliato");
+      await dialog.getByRole("textbox").fill("cliente 01");
+      await page.waitForTimeout(400); // let the fade-in finish
+      await shot(page, "13-elimina-cliente-mobile");
+      await confirmBtn.click();
+      await page.waitForURL("**/dashboard/clienti");
+      assert((state.deletedClients || []).includes("c1"), "DELETE non inviato al database");
+      assert(await page.locator('a[href="/dashboard/clienti/c1"]').count() === 0, "cliente ancora in elenco");
+      await page.getByRole("button", { name: "Nuovo cliente" }).click();
+      await page.getByPlaceholder(/Mario Rossi|Nome/).first().waitFor();
+      assert(await page.getByTestId("upgrade-dialog").count() === 0, "slot demo non liberato");
+    });
+    await context.close();
+    state.clients = allClients.slice(0, 1);
 
     state.profile = { ...state.profile, plan: "premium", premium_status: "approved" };
     ({ context, page } = await newPage(browser, MOBILE, errors));
