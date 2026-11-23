@@ -6,6 +6,7 @@ import type { DietPlan } from "@/lib/store";
 import { dbClients, dbPhases, dbWorkoutPlans, dbDietPlans, dbNotes, dbMeasurements } from "@/lib/db";
 import { showToast } from "@/components/Toast";
 import DietPlanEditor, { DIET_DISCLAIMER } from "@/components/DietPlanEditor";
+import DeleteClientDialog from "@/components/DeleteClientDialog";
 import ClientFeedbackPanel, { collectClientFeedback } from "@/components/ClientFeedbackPanel";
 import Link from "next/link";
 import {
@@ -40,7 +41,7 @@ function daysTogether(startDate?: string): number {
   return Math.max(0, Math.floor((Date.now() - new Date(startDate).getTime()) / 86400000));
 }
 
-function AthleteCredsCard({ client, onEdit }: { client: { id: string; name: string; status: string; goal?: string; level?: string; monthlyFee?: number; startDate?: string }; onEdit: () => void }) {
+function AthleteCredsCard({ client, onEdit, onDelete }: { client: { id: string; name: string; status: string; goal?: string; level?: string; monthlyFee?: number; startDate?: string }; onEdit: () => void; onDelete: () => void }) {
   const hue = clientHue(client.name);
   const initials = client.name.split(" ").filter(Boolean).slice(0, 2).map((w: string) => w[0].toUpperCase()).join("").slice(0, 2);
   const num = athleteNumber(client.id);
@@ -98,11 +99,18 @@ function AthleteCredsCard({ client, onEdit }: { client: { id: string; name: stri
               <span className="font-bold" style={{ color: "var(--accent-light)" }}>{days}</span> giorni insieme
             </p>
           )}
+          <div className="flex items-center gap-1.5">
           <button onClick={onEdit} title="Modifica cliente"
             className="p-2 rounded-xl transition-all hover:opacity-80"
             style={{ background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
             <Pencil size={13} style={{ color: "var(--text-muted)" }} />
           </button>
+          <button onClick={onDelete} title="Elimina cliente" aria-label="Elimina cliente"
+            className="p-2 rounded-xl transition-all hover:bg-red-500/15"
+            style={{ background: "var(--surface-sm)", border: "1px solid var(--border)" }}>
+            <Trash2 size={13} style={{ color: "rgba(239,68,68,0.75)" }} />
+          </button>
+          </div>
         </div>
       </div>
       <div className="h-px" style={{ background: `linear-gradient(90deg, transparent, hsla(${hue},45%,55%,0.28), rgba(201,168,76,0.42), hsla(${hue},45%,55%,0.28), transparent)` }} />
@@ -289,6 +297,7 @@ function ClientDetail() {
   const addMeasurement = useAppStore((s) => s.addMeasurement);
   const removeMeasurement = useAppStore((s) => s.removeMeasurement);
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [tab, setTab] = useState<Tab>((searchParams.get("tab") as Tab) || "overview");
   const [saving, setSaving] = useState(false);
 
@@ -1039,7 +1048,7 @@ function ClientDetail() {
         level: client.level ?? "",
         status: client.status,
         monthlyFee: client.monthlyFee != null ? String(client.monthlyFee) : "",
-      })} />
+      })} onDelete={() => setConfirmDelete(true)} />
 
       {/* Save error banner */}
       {saveError && (
@@ -2491,6 +2500,15 @@ function ClientDetail() {
             </div>
           </div>
         </div>
+      )}
+
+      {confirmDelete && (
+        <DeleteClientDialog client={client}
+          onClose={() => setConfirmDelete(false)}
+          onDeleted={() => {
+            showToast(`${client.name} eliminato`, "success");
+            router.replace("/dashboard/clienti");
+          }} />
       )}
 
       {/* Edit client modal */}

@@ -7,6 +7,8 @@ import { checkLimit, isDemoLimitError, DEMO_LIMIT_MESSAGE } from "@/lib/plan-lim
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppStore } from "@/lib/store";
 import { dbClients } from "@/lib/db";
+import DeleteClientDialog from "@/components/DeleteClientDialog";
+import { showToast } from "@/components/Toast";
 import {
   Users, Plus, Search, ChevronRight,
   Mail, Phone, Activity, Loader2, X, AlertCircle, Trash2, TrendingDown,
@@ -556,6 +558,8 @@ function ClientiPageInner() {
   const [form, setForm] = useState<ClientFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const deletingClient = deletingId ? clients.find((c) => c.id === deletingId) : undefined;
 
   const filtered = clients.filter((c) => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -605,19 +609,10 @@ function ClientiPageInner() {
     }
   }
 
-  async function handleDelete(id: string, name: string, e: React.MouseEvent) {
+  function handleDelete(id: string, e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm(`Eliminare "${name}"? Questa azione è irreversibile.`)) return;
-    const snapshot = useAppStore.getState().clients.find((c) => c.id === id);
-    removeClient(id);
-    try {
-      await dbClients.remove(id);
-    } catch {
-      // DB delete failed: restore the client so UI and DB stay in sync
-      if (snapshot) useAppStore.setState((s) => ({ clients: [...s.clients, snapshot] }));
-      alert("Errore nell'eliminazione del cliente. Riprova.");
-    }
+    setDeletingId(id);
   }
 
   return (
@@ -813,8 +808,9 @@ function ClientiPageInner() {
               </div>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={(e) => handleDelete(client.id, client.name, e)}
-                  className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-500/15 transition-all"
+                  onClick={(e) => handleDelete(client.id, e)}
+                  className="p-2 rounded-lg opacity-60 lg:opacity-0 lg:group-hover:opacity-100 hover:bg-red-500/15 transition-all"
+                  aria-label={`Elimina ${client.name}`}
                   title="Elimina cliente">
                   <Trash2 size={14} style={{ color: "rgba(239,68,68,0.7)" }} />
                 </button>
@@ -905,6 +901,12 @@ function ClientiPageInner() {
           );
         })}
       </div>
+
+      {deletingClient && (
+        <DeleteClientDialog client={deletingClient}
+          onClose={() => setDeletingId(null)}
+          onDeleted={() => showToast(`${deletingClient.name} eliminato`, "success")} />
+      )}
 
       {/* Brief Settimanale modal */}
       {showUpgrade && (
