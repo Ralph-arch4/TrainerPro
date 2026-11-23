@@ -1,9 +1,9 @@
 -- 026 — Demo (free) vs Premium plans, approved by a super user (idempotent)
 -- Run in the Supabase SQL Editor.
 --
--- * No existing data is modified or deleted: accounts keep their clients,
---   plans and logs. Accounts keep the plan already stored in profiles.plan
---   ('free' unless changed by hand) until a super user approves Premium.
+-- * No client data is modified or deleted: accounts keep their clients,
+--   plans and logs. Accounts created before 2026-11-23 become Premium (section 6);
+--   new accounts start on the demo until a super user approves Premium.
 -- * The plan becomes server-authoritative: a trainer can no longer change
 --   his own plan from the browser.
 -- * Demo accounts can have at most 1 client (enforced here, not only in the UI).
@@ -102,3 +102,14 @@ create trigger enforce_client_limit
 -- update public.profiles set plan = 'premium', premium_status = 'approved',
 --   premium_decided_at = now(), premium_decided_by = 'sql'
 -- where id = (select id from auth.users where email = 'trainer@example.com');
+
+-- ─── 6. Existing accounts keep working as before ──────────────────────────────
+-- Every trainer registered before the Demo/Premium launch (2026-11-23) gets
+-- Premium, so nobody already using the app is limited. Revocable from
+-- /admin/premium like any other approval.
+update public.profiles p
+set plan = 'premium', premium_status = 'approved',
+    premium_decided_at = now(), premium_decided_by = 'legacy'
+from auth.users u
+where u.id = p.id and p.plan = 'free'
+  and u.created_at < '2026-11-23T00:00:00Z';
