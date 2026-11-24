@@ -38,3 +38,20 @@ test("DB guard errors map to Italian messages", () => {
   assert.match(demoLinkErrorMessage({ message: "DEMO_LINK_PLAN_REQUIRED" }), /Fitness Master/);
   assert.match(demoLinkErrorMessage(new Error("x")), /Riprova/);
 });
+
+test("quick builder: empty rows and days dropped, labels kept, values clamped", async () => {
+  const { quickToPlan, planToQuick } = await import("../lib/quickDemo.ts");
+  const days = [
+    { id: "d1", label: "Push", exercises: [{ id: "a", name: " Panca Piana ", sets: "4", reps: "8-10" }, { id: "b", name: "", sets: "3", reps: "10" }] },
+    { id: "d2", label: "Giorno 2", exercises: [{ id: "c", name: "", sets: "3", reps: "" }] },
+    { id: "d3", label: "Giorno 3", exercises: [{ id: "d", name: "Squat", sets: "99", reps: "" }, { id: "e", name: "Plank", sets: "x", reps: "30s" }] },
+  ];
+  const plan = quickToPlan(days);
+  assert.equal(plan.daysPerWeek, 2);
+  assert.deepEqual(plan.dayLabels, { 1: "Push" });
+  assert.deepEqual(plan.exercises.map((e) => [e.name, e.sets, e.targetReps, e.day, e.order]), [
+    ["Panca Piana", 4, "8-10", 1, 0], ["Squat", 20, "10", 2, 0], ["Plank", 1, "30s", 2, 1],
+  ]);
+  const back = planToQuick(plan.exercises, plan.daysPerWeek, plan.dayLabels);
+  assert.deepEqual(back.map((d) => [d.label, d.exercises.map((e) => e.name)]), [["Push", ["Panca Piana"]], ["Giorno 2", ["Squat", "Plank"]]]);
+});

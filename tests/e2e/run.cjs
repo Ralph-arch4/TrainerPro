@@ -43,7 +43,7 @@ function freshState() {
     ],
   };
   const profile = { id: USER.id, full_name: "Mario Trainer", plan: "free", premium_status: "none" };
-  return { clients, plan, profile, patches: [], logUpserts: [], demoLinks: [], demoInserts: [], demoLogUpserts: [] };
+  return { clients, plan, profile, patches: [], logUpserts: [], demoLinks: [], demoInserts: [], demoPatches: [], demoLogUpserts: [] };
 }
 let state = freshState();
 
@@ -110,6 +110,14 @@ async function mockSupabase(context) {
         created_at: new Date(now).toISOString(), expires_at: new Date(now + 4 * 3600_000).toISOString(), ...body };
       state.demoLinks.unshift(row);
       return json(row, 201);
+    }
+    if (table === "demo_links" && req.method() === "PATCH") {
+      const body = req.postDataJSON();
+      state.demoPatches.push(body);
+      const id = url.searchParams.get("id")?.replace("eq.", "");
+      const row = state.demoLinks.find((l) => l.id === id);
+      Object.assign(row, body);
+      return json(row);
     }
     return json([], 201);
   });
@@ -416,20 +424,47 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
     await context.close();
     state.profile = { ...state.profile, plan: "fitness_master" };
     ({ context, page } = await newPage(browser, MOBILE, errors));
-    await check("demo rapida: Fitness Master genera un link di 4 ore", async () => {
+    await check("demo rapida: scheda creata al volo (nome, sessioni, esercizi, serie, reps) e link di 4 ore", async () => {
       await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: BASE });
       await page.goto(`${BASE}/dashboard/demo-rapida`);
       await page.getByRole("button", { name: /Genera link \(4 ore\)/ }).waitFor({ timeout: 15000 });
-      await page.locator("select").selectOption("p1");
-      await page.getByPlaceholder("es. Giulia").fill("Giulia Bianchi");
-      await page.getByText("Integratori consigliati").click(); // untick one teaser
+      await page.getByLabel("Nome del cliente").fill("Giulia Bianchi");
+      const ex = page.getByLabel("Esercizio", { exact: true });
+      await ex.nth(0).fill("Squat con bilanciere");
+      await page.getByLabel("Serie").nth(0).fill("4");
+      await page.getByLabel("Ripetizioni").nth(0).fill("8-10");
+      await page.getByLabel("Ripetizioni").nth(0).press("Enter"); // new row, same sets/reps, focused
+      await page.keyboard.type("Affondi");
+      assert(await page.getByLabel("Serie").nth(1).inputValue() === "4", "la nuova riga ripete le serie");
+      await page.getByRole("button", { name: "Esercizio", exact: true }).first().click();
+      await ex.nth(2).fill("Da cancellare");
+      await page.getByRole("button", { name: "Elimina esercizio" }).nth(2).click();
+      await page.getByRole("button", { name: "Sposta giu" }).first().click(); // Affondi first
+      await page.getByRole("button", { name: "Sessione", exact: true }).click();
+      await page.getByLabel("Nome della sessione").nth(1).fill("Parte alta");
+      await page.keyboard.press("Tab");
+      await ex.nth(2).fill("Panca Piana con manubri");
+      await shot(page, "20-demo-rapida-editor-mobile");
       await page.getByRole("button", { name: /Genera link/ }).click();
       await page.getByText(/Ancora 3h 5\dm|Ancora 4h 00m/).waitFor();
       const ins = state.demoInserts[0];
-      assert(ins && ins.workout_plan_id === "p1" && ins.prospect_name === "Giulia Bianchi", `insert: ${JSON.stringify(ins)}`);
-      assert(!ins.locked_features.includes("supplements") && ins.locked_features.includes("weeks"), `teaser: ${ins.locked_features}`);
+      assert(ins && ins.prospect_name === "Giulia Bianchi" && ins.workout_plan_id === null, `insert: ${JSON.stringify(ins)}`);
+      assert(ins.days_per_week === 2 && ins.day_labels["2"] === "Parte alta", `sessioni: ${JSON.stringify(ins)}`);
+      const flat = ins.exercises.map((e) => `${e.day}:${e.order}:${e.name}:${e.sets}:${e.targetReps}`).join(" | ");
+      assert(flat === "1:0:Affondi:4:8-10 | 1:1:Squat con bilanciere:4:8-10 | 2:0:Panca Piana con manubri:3:10", flat);
+      assert(ins.exercises[1].muscleGroup, "gruppo muscolare dalla libreria");
       assert(!("expires_at" in ins) && !("token" in ins), "scadenza e token li decide il database");
-      await shot(page, "20-demo-rapida-trainer-mobile");
+    });
+    await check("demo rapida: il link attivo si modifica senza cambiare indirizzo", async () => {
+      await page.getByRole("button", { name: "Modifica" }).click();
+      assert(await page.getByLabel("Nome del cliente").inputValue() === "Giulia Bianchi", "dati caricati");
+      await page.getByLabel("Ripetizioni").nth(0).fill("12");
+      await page.getByRole("button", { name: "Salva modifiche" }).click();
+      await page.getByRole("button", { name: /Genera link/ }).waitFor();
+      const patch = state.demoPatches[0];
+      assert(patch && patch.exercises[0].targetReps === "12" && !("token" in patch) && !("expires_at" in patch), `patch: ${JSON.stringify(patch)}`);
+      assert(await page.getByTestId("demo-link-row").count() === 1, "un solo link");
+      await shot(page, "20b-demo-rapida-lista-mobile");
     });
     await context.close();
 
