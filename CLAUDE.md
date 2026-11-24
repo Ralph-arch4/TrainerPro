@@ -53,6 +53,7 @@ intake_forms(id, trainer_id, token, label, status, response JSONB, submitted_at)
 | `lib/billing.ts` + `components/PaymentNotice.tsx` | Payment reminder pop-up for `plan === "free"`; due date = user metadata `payment_due_at` or `PAYMENT_NOTICE_START` + 30 days |
 | `lib/brand.ts`, `app/manifest.ts`, `public/sw.js`, `android/twa-manifest.json` | PWA / Play Store (TWA). Steps in `docs/PLAY_STORE.md` |
 | `app/dashboard/account/page.tsx` + `app/api/account/delete/route.ts` | Account page + self-service account deletion (service_role) |
+| `app/dashboard/demo-rapida` + `components/DemoPortal.tsx` (`/demo/[token]`) + `lib/quickDemo.ts` | "Demo rapida": 4h free-lesson link, `fitness_master` only. Migration 029: `demo_links` (trigger forces token/4h expiry/plan gate), `demo_logs` (separate from exercise_logs), RPCs `get_demo_data`, `upsert_demo_log` |
 
 ### store.ts type summary (avoid loading 360-line file)
 | Type | Key fields |

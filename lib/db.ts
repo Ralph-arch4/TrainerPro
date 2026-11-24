@@ -546,3 +546,86 @@ export const dbFeedback = {
     if (error) throw error;
   },
 };
+
+// ─── Quick demo links (migration 029) ────────────────────────────────────────
+export interface DemoLink {
+  id: string;
+  workoutPlanId: string;
+  token: string;
+  prospectName: string | null;
+  message: string | null;
+  lockedFeatures: string[];
+  createdAt: string;
+  expiresAt: string;
+  firstOpenedAt: string | null;
+  openCount: number;
+  logCount: number;
+}
+
+function mapDemoLink(r: Record<string, unknown>): DemoLink {
+  const counts = r.demo_logs as Array<{ count: number }> | undefined;
+  return {
+    id:             r.id as string,
+    workoutPlanId:  r.workout_plan_id as string,
+    token:          r.token as string,
+    prospectName:   (r.prospect_name as string) ?? null,
+    message:        (r.message as string) ?? null,
+    lockedFeatures: (r.locked_features as string[]) ?? [],
+    createdAt:      r.created_at as string,
+    expiresAt:      r.expires_at as string,
+    firstOpenedAt:  (r.first_opened_at as string) ?? null,
+    openCount:      (r.open_count as number) ?? 0,
+    logCount:       counts?.[0]?.count ?? 0,
+  };
+}
+
+export const dbDemoLinks = {
+  async list(): Promise<DemoLink[]> {
+    const { data, error } = await db()
+      .from("demo_links")
+      .select("*, demo_logs(count)")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return (data ?? []).map(mapDemoLink);
+  },
+  // user_id, token and expires_at are set by the guard_demo_link trigger.
+  async create(payload: { workoutPlanId: string; prospectName?: string; message?: string; lockedFeatures: string[] }): Promise<DemoLink> {
+    const { data, error } = await db()
+      .from("demo_links")
+      .insert({
+        user_id:         await uid(),
+        workout_plan_id: payload.workoutPlanId,
+        prospect_name:   payload.prospectName?.trim() || null,
+        message:         payload.message?.trim() || null,
+        locked_features: payload.lockedFeatures,
+      })
+      .select("*, demo_logs(count)")
+      .single();
+    if (error) throw error;
+    return mapDemoLink(data);
+  },
+  async remove(id: string) {
+    const { error } = await db().from("demo_links").delete().eq("id", id);
+    if (error) throw error;
+  },
+  async getByToken(token: string) {
+    const { data, error } = await db().rpc("get_demo_data", { p_token: token });
+    if (error) throw error;
+    return data as Record<string, unknown>;
+  },
+  async upsertLogByToken(token: string, payload: { exercise_id: string; week_number: number; weight?: number | null; reps?: string | null; note?: string | null }) {
+    const { data, error } = await db().rpc("upsert_demo_log", {
+      p_token:       token,
+      p_exercise_id: payload.exercise_id,
+      p_week_number: payload.week_number,
+      p_weight:      payload.weight ?? null,
+      p_reps:        payload.reps   ?? null,
+      p_note:        payload.note   ?? null,
+    });
+    if (error) throw error;
+    const err = (data as { error?: string })?.error;
+    if (err) throw new Error(err);
+    return data as { id: string };
+  },
+};
