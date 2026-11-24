@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import type { Client, WorkoutPlan, Phase, DietPlan, BodyMeasurement, Note, ExerciseLog } from "@/lib/store";
+import type { Client, WorkoutPlan, Phase, DietPlan, BodyMeasurement, Note, ExerciseLog, Exercise } from "@/lib/store";
 
 // Patch type for update() functions: `undefined` = leave column untouched,
 // `null` = explicitly clear the column in the DB.
@@ -550,7 +550,11 @@ export const dbFeedback = {
 // ─── Quick demo links (migration 029) ────────────────────────────────────────
 export interface DemoLink {
   id: string;
-  workoutPlanId: string;
+  workoutPlanId: string | null;
+  planName: string | null;
+  exercises: Exercise[] | null;
+  daysPerWeek: number | null;
+  dayLabels: Record<number, string> | null;
   token: string;
   prospectName: string | null;
   message: string | null;
@@ -566,7 +570,11 @@ function mapDemoLink(r: Record<string, unknown>): DemoLink {
   const counts = r.demo_logs as Array<{ count: number }> | undefined;
   return {
     id:             r.id as string,
-    workoutPlanId:  r.workout_plan_id as string,
+    workoutPlanId:  (r.workout_plan_id as string) ?? null,
+    planName:       (r.plan_name as string) ?? null,
+    exercises:      (r.exercises as Exercise[]) ?? null,
+    daysPerWeek:    (r.days_per_week as number) ?? null,
+    dayLabels:      (r.day_labels as Record<number, string>) ?? null,
     token:          r.token as string,
     prospectName:   (r.prospect_name as string) ?? null,
     message:        (r.message as string) ?? null,
@@ -577,6 +585,31 @@ function mapDemoLink(r: Record<string, unknown>): DemoLink {
     openCount:      (r.open_count as number) ?? 0,
     logCount:       counts?.[0]?.count ?? 0,
   };
+}
+
+export interface DemoLinkPayload {
+  prospectName?: string;
+  message?: string;
+  lockedFeatures: string[];
+  planName?: string;
+  exercises?: Array<Pick<Exercise, "id" | "name" | "sets" | "targetReps" | "day" | "order" | "muscleGroup">>;
+  daysPerWeek?: number;
+  dayLabels?: Record<number, string>;
+}
+
+function demoLinkRow(p: DemoLinkPayload): Record<string, unknown> {
+  const row: Record<string, unknown> = {
+    prospect_name:   p.prospectName?.trim() || null,
+    message:         p.message?.trim() || null,
+    locked_features: p.lockedFeatures,
+  };
+  if (p.exercises !== undefined) {
+    row.plan_name     = p.planName?.trim() || null;
+    row.exercises     = p.exercises;
+    row.days_per_week = p.daysPerWeek ?? 1;
+    row.day_labels    = p.dayLabels && Object.keys(p.dayLabels).length ? p.dayLabels : null;
+  }
+  return row;
 }
 
 export const dbDemoLinks = {
@@ -590,16 +623,26 @@ export const dbDemoLinks = {
     return (data ?? []).map(mapDemoLink);
   },
   // user_id, token and expires_at are set by the guard_demo_link trigger.
-  async create(payload: { workoutPlanId: string; prospectName?: string; message?: string; lockedFeatures: string[] }): Promise<DemoLink> {
+  // Either workoutPlanId (saved plan) or an inline plan (exercises, migration 030).
+  async create(payload: DemoLinkPayload & { workoutPlanId?: string }): Promise<DemoLink> {
     const { data, error } = await db()
       .from("demo_links")
       .insert({
         user_id:         await uid(),
-        workout_plan_id: payload.workoutPlanId,
-        prospect_name:   payload.prospectName?.trim() || null,
-        message:         payload.message?.trim() || null,
-        locked_features: payload.lockedFeatures,
+        workout_plan_id: payload.workoutPlanId ?? null,
+        ...demoLinkRow(payload),
       })
+      .select("*, demo_logs(count)")
+      .single();
+    if (error) throw error;
+    return mapDemoLink(data);
+  },
+  // Token, owner and expiry are locked by the guard_demo_link_update trigger.
+  async update(id: string, payload: DemoLinkPayload): Promise<DemoLink> {
+    const { data, error } = await db()
+      .from("demo_links")
+      .update(demoLinkRow(payload))
+      .eq("id", id)
       .select("*, demo_logs(count)")
       .single();
     if (error) throw error;
