@@ -5,6 +5,7 @@ export type AccountStatus = "active" | "suspended" | "banned";
 
 export type AdminAction =
   | { action: "set_premium" }
+  | { action: "set_fitness_master" }
   | { action: "set_demo" }
   | { action: "suspend"; reason: string }
   | { action: "reactivate" }
@@ -33,7 +34,7 @@ export function parseAdminAction(body: unknown): AdminAction | null {
   const b = body as Record<string, unknown>;
   const text = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
   switch (b.action) {
-    case "set_premium": case "set_demo": case "reactivate": case "unban":
+    case "set_premium": case "set_fitness_master": case "set_demo": case "reactivate": case "unban":
       return { action: b.action };
     case "suspend": case "ban": {
       const reason = text(b.reason, MAX_REASON);
@@ -65,6 +66,11 @@ export function planAdminAction(a: AdminAction, adminEmail: string, now = new Da
         profile: { plan: "premium", premium_status: "approved", premium_decided_at: now.toISOString(), premium_decided_by: adminEmail },
         log: { plan: "premium" },
       };
+    case "set_fitness_master":
+      return {
+        profile: { plan: "fitness_master", premium_status: "approved", premium_decided_at: now.toISOString(), premium_decided_by: adminEmail },
+        log: { plan: "fitness_master" },
+      };
     case "set_demo":
       return {
         profile: { plan: "free", premium_status: "revoked", premium_decided_at: now.toISOString(), premium_decided_by: adminEmail },
@@ -91,6 +97,7 @@ export function planAdminAction(a: AdminAction, adminEmail: string, now = new Da
 
 export const ACTION_LABELS: Record<string, string> = {
   set_premium: "Premium attivato",
+  set_fitness_master: "Fitness Master attivato",
   set_demo: "Riportato alla demo",
   suspend: "Account sospeso",
   reactivate: "Account riattivato",

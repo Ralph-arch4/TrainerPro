@@ -143,7 +143,8 @@ export function StatusBadge({ status }: { status: string }) {
 export function PlanBadge({ plan, trialEndsAt }: { plan: string; trialEndsAt?: string | null }) {
   const premium = plan !== "free";
   const expired = !premium && isPast(trialEndsAt);
-  const s = premium ? { label: "Premium", bg: "rgba(201,168,76,0.14)", color: "var(--accent-light)" }
+  const s = plan === "fitness_master" ? { label: "Fitness Master", bg: "rgba(201,168,76,0.22)", color: "var(--accent-light)" }
+    : premium ? { label: "Premium", bg: "rgba(201,168,76,0.14)", color: "var(--accent-light)" }
     : expired ? { label: "Prova scaduta", bg: "rgba(239,68,68,0.10)", color: "#f87171" }
     : { label: trialEndsAt ? "In prova" : "Demo", bg: "var(--surface-md)", color: "var(--text-muted)" };
   return <span className="text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ background: s.bg, color: s.color }}>{s.label}</span>;

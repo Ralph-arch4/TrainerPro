@@ -106,19 +106,24 @@ export default function AdminTrainerPage({ params }: { params: Promise<{ id: str
 
       <div className="grid lg:grid-cols-2 gap-4">
         <Card icon={<CreditCard size={15} />} title="Abbonamento">
-          <Row label="Piano">{premium ? "Premium" : "Demo / prova"}</Row>
+          <Row label="Piano">{t.plan === "fitness_master" ? "Fitness Master" : premium ? "Premium" : "Demo / prova"}</Row>
           {!premium && <Row label="Prova fino al">{fmtDate(t.trialEndsAt)}</Row>}
           {t.premiumStatus === "pending" && <Row label="Richiesta Premium">{fmtDate(t.premiumRequestedAt)}</Row>}
           {t.premiumDecidedAt && <Row label="Ultima decisione">{fmtDate(t.premiumDecidedAt)}{t.premiumDecidedBy ? ` · ${t.premiumDecidedBy}` : ""}</Row>}
           <Row label="Stato abbonamento">{t.accountStatus === "active" ? "Attivo" : t.accountStatus === "suspended" ? "Sospeso" : "Bloccato (ban)"}</Row>
 
           <div className="flex flex-wrap gap-2 mt-3">
-            {premium ? (
+            {t.plan !== "premium" && (
+              <button disabled={busy} onClick={() => run({ action: "set_premium" }, `Attivare il piano Premium per ${who}?`, "Piano Premium attivato")}
+                className={premium ? "outline-btn px-3 py-2 rounded-xl text-xs disabled:opacity-50" : "accent-btn px-3 py-2 rounded-xl text-xs disabled:opacity-50"}>Passa a Premium</button>
+            )}
+            {t.plan !== "fitness_master" && (
+              <button disabled={busy} onClick={() => run({ action: "set_fitness_master" }, `Attivare il piano Fitness Master per ${who}?`, "Piano Fitness Master attivato")}
+                className="accent-btn px-3 py-2 rounded-xl text-xs disabled:opacity-50">Passa a Fitness Master</button>
+            )}
+            {premium && (
               <button disabled={busy} onClick={() => run({ action: "set_demo" }, `Riportare ${who} alla demo? I dati restano conservati.`, "Account riportato alla demo")}
                 className="outline-btn px-3 py-2 rounded-xl text-xs disabled:opacity-50">Riporta alla demo</button>
-            ) : (
-              <button disabled={busy} onClick={() => run({ action: "set_premium" }, `Attivare Premium per ${who}?`, "Premium attivato")}
-                className="accent-btn px-3 py-2 rounded-xl text-xs disabled:opacity-50">Attiva Premium</button>
             )}
             {!premium && (
               <button disabled={busy} onClick={() => run({ action: "extend_trial", days: 14 }, null, "Prova estesa di 14 giorni")}
