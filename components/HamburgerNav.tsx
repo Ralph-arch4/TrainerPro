@@ -1,4 +1,5 @@
 'use client'
+import { APP_NAME } from "@/lib/brand";
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -29,7 +30,7 @@ export default function HamburgerNav() {
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="w-8 h-8 rounded-lg accent-btn flex items-center justify-center flex-shrink-0 text-xs font-black">R</div>
           <div className="flex flex-col leading-none">
-            <span className="font-black text-sm tracking-[0.16em] uppercase accent-text">REC STUDIO</span>
+            <span className="font-black text-sm tracking-[0.16em] uppercase accent-text">{APP_NAME}</span>
             <span className="text-[10px] font-mono tracking-[0.18em] uppercase mt-0.5" style={{ color: 'var(--text-faint)' }}>CRM · Personal Trainer</span>
           </div>
         </Link>
@@ -64,7 +65,7 @@ export default function HamburgerNav() {
             {/* Top */}
             <div className="flex items-center justify-between px-6 lg:px-14 h-16 flex-shrink-0">
               <Link href="/" onClick={() => setOpen(false)}>
-                <span className="font-black text-sm tracking-[0.18em] uppercase accent-text">REC STUDIO</span>
+                <span className="font-black text-sm tracking-[0.18em] uppercase accent-text">{APP_NAME}</span>
               </Link>
               <button onClick={() => setOpen(false)} className="flex items-center gap-3 group" aria-label="Chiudi menu">
                 <span className="text-xs font-bold tracking-[0.18em] uppercase hidden sm:block"
