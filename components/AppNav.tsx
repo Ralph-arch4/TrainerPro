@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/lib/store";
 import {
   Dumbbell, LayoutDashboard, Users, Activity, UtensilsCrossed,
-  TrendingUp, Calculator, FileDown, LogOut, Menu, X, ClipboardList, MessageSquare, UserRound, Crown,
+  TrendingUp, Calculator, FileDown, LogOut, Menu, X, ClipboardList, MessageSquare, UserRound, Crown, Timer,
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { planLabel } from "@/lib/plan-limits";
@@ -75,6 +75,7 @@ const navItems = [
   { href: "/dashboard",                 icon: LayoutDashboard, label: "Dashboard" },
   { href: "/dashboard/clienti",         icon: Users,           label: "Clienti" },
   { href: "/dashboard/intake",          icon: ClipboardList,   label: "Form Intake" },
+  { href: "/dashboard/demo-rapida",     icon: Timer,           label: "Demo rapida" },
   { href: "/dashboard/fasi",            icon: Activity,        label: "Fasi & Piani" },
   { href: "/dashboard/diete",           icon: UtensilsCrossed, label: "Alimentazione" },
   { href: "/dashboard/misurazioni",     icon: TrendingUp,      label: "Misurazioni" },

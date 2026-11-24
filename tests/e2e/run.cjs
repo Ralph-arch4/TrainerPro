@@ -21,6 +21,8 @@ const ENV = { ...process.env, NEXT_PUBLIC_SUPABASE_URL: SUPA, NEXT_PUBLIC_SUPABA
 // ── Fake backend state ────────────────────────────────────────────────────────
 const USER = { id: "u-1", email: "trainer@example.com", aud: "authenticated", role: "authenticated", user_metadata: { full_name: "Mario Trainer", plan: "free" }, app_metadata: {} };
 const TOKEN = "tok".repeat(20);
+const DEMO_TOKEN = "demo".repeat(16);
+const DEMO_EXPIRED = "gone".repeat(16);
 function freshState() {
   const clients = Array.from({ length: 30 }, (_, i) => ({
     id: `c${i + 1}`, user_id: USER.id, name: `Cliente ${String(i + 1).padStart(2, "0")}`, email: `c${i + 1}@example.com`,
@@ -41,7 +43,7 @@ function freshState() {
     ],
   };
   const profile = { id: USER.id, full_name: "Mario Trainer", plan: "free", premium_status: "none" };
-  return { clients, plan, profile, patches: [], logUpserts: [] };
+  return { clients, plan, profile, patches: [], logUpserts: [], demoLinks: [], demoInserts: [], demoLogUpserts: [] };
 }
 let state = freshState();
 
@@ -69,6 +71,19 @@ async function mockSupabase(context) {
       return json({ plan: state.plan, logs: [], diets: [], trainer_name: "Mario Trainer" });
     }
     if (p === "/rest/v1/rpc/upsert_exercise_log") { state.logUpserts.push(req.postDataJSON()); return json({ id: `log-${state.logUpserts.length}` }); }
+    if (p === "/rest/v1/rpc/get_demo_data") {
+      const { p_token } = req.postDataJSON();
+      if (p_token === DEMO_EXPIRED) return json({ error: "expired", trainer_name: "Mario Trainer", prospect_name: "Giulia Bianchi", message: "Scrivimi per iniziare" });
+      if (p_token !== DEMO_TOKEN) return json({ error: "not_found" });
+      const now = new Date();
+      return json({
+        plan: { name: state.plan.name, description: null, days_per_week: 3, total_weeks: 8, exercises: state.plan.exercises, day_labels: null },
+        logs: [], trainer_name: "Mario Trainer", prospect_name: "Giulia Bianchi", message: "Ti e' piaciuta? Scrivimi su https://wa.me/390000000",
+        locked_features: ["weeks", "diet", "progress"], server_now: now.toISOString(),
+        expires_at: new Date(now.getTime() + (3 * 60 + 30) * 60_000).toISOString(),
+      });
+    }
+    if (p === "/rest/v1/rpc/upsert_demo_log") { state.demoLogUpserts.push(req.postDataJSON()); return json({ id: `dlog-${state.demoLogUpserts.length}` }); }
     if (p.startsWith("/rest/v1/rpc/")) return json(null);
     const table = p.replace("/rest/v1/", "");
     if (req.method() === "GET") {
@@ -78,6 +93,7 @@ async function mockSupabase(context) {
       }
       if (table === "clients") return json(state.clients);
       if (table === "workout_plans") return json([state.plan]);
+      if (table === "demo_links") return json(state.demoLinks);
       return json([]);
     }
     if (table === "workout_plans" && req.method() === "PATCH") {
@@ -85,6 +101,15 @@ async function mockSupabase(context) {
       state.patches.push(patch);
       Object.assign(state.plan, patch);
       return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } });
+    }
+    if (table === "demo_links" && req.method() === "POST") {
+      const body = req.postDataJSON();
+      state.demoInserts.push(body);
+      const now = Date.now();
+      const row = { id: `dl-${state.demoInserts.length}`, token: DEMO_TOKEN, open_count: 0, first_opened_at: null, demo_logs: [{ count: 0 }],
+        created_at: new Date(now).toISOString(), expires_at: new Date(now + 4 * 3600_000).toISOString(), ...body };
+      state.demoLinks.unshift(row);
+      return json(row, 201);
     }
     return json([], 201);
   });
@@ -377,6 +402,53 @@ const dayOrder = (day) => state.plan.exercises.filter((e) => e.day === day).sort
       assert(await page.getByTestId("upgrade-dialog").count() === 0, "Premium bloccato dal limite demo");
       await page.goto(`${BASE}/dashboard/abbonamento`);
       await page.getByTestId("premium-active").waitFor();
+    });
+    await context.close();
+
+    // ── Quick demo link (fitness_master only) ────────────────────────────────
+    console.log("Demo rapida per i clienti");
+    ({ context, page } = await newPage(browser, MOBILE, errors));
+    await check("demo rapida: bloccata per Premium non Fitness Master", async () => {
+      await page.goto(`${BASE}/dashboard/demo-rapida`);
+      await page.getByText("Esclusiva del piano Fitness Master").waitFor({ timeout: 15000 });
+      assert(await page.getByRole("button", { name: /Genera link/ }).count() === 0, "il form non deve comparire");
+    });
+    await context.close();
+    state.profile = { ...state.profile, plan: "fitness_master" };
+    ({ context, page } = await newPage(browser, MOBILE, errors));
+    await check("demo rapida: Fitness Master genera un link di 4 ore", async () => {
+      await context.grantPermissions(["clipboard-read", "clipboard-write"], { origin: BASE });
+      await page.goto(`${BASE}/dashboard/demo-rapida`);
+      await page.getByRole("button", { name: /Genera link \(4 ore\)/ }).waitFor({ timeout: 15000 });
+      await page.locator("select").selectOption("p1");
+      await page.getByPlaceholder("es. Giulia").fill("Giulia Bianchi");
+      await page.getByText("Integratori consigliati").click(); // untick one teaser
+      await page.getByRole("button", { name: /Genera link/ }).click();
+      await page.getByText(/Ancora 3h 5\dm|Ancora 4h 00m/).waitFor();
+      const ins = state.demoInserts[0];
+      assert(ins && ins.workout_plan_id === "p1" && ins.prospect_name === "Giulia Bianchi", `insert: ${JSON.stringify(ins)}`);
+      assert(!ins.locked_features.includes("supplements") && ins.locked_features.includes("weeks"), `teaser: ${ins.locked_features}`);
+      assert(!("expires_at" in ins) && !("token" in ins), "scadenza e token li decide il database");
+      await shot(page, "20-demo-rapida-trainer-mobile");
+    });
+    await context.close();
+
+    ({ context, page } = await newPage(browser, MOBILE, errors, { auth: false }));
+    await check("demo rapida: il potenziale cliente vede la scheda, il timer e le funzioni bloccate", async () => {
+      await page.goto(`${BASE}/demo/${DEMO_TOKEN}`);
+      await page.getByText("Ciao Giulia, questa scheda è pensata per te").waitFor({ timeout: 15000 });
+      const body = await page.locator("body").innerText();
+      assert(/3h (2|3)\dm/.test(body), "conto alla rovescia");
+      assert(/Programma completo di 8 settimane/.test(body) && /Indicazioni alimentari/.test(body), "teaser bloccati");
+      assert(!/Integratori consigliati/.test(body), "teaser non scelto dal trainer");
+      assert(/Panca Piana/i.test(body), "esercizi della scheda");
+      assert(await page.getByText("Settimana 2", { exact: true }).count() === 0, "solo la settimana 1 con programma bloccato");
+      await shot(page, "21-demo-rapida-cliente-mobile");
+    });
+    await check("demo rapida: link scaduto mostra la chiusura con il messaggio del trainer", async () => {
+      await page.goto(`${BASE}/demo/${DEMO_EXPIRED}`);
+      await page.getByText("La lezione di prova è terminata").waitFor({ timeout: 15000 });
+      assert(/Scrivimi per iniziare/.test(await page.locator("body").innerText()), "messaggio finale");
     });
     await context.close();
     state.clients = allClients;
