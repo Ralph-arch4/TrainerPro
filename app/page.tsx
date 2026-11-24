@@ -22,7 +22,7 @@ const features = [
   { icon: FileDown,        title: "Export PDF",       desc: "Condividi schede e piani con i tuoi clienti in PDF." },
 ];
 
-const MARQUEE_TEXT = "REC STUDIO · GESTIONE CLIENTI · SCHEDE DI ALLENAMENTO · NUTRIZIONE · PROGRESSI · EXPORT PDF · ";
+const MARQUEE_TEXT = `${APP_NAME.toUpperCase()} · GESTIONE CLIENTI · SCHEDE DI ALLENAMENTO · NUTRIZIONE · PROGRESSI · EXPORT PDF · `;
 
 function SectionNum({ n }: { n: string }) {
   return (
@@ -694,7 +694,7 @@ export default function LandingPage() {
             <span className="accent-text">dominare?</span>
           </h2>
           <p className="text-base mb-12 max-w-md mx-auto leading-relaxed" style={{ color: "rgba(245,240,232,0.5)" }}>
-            Unisciti ai personal trainer che usano REC Studio per gestire il loro business in modo professionale.
+            Unisciti ai personal trainer che usano {APP_NAME} per gestire il loro business in modo professionale.
           </p>
           <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}>
@@ -711,7 +711,7 @@ export default function LandingPage() {
         style={{ borderTop: "1px solid rgba(201,168,76,0.07)" }}>
         <div className="flex items-center gap-3">
           <div className="w-6 h-6 rounded-md accent-btn flex items-center justify-center text-xs font-black">R</div>
-          <span className="font-black text-xs tracking-[0.18em] uppercase accent-text">REC STUDIO</span>
+          <span className="font-black text-xs tracking-[0.18em] uppercase accent-text">{APP_NAME}</span>
         </div>
         <p className="text-xs font-mono" style={{ color: "var(--text-faint)" }}>
           © {new Date().getFullYear()} REC GROUP · Tutti i diritti riservati

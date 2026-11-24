@@ -65,11 +65,11 @@ Nome e descrizione dell'app si cambiano in un solo punto: `lib/brand.ts`
 
 Testi proposti:
 
-- **Titolo** (max 30): `REC Studio: schede per PT`
+- **Titolo** (max 30): `Ferrea: schede per PT`
 - **Descrizione breve** (max 80): `Clienti, schede e progressi del personal trainer in un'unica app.`
 - **Descrizione completa**:
 
-  > REC Studio e' lo strumento di lavoro del personal trainer.
+  > Ferrea e' lo strumento di lavoro del personal trainer.
   >
   > - Schede di allenamento con superserie, cardio e progressioni gia' programmate settimana per settimana
   > - Link personale per ogni cliente: vede la scheda, registra carichi e ripetizioni, lascia un feedback

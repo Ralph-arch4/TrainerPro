@@ -1,8 +1,8 @@
 {
   "packageId": "app.recstudio.twa",
   "host": "trainer-pro-phi.vercel.app",
-  "name": "REC Studio",
-  "launcherName": "REC Studio",
+  "name": "Ferrea",
+  "launcherName": "Ferrea",
   "display": "standalone",
   "orientation": "portrait",
   "themeColor": "#080808",

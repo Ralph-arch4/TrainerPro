@@ -1,4 +1,5 @@
 ﻿"use client";
+import { APP_NAME } from "@/lib/brand";
 import { useState, useEffect, useRef } from "react";
 import type { Exercise, ExerciseLog, ExerciseKind } from "@/lib/store";
 import {
@@ -710,7 +711,7 @@ export default function WorkoutSpreadsheet({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "REC Studio_template.csv";
+    a.download = `${APP_NAME}_template.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }

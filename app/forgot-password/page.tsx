@@ -1,4 +1,5 @@
 ﻿"use client";
+import { APP_NAME } from "@/lib/brand";
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -53,7 +54,7 @@ export default function ForgotPasswordPage() {
           <div className="w-16 h-16 rounded-2xl accent-btn flex items-center justify-center mb-4">
             <Dumbbell size={32} />
           </div>
-          <h1 className="text-3xl font-bold accent-text">REC Studio</h1>
+          <h1 className="text-3xl font-bold accent-text">{APP_NAME}</h1>
         </div>
 
         <div className="glass-dark rounded-2xl p-8">

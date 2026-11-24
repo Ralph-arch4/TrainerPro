@@ -1,4 +1,5 @@
 ﻿"use client";
+import { APP_NAME } from "@/lib/brand";
 import { useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
 import { DIET_DISCLAIMER } from "@/components/DietPlanEditor";
@@ -133,7 +134,7 @@ export default function ExportPage() {
           <div className="card-luxury rounded-2xl p-5 overflow-auto" style={{ maxHeight: "70vh" }}>
             <p className="text-xs font-semibold mb-4" style={{ color: "var(--text-dim)" }}>ANTEPRIMA</p>
             {hydrated && client
-              ? <PrintPreview client={client} sections={sections} trainerName={user?.name ?? "REC Studio"} />
+              ? <PrintPreview client={client} sections={sections} trainerName={user?.name ?? APP_NAME} />
               : (
                 <div className="flex flex-col items-center justify-center py-16" style={{ color: "var(--text-faint)" }}>
                   <FileDown size={40} className="mb-3" style={{ color: "rgba(255,107,43,0.15)" }} />
@@ -148,7 +149,7 @@ export default function ExportPage() {
       {/* Print layout */}
       {client && (
         <div className="hidden print:block p-8" style={{ background: "white", color: "#111" }}>
-          <PrintPreview client={client} sections={sections} trainerName={user?.name ?? "REC Studio"} forPrint />
+          <PrintPreview client={client} sections={sections} trainerName={user?.name ?? APP_NAME} forPrint />
         </div>
       )}
     </>
@@ -171,7 +172,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
       {/* Header */}
       <div className="flex items-start justify-between mb-6 pb-4" style={{ borderBottom: `2px solid ${forPrint ? "#C9A84C" : "var(--accent)"}` }}>
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: forPrint ? "#C9A84C" : "var(--accent)" }}>REC Studio</h1>
+          <h1 className="text-2xl font-bold" style={{ color: forPrint ? "#C9A84C" : "var(--accent)" }}>{APP_NAME}</h1>
           <p style={{ color: mutedColor }}>Trainer: {trainerName}</p>
         </div>
         <div className="text-right">
@@ -385,7 +386,7 @@ function PrintPreview({ client, sections, trainerName, forPrint = false }: {
 
       {/* Footer */}
       <div className="pt-4 text-center text-xs" style={{ borderTop: `1px solid ${borderColor}`, color: mutedColor }}>
-        Generato da REC Studio · {new Date().toLocaleDateString("it-IT")}
+        Generato da {APP_NAME} · {new Date().toLocaleDateString("it-IT")}
       </div>
     </div>
   );
