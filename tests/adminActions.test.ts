@@ -41,6 +41,9 @@ test("ban blocks the login, unban and reactivate lift it", () => {
 test("plan, trial and payment date", () => {
   assert.equal(planAdminAction({ action: "set_premium" }, "x", NOW).profile?.plan, "premium");
   assert.equal(planAdminAction({ action: "set_demo" }, "x", NOW).profile?.plan, "free");
+  const fm = planAdminAction(parseAdminAction({ action: "set_fitness_master" })!, "x", NOW);
+  assert.equal(fm.profile?.plan, "fitness_master");
+  assert.equal(fm.profile?.premium_status, "approved");
   const trial = planAdminAction(parseAdminAction({ action: "extend_trial" })!, "x", NOW);
   assert.equal(trial.profile?.trial_ends_at, "2026-12-07T12:00:00.000Z");
   assert.equal(planAdminAction(parseAdminAction({ action: "set_paid_until", date: "2026-12-31" })!, "x", NOW).profile?.paid_until, "2026-12-31");
